@@ -9,3 +9,6 @@ data/*.sqlite*
 .env
 # Godot native-library reload scratch files (keep actual vendored DLLs).
 addons/godot-sqlite/bin/~*.dll
+
+# Source art archive duplicates the extracted batch folder.
+assets/sources/*.zip

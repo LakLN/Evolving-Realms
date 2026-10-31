@@ -1,0 +1,550 @@
+{
+ "version": 1,
+ "batch": "EvolvingRealms_Original_Assets_Batch01",
+ "tile_px": 40,
+ "ground": {
+  "atlas": "terrain/ground.png",
+  "biomes": {
+   "meadow": [
+    [
+     0,
+     0,
+     6
+    ],
+    [
+     1,
+     0,
+     3
+    ],
+    [
+     2,
+     0,
+     2
+    ],
+    [
+     3,
+     0,
+     1
+    ],
+    [
+     4,
+     0,
+     1
+    ]
+   ],
+   "forest": [
+    [
+     0,
+     1,
+     4
+    ],
+    [
+     1,
+     1,
+     3
+    ],
+    [
+     2,
+     1,
+     2
+    ],
+    [
+     3,
+     1,
+     1
+    ],
+    [
+     4,
+     1,
+     1
+    ]
+   ],
+   "beach": [
+    [
+     0,
+     2,
+     4
+    ],
+    [
+     1,
+     2,
+     3
+    ],
+    [
+     2,
+     2,
+     1
+    ]
+   ],
+   "ocean": [
+    [
+     0,
+     3,
+     3
+    ],
+    [
+     1,
+     3,
+     2
+    ]
+   ]
+  }
+ },
+ "overlays": {
+  "shallow": "terrain/overlay_shallow.png",
+  "sand": "terrain/overlay_sand.png",
+  "forest": "terrain/overlay_forest.png",
+  "grass": "terrain/overlay_grass.png"
+ },
+ "props": {
+  "atlas": "terrain/props.png",
+  "cell": 80,
+  "tree": [
+   [
+    0,
+    4
+   ],
+   [
+    1,
+    4
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    3,
+    3
+   ],
+   [
+    4,
+    1
+   ]
+  ],
+  "rock": [
+   [
+    5,
+    3
+   ],
+   [
+    6,
+    2
+   ]
+  ]
+ },
+ "characters": {
+  "player": {
+   "sheet": "sprites/player.png",
+   "frame": [
+    88,
+    80
+   ],
+   "columns": 8,
+   "anchor": [
+    44,
+    73
+   ],
+   "anims": {
+    "idle_down": [
+     0
+    ],
+    "walk_down": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "attack_down": [
+     5,
+     6,
+     7
+    ],
+    "hit_down": [
+     8
+    ],
+    "death_down": [
+     9,
+     10
+    ],
+    "idle_left": [
+     11
+    ],
+    "walk_left": [
+     12,
+     13,
+     14,
+     15
+    ],
+    "attack_left": [
+     16,
+     17,
+     18
+    ],
+    "hit_left": [
+     19
+    ],
+    "death_left": [
+     20,
+     21
+    ],
+    "idle_right": [
+     22
+    ],
+    "walk_right": [
+     23,
+     24,
+     25,
+     26
+    ],
+    "attack_right": [
+     27,
+     28,
+     29
+    ],
+    "hit_right": [
+     30
+    ],
+    "death_right": [
+     31,
+     32
+    ],
+    "idle_up": [
+     33
+    ],
+    "walk_up": [
+     34,
+     35,
+     36,
+     37
+    ],
+    "attack_up": [
+     38,
+     39,
+     40
+    ],
+    "hit_up": [
+     41
+    ],
+    "death_up": [
+     42,
+     43
+    ]
+   }
+  },
+  "wolf": {
+   "sheet": "sprites/wolf.png",
+   "frame": [
+    84,
+    76
+   ],
+   "columns": 8,
+   "anchor": [
+    42,
+    69
+   ],
+   "anims": {
+    "idle_down": [
+     0
+    ],
+    "walk_down": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "attack_down": [
+     5,
+     6,
+     7
+    ],
+    "hit_down": [
+     8
+    ],
+    "death_down": [
+     9
+    ],
+    "idle_left": [
+     10
+    ],
+    "walk_left": [
+     11,
+     12,
+     13,
+     14
+    ],
+    "attack_left": [
+     15,
+     16
+    ],
+    "hit_left": [
+     17
+    ],
+    "death_left": [
+     18
+    ],
+    "idle_right": [
+     19
+    ],
+    "walk_right": [
+     20,
+     21,
+     22,
+     23
+    ],
+    "attack_right": [
+     24,
+     25
+    ],
+    "hit_right": [
+     26
+    ],
+    "death_right": [
+     27
+    ],
+    "idle_up": [
+     28
+    ],
+    "walk_up": [
+     29,
+     30,
+     31,
+     32
+    ],
+    "attack_up": [
+     33,
+     34,
+     35
+    ],
+    "hit_up": [
+     36
+    ],
+    "death_up": [
+     37
+    ]
+   }
+  }
+ },
+ "objects": {
+  "chest_closed": {
+   "texture": "objects/chest_closed.png",
+   "size": [
+    34,
+    29
+   ]
+  },
+  "chest_open": {
+   "texture": "objects/chest_open.png",
+   "size": [
+    36,
+    35
+   ]
+  },
+  "crate": {
+   "texture": "objects/crate.png",
+   "size": [
+    34,
+    33
+   ]
+  },
+  "berry_bush": {
+   "texture": "objects/berry_bush.png",
+   "size": [
+    38,
+    37
+   ]
+  },
+  "twig_bush": {
+   "texture": "objects/twig_bush.png",
+   "size": [
+    36,
+    32
+   ]
+  },
+  "herb_flower": {
+   "texture": "objects/herb_flower.png",
+   "size": [
+    36,
+    36
+   ]
+  },
+  "leafy_plant": {
+   "texture": "objects/leafy_plant.png",
+   "size": [
+    36,
+    26
+   ]
+  },
+  "crystal": {
+   "texture": "objects/crystal.png",
+   "size": [
+    34,
+    35
+   ]
+  },
+  "ore_rock": {
+   "texture": "objects/ore_rock.png",
+   "size": [
+    36,
+    27
+   ]
+  },
+  "spring_pool": {
+   "texture": "objects/spring_pool.png",
+   "size": [
+    40,
+    35
+   ]
+  },
+  "meat": {
+   "texture": "objects/meat.png",
+   "size": [
+    30,
+    20
+   ]
+  },
+  "rock": {
+   "texture": "objects/rock.png",
+   "size": [
+    32,
+    23
+   ]
+  },
+  "herb_bundle": {
+   "texture": "objects/herb_bundle.png",
+   "size": [
+    32,
+    24
+   ]
+  },
+  "mana_crystal": {
+   "texture": "objects/mana_crystal.png",
+   "size": [
+    30,
+    30
+   ]
+  }
+ },
+ "places": {
+  "ancient_ruins": {
+   "texture": "places/ancient_ruins.png",
+   "size": [
+    100,
+    101
+   ]
+  },
+  "moon_altar": {
+   "texture": "places/moon_altar.png",
+   "size": [
+    84,
+    90
+   ]
+  },
+  "buried_ruin": {
+   "texture": "places/buried_ruin.png",
+   "size": [
+    96,
+    82
+   ]
+  },
+  "magic_spring": {
+   "texture": "places/magic_spring.png",
+   "size": [
+    88,
+    114
+   ]
+  },
+  "toxic_vent": {
+   "texture": "places/toxic_vent.png",
+   "size": [
+    84,
+    120
+   ]
+  },
+  "ritual_site": {
+   "texture": "places/ritual_site.png",
+   "size": [
+    96,
+    86
+   ]
+  },
+  "rune_monolith": {
+   "texture": "places/rune_monolith.png",
+   "size": [
+    76,
+    108
+   ]
+  }
+ },
+ "mapping": {
+  "objects": {
+   "by_id": {
+    "core:wayfarer_cache": "crate",
+    "core:buried_cache": "crate"
+   },
+   "by_visual": {
+    "chest": "chest_closed",
+    "berry": "berry_bush",
+    "wood": "twig_bush",
+    "herb": "herb_flower",
+    "fiber": "leafy_plant",
+    "stone": "ore_rock",
+    "shell": "",
+    "coin": "",
+    "spring": "spring_pool",
+    "cache": "crate",
+    "crystal": "crystal",
+    "ore": "ore_rock",
+    "meat": "meat",
+    "mana": "mana_crystal"
+   },
+   "by_kind": {
+    "chest": "chest_closed",
+    "resource": "crystal"
+   },
+   "opened": {
+    "chest_closed": "chest_open"
+   }
+  },
+  "places": {
+   "by_id": {},
+   "by_visual": {
+    "ruin": "ancient_ruins",
+    "shrine": "moon_altar",
+    "vein": "rune_monolith",
+    "vent": "toxic_vent",
+    "spring_site": "magic_spring",
+    "ritual": "ritual_site",
+    "buried": "buried_ruin",
+    "monolith": "rune_monolith",
+    "leyline": "rune_monolith"
+   },
+   "by_category": {
+    "ruin": "buried_ruin",
+    "cave": "buried_ruin",
+    "anomaly": "rune_monolith",
+    "hazard": "toxic_vent",
+    "resource_site": "magic_spring",
+    "shrine": "moon_altar"
+   },
+   "default": "ritual_site"
+  },
+  "creatures": {
+   "wolf": "wolf"
+  },
+  "item_icons": {
+   "meat": "meat",
+   "berr": "berry_bush",
+   "herb": "herb_bundle",
+   "fiber": "herb_bundle",
+   "reed": "herb_bundle",
+   "grass": "herb_bundle",
+   "wood": "twig_bush",
+   "branch": "twig_bush",
+   "stone": "rock",
+   "crystal": "crystal",
+   "mana": "mana_crystal",
+   "ore": "ore_rock",
+   "water": "spring_pool"
+  }
+ }
+}

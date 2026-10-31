@@ -7,6 +7,8 @@ const Data = preload("res://src/data/json_data.gd")
 const StarterPack = preload("res://src/content/starter_pack.gd")
 const Acceptance = preload("res://src/acceptance/standalone_check.gd")
 const TalentText = preload("res://src/core/talent_text.gd")
+const FantasyTheme = preload("res://src/ui/fantasy_theme.gd")
+const Art = preload("res://src/world/art.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
@@ -89,9 +91,7 @@ func _ready() -> void:
 	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ui.add_child(frame)
-	var ui_theme := Theme.new()
-	ui_theme.default_font_size = 17
-	frame.theme = ui_theme
+	frame.theme = FantasyTheme.build()
 	_build_menu(frame)
 	_build_hud(frame)
 	_build_inventory(frame)
@@ -125,15 +125,27 @@ func _build_menu(parent: Control) -> void:
 	_menu = Panel.new()
 	_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	parent.add_child(_menu)
+	var art: RefCounted = Art.shared()
+	if art.ready():
+		var tile := AtlasTexture.new()
+		tile.atlas = art.texture(art.index.ground.atlas)
+		tile.region = Rect2(0, art.px, art.px, art.px) # Forest floor (row 1).
+		FantasyTheme.backdrop(_menu, tile)
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_menu.add_child(center)
+	var card := PanelContainer.new()
+	card.custom_minimum_size.x = 960
+	center.add_child(card)
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(920, 0)
-	column.add_theme_constant_override("separation", 16)
-	center.add_child(column)
-	_label(column, "EVOLVING REALMS", 36)
-	_label(column, "A persistent world. A new path with every run.", 18)
+	column.add_theme_constant_override("separation", 8)
+	card.add_child(column)
+	var title := _label(column, "EVOLVING REALMS", 38)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", FantasyTheme.GOLD)
+	title.add_theme_constant_override("outline_size", 6)
+	_label(column, "A persistent world. A new path with every run.", 18).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	column.add_child(HSeparator.new())
 	var body := HBoxContainer.new()
 	body.add_theme_constant_override("separation", 30)
@@ -170,7 +182,7 @@ func _build_menu(parent: Control) -> void:
 	body.add_child(right)
 	_label(right, "SAVED RUNS", 20)
 	_runs = ItemList.new()
-	_runs.custom_minimum_size = Vector2(450, 330)
+	_runs.custom_minimum_size = Vector2(450, 280)
 	_runs.item_selected.connect(func(_index: int) -> void: _resume.disabled = false)
 	_runs.item_activated.connect(func(_index: int) -> void: _on_resume())
 	right.add_child(_runs)
@@ -179,7 +191,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills (1-9 use)  Ctrl+S: save  Esc: menu", 14)
+	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills (1-9 use)  Ctrl+S: save  Esc: menu", 14).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -379,6 +391,7 @@ func _build_inventory(parent: Control) -> void:
 	_label(column, "INVENTORY", 24)
 	_inventory_list = ItemList.new()
 	_inventory_list.custom_minimum_size = Vector2(365, 150)
+	_inventory_list.fixed_icon_size = Vector2i(24, 24)
 	_inventory_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_inventory_list.item_selected.connect(_show_inventory_item)
 	column.add_child(_inventory_list)
@@ -831,6 +844,9 @@ func _refresh_inventory(selected: String = "") -> void:
 		var tag := "   [gear]" if gear else ("   [book]" if book else ("   [usable]" if usable else ""))
 		_inventory_list.add_item("%s%s%s" % [item_label(item.definition, item.metadata), "" if gear else "  x%d" % item.quantity, tag])
 		_inventory_list.set_item_tooltip(_inventory_list.item_count - 1, "%s / %s" % [item.name, item.type])
+		var icon: Texture2D = Art.shared().item_icon(item.content_id, item.name) if Art.shared().ready() else null
+		if icon != null:
+			_inventory_list.set_item_icon(_inventory_list.item_count - 1, icon)
 		_color_row(_inventory_list, _inventory_list.item_count - 1, item.definition, item.metadata)
 		if item.content_id == selected or (not item.instance_id.is_empty() and item.instance_id == selected):
 			index = _inventory_list.item_count - 1
@@ -900,6 +916,8 @@ func _label(parent: Node, text: String, size: int) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", size)
+	if size >= 20 and not text.is_empty() and text == text.to_upper():
+		label.add_theme_color_override("font_color", FantasyTheme.GOLD) # Section headers.
 	parent.add_child(label)
 	return label
 
@@ -1214,7 +1232,10 @@ func describe_events(events: Array) -> String:
 func _interact() -> void:
 	if session == null or _panel_open():
 		return
+	var target: Dictionary = session.interaction_target()
 	if session.interact():
+		if not target.is_empty() and not session.last_result.get("place", false):
+			map_view.show_received(session.last_result.received, Vector2i(int(target.position.x), int(target.position.y)))
 		if session.last_result.get("place", false):
 			_after_action(true) # The place's own notice lists its rewards.
 			return
@@ -1235,6 +1256,7 @@ func _search() -> void:
 func move_player(direction: Vector2i) -> bool:
 	if session == null or _menu.visible or _panel_open() or session.is_dead():
 		return false
+	map_view.face(direction)
 	var moved: bool = session.try_move(direction)
 	_after_action(moved)
 	return moved

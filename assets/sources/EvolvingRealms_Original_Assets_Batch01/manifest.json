@@ -1,0 +1,32 @@
+{
+  "batch": "01",
+  "project": "Evolving Realms",
+  "type": "AI-generated source art (requires processing)",
+  "files": [
+    {
+      "path": "environment/forest_grass_beach_water_tilesheet.png",
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "path": "characters/player_adventurer_spritesheet.png",
+      "width": 1448,
+      "height": 1086
+    },
+    {
+      "path": "creatures/gray_wolf_spritesheet.png",
+      "width": 1448,
+      "height": 1086
+    },
+    {
+      "path": "props/chests_resources_items_sheet.png",
+      "width": 1448,
+      "height": 1086
+    },
+    {
+      "path": "landmarks/discoveries_ruins_shrines_sheet.png",
+      "width": 1254,
+      "height": 1254
+    }
+  ]
+}

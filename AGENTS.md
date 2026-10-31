@@ -43,3 +43,5 @@ AI proposals never activate themselves; tests use the mock/local stub only, neve
 Read docs/AI_WORLD_AND_ENCOUNTERS.md before changing encounters, the region ledger or spawn layers.
 Established regions never change; never rewrite or delete region records or creature v1 homes.
 Read docs/DISCOVERIES_AND_EVENTS.md before changing locations, world events, discovery or search.
+Read docs/ART_DIRECTION.md before changing art, rendering (map_view/art.gd) or the asset pipeline.
+Visual Prototype work is presentation only: never change gameplay, saves or coordinates for art.

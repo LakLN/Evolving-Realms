@@ -49,11 +49,11 @@ func _run() -> void:
 	var start: Vector2i = app.session.position
 	check(app.map_view.chunk_nodes.size() == 9, "Actual map renders nine streamed chunks")
 	var entry: Dictionary = app.map_view.chunk_nodes[Terrain.chunk_of(start)]
-	check(entry.ground is TileMapLayer and entry.fog is TileMapLayer, "Terrain and fog use TileMapLayer")
-	check(entry.fog.get_cell_source_id(Terrain.local_of(start)) == -1, "Current tile has no fog overlay")
+	# Fog is one soft texture over the cached chunks (Visual Prototype); fog_at reads it back.
+	check(entry.ground is TileMapLayer and app.map_view._fog.texture != null, "Terrain uses TileMapLayer and fog is rendered")
+	check(app.map_view.fog_at(start) == -1, "Current tile has no fog overlay")
 	var far := start + Vector2i(15, 0)
-	var far_entry: Dictionary = app.map_view.chunk_nodes[Terrain.chunk_of(far)]
-	check(far_entry.fog.get_cell_atlas_coords(Terrain.local_of(far)) == Vector2i(6, 0), "Unseen tile is opaque fog in renderer")
+	check(app.map_view.fog_at(far) == 6, "Unseen tile is opaque fog in renderer")
 	var direction := Vector2i.ZERO
 	for candidate in Spawn.DIRECTIONS:
 		if app.session.terrain.walkable(start + candidate):
@@ -75,11 +75,9 @@ func _run() -> void:
 		await process_frame
 	check(rendered_path_ok and Terrain.chunk_of(app.session.position) != chunk_before, "Real renderer survives travel across chunk boundaries")
 	var remembered := 0
-	for chunk in app.map_view.chunk_nodes:
-		var fog: TileMapLayer = app.map_view.chunk_nodes[chunk].fog
-		for tile in fog.get_used_cells():
-			if fog.get_cell_atlas_coords(tile) == Vector2i(7, 0):
-				remembered += 1
+	for tile in app.session.explored:
+		if app.map_view.fog_at(tile) == 7:
+			remembered += 1
 	check(remembered > 0, "Previously explored terrain is rendered dim outside sight")
 	await _screenshot("checkpoint-c-map.png")
 	var saved_position: Vector2i = app.session.position

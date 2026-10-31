@@ -1,6 +1,66 @@
-# Progress — 2026-10-31 (Asia/Saigon)
+# Progress — 2026-11-01 (Asia/Saigon)
 
-## Current state: Milestone 02 complete — final integration and playtest build
+## Current state: Visual Prototype — first art batch integrated (forest vertical slice)
+
+From `52a1035` (Milestone 02 complete). Scope: presentation only. No gameplay, save,
+schema, generation, pack or coordinate change; Milestone 03 not started.
+Details, pipeline and mapping rules: [ART_DIRECTION.md](ART_DIRECTION.md).
+
+### Done
+
+- Import pipeline `tools/art/build_assets.py` (dev-only Pillow/numpy/scipy) slices the
+  five Batch 01 source sheets into `assets/game/**` + `art_index.json`; originals kept
+  untouched in `assets/sources/` (Godot ignores them, export excludes them).
+- Terrain at 40 px/tile: seamless meadow/forest/beach/ocean variants, ragged 8-neighbour
+  transitions (grass→forest floor/sand, forest→sand, sand+foam and shallow water→ocean),
+  tree canopies/stumps and rock piles as blockers, soft linear-filtered fog texture.
+- Hero: AnimatedSprite2D with idle/walk/attack/hit/death x 4 directions, smooth step
+  tween, faces blocked moves, lunges on attack, red flash on hit, death pose.
+- Wolf: same animation set (side frames from the sheet's mixed rows), tweened moves,
+  attack lunge toward the hero, white hit flash, death animation then fade.
+- Objects: chest closed/open, crate (wayfarer/buried cache), berry bush, twig bush
+  (wood), herb, leafy plant (fiber), ore-flecked rock (loose stones), spring pool.
+- Places: ancient ruins, moon altar, rune monolith (spirit vein), toxic vent (miasma),
+  magic spring (clear spring); buried ruin, ritual site and others as category fallbacks
+  for AI-generated places. Resolved places are dimmed.
+- Feedback: pickup popups with item icons, chest/loot sparkle, hit sparks, damage
+  numbers, XP, LEVEL UP burst, skill/learn/equip effects, discovery ring + "Discovered!".
+- UI: fantasy theme (leather panels, gold trim, gold section headers), forest menu
+  backdrop, inventory item icons. Vietnamese talent/quality names render correctly.
+
+### Fallbacks still in use
+
+Boar, rabbit, deer, shore crab and AI creatures: disposition-ringed archetype token.
+Shell bed and lost coins: code-drawn icons. Items without a keyword icon: no icon.
+No dedicated beach/ocean props, no water animation, no skill-specific spell sprites.
+
+### Verified (2026-11-01)
+
+- `.\scripts\test.ps1 -Smoke -Only gameplay,world,combat-gameplay,interaction-gameplay,
+  discovery-gameplay,skill-gameplay`, then `-Only combat-gameplay,discovery-gameplay,
+  skill-gameplay,survival-gameplay,equipment-gameplay,talent-gameplay,effect-gameplay`:
+  all PASS (data 96, world 49, gameplay 22, integration 41, and every gameplay suite).
+  `gameplay` now reads fog through `map_view.fog_at()` (soft fog texture replaced the
+  per-chunk fog TileMapLayer); same assertions otherwise.
+- Bugs found and fixed while testing: delayed hit feedback could call a freed creature
+  node after leaving the map; the themed top HUD exceeded its 100 px budget; chest visual
+  mapped to a missing sprite (the build now fails on unknown sprite names).
+- `.\scripts\export.ps1 -Verify -Render`: export PASS; exe write 37/37, abrupt kill,
+  verify 9/9, features 17/17, features-verify 5/5 (Windows renderer), default-save
+  refusal PASS. Exe screenshots show the new art, so assets are in the .pck (1.86 MB).
+- `tests/visual_probe.gd` (dev-only, temp database): menu, forest/meadow/beach,
+  chest open, gathering, wolf fight, landmark discovery, inventory screenshots reviewed.
+- Full `-Render -Service -Export` regression not run (presentation-only change).
+
+### Known issues / next steps
+
+- A wolf directly north of the hero is partly covered by the hero (y-sorted, tall hero).
+- Popups/effects jump when the view re-centres at a chunk boundary (they last ~1 s).
+- Interacting with a chest can list the same item twice in "Received" (pre-existing text).
+- Next art batch: boar, rabbit, deer, crab sprites; beach/ocean props; water animation;
+  spell effect sheets; item icon sheet.
+
+## Milestone 02 final record (historical) — final integration and playtest build
 
 From clean `36c6988`. Scope: integration audit, stability/persistence, save performance,
 first-pass balance probe, UI usability, offline AI checks, full regression, Windows export
