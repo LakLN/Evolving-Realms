@@ -57,13 +57,29 @@ Rebuild after changing sources or tables (dev-only Python; the game never needs 
   (chests). Visual mapped to `""` keeps the code-drawn icon (shells, coins).
 - Places: `content_id` → `payload.visual` → `payload.category` → `default`, so
   AI-generated places get a fitting landmark by category.
-- Creatures: `payload.visual` → animated sheet. Others (boar, rabbit, deer, crab and
-  AI species) use a disposition-ringed archetype token until art exists.
-- Item icons: keyword in the item id/name → object sprite (inventory, pickup popups).
+- Creatures: `payload.visual` → animated sheet (wolf, boar, rabbit, deer, crab). AI
+  species and unknown visuals use a disposition-ringed archetype token.
+- Item icons (inventory, gear slots, pickup popups): equipment slot → `slot_icons`,
+  skill book → `book_icon`, else a keyword of the id/name → `item_icons` (UI icon, or
+  object sprite of that name). Status popups use `status_icons` by status name.
+- Terrain: `GROUND` lists (sheet, row, col, weight) per biome; `ENV_PROPS` kinds `tree`,
+  `rock` and per-biome `rock_meadow` / `rock_beach`; `DECOR` adds flat flowers, shells
+  and mushrooms (~7% of walkable cells, never on blockers, presentation only).
 
 The build fails if a mapping names a sprite that was not produced. To add art: drop
 a new batch in `assets/sources/`, add bounding boxes/animation tables and mapping
 entries, rebuild. No gameplay code changes are needed.
+
+## Batch 02 notes
+
+Source: `EvolvingRealms_Original_Assets_Batch02` (boar, rabbit, deer, crab sheets;
+grassland and beach tiles/props; UI/status icons). Creature frames touch or overlap
+(antlers, bodies), so `split_touching` erodes the mask to seed each body and assigns
+pixels to the nearest seed; `defringe` removes the red/green/yellow halo pixels. Merged
+leftovers and lone slash arcs are not referenced. The boar has no clean side-walk or
+lone death frame: its right side mirrors the left, and the death pose is a manual crop.
+Unused so far: shipwreck, sandcastle, tide pools, driftwood, seagull post, fences,
+signpost, logs, bushes, beach flowers; key/heart/mana/water icons have few item matches.
 
 ## Batch 01 notes
 

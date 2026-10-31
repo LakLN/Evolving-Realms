@@ -1,6 +1,41 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
-## Current state: Visual Prototype — first art batch integrated (forest vertical slice)
+## Current state: Visual Prototype — art batch 02 integrated
+
+Presentation only; gameplay, saves, World Blueprint, content IDs unchanged.
+
+### Done (Batch 02)
+
+- Boar, rabbit, deer and shore crab: animated sprites (idle/walk/attack/hit/death x 4
+  directions) replace the archetype tokens; AI species keep the token fallback.
+- Meadow: Batch 02 grassland tiles (plain grass dominant, flower/clover variants),
+  mossy boulders as meadow rocks, flat flower/clover decor. Beach: new sand tiles,
+  deep-water variants, shell-studded rocks, starfish/shell/dune-grass decor, shell bed
+  object sprite. Forest: mushroom decor. Lost coins use the coin icon.
+- UI icons: inventory rows and gear slots (empty slots dimmed), pickup popups, status
+  popups (burn, poison, bleed, slow, stun, ward, regeneration).
+- Fixes: a creature directly north of the hero is no longer hidden (hero turns
+  see-through; y-sort kept); popups/effects/dying creatures shift with the view when it
+  re-centres on a chunk (FX layer + relative tweens); identical receipts are merged in
+  "Received", loot and place messages and in pickup popups (display only).
+
+### Verified (Batch 02)
+
+- `.\scripts\test.ps1 -Smoke -Only gameplay,world,combat-gameplay,interaction-gameplay,
+  discovery-gameplay,skill-gameplay,effect-gameplay,equipment-gameplay`: all PASS.
+- `.\scripts\export.ps1 -Verify -Render`: export PASS (pck 2.17 MB); exe write 37/37,
+  abrupt kill, verify 9/9, features 17/17, features-verify 5/5, default-save refusal.
+- `tests/visual_probe.gd`: wolf, boar, rabbit, deer, crab beside the hero and in combat,
+  meadow/beach/forest starts, chest, gathering, discovery, inventory and gear reviewed.
+
+### Remaining asset requests
+
+Item icons for hide, fang, crab claw and relics (they borrow meat/crystal icons);
+beach landmarks wired to places (shipwreck, tide pool); animated water; spell/skill
+effect sheets; a clean boar side-walk cycle; AI creature archetype sprites (beast,
+spirit, insect...) instead of tokens; UI frame/panel art.
+
+## Visual Prototype — Batch 01 record (forest vertical slice)
 
 From `52a1035` (Milestone 02 complete). Scope: presentation only. No gameplay, save,
 schema, generation, pack or coordinate change; Milestone 03 not started.
@@ -54,9 +89,8 @@ No dedicated beach/ocean props, no water animation, no skill-specific spell spri
 
 ### Known issues / next steps
 
-- A wolf directly north of the hero is partly covered by the hero (y-sorted, tall hero).
-- Popups/effects jump when the view re-centres at a chunk boundary (they last ~1 s).
-- Interacting with a chest can list the same item twice in "Received" (pre-existing text).
+- Fixed in Batch 02: wolf hidden behind the hero, popup jump at chunk boundaries,
+  duplicate "Received" entries.
 - Next art batch: boar, rabbit, deer, crab sprites; beach/ocean props; water animation;
   spell effect sheets; item icon sheet.
 

@@ -9,13 +9,15 @@ const OVERLAYS := [["shallow", ["ocean"], ["forest", "beach", "meadow"]], ["sand
 const GROUND_SOURCE := 0
 const PROP_SOURCE := 1
 const OVERLAY_SOURCE := 2 # + overlay index
+const DECOR_SOURCE := 10
 static var _shared: RefCounted
 
 var index: Dictionary = {}
 var px := 32
 var tileset: TileSet
 var ground: Dictionary = {} # biome -> [[Vector2i atlas coords, weight], ...]
-var props: Dictionary = {} # "tree"/"rock" -> [[Vector2i, weight], ...]
+var props: Dictionary = {} # "tree", "rock", "rock_<biome>" -> [[Vector2i, weight], ...]
+var decor: Dictionary = {} # biome -> [[Vector2i, weight], ...]
 var _textures: Dictionary = {}
 var _frames: Dictionary = {}
 
@@ -61,7 +63,9 @@ func _build_tileset() -> void:
 			ground[biome].append([coords, int(entry[2])])
 	var prop_source := _atlas(index.props.atlas, int(index.props.cell))
 	built.add_source(prop_source, PROP_SOURCE)
-	for kind in ["tree", "rock"]:
+	for kind in index.props:
+		if not index.props[kind] is Array:
+			continue # "atlas", "cell"
 		props[kind] = []
 		for entry in index.props[kind]:
 			var coords := Vector2i(int(entry[0]), 0)
@@ -72,6 +76,17 @@ func _build_tileset() -> void:
 		built.add_source(source, OVERLAY_SOURCE + i)
 		for mask in range(1, 256):
 			source.create_tile(Vector2i(mask % 16, mask / 16))
+	if index.has("decor"):
+		var decor_source := _atlas(index.decor.atlas, px)
+		built.add_source(decor_source, DECOR_SOURCE)
+		for biome in index.decor:
+			if not index.decor[biome] is Array:
+				continue
+			decor[biome] = []
+			for entry in index.decor[biome]:
+				var coords := Vector2i(int(entry[0]), 0)
+				decor_source.create_tile(coords)
+				decor[biome].append([coords, int(entry[1])])
 	tileset = built
 
 static func pick(choices: Array, roll: int) -> Vector2i:
@@ -136,12 +151,33 @@ func place_sprite(definition: Dictionary) -> Texture2D:
 	var name: String = map.get("by_id", {}).get(definition.get("content_id", ""), map.get("by_visual", {}).get(payload.get("visual", ""), map.get("by_category", {}).get(payload.get("category", ""), map.get("default", ""))))
 	return _single("places", name)
 
-func item_icon(content_id: String, name: String) -> Texture2D:
-	var key := (content_id.get_slice(":", content_id.get_slice_count(":") - 1) + " " + name).to_lower() # Skip "core:" etc.
-	var icons: Dictionary = index.get("mapping", {}).get("item_icons", {})
+func item_icon(content_id: String, name: String, definition: Dictionary = {}) -> Texture2D:
+	## Equipment slot, then skill book, then a keyword of the id (namespace skipped) or name.
+	var mapping: Dictionary = index.get("mapping", {})
+	var payload: Dictionary = definition.get("payload", {})
+	if payload.get("equipment") is Dictionary and mapping.get("slot_icons", {}).has(payload.equipment.get("slot", "")):
+		return icon(mapping.slot_icons[payload.equipment.slot])
+	if payload.has("skill_book") and mapping.has("book_icon"):
+		return icon(mapping.book_icon)
+	var key := (content_id.get_slice(":", content_id.get_slice_count(":") - 1) + " " + name).to_lower()
+	var icons: Dictionary = mapping.get("item_icons", {})
 	for word in icons:
 		if key.contains(word):
-			return _single("objects", icons[word])
+			return icon(icons[word])
+	return null
+
+func icon(name: String) -> Texture2D:
+	## UI icon by name, falling back to an object sprite of that name.
+	var found := _single("icons", name)
+	return found if found != null else _single("objects", name)
+
+func status_icon(status: String) -> Texture2D:
+	var key := status.to_lower()
+	key = key.get_slice("/", key.get_slice_count("/") - 1)
+	var icons: Dictionary = index.get("mapping", {}).get("status_icons", {})
+	for word in icons:
+		if key.contains(word):
+			return icon(icons[word])
 	return null
 
 func _single(group: String, name: String) -> Texture2D:

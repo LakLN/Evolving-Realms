@@ -1,0 +1,13 @@
+{
+  "batch": "02",
+  "source_type": "AI-generated original image sheets",
+  "items": [
+    "creatures/wild_boar_spritesheet.png",
+    "creatures/rabbit_spritesheet.png",
+    "creatures/deer_spritesheet.png",
+    "creatures/crab_spritesheet.png",
+    "environment/grassland_tiles_props.png",
+    "environment/beach_tiles_props.png",
+    "ui/inventory_status_icons.png"
+  ]
+}

@@ -121,3 +121,90 @@ def place(canvas: Image.Image, sprite: Image.Image, anchor_canvas, anchor_sprite
     x = round(anchor_canvas[0] - anchor_sprite[0])
     y = round(anchor_canvas[1] - anchor_sprite[1])
     canvas.alpha_composite(sprite, (max(0, x), max(0, y)), (max(0, -x), max(0, -y)))
+
+
+def split_band(rgba: np.ndarray, band, valley: float = 0.3, alpha: int = 200):
+    """Frames packed edge to edge in one row band (Batch 02 sheets). Column runs are
+    split at deep opacity valleys when wider than a typical frame; lying/death poses
+    (wide but solid) stay whole. Slivers join their neighbour. Returns cut sprites."""
+    y0, x0, y1, x1 = band
+    solid = rgba[y0:y1, x0:x1, 3] > alpha
+    profile = solid.sum(axis=0)
+    runs, start = [], None
+    for x, v in enumerate(profile > 2):
+        if v and start is None:
+            start = x
+        elif not v and start is not None:
+            runs.append([start, x])
+            start = None
+    if start is not None:
+        runs.append([start, len(profile)])
+    merged = []
+    for run in runs:  # Slivers (stray pixels, split slash tips) join the previous run.
+        if merged and (run[1] - run[0] < 16 or run[0] - merged[-1][1] < 3):
+            merged[-1][1] = run[1]
+        else:
+            merged.append(run)
+    typical = float(np.median([r[1] - r[0] for r in merged]))
+
+    def split(a, b):
+        if b - a < typical * 1.45:
+            return [(a, b)]
+        lo, hi = a + int(typical * 0.6), b - int(typical * 0.6)
+        if hi <= lo:
+            return [(a, b)]
+        cut = lo + int(np.argmin(profile[lo:hi]))
+        if profile[cut] > valley * np.median(profile[a:b]):
+            return [(a, b)]
+        return split(a, cut) + split(cut, b)
+
+    frames = []
+    for a, b in merged:
+        for c, d in split(a, b):
+            part = rgba[y0:y1, x0 + c:x0 + d].copy()
+            part[part[..., 3] <= 24] = 0
+            ys, xs = np.nonzero(part[..., 3] > 24)
+            if ys.size:
+                frames.append(part[ys.min():ys.max() + 1, xs.min():xs.max() + 1])
+    return frames
+
+
+def defringe(part: np.ndarray) -> np.ndarray:
+    """Drop the saturated red/green/yellow halo pixels AI sheets leave around sprites:
+    edge pixels (touching transparency) whose colour is a pure primary."""
+    out = part.copy()
+    solid = out[..., 3] > 24
+    edge = solid & ~ndimage.binary_erosion(solid, iterations=2)
+    r, g, b = (out[..., i].astype(int) for i in range(3))
+    vivid = ((r > 170) & (g < 70) & (b < 70)) | ((g > 170) & (r < 120) & (b < 90)) | ((r > 200) & (g > 200) & (b < 80))
+    out[edge & vivid] = 0
+    return out
+
+
+def split_touching(rgba: np.ndarray, band, erode: int = 4, min_area: int = 900, alpha: int = 160):
+    """Frames whose antlers/legs touch or overlap their neighbours: erode the mask to
+    break thin contacts, keep large eroded blobs as seeds, then hand every opaque pixel
+    to its nearest seed. Returns cut sprites sorted left to right."""
+    y0, x0, y1, x1 = band
+    region = rgba[y0:y1, x0:x1]
+    solid = region[..., 3] > 24
+    core = ndimage.binary_erosion(region[..., 3] > alpha, iterations=erode)
+    labels, count = ndimage.label(core)
+    sizes = ndimage.sum(core, labels, range(1, count + 1))
+    seeds = np.zeros_like(labels)
+    keep = [i + 1 for i, s in enumerate(sizes) if s >= min_area]
+    for new, old in enumerate(keep, start=1):
+        seeds[labels == old] = new
+    if not keep:
+        return []
+    _, (iy, ix) = ndimage.distance_transform_edt(seeds == 0, return_indices=True)
+    owner = seeds[iy, ix]
+    frames = []
+    for label in range(1, len(keep) + 1):
+        mask = solid & (owner == label)
+        ys, xs = np.nonzero(mask)
+        part = region.copy()
+        part[~mask] = 0
+        frames.append((xs.mean(), part[ys.min():ys.max() + 1, xs.min():xs.max() + 1]))
+    frames.sort(key=lambda f: f[0])
+    return [f[1] for f in frames]

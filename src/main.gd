@@ -275,6 +275,7 @@ func _build_character(parent: Control) -> void:
 	_talent_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_slot_list = ItemList.new()
 	_slot_list.custom_minimum_size = Vector2(355, 140)
+	_slot_list.fixed_icon_size = Vector2i(22, 22)
 	_slot_list.item_selected.connect(_show_slot)
 	_slot_list.item_activated.connect(func(_index: int) -> void: _unequip_selected())
 	column.add_child(_slot_list)
@@ -342,6 +343,10 @@ func _refresh_character(selected_slot: String = "") -> void:
 		var record: Dictionary = character.equipment.get(slot, {})
 		var definition: Dictionary = {} if record.is_empty() else session._definition(record.content_id, int(record.version))
 		_slot_list.add_item("%s:  %s" % [session.character_rules.slot_name(slot), "—" if record.is_empty() else item_label(definition, record.get("metadata", {}))])
+		var slot_icon: Texture2D = Art.shared().icon(str(Art.shared().index.get("mapping", {}).get("slot_icons", {}).get(slot, ""))) if Art.shared().ready() else null
+		if slot_icon != null:
+			_slot_list.set_item_icon(_slot_list.item_count - 1, slot_icon)
+			_slot_list.set_item_icon_modulate(_slot_list.item_count - 1, Color.WHITE if not record.is_empty() else Color(1, 1, 1, 0.3))
 		if not record.is_empty():
 			_color_row(_slot_list, _slot_list.item_count - 1, definition, record.get("metadata", {}))
 		if slot == selected_slot:
@@ -844,7 +849,7 @@ func _refresh_inventory(selected: String = "") -> void:
 		var tag := "   [gear]" if gear else ("   [book]" if book else ("   [usable]" if usable else ""))
 		_inventory_list.add_item("%s%s%s" % [item_label(item.definition, item.metadata), "" if gear else "  x%d" % item.quantity, tag])
 		_inventory_list.set_item_tooltip(_inventory_list.item_count - 1, "%s / %s" % [item.name, item.type])
-		var icon: Texture2D = Art.shared().item_icon(item.content_id, item.name) if Art.shared().ready() else null
+		var icon: Texture2D = Art.shared().item_icon(item.content_id, item.name, item.definition) if Art.shared().ready() else null
 		if icon != null:
 			_inventory_list.set_item_icon(_inventory_list.item_count - 1, icon)
 		_color_row(_inventory_list, _inventory_list.item_count - 1, item.definition, item.metadata)
@@ -1162,7 +1167,7 @@ func describe_events(events: Array) -> String:
 					parts.append("%s hits you for %d!" % [event.name, event.damage])
 			"creature_death":
 				var received := PackedStringArray()
-				for item in event.received:
+				for item in MapView.merge_received(event.received):
 					received.append(_receipt_text(item))
 				parts.append("%s dies. Loot: %s." % [event.name, ", ".join(received)])
 			"player_death":
@@ -1212,7 +1217,7 @@ func describe_events(events: Array) -> String:
 				parts.append("DISCOVERED: %s — %s" % [event.name, event.description])
 			"location":
 				var outcome := PackedStringArray()
-				for item in event.received:
+				for item in MapView.merge_received(event.received):
 					outcome.append(_receipt_text(item))
 				for change in event.changes:
 					outcome.append("%s %d -> %d" % [{"hp": "HP", "hunger": "hunger", "thirst": "thirst"}.get(change.stat, change.stat), change.before, change.after])
@@ -1240,7 +1245,7 @@ func _interact() -> void:
 			_after_action(true) # The place's own notice lists its rewards.
 			return
 		var received := PackedStringArray()
-		for item in session.last_result.received:
+		for item in MapView.merge_received(session.last_result.received):
 			received.append(_receipt_text(item))
 		_after_action(true)
 		_notice.text = ("Received: " + ", ".join(received) + " " + _notice.text).strip_edges()

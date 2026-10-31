@@ -40,6 +40,11 @@ var _fog_texture: ImageTexture
 var _creatures: Dictionary = {} # instance_id -> {node, sprite, tile, facing, sheet}
 var _origin := Vector2i.ZERO
 var _stack := 0 # Centred popups of one turn stack upward instead of overlapping.
+## Popups and effects live here; when the view re-centres on a new chunk the layer's
+## children are shifted so they stay over the same world tile (no jump).
+var _fx_layer := Node2D.new()
+var _dying: Array = [] # Creature nodes playing their death; shifted like effects.
+var _has_origin := false
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -65,6 +70,8 @@ func _ready() -> void:
 	_sense_layer.z_index = 5
 	_sense_layer.draw.connect(_draw_sensed)
 	add_child(_sense_layer)
+	_fx_layer.z_index = 6
+	add_child(_fx_layer)
 	_creature_layer.add_child(_player)
 	var shadow := Node2D.new()
 	shadow.draw.connect(func() -> void: _draw_shadow(shadow, 13.0))
@@ -98,6 +105,10 @@ func clear_map() -> void:
 	for entry in _creatures.values():
 		entry.node.free()
 	_creatures.clear()
+	for child in _fx_layer.get_children():
+		child.free()
+	_dying.clear()
+	_has_origin = false
 	session = null
 	_object_layer.queue_redraw()
 	_sense_layer.queue_redraw()
@@ -113,7 +124,11 @@ func _feet(tile: Vector2i) -> Vector2:
 func refresh() -> void:
 	if session == null:
 		return
-	_origin = session.cache.center * Terrain.CHUNK_SIZE
+	var next_origin: Vector2i = session.cache.center * Terrain.CHUNK_SIZE
+	if _has_origin and next_origin != _origin:
+		_shift_transients(Vector2(_origin - next_origin) * px)
+	_origin = next_origin
+	_has_origin = true
 	for chunk in chunk_nodes.keys():
 		if not session.cache.chunks.has(chunk):
 			chunk_nodes[chunk].root.free()
@@ -129,6 +144,13 @@ func refresh() -> void:
 	_object_layer.queue_redraw()
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
+
+func _shift_transients(offset: Vector2) -> void:
+	for child in _fx_layer.get_children():
+		child.position += offset
+	_dying = _dying.filter(func(node: Node2D) -> bool: return is_instance_valid(node))
+	for node in _dying:
+		node.position += offset
 
 func face(direction: Vector2i) -> void:
 	## Turn the hero toward an attempted move, even when the move is blocked.
@@ -164,6 +186,9 @@ func _add_chunk(chunk: Vector2i) -> void:
 		layer.tile_set = _tiles
 		root.add_child(layer)
 		overlays.append(layer)
+	var decor := TileMapLayer.new()
+	decor.tile_set = _tiles
+	root.add_child(decor)
 	var props := TileMapLayer.new()
 	props.tile_set = _tiles
 	props.z_index = 1 # Canopies overhang the ground; objects and creatures draw above.
@@ -198,8 +223,13 @@ func _add_chunk(chunk: Vector2i) -> void:
 				if mask != 0:
 					overlays[i].set_cell(local, Art.OVERLAY_SOURCE + i, Vector2i(mask % 16, mask / 16))
 			var value: int = bytes[y * Terrain.CHUNK_SIZE + x]
-			if value == Terrain.TREE or value == Terrain.ROCK:
-				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props["tree" if value == Terrain.TREE else "rock"], Art.tile_roll(global_tile, 2)))
+			if value == Terrain.TREE:
+				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.tree, Art.tile_roll(global_tile, 2)))
+			elif value == Terrain.ROCK:
+				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.get("rock_" + kind, art.props.rock), Art.tile_roll(global_tile, 2)))
+			elif art.decor.has(kind) and Art.tile_roll(global_tile, 3) % 100 < 7:
+				# Flat flowers/shells/mushrooms: dressing only, never on blockers.
+				decor.set_cell(local, Art.DECOR_SOURCE, Art.pick(art.decor[kind], Art.tile_roll(global_tile, 4)))
 
 func _update_fog() -> void:
 	## One texel per tile over the nine cached chunks, linearly filtered for soft edges.
@@ -319,6 +349,14 @@ func _sync_creatures() -> void:
 		if not seen.has(id) and not _creatures[id].get("dying", false):
 			_creatures[id].node.queue_free()
 			_creatures.erase(id)
+	# Y-sort keeps a creature directly north of the hero behind them; the taller hero
+	# would hide it, so the hero turns see-through while something stands there.
+	var hidden_behind := false
+	for entry in _creatures.values():
+		if entry.tile == session.position + Vector2i.UP:
+			hidden_behind = true
+	var sprite: CanvasItem = _player_sprite if _player_sprite != null else _player
+	sprite.self_modulate.a = 0.55 if hidden_behind else 1.0
 
 func _spawn_creature(creature: Dictionary) -> Dictionary:
 	var node := Node2D.new()
@@ -354,6 +392,7 @@ func _kill_creature(id: String) -> void:
 	_creatures.erase(id)
 	entry.dying = true
 	var node: Node2D = entry.node
+	_dying.append(node)
 	_play_creature(entry, "death")
 	var tween := node.create_tween()
 	tween.tween_interval(0.7)
@@ -561,6 +600,12 @@ func show_events(events: Array) -> void:
 				_show_items(event.get("received", []), place_tile, delay + 0.1)
 			"player_death":
 				_play_player("death")
+			"status_apply":
+				# Target is "player" or the affected creature's instance id.
+				var on_hero: bool = str(event.get("target", "")) == "player"
+				var foe: Dictionary = _creatures.get(str(event.get("target", "")), {})
+				var where: Vector2i = session.position if on_hero or foe.is_empty() else foe.tile
+				_popup(where, str(event.status), Color("d9b8ff"), 0.0 if on_hero else 0.55, delay + 0.2, 15, art.status_icon(str(event.status)) if art.ready() else null)
 
 func show_received(items: Array, tile: Vector2i) -> void:
 	## Gathered/opened loot rises from the object's tile.
@@ -570,9 +615,22 @@ func show_received(items: Array, tile: Vector2i) -> void:
 	_burst(tile, Color("ffe7a0"), 0.0, 0.8)
 	_show_items(items, tile, 0.05)
 
+static func merge_received(items: Array) -> Array:
+	## Identical receipts (same item and quality from several loot rolls) shown once.
+	var merged: Array = []
+	var by_key := {}
+	for item in items:
+		var key := "%s|%s|%s" % [item.get("content_id", ""), item.get("name", ""), item.get("quality", "")]
+		if by_key.has(key):
+			by_key[key].quantity = int(by_key[key].get("quantity", 1)) + int(item.get("quantity", 1))
+		else:
+			by_key[key] = item.duplicate()
+			merged.append(by_key[key])
+	return merged
+
 func _show_items(items: Array, tile: Vector2i, delay: float) -> void:
 	var i := 0
-	for item in items:
+	for item in merge_received(items):
 		_popup(tile, "+%d %s" % [int(item.get("quantity", 1)), str(item.get("name", ""))], Color("fff1b0"), 0.0, delay + i * 0.25, 15, art.item_icon(str(item.get("content_id", "")), str(item.get("name", ""))) if art.ready() else null)
 		i += 1
 
@@ -649,7 +707,7 @@ func _popup(tile: Vector2i, text: String, color: Color, side: float, delay: floa
 	label.add_theme_constant_override("outline_size", 5)
 	popup.add_child(label)
 	popup.modulate.a = 0.0
-	add_child(popup)
+	_fx_layer.add_child(popup)
 	# Player numbers rise on the left, creature numbers on the right: no overlap.
 	var start := _point(tile) + Vector2(side * px - (label.get_minimum_size().x * 0.5 if side == 0.0 else 0.0), -px * 1.3)
 	if side == 0.0:
@@ -659,7 +717,7 @@ func _popup(tile: Vector2i, text: String, color: Color, side: float, delay: floa
 	var tween := popup.create_tween()
 	tween.tween_interval(delay)
 	tween.tween_property(popup, "modulate:a", 1.0, 0.08)
-	tween.tween_property(popup, "position:y", start.y - px * 0.8, 0.9).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(popup, "position:y", -px * 0.8, 0.9).as_relative().set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_CUBIC)
 	tween.parallel().tween_property(popup, "modulate:a", 0.0, 0.5).set_delay(0.45)
 	tween.tween_callback(popup.queue_free)
 
@@ -689,7 +747,7 @@ func _effect(tile: Vector2i, delay: float, duration: float, painter: Callable) -
 	node.set_meta("t", 0.0)
 	node.draw.connect(func() -> void: painter.call(node, float(node.get_meta("t"))))
 	node.visible = delay <= 0.0
-	add_child(node)
+	_fx_layer.add_child(node)
 	var tween := node.create_tween()
 	tween.tween_interval(delay)
 	tween.tween_callback(func() -> void: node.visible = true)
