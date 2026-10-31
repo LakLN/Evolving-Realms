@@ -62,7 +62,13 @@ static func key(def: Dictionary) -> String:
 	return "%s@%d" % [def.content_id, int(def.version)]
 
 static func fingerprint(def: Dictionary) -> String:
-	return JSON.stringify({"kind": def.kind, "payload": def.payload, "category": def.get("metadata", {}).get("category", "")}, "", true).sha256_text()
+	var signature := {"kind": def.kind, "payload": def.payload, "category": def.get("metadata", {}).get("category", "")}
+	# A plain material/trophy (only stacking/quality) has no gameplay of its own; it is
+	# distinguished by identity (which events cost it, which creatures drop it), so its
+	# name is part of the fingerprint. Gear, books and every other kind stay strict.
+	if def.kind == "item" and def.payload.keys().all(func(field: Variant) -> bool: return field in ["stackable", "stack_limit", "quality"]):
+		signature.name = str(def.get("name", "")).strip_edges().to_lower()
+	return JSON.stringify(signature, "", true).sha256_text()
 
 func validate(registry: RefCounted, world_id: String, content: Variant) -> Dictionary:
 	var report := {"status": "valid", "errors": [], "missing_capabilities": [], "ordered": [], "fingerprints": {}}

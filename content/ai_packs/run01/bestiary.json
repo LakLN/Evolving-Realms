@@ -1,0 +1,863 @@
+{
+ "schema_version": 1,
+ "request": {
+  "request_id": "run01/bestiary@1",
+  "kind": "collection",
+  "prompt": "Run 01 content: Creatures and variants with habitats and trophies",
+  "context": {
+   "version": 1,
+   "pack": "run01"
+  }
+ },
+ "provenance": {
+  "origin": "ai",
+  "provider": "claude-world-creator",
+  "model": "claude-opus-5-5",
+  "prompt_version": 1,
+  "request_hash": "955a50e1985dc2fcd3aefffcbc92631aad7d5cd5fa73dd64d759830c31f19efa"
+ },
+ "content": {
+  "schema_version": 1,
+  "definitions": [
+   {
+    "content_id": "ai:run01/mossback_hide",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Mossback hide",
+    "description": "A thick pelt grown through with living moss. Hunters' camps still trade for it.",
+    "metadata": {
+     "category": "material"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 20
+    }
+   },
+   {
+    "content_id": "ai:run01/dusk_fang",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Dusk fang",
+    "description": "A fang that stays cold to the touch. Old altars hunger for such things.",
+    "metadata": {
+     "category": "trophy"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 20
+    }
+   },
+   {
+    "content_id": "ai:run01/hare_foot",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Thornhare foot",
+    "description": "Said to bring luck to whoever throws it into still water.",
+    "metadata": {
+     "category": "keepsake"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 10
+    }
+   },
+   {
+    "content_id": "ai:run01/glimmer_antler",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Glimmer antler shard",
+    "description": "Faint light flickers inside the bone, like a candle behind glass.",
+    "metadata": {
+     "category": "material"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 10
+    }
+   },
+   {
+    "content_id": "ai:run01/tide_pearl",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Tide pearl",
+    "description": "A pearl that smells of storms. Swallowed whole, it hardens the skin; offered, it opens doors.",
+    "metadata": {
+     "category": "treasure"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 10
+    }
+   },
+   {
+    "content_id": "ai:run01/lurker_gland",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Lurker gland",
+    "description": "A bitter sac that neutralises venom when pressed onto a wound.",
+    "metadata": {
+     "category": "herb"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 10
+    }
+   },
+   {
+    "content_id": "ai:run01/mossback_boar",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "creature",
+    "name": "Mossback boar",
+    "description": "An old boar carrying a meadow on its back. Slow to anger, hard to stop.",
+    "metadata": {
+     "category": "beast"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/mossback_hide",
+      "version": 1
+     },
+     {
+      "content_id": "core:raw_meat",
+      "version": 1
+     },
+     {
+      "content_id": "core:hide",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "visual": "boar",
+     "disposition": "neutral",
+     "stats": {
+      "max_hp": 26,
+      "attack": 5,
+      "defense": 3
+     },
+     "movement": {
+      "biomes": [
+       "forest",
+       "meadow"
+      ],
+      "leash": 8,
+      "move_per_10000": 6000
+     },
+     "ai": {
+      "detect_radius": 4,
+      "wander_per_10000": 2000,
+      "flee_radius": 0,
+      "flee_below_percent": 0
+     },
+     "loot": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/mossback_hide",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ],
+      "rolls": 1,
+      "entries": [
+       {
+        "content_id": "core:raw_meat",
+        "version": 1,
+        "min": 1,
+        "max": 3,
+        "weight": 2
+       },
+       {
+        "content_id": "core:hide",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "weight": 1
+       }
+      ]
+     },
+     "elements": [
+      "wood"
+     ],
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "wood",
+       "percent": 30
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/dusk_wolf",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "creature",
+    "name": "Dusk wolf",
+    "description": "Hunts at the edges of dangerous woods. Its bite leaves wounds that will not close.",
+    "metadata": {
+     "category": "beast"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/dusk_fang",
+      "version": 1
+     },
+     {
+      "content_id": "core:raw_meat",
+      "version": 1
+     },
+     {
+      "content_id": "core:fang",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/bleed",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "visual": "wolf",
+     "disposition": "hostile",
+     "stats": {
+      "max_hp": 18,
+      "attack": 6,
+      "defense": 1
+     },
+     "movement": {
+      "biomes": [
+       "forest",
+       "meadow"
+      ],
+      "leash": 12,
+      "move_per_10000": 10000
+     },
+     "ai": {
+      "detect_radius": 7,
+      "wander_per_10000": 3500,
+      "flee_radius": 0,
+      "flee_below_percent": 0
+     },
+     "loot": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/dusk_fang",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ],
+      "rolls": 1,
+      "entries": [
+       {
+        "content_id": "core:raw_meat",
+        "version": 1,
+        "min": 1,
+        "max": 2,
+        "weight": 1
+       },
+       {
+        "content_id": "core:fang",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "weight": 1
+       }
+      ]
+     },
+     "elements": [
+      "dark"
+     ],
+     "on_hit_effects": [
+      {
+       "type": "apply_status",
+       "content_id": "core:status/bleed",
+       "version": 1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/thornhare",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "creature",
+    "name": "Thornhare",
+    "description": "A skittish hare with a bramble crest. It bolts long before you reach it.",
+    "metadata": {
+     "category": "herbivore"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:raw_meat",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "visual": "rabbit",
+     "disposition": "passive",
+     "stats": {
+      "max_hp": 6,
+      "attack": 1,
+      "defense": 0
+     },
+     "movement": {
+      "biomes": [
+       "meadow",
+       "forest"
+      ],
+      "leash": 8,
+      "move_per_10000": 10000
+     },
+     "ai": {
+      "detect_radius": 5,
+      "wander_per_10000": 4000,
+      "flee_radius": 4,
+      "flee_below_percent": 100
+     },
+     "loot": {
+      "guaranteed": [
+       {
+        "content_id": "core:raw_meat",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/glimmer_stag",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "creature",
+    "name": "Glimmer stag",
+    "description": "A rare stag whose antlers hold a sliver of light. It never lingers.",
+    "metadata": {
+     "category": "herbivore"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/glimmer_antler",
+      "version": 1
+     },
+     {
+      "content_id": "core:raw_meat",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "visual": "deer",
+     "disposition": "passive",
+     "stats": {
+      "max_hp": 16,
+      "attack": 3,
+      "defense": 1
+     },
+     "movement": {
+      "biomes": [
+       "forest",
+       "meadow"
+      ],
+      "leash": 10,
+      "move_per_10000": 8000
+     },
+     "ai": {
+      "detect_radius": 6,
+      "wander_per_10000": 3000,
+      "flee_radius": 5,
+      "flee_below_percent": 100
+     },
+     "loot": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/glimmer_antler",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ],
+      "rolls": 1,
+      "entries": [
+       {
+        "content_id": "core:raw_meat",
+        "version": 1,
+        "min": 1,
+        "max": 2,
+        "weight": 1
+       }
+      ]
+     },
+     "elements": [
+      "light"
+     ],
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "dark",
+       "percent": 50
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/tidecaller_crab",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "creature",
+    "name": "Tidecaller crab",
+    "description": "A barnacled crab that answers attacks with a numbing pinch.",
+    "metadata": {
+     "category": "crustacean"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:crab_claw",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/slow",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "visual": "crab",
+     "disposition": "neutral",
+     "stats": {
+      "max_hp": 14,
+      "attack": 4,
+      "defense": 4
+     },
+     "movement": {
+      "biomes": [
+       "beach"
+      ],
+      "leash": 6,
+      "move_per_10000": 6000
+     },
+     "ai": {
+      "detect_radius": 3,
+      "wander_per_10000": 1500,
+      "flee_radius": 0,
+      "flee_below_percent": 0
+     },
+     "loot": {
+      "guaranteed": [
+       {
+        "content_id": "core:crab_claw",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     },
+     "elements": [
+      "water"
+     ],
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "water",
+       "percent": 40
+      },
+      {
+       "type": "resistance",
+       "element": "fire",
+       "percent": -25
+      }
+     ],
+     "on_hit_effects": [
+      {
+       "type": "apply_status",
+       "content_id": "core:status/slow",
+       "version": 1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/mire_lurker",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "creature",
+    "name": "Mire lurker",
+    "description": "Something low and patient that waits where land meets water. Its spines carry venom.",
+    "metadata": {
+     "category": "beast"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/lurker_gland",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/poison",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "visual": "lurker",
+     "disposition": "hostile",
+     "stats": {
+      "max_hp": 20,
+      "attack": 5,
+      "defense": 2
+     },
+     "movement": {
+      "biomes": [
+       "meadow",
+       "beach"
+      ],
+      "leash": 5,
+      "move_per_10000": 7000
+     },
+     "ai": {
+      "detect_radius": 4,
+      "wander_per_10000": 1000,
+      "flee_radius": 0,
+      "flee_below_percent": 0
+     },
+     "loot": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/lurker_gland",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     },
+     "elements": [
+      "wood"
+     ],
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "wood",
+       "percent": 50
+      },
+      {
+       "type": "resistance",
+       "element": "fire",
+       "percent": -30
+      }
+     ],
+     "on_hit_effects": [
+      {
+       "type": "apply_status",
+       "content_id": "core:status/poison",
+       "version": 1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/habitat/mossback",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "encounter",
+    "name": "Mossback grounds",
+    "description": "Run 01 habitat.",
+    "metadata": {
+     "category": "encounter"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/mossback_boar",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "creature": {
+      "content_id": "ai:run01/mossback_boar",
+      "version": 1
+     },
+     "biomes": [
+      "forest",
+      "meadow"
+     ],
+     "per_10000": 7,
+     "max_per_chunk": 1,
+     "priority": 45,
+     "conditions": []
+    }
+   },
+   {
+    "content_id": "ai:run01/habitat/dusk_pack",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "encounter",
+    "name": "Dusk hunting grounds",
+    "description": "Run 01 habitat.",
+    "metadata": {
+     "category": "encounter"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/dusk_wolf",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "creature": {
+      "content_id": "ai:run01/dusk_wolf",
+      "version": 1
+     },
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 12,
+     "max_per_chunk": 2,
+     "priority": 40,
+     "conditions": [
+      {
+       "type": "danger",
+       "min": 1,
+       "max": 3
+      },
+      {
+       "type": "biome_share",
+       "biome": "forest",
+       "min_percent": 25
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/habitat/thornhare",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "encounter",
+    "name": "Thornhare warren",
+    "description": "Run 01 habitat.",
+    "metadata": {
+     "category": "encounter"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/thornhare",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "creature": {
+      "content_id": "ai:run01/thornhare",
+      "version": 1
+     },
+     "biomes": [
+      "meadow"
+     ],
+     "per_10000": 14,
+     "max_per_chunk": 2,
+     "priority": 60,
+     "conditions": [
+      {
+       "type": "biome_share",
+       "biome": "meadow",
+       "min_percent": 20
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/habitat/glimmer",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "encounter",
+    "name": "Glimmer trail",
+    "description": "Run 01 habitat.",
+    "metadata": {
+     "category": "encounter"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/glimmer_stag",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "creature": {
+      "content_id": "ai:run01/glimmer_stag",
+      "version": 1
+     },
+     "biomes": [
+      "forest",
+      "meadow"
+     ],
+     "per_10000": 3,
+     "max_per_chunk": 1,
+     "priority": 30,
+     "conditions": [
+      {
+       "type": "danger",
+       "min": 1,
+       "max": 3
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/habitat/tidecaller",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "encounter",
+    "name": "Tidecaller shallows",
+    "description": "Run 01 habitat.",
+    "metadata": {
+     "category": "encounter"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "creature": {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     },
+     "biomes": [
+      "beach"
+     ],
+     "per_10000": 12,
+     "max_per_chunk": 2,
+     "priority": 50,
+     "conditions": [
+      {
+       "type": "biome_share",
+       "biome": "beach",
+       "min_percent": 8
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/habitat/mire",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "encounter",
+    "name": "Mire edge",
+    "description": "Run 01 habitat.",
+    "metadata": {
+     "category": "encounter"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/mire_lurker",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "creature": {
+      "content_id": "ai:run01/mire_lurker",
+      "version": 1
+     },
+     "biomes": [
+      "meadow",
+      "beach"
+     ],
+     "per_10000": 10,
+     "max_per_chunk": 1,
+     "priority": 35,
+     "conditions": [
+      {
+       "type": "near_terrain",
+       "terrain": "water",
+       "radius": 2
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/drop/hare_foot",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Thornhare luck",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/thornhare",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/hare_foot",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/thornhare",
+      "version": 1
+     },
+     "chance_per_10000": 4500,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/hare_foot",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/drop/tide_pearl",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Tidecaller pearls",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/tide_pearl",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     },
+     "chance_per_10000": 5000,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/tide_pearl",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     }
+    }
+   }
+  ]
+ }
+}

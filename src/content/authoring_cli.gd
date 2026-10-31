@@ -4,12 +4,14 @@ const Store = preload("res://src/data/game_store.gd")
 const Pipeline = preload("res://src/content/authoring_pipeline.gd")
 const Context = preload("res://src/content/authoring_context.gd")
 const Packs = preload("res://src/content/starter_pack.gd")
+const ContentPack = preload("res://src/content/content_pack.gd")
 
 func _initialize() -> void:
 	var args := {}
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--") and arg.contains("="):
 			args[arg.get_slice("=", 0).trim_prefix("--")] = arg.substr(arg.find("=") + 1)
+	if args.get("command", "") == "pack-check": return finish(_pack_check(args), args) # Own throwaway database.
 	if not args.has("database") or not str(args.database).is_absolute_path(): return finish({"error": "Explicit absolute --database is required"}, args)
 	var store := Store.new()
 	if not store.open(args.database): return finish({"error": store.last_error}, args)
@@ -38,10 +40,31 @@ func _initialize() -> void:
 		"reject": result = tool.reject(world_id, args.get("proposal", ""), args.get("reason", ""))
 		"proposals": result = {"proposals": tool.summaries(world_id)}
 		"registered": result = {"registered": tool.registered(world_id)}
+		"pack-status", "pack-apply":
+			var packs := ContentPack.new()
+			var pack := packs.load_pack(args.get("pack", ""))
+			if pack.is_empty(): result = {"error": packs.last_error}
+			else:
+				if args.has("create-world"):
+					# A fresh World (random seed unless --seed): every region of it is new,
+					# so encounters and places of the pack can appear from the first Run on.
+					var seed_value := int(args.get("seed", str(randi() & 0x7fffffff)))
+					var created: Dictionary = store.create_world(args["create-world"], seed_value, 1, Packs.blueprint(seed_value))
+					if created.is_empty(): result = {"error": store.last_error}
+					world_id = created.get("world_id", "")
+				if not result.has("error") and store.load_world(world_id).is_empty(): result = {"error": "Unknown --world; pass a World ID or --create-world=<name>"}
+				elif not result.has("error"):
+					if args.command == "pack-status": result = {"pack": pack.manifest.pack_id, "world": world_id, "modules": packs.status(store, world_id, pack)}
+					else: result = packs.apply(store, world_id, pack, Array(str(args.get("modules", "")).split(",", false)))
 		_: result = {"error": "Unknown authoring command"}
 	if result.is_empty(): result = {"error": tool.last_error if not tool.last_error.is_empty() else store.last_error}
 	store.close()
 	finish(result, args)
+
+func _pack_check(args: Dictionary) -> Dictionary:
+	var packs := ContentPack.new()
+	var pack := packs.load_pack(args.get("pack", ""))
+	return {"error": packs.last_error} if pack.is_empty() else packs.check(pack)
 
 func finish(result: Dictionary, args: Dictionary) -> void:
 	if args.has("output"):

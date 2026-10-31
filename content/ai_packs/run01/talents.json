@@ -1,0 +1,431 @@
+{
+ "schema_version": 1,
+ "request": {
+  "request_id": "run01/talents@1",
+  "kind": "collection",
+  "prompt": "Run 01 content: Talents with distinct triggers, trade-offs and synergies",
+  "context": {
+   "version": 1,
+   "pack": "run01"
+  }
+ },
+ "provenance": {
+  "origin": "ai",
+  "provider": "claude-world-creator",
+  "model": "claude-opus-5-5",
+  "prompt_version": 1,
+  "request_hash": "8d9189f86f009d05c454580e2a5dbc20d574fefaebb300877983f381031e4497"
+ },
+ "content": {
+  "schema_version": 1,
+  "definitions": [
+   {
+    "content_id": "ai:run01/talent/pathfinder",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "talent",
+    "name": "Pathfinder",
+    "description": "Wanderer's instinct: herbs turn up along new trails and movement techniques cost less.",
+    "metadata": {
+     "category": "talent"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:herb",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "rank": "F",
+     "unique": false,
+     "awakening": {
+      "weight": 100
+     },
+     "passive": [
+      {
+       "type": "skill_modifier",
+       "tags": [
+        "movement"
+       ],
+       "cost_percent": -25
+      }
+     ],
+     "abilities": [
+      {
+       "id": "trail_herbs",
+       "trigger": "on_explore",
+       "limits": {
+        "every_tiles": 70,
+        "charges": 20
+       },
+       "effects": [
+        {
+         "type": "grant_item",
+         "content_id": "core:herb",
+         "version": 1,
+         "quantity": 1
+        }
+       ]
+      }
+     ],
+     "limitations": [
+      "Only newly discovered tiles count.",
+      "Limited finds per run."
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/talent/magpie",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "talent",
+    "name": "Magpie",
+    "description": "Eyes for shiny things: chests sometimes hold a tide pearl for you, and gathering may yield twice.",
+    "metadata": {
+     "category": "talent"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tide_pearl",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "rank": "E",
+     "unique": false,
+     "awakening": {
+      "weight": 100
+     },
+     "abilities": [
+      {
+       "id": "glint",
+       "trigger": "on_open",
+       "conditions": [
+        {
+         "type": "chance_per_10000",
+         "value": 5000
+        }
+       ],
+       "effects": [
+        {
+         "type": "grant_item",
+         "content_id": "ai:run01/tide_pearl",
+         "version": 1,
+         "quantity": 1
+        }
+       ]
+      },
+      {
+       "id": "second_look",
+       "trigger": "on_gather",
+       "conditions": [
+        {
+         "type": "chance_per_10000",
+         "value": 2000
+        }
+       ],
+       "effects": [
+        {
+         "type": "extra_loot_roll"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/talent/quarry_sense",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "talent",
+    "name": "Quarry Sense",
+    "description": "You sense nearby objects through the fog and learn twice as much from hunting shy animals.",
+    "metadata": {
+     "category": "talent"
+    },
+    "dependencies": [],
+    "payload": {
+     "rank": "D",
+     "unique": false,
+     "awakening": {
+      "weight": 100
+     },
+     "passive": [
+      {
+       "type": "perception",
+       "hidden": false,
+       "sense_radius": 9
+      }
+     ],
+     "abilities": [
+      {
+       "id": "patient_hunt",
+       "trigger": "on_kill",
+       "conditions": [
+        {
+         "type": "target_disposition",
+         "values": [
+          "passive"
+         ]
+        }
+       ],
+       "effects": [
+        {
+         "type": "xp_bonus",
+         "percent": 100
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/talent/tidebound",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "talent",
+    "name": "Tidebound",
+    "description": "Born of the shore: resistant to water and slowly mended by the surf.",
+    "metadata": {
+     "category": "talent"
+    },
+    "dependencies": [],
+    "payload": {
+     "rank": "C",
+     "unique": false,
+     "awakening": {
+      "weight": 100,
+      "conditions": [
+       {
+        "type": "spawn_biome",
+        "values": [
+         "beach"
+        ]
+       }
+      ]
+     },
+     "passive": [
+      {
+       "type": "effect_modifier",
+       "modifier": {
+        "type": "resistance",
+        "element": "water",
+        "percent": 40
+       }
+      }
+     ],
+     "abilities": [
+      {
+       "id": "surf_mend",
+       "trigger": "on_turn",
+       "quiet": true,
+       "conditions": [
+        {
+         "type": "biome",
+         "values": [
+          "beach"
+         ]
+        },
+        {
+         "type": "every_turns",
+         "value": 6
+        }
+       ],
+       "effects": [
+        {
+         "type": "heal",
+         "amount": 2
+        }
+       ]
+      }
+     ],
+     "limitations": [
+      "Only awakens in runs that start on a beach.",
+      "Healing only while on the beach."
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/talent/mossheart",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "talent",
+    "name": "Mossheart",
+    "description": "Bark-like skin turns blows and the forest slowly draws poison from you.",
+    "metadata": {
+     "category": "talent"
+    },
+    "dependencies": [],
+    "payload": {
+     "rank": "B",
+     "unique": false,
+     "awakening": {
+      "weight": 100
+     },
+     "passive": [
+      {
+       "type": "stat",
+       "stat": "defense",
+       "add": 2
+      }
+     ],
+     "abilities": [
+      {
+       "id": "bark_turn",
+       "trigger": "on_hit_taken",
+       "conditions": [
+        {
+         "type": "chance_per_10000",
+         "value": 3000
+        }
+       ],
+       "effects": [
+        {
+         "type": "damage_reduction",
+         "amount": 2
+        }
+       ]
+      },
+      {
+       "id": "green_cleanse",
+       "trigger": "on_turn",
+       "conditions": [
+        {
+         "type": "every_turns",
+         "value": 12
+        }
+       ],
+       "effects": [
+        {
+         "type": "cleanse",
+         "harmful": true
+        }
+       ]
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/talent/stormblood",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "talent",
+    "name": "Stormblood",
+    "description": "Lightning in the veins: your blows sometimes stun, but your body is fragile.",
+    "metadata": {
+     "category": "talent"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:status/stun",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "rank": "A",
+     "unique": false,
+     "awakening": {
+      "weight": 100
+     },
+     "passive": [
+      {
+       "type": "stat",
+       "stat": "max_hp",
+       "percent": -15
+      }
+     ],
+     "abilities": [
+      {
+       "id": "thunderclap",
+       "trigger": "on_attack",
+       "conditions": [
+        {
+         "type": "chance_per_10000",
+         "value": 1500
+        }
+       ],
+       "limits": {
+        "cooldown_turns": 6
+       },
+       "effects": [
+        {
+         "type": "apply_status",
+         "content_id": "core:status/stun",
+         "version": 1
+        }
+       ]
+      }
+     ],
+     "limitations": [
+      "Max HP -15%.",
+      "At most one stun every 6 turns."
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/talent/ember_soul",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "talent",
+    "name": "Ember Soul",
+    "description": "Fire answers you: fire damage +30% and your strikes may set foes alight. Your body burns too.",
+    "metadata": {
+     "category": "talent"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:status/burn",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "rank": "S",
+     "unique": false,
+     "awakening": {
+      "weight": 100
+     },
+     "passive": [
+      {
+       "type": "effect_modifier",
+       "modifier": {
+        "type": "damage",
+        "element": "fire",
+        "percent": 30
+       }
+      },
+      {
+       "type": "effect_modifier",
+       "modifier": {
+        "type": "resistance",
+        "element": "water",
+        "percent": -25
+       }
+      }
+     ],
+     "abilities": [
+      {
+       "id": "kindle",
+       "trigger": "on_attack",
+       "conditions": [
+        {
+         "type": "chance_per_10000",
+         "value": 2500
+        }
+       ],
+       "effects": [
+        {
+         "type": "apply_status",
+         "content_id": "core:status/burn",
+         "version": 1
+        }
+       ]
+      }
+     ],
+     "limitations": [
+      "Water hurts you 25% more."
+     ]
+    }
+   }
+  ]
+ }
+}

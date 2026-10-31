@@ -1,0 +1,1004 @@
+{
+ "schema_version": 1,
+ "request": {
+  "request_id": "run01/places@1",
+  "kind": "collection",
+  "prompt": "Run 01 content: Mysterious places with choices, chains and random outcomes",
+  "context": {
+   "version": 1,
+   "pack": "run01"
+  }
+ },
+ "provenance": {
+  "origin": "ai",
+  "provider": "claude-world-creator",
+  "model": "claude-opus-5-5",
+  "prompt_version": 1,
+  "request_hash": "45638783b144641635079a1de06d75798c63456cea68d253ec9115b5b97523fb"
+ },
+ "content": {
+  "schema_version": 1,
+  "definitions": [
+   {
+    "content_id": "ai:run01/event/well_wish",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Wishing well",
+    "description": "",
+    "metadata": {
+     "category": "opportunity"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tide_pearl",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/windrunner",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/harefoot_charm",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/slow",
+      "version": 1
+     },
+     {
+      "content_id": "core:coin",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "neutral",
+     "message": "The coins vanish into the dark water.",
+     "outcomes": [
+      {
+       "type": "chance",
+       "chance_per_10000": 5500,
+       "outcomes": [
+        {
+         "type": "loot",
+         "table": {
+          "rolls": 1,
+          "entries": [
+           {
+            "content_id": "ai:run01/tide_pearl",
+            "version": 1,
+            "min": 1,
+            "max": 2,
+            "weight": 4
+           },
+           {
+            "content_id": "ai:run01/book/windrunner",
+            "version": 1,
+            "min": 1,
+            "max": 1,
+            "weight": 2
+           },
+           {
+            "content_id": "ai:run01/harefoot_charm",
+            "version": 1,
+            "min": 1,
+            "max": 1,
+            "weight": 1,
+            "quality": {
+             "pho_thong": 30,
+             "uu_tu": 40,
+             "hiem_co": 22,
+             "su_thi": 8
+            }
+           }
+          ]
+         }
+        },
+        {
+         "type": "xp",
+         "amount": 20
+        }
+       ],
+       "message": "Something glints and floats back up.",
+       "otherwise": [
+        {
+         "type": "apply_status",
+         "content_id": "core:status/slow",
+         "version": 1
+        }
+       ],
+       "otherwise_message": "A cold breath rises from the well and settles in your bones."
+      }
+     ],
+     "cost": {
+      "items": [
+       {
+        "content_id": "core:coin",
+        "version": 1,
+        "quantity": 3
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/event/well_luck",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Lucky throw",
+    "description": "",
+    "metadata": {
+     "category": "reward"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/book/windrunner",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/tide_pearl",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/hare_foot",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "boon",
+     "message": "The hare's foot sinks without a ripple. The water clears.",
+     "outcomes": [
+      {
+       "type": "loot",
+       "table": {
+        "guaranteed": [
+         {
+          "content_id": "ai:run01/book/windrunner",
+          "version": 1,
+          "min": 1,
+          "max": 1
+         }
+        ],
+        "rolls": 1,
+        "entries": [
+         {
+          "content_id": "ai:run01/tide_pearl",
+          "version": 1,
+          "min": 1,
+          "max": 2,
+          "weight": 1
+         }
+        ]
+       }
+      },
+      {
+       "type": "xp",
+       "amount": 30
+      }
+     ],
+     "cost": {
+      "items": [
+       {
+        "content_id": "ai:run01/hare_foot",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/event/altar_pray",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Moonlit prayer",
+    "description": "",
+    "metadata": {
+     "category": "blessing"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:status/ward",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "boon",
+     "message": "Pale light washes over you.",
+     "outcomes": [
+      {
+       "type": "heal",
+       "amount": 10
+      },
+      {
+       "type": "cleanse",
+       "harmful": true
+      },
+      {
+       "type": "apply_status",
+       "content_id": "core:status/ward",
+       "version": 1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/event/altar_blood",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Blood offering",
+    "description": "",
+    "metadata": {
+     "category": "curse"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/duskfang_blade",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/bleed",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "bane",
+     "message": "You cut your palm over the stone.",
+     "outcomes": [
+      {
+       "type": "damage",
+       "amount": 4
+      },
+      {
+       "type": "chance",
+       "chance_per_10000": 4500,
+       "outcomes": [
+        {
+         "type": "loot",
+         "table": {
+          "guaranteed": [
+           {
+            "content_id": "ai:run01/duskfang_blade",
+            "version": 1,
+            "min": 1,
+            "max": 1,
+            "quality": {
+             "uu_tu": 40,
+             "hiem_co": 40,
+             "su_thi": 20
+            }
+           }
+          ]
+         }
+        }
+       ],
+       "message": "The altar drinks, and a blade rises from the moss.",
+       "otherwise": [
+        {
+         "type": "apply_status",
+         "content_id": "core:status/bleed",
+         "version": 1
+        },
+        {
+         "type": "xp",
+         "amount": 10
+        }
+       ],
+       "otherwise_message": "The altar drinks, and gives nothing back."
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/event/camp_search",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Abandoned camp",
+    "description": "",
+    "metadata": {
+     "category": "reward"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:raw_meat",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/hunters_mark",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/stoneskin",
+      "version": 1
+     },
+     {
+      "content_id": "core:herb",
+      "version": 1
+     },
+     {
+      "content_id": "core:coin",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "boon",
+     "message": "Someone left in a hurry.",
+     "outcomes": [
+      {
+       "type": "loot",
+       "table": {
+        "rolls": 2,
+        "entries": [
+         {
+          "content_id": "core:raw_meat",
+          "version": 1,
+          "min": 1,
+          "max": 2,
+          "weight": 3
+         },
+         {
+          "content_id": "ai:run01/book/hunters_mark",
+          "version": 1,
+          "min": 1,
+          "max": 1,
+          "weight": 2
+         },
+         {
+          "content_id": "ai:run01/book/stoneskin",
+          "version": 1,
+          "min": 1,
+          "max": 1,
+          "weight": 1
+         },
+         {
+          "content_id": "core:herb",
+          "version": 1,
+          "min": 1,
+          "max": 3,
+          "weight": 2
+         },
+         {
+          "content_id": "core:coin",
+          "version": 1,
+          "min": 4,
+          "max": 9,
+          "weight": 2
+         }
+        ]
+       }
+      },
+      {
+       "type": "xp",
+       "amount": 15
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/event/camp_trade",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Hunter's ledger",
+    "description": "",
+    "metadata": {
+     "category": "reward"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/book/predators_instinct",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/mossback_mantle",
+      "version": 1
+     },
+     {
+      "content_id": "core:coin",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/mossback_hide",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "boon",
+     "message": "You leave the hides on the rack and take what the ledger promises.",
+     "outcomes": [
+      {
+       "type": "loot",
+       "table": {
+        "guaranteed": [
+         {
+          "content_id": "ai:run01/book/predators_instinct",
+          "version": 1,
+          "min": 1,
+          "max": 1
+         }
+        ],
+        "rolls": 1,
+        "entries": [
+         {
+          "content_id": "ai:run01/mossback_mantle",
+          "version": 1,
+          "min": 1,
+          "max": 1,
+          "weight": 1,
+          "quality": {
+           "pho_thong": 30,
+           "uu_tu": 40,
+           "hiem_co": 22,
+           "su_thi": 8
+          }
+         },
+         {
+          "content_id": "core:coin",
+          "version": 1,
+          "min": 10,
+          "max": 20,
+          "weight": 2
+         }
+        ]
+       }
+      },
+      {
+       "type": "xp",
+       "amount": 40
+      }
+     ],
+     "cost": {
+      "items": [
+       {
+        "content_id": "ai:run01/mossback_hide",
+        "version": 1,
+        "quantity": 2
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/event/spores",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Spore ring",
+    "description": "",
+    "metadata": {
+     "category": "hazard"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:status/regeneration",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/poison",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "neutral",
+     "message": "A cloud of spores bursts around your feet.",
+     "outcomes": [
+      {
+       "type": "chance",
+       "chance_per_10000": 5000,
+       "outcomes": [
+        {
+         "type": "apply_status",
+         "content_id": "core:status/regeneration",
+         "version": 1
+        },
+        {
+         "type": "sate",
+         "amount": 60
+        }
+       ],
+       "message": "They taste sweet and leave you warm.",
+       "otherwise": [
+        {
+         "type": "apply_status",
+         "content_id": "core:status/poison",
+         "version": 1
+        },
+        {
+         "type": "damage",
+         "amount": 2
+        }
+       ],
+       "otherwise_message": "They burn in your throat."
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/event/rune_attune",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Rune circle",
+    "description": "",
+    "metadata": {
+     "category": "blessing"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/book/tidal_lash",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/ward",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/glimmer_antler",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "boon",
+     "message": "The antler shard flares and crumbles; the runes drink its light.",
+     "outcomes": [
+      {
+       "type": "restore",
+       "resource": "energy",
+       "amount": 20
+      },
+      {
+       "type": "xp",
+       "amount": 40
+      },
+      {
+       "type": "chance",
+       "chance_per_10000": 3500,
+       "outcomes": [
+        {
+         "type": "grant_items",
+         "items": [
+          {
+           "content_id": "ai:run01/book/tidal_lash",
+           "version": 1,
+           "quantity": 1
+          }
+         ]
+        }
+       ],
+       "message": "A page of runes peels away from the stone.",
+       "otherwise": [
+        {
+         "type": "apply_status",
+         "content_id": "core:status/ward",
+         "version": 1
+        }
+       ],
+       "otherwise_message": "The light settles over your skin."
+      }
+     ],
+     "cost": {
+      "items": [
+       {
+        "content_id": "ai:run01/glimmer_antler",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/event/grotto_dive",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "world_event",
+    "name": "Pearl dive",
+    "description": "",
+    "metadata": {
+     "category": "resource"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tide_pearl",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "tone": "neutral",
+     "message": "You hold your breath and slip under the surface.",
+     "outcomes": [
+      {
+       "type": "chance",
+       "chance_per_10000": 6000,
+       "outcomes": [
+        {
+         "type": "loot",
+         "table": {
+          "guaranteed": [
+           {
+            "content_id": "ai:run01/tide_pearl",
+            "version": 1,
+            "min": 1,
+            "max": 2
+           }
+          ]
+         }
+        },
+        {
+         "type": "quench",
+         "amount": 80
+        }
+       ],
+       "message": "Your fingers close on something smooth.",
+       "otherwise": [
+        {
+         "type": "damage",
+         "amount": 3
+        },
+        {
+         "type": "quench",
+         "amount": 80
+        }
+       ],
+       "otherwise_message": "A wave slams you against the rocks."
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/place/whispering_well",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "location",
+    "name": "Whispering well",
+    "description": "A moss-choked well. Coins glint far below, and something whispers back.",
+    "metadata": {
+     "category": "anomaly"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/event/well_wish",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/event/well_luck",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "category": "anomaly",
+     "visual": "leyline",
+     "spawn": {
+      "biomes": [
+       "forest",
+       "meadow"
+      ],
+      "per_10000": 3,
+      "priority": 40,
+      "conditions": []
+     },
+     "discovery": {
+      "mode": "proximity",
+      "radius": 3
+     },
+     "interactions": [
+      {
+       "id": "wish",
+       "verb": "Throw in 3 coins",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/well_wish",
+        "version": 1
+       },
+       "exclusive": true
+      },
+      {
+       "id": "luck",
+       "verb": "Throw in a thornhare foot",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/well_luck",
+        "version": 1
+       },
+       "exclusive": true
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/place/moon_altar",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "location",
+    "name": "Moonlit altar",
+    "description": "An altar that holds moonlight even at noon. It accepts prayer, or blood.",
+    "metadata": {
+     "category": "shrine"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/event/altar_pray",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/event/altar_blood",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "category": "shrine",
+     "visual": "shrine",
+     "spawn": {
+      "biomes": [
+       "forest"
+      ],
+      "per_10000": 3,
+      "priority": 35,
+      "conditions": [
+       {
+        "type": "danger",
+        "min": 1,
+        "max": 3
+       }
+      ]
+     },
+     "discovery": {
+      "mode": "visible"
+     },
+     "interactions": [
+      {
+       "id": "pray",
+       "verb": "Kneel and pray",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/altar_pray",
+        "version": 1
+       },
+       "exclusive": true
+      },
+      {
+       "id": "blood",
+       "verb": "Offer your blood",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/altar_blood",
+        "version": 1
+       },
+       "exclusive": true
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/place/hunters_camp",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "location",
+    "name": "Abandoned hunters' camp",
+    "description": "A collapsed lean-to, a cold firepit and a ledger promising payment for mossback hides.",
+    "metadata": {
+     "category": "ruin"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/event/camp_search",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/event/camp_trade",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "category": "ruin",
+     "visual": "buried",
+     "spawn": {
+      "biomes": [
+       "forest",
+       "meadow"
+      ],
+      "per_10000": 3,
+      "priority": 45,
+      "conditions": []
+     },
+     "discovery": {
+      "mode": "search",
+      "radius": 3
+     },
+     "interactions": [
+      {
+       "id": "search",
+       "verb": "Search the camp",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/camp_search",
+        "version": 1
+       }
+      },
+      {
+       "id": "trade",
+       "verb": "Leave 2 mossback hides",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/camp_trade",
+        "version": 1
+       },
+       "after": "search"
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/place/spore_ring",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "location",
+    "name": "Spore ring",
+    "description": "A perfect circle of pale mushrooms. Stepping inside stirs them.",
+    "metadata": {
+     "category": "hazard"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/event/spores",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "category": "hazard",
+     "visual": "vent",
+     "spawn": {
+      "biomes": [
+       "forest",
+       "meadow"
+      ],
+      "per_10000": 3,
+      "priority": 50,
+      "conditions": []
+     },
+     "discovery": {
+      "mode": "proximity",
+      "radius": 2
+     },
+     "interactions": [
+      {
+       "id": "enter",
+       "verb": "Step into the ring",
+       "trigger": "enter",
+       "event": {
+        "content_id": "ai:run01/event/spores",
+        "version": 1
+       }
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/place/rune_circle",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "location",
+    "name": "Rune circle",
+    "description": "Standing stones carved with runes that only wake for those who can see them.",
+    "metadata": {
+     "category": "anomaly"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/event/rune_attune",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/skill/hunters_mark",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "category": "anomaly",
+     "visual": "ritual",
+     "spawn": {
+      "biomes": [
+       "meadow",
+       "forest"
+      ],
+      "per_10000": 2,
+      "priority": 30,
+      "conditions": [
+       {
+        "type": "danger",
+        "min": 1,
+        "max": 3
+       }
+      ]
+     },
+     "discovery": {
+      "mode": "hidden",
+      "radius": 3,
+      "conditions": [
+       {
+        "type": "any_of",
+        "conditions": [
+         {
+          "type": "perception"
+         },
+         {
+          "type": "level",
+          "min": 3
+         },
+         {
+          "type": "skill_known",
+          "content_id": "ai:run01/skill/hunters_mark"
+         }
+        ]
+       }
+      ]
+     },
+     "interactions": [
+      {
+       "id": "attune",
+       "verb": "Offer a glimmer antler shard",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/rune_attune",
+        "version": 1
+       }
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/place/pearl_grotto",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "location",
+    "name": "Pearl grotto",
+    "description": "A tide pool hidden among the rocks, its floor pale with shells.",
+    "metadata": {
+     "category": "resource_site"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/event/grotto_dive",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "category": "resource_site",
+     "visual": "spring_site",
+     "spawn": {
+      "biomes": [
+       "beach"
+      ],
+      "per_10000": 25,
+      "priority": 40,
+      "conditions": [
+       {
+        "type": "near_terrain",
+        "terrain": "water",
+        "radius": 2
+       }
+      ]
+     },
+     "discovery": {
+      "mode": "visible"
+     },
+     "interactions": [
+      {
+       "id": "dive",
+       "verb": "Dive for pearls",
+       "trigger": "interact",
+       "event": {
+        "content_id": "ai:run01/event/grotto_dive",
+        "version": 1
+       }
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

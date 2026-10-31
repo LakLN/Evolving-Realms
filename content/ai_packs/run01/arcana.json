@@ -1,0 +1,660 @@
+{
+ "schema_version": 1,
+ "request": {
+  "request_id": "run01/arcana@1",
+  "kind": "collection",
+  "prompt": "Run 01 content: Statuses, skills with synergies, and where their manuals are found",
+  "context": {
+   "version": 1,
+   "pack": "run01"
+  }
+ },
+ "provenance": {
+  "origin": "ai",
+  "provider": "claude-world-creator",
+  "model": "claude-opus-5-5",
+  "prompt_version": 1,
+  "request_hash": "e567164e5b1d529c54a25048ba9135eba27c0b51ead5a03a9fb214389e57fdf0"
+ },
+ "content": {
+  "schema_version": 1,
+  "definitions": [
+   {
+    "content_id": "ai:run01/status/marked",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "status",
+    "name": "Marked",
+    "description": "Exposed weak points: defense -2.",
+    "metadata": {
+     "category": "status"
+    },
+    "dependencies": [],
+    "payload": {
+     "element": "neutral",
+     "duration": 4,
+     "max_stacks": 1,
+     "refresh": "refresh",
+     "harmful": true,
+     "skip_every": 0,
+     "modifiers": [
+      {
+       "stat": "defense",
+       "add": -2
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/status/stoneskin",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "status",
+    "name": "Stoneskin",
+    "description": "Skin like bark and stone: defense +4, attack -1.",
+    "metadata": {
+     "category": "status"
+    },
+    "dependencies": [],
+    "payload": {
+     "element": "earth",
+     "duration": 4,
+     "max_stacks": 1,
+     "refresh": "refresh",
+     "harmful": false,
+     "skip_every": 0,
+     "modifiers": [
+      {
+       "stat": "defense",
+       "add": 4
+      },
+      {
+       "stat": "attack",
+       "add": -1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/skill/hunters_mark",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "skill",
+    "name": "Hunter's Mark",
+    "description": "Mark a creature in sight; its defense drops for a few turns.",
+    "metadata": {
+     "category": "skill"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/status/marked",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "type": "active",
+     "tags": [
+      "ranged",
+      "control"
+     ],
+     "use": {
+      "cost": {
+       "energy": 3
+      },
+      "cooldown_turns": 6,
+      "target": {
+       "kind": "creature",
+       "range": 5,
+       "line_of_sight": true
+      }
+     },
+     "effects": [
+      {
+       "type": "apply_status",
+       "content_id": "ai:run01/status/marked",
+       "version": 1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/skill/predators_instinct",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "skill",
+    "name": "Predator's Instinct",
+    "description": "Passive: your attacks deal 35% more damage to marked prey.",
+    "metadata": {
+     "category": "skill"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/skill/hunters_mark",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/status/marked",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "type": "passive",
+     "tags": [
+      "melee"
+     ],
+     "learn": {
+      "conditions": [
+       {
+        "type": "skill_known",
+        "content_id": "ai:run01/skill/hunters_mark"
+       }
+      ]
+     },
+     "passive": [
+      {
+       "type": "effect_modifier",
+       "modifier": {
+        "type": "damage",
+        "percent": 35,
+        "conditions": [
+         {
+          "type": "target_status",
+          "status": "ai:run01/status/marked"
+         }
+        ]
+       }
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/skill/tidal_lash",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "skill",
+    "name": "Tidal Lash",
+    "description": "A whip of water that strikes at range and numbs the target.",
+    "metadata": {
+     "category": "skill"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:status/slow",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "type": "active",
+     "tags": [
+      "ranged",
+      "elemental"
+     ],
+     "elements": [
+      "water"
+     ],
+     "learn": {
+      "conditions": [
+       {
+        "type": "level",
+        "min": 2
+       }
+      ]
+     },
+     "use": {
+      "cost": {
+       "energy": 4
+      },
+      "cooldown_turns": 3,
+      "target": {
+       "kind": "creature",
+       "range": 3,
+       "line_of_sight": true
+      }
+     },
+     "effects": [
+      {
+       "type": "strike",
+       "attack_percent": 80
+      },
+      {
+       "type": "apply_status",
+       "content_id": "core:status/slow",
+       "version": 1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/skill/verdant_pulse",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "skill",
+    "name": "Verdant Pulse",
+    "description": "Draw on the green: heal a fifth of your health and purge harmful effects.",
+    "metadata": {
+     "category": "skill"
+    },
+    "dependencies": [],
+    "payload": {
+     "type": "active",
+     "tags": [
+      "restoration"
+     ],
+     "use": {
+      "cost": {
+       "energy": 6
+      },
+      "cooldown_turns": 10,
+      "target": {
+       "kind": "self"
+      }
+     },
+     "effects": [
+      {
+       "type": "heal",
+       "percent_of_max": 20
+      },
+      {
+       "type": "cleanse",
+       "harmful": true
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/skill/stoneskin",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "skill",
+    "name": "Stoneskin",
+    "description": "Harden yourself: defense +4 but attack -1 for 4 turns.",
+    "metadata": {
+     "category": "skill"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/status/stoneskin",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "type": "active",
+     "tags": [
+      "defense",
+      "buff"
+     ],
+     "learn": {
+      "conditions": [
+       {
+        "type": "stat",
+        "stat": "defense",
+        "min": 2
+       }
+      ]
+     },
+     "use": {
+      "cost": {
+       "energy": 4
+      },
+      "cooldown_turns": 12,
+      "target": {
+       "kind": "self"
+      }
+     },
+     "effects": [
+      {
+       "type": "apply_status",
+       "content_id": "ai:run01/status/stoneskin",
+       "version": 1
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/skill/windrunner",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "skill",
+    "name": "Windrunner",
+    "description": "Passive: movement techniques reach 1 tile further and cost 30% less.",
+    "metadata": {
+     "category": "skill"
+    },
+    "dependencies": [],
+    "payload": {
+     "type": "passive",
+     "tags": [
+      "movement"
+     ],
+     "passive": [
+      {
+       "type": "skill_modifier",
+       "tags": [
+        "movement"
+       ],
+       "range_add": 1,
+       "cost_percent": -30
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/book/hunters_mark",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Manual: Hunter's Mark",
+    "description": "A worn manual. Study it (U) to learn its technique.",
+    "metadata": {
+     "category": "book"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/skill/hunters_mark",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 5,
+     "skill_book": {
+      "skill": {
+       "content_id": "ai:run01/skill/hunters_mark",
+       "version": 1
+      },
+      "consume_on_learn": true
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/book/predators_instinct",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Manual: Predator's Instinct",
+    "description": "A worn manual. Study it (U) to learn its technique.",
+    "metadata": {
+     "category": "book"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/skill/predators_instinct",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 5,
+     "skill_book": {
+      "skill": {
+       "content_id": "ai:run01/skill/predators_instinct",
+       "version": 1
+      },
+      "consume_on_learn": true
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/book/tidal_lash",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Manual: Tidal Lash",
+    "description": "A worn manual. Study it (U) to learn its technique.",
+    "metadata": {
+     "category": "book"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/skill/tidal_lash",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 5,
+     "skill_book": {
+      "skill": {
+       "content_id": "ai:run01/skill/tidal_lash",
+       "version": 1
+      },
+      "consume_on_learn": true
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/book/verdant_pulse",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Scroll: Verdant Pulse",
+    "description": "A worn manual. Study it (U) to learn its technique.",
+    "metadata": {
+     "category": "book"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/skill/verdant_pulse",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 5,
+     "skill_book": {
+      "skill": {
+       "content_id": "ai:run01/skill/verdant_pulse",
+       "version": 1
+      },
+      "consume_on_learn": true
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/book/stoneskin",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Manual: Stoneskin",
+    "description": "A worn manual. Study it (U) to learn its technique.",
+    "metadata": {
+     "category": "book"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/skill/stoneskin",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 5,
+     "skill_book": {
+      "skill": {
+       "content_id": "ai:run01/skill/stoneskin",
+       "version": 1
+      },
+      "consume_on_learn": true
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/book/windrunner",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Manual: Windrunner",
+    "description": "A worn manual. Study it (U) to learn its technique.",
+    "metadata": {
+     "category": "book"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/skill/windrunner",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": true,
+     "stack_limit": 5,
+     "skill_book": {
+      "skill": {
+       "content_id": "ai:run01/skill/windrunner",
+       "version": 1
+      },
+      "consume_on_learn": true
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/books/chest",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Wanderer's manuals",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:weathered_chest",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/hunters_mark",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/stoneskin",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/verdant_pulse",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/windrunner",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "core:weathered_chest",
+      "version": 1
+     },
+     "chance_per_10000": 3500,
+     "table": {
+      "rolls": 1,
+      "entries": [
+       {
+        "content_id": "ai:run01/book/hunters_mark",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "weight": 3
+       },
+       {
+        "content_id": "ai:run01/book/stoneskin",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "weight": 3
+       },
+       {
+        "content_id": "ai:run01/book/verdant_pulse",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "weight": 2
+       },
+       {
+        "content_id": "ai:run01/book/windrunner",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "weight": 2
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/books/dusk_wolf",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Predator's lore",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/dusk_wolf",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/predators_instinct",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/dusk_wolf",
+      "version": 1
+     },
+     "chance_per_10000": 1500,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/book/predators_instinct",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/books/tidecaller",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Tide-scrawled manual",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/book/tidal_lash",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     },
+     "chance_per_10000": 1500,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/book/tidal_lash",
+        "version": 1,
+        "min": 1,
+        "max": 1
+       }
+      ]
+     }
+    }
+   }
+  ]
+ }
+}

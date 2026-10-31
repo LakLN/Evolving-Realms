@@ -200,9 +200,12 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 			return {"error": "%s: needs %s x%d" % [interaction.get("verb", "Explore"), str(session._definition(item.content_id, int(item.version)).get("name", item.content_id)), int(item.get("quantity", 1))]}
 		inventory = removal.inventory
 	var key := "location-v1/%d/%d/%d/%s@%d/%s/%s" % [int(session.world.seed), int(session.world.generation_version), int(session.run.seed), event.content_id, int(event.version), instance.instance_id, interaction.id]
+	# `chance` branches resolve first (fixed per Run and place); nothing else changes.
+	var resolved: Dictionary = Events.effective(p.outcomes, key)
+	var outcomes: Array = resolved.outcomes
 	var grants: Array = []
-	for index in p.outcomes.size():
-		var outcome: Dictionary = p.outcomes[index]
+	for index in outcomes.size():
+		var outcome: Dictionary = outcomes[index]
 		if outcome.type == "grant_items":
 			for item in outcome.items: grants.append({"content_id": item.content_id, "version": int(item.version), "quantity": int(item.get("quantity", 1))})
 		elif outcome.type == "loot":
@@ -213,9 +216,9 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 		if award.is_empty():
 			return {"error": tools.last_error}
 	var trial: Dictionary = session.stats().duplicate(true)
-	var changes := ItemEffects.apply(trial, p.outcomes.filter(func(o: Dictionary) -> bool: return o.type in ItemEffects.TYPES), int(session.combat_stats().max_hp))
+	var changes := ItemEffects.apply(trial, outcomes.filter(func(o: Dictionary) -> bool: return o.type in ItemEffects.TYPES), int(session.combat_stats().max_hp))
 	var damage := 0
-	for outcome in p.outcomes:
+	for outcome in outcomes:
 		if outcome.type == "damage":
 			damage += mini(int(trial.hp), int(outcome.amount))
 			trial.hp = maxi(0, int(trial.hp) - int(outcome.amount))
@@ -232,9 +235,9 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	mutation.resolved[interaction.id] = {"turn": int(session.run.state.turn), "event": {"content_id": event.content_id, "version": int(event.version)}, "received": award.received.duplicate(true)}
 	session.run.state.entity_mutations[instance.instance_id] = mutation
 	session.dirty = true
-	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": p.get("message", ""), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
+	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", "")] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
 	var source := {"content_id": event.content_id, "version": int(event.version), "actor": "player"}
-	for outcome in p.outcomes:
+	for outcome in outcomes:
 		match outcome.type:
 			"apply_status": events.append_array(session.statuses.apply(session, outcome, source, "player"))
 			"cleanse": events.append_array(session.statuses.cleanse(session, "player", outcome.get("harmful", true)))

@@ -70,6 +70,7 @@ resolve it for Run B.
 | `damage` | HP loss; death uses the normal death/permadeath path; marks the action risky for autosave |
 | `xp` | `ExplorationSession.gain_xp` (level ups) |
 | `restore` | skill resources (energy) |
+| `chance` (Run 01) | `{chance_per_10000 1..9999, outcomes, otherwise, message?, otherwise_message?}`: one branch of ordinary outcomes (≤ 6 each, no nested chance → pending `event.outcome.chance.nested`). The roll is keyed like loot (World seed, Run seed, event, place, interaction): fixed for a Run, different between Runs. The branch message is appended to the notice. |
 
 Conditions: the skill learn/use vocabulary (`level`, `stat`, `skill_known`, `talent`,
 `item`, `equipped`, `hp_*_percent`, `need_below`) plus `perception` (a talent with

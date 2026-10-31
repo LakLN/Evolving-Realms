@@ -1,0 +1,38 @@
+{
+ "pack_id": "run01",
+ "version": 1,
+ "title": "Run 01 — The Hollow Wilds",
+ "note": "Developer content pack. Apply explicitly to ONE World with scripts/generate_content.py pack-apply. Never auto-installed.",
+ "modules": [
+  {
+   "id": "bestiary",
+   "file": "bestiary.json",
+   "summary": "Creatures and variants with habitats and trophies",
+   "definitions": 20
+  },
+  {
+   "id": "arcana",
+   "file": "arcana.json",
+   "summary": "Statuses, skills with synergies, and where their manuals are found",
+   "definitions": 17
+  },
+  {
+   "id": "armory",
+   "file": "armory.json",
+   "summary": "Gear with distinct modifiers, consumables for creature trophies",
+   "definitions": 14
+  },
+  {
+   "id": "talents",
+   "file": "talents.json",
+   "summary": "Talents with distinct triggers, trade-offs and synergies",
+   "definitions": 7
+  },
+  {
+   "id": "places",
+   "file": "places.json",
+   "summary": "Mysterious places with choices, chains and random outcomes",
+   "definitions": 15
+  }
+ ]
+}

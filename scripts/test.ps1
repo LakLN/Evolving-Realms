@@ -68,6 +68,7 @@ try {
     Invoke-EngineCheck -Name 'ai-world' -EngineArgs @('--headless', '--script', 'res://tests/ai_world_suite.gd') -Summary 'M02 CHECKPOINT H AI WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'discoveries' -EngineArgs @('--headless', '--script', 'res://tests/discovery_suite.gd') -Summary 'M02 CHECKPOINT I DISCOVERIES: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'discovery-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'run01-content' -EngineArgs @('--headless', '--script', 'res://tests/run01_content_suite.gd') -Summary 'RUN01 CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-discoveries' -EngineArgs @('--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'

@@ -138,6 +138,45 @@ Add `--allow-network` with a configured real provider to spend real API calls.
 - `.\scripts\test.ps1 -Only ai-content` runs both; `-Service` also checks `/generate` over
   real HTTP with the mock.
 
+## Content packs (Run 01)
+
+A content pack is a curated, ordered set of generation envelopes for **one explicit
+World**. It goes through the same draft → confirm → activate lifecycle as any proposal;
+nothing is installed automatically and the game never reads pack files.
+
+```
+content/ai_packs/<pack>/manifest.json   {"pack_id", "version", "title", "modules": [{"id", "file", "summary"}]}
+content/ai_packs/<pack>/<module>.json   ordinary generation envelope (<= 24 definitions)
+src/content/content_pack.gd             load / status / apply (in manifest order) / check
+```
+
+```powershell
+$py = ".\.venv\Scripts\python.exe"
+& $py -I scripts\generate_content.py pack-check                       # dry run in a throwaway database
+& $py -I scripts\generate_content.py --database $db pack-apply --create-world "Run 01"   # new World, random seed
+& $py -I scripts\generate_content.py --database $db pack-apply --world <id> [--modules bestiary,arcana]
+& $py -I scripts\generate_content.py --database $db pack-status --world <id>
+```
+
+- `--pack` defaults to `content/ai_packs/run01`. `--database` must be an explicit file; to
+  play the pack in the game, point it at the game's database deliberately (the game's
+  default is `%APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite`) or copy it
+  first. Close the game while applying.
+- Modules apply in order and stop at the first invalid/pending one; earlier modules stay
+  activated (each activation is atomic). Applying again is a no-op. Changing a module
+  after activation needs a new `request_id` (and new definition versions).
+- Creatures and places reach only regions established after activation. A pack applied
+  to a **new** World (`--create-world`) is everywhere from the first Run; in an existing
+  World it appears in regions nobody has visited yet.
+- Pack content: [RUN01_CONTENT_PACK.md](RUN01_CONTENT_PACK.md) (developer spoilers);
+  missing art: [RUN01_CONTENT_ASSETS.md](RUN01_CONTENT_ASSETS.md).
+- Validator note (Run 01): plain material/trophy items (only stacking/quality) include
+  their name in the duplicate fingerprint. Before, every new material with the same
+  stacking as an existing one (e.g. a new hide) was refused as a "gameplay duplicate",
+  although such items differ exactly by which events cost them and who drops them.
+- `tests/run01_content_suite.gd` (`.\scripts\test.ps1 -Only run01-content`) applies the
+  pack and plays every kind in a real session.
+
 ## Limits
 
 - The mock composes a fixed set of shapes; real output quality depends on the provider.

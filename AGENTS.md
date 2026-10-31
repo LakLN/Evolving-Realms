@@ -45,3 +45,4 @@ Established regions never change; never rewrite or delete region records or crea
 Read docs/DISCOVERIES_AND_EVENTS.md before changing locations, world events, discovery or search.
 Read docs/ART_DIRECTION.md before changing art, rendering (map_view/art.gd) or the asset pipeline.
 Visual Prototype work is presentation only: never change gameplay, saves or coordinates for art.
+Read docs/AI_CONTENT.md (Content packs) before changing content/ai_packs; packs apply to one explicit World only.

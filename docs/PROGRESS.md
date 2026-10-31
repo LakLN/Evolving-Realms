@@ -1,6 +1,50 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
-## Current state: Visual Prototype — art batch 02 integrated
+## Current state: Run 01 Task A — AI World Creator content pack (branch feature/run01-ai-content)
+
+Worktree `D:\Game\RPG-run01-content`, from master `cc5c8fb`. No rendering, art pipeline,
+UI, terrain/spawn algorithm or telemetry change. No SQL migration, no generation version
+change, no edit to established packs.
+
+### Audit of the AI pipeline
+
+Proposal → validation → draft → confirm → activate works for item, equipment, skill
+(+ book), item use, status, talent, creature (+ encounter), location and world event;
+activation goes into the World's Content Registry (the Blueprint itself never changes).
+Gameplay reach: loot extensions (chests/resources/creatures), books → learn, encounters
+and places in regions established after activation, talents in new Runs.
+
+Fixed blockers: plain materials/trophies with the same stacking as an existing item were
+refused as "gameplay duplicates" (fingerprint now includes their name). Added
+`event.outcome.chance` for random place outcomes (deterministic per Run/place).
+Added content packs (`src/content/content_pack.gd`, CLI `pack-check`, `pack-apply`
+incl. `--create-world`, `pack-status`); never auto-installed.
+
+### Run 01 pack
+
+`content/ai_packs/run01`: 73 definitions (6 creatures/habitats, 6 places/9 events, 7
+talents, 6 skills/manuals, 2 statuses, 6 gear, 2 item uses, trophies, distribution).
+Details (developer only): [RUN01_CONTENT_PACK.md](RUN01_CONTENT_PACK.md); missing art:
+[RUN01_CONTENT_ASSETS.md](RUN01_CONTENT_ASSETS.md).
+
+### Verified
+
+- `.\scripts\test.ps1 -Only run01-content`: RUN01 CONTENT 68 checks, 0 failures.
+- `.\scripts\test.ps1 -Smoke -Only ai-content,ai-world,discoveries,discovery-gameplay,interactions`:
+  data 96, interactions 69, integration 41, offline AI provider, ai-content 35, ai-world 41,
+  discoveries 40, discovery-gameplay 6, startup — all PASS.
+- CLI on a lab database: `pack-apply --create-world`, `pack-status`, repeated apply (no-op),
+  `registered` = 73.
+- Not run: full regression, export (not required for this task).
+
+### Limits / next
+
+No paid provider configured: the pack was authored offline by the AI World Creator and
+imported as envelopes. Creature variants reuse sprites; the mire lurker is a token.
+To play it: apply to a new World in the game database deliberately (see AI_CONTENT.md).
+
+## Visual Prototype — art batch 02 record
+
 
 Presentation only; gameplay, saves, World Blueprint, content IDs unchanged.
 

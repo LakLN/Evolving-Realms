@@ -1,0 +1,565 @@
+{
+ "schema_version": 1,
+ "request": {
+  "request_id": "run01/armory@1",
+  "kind": "collection",
+  "prompt": "Run 01 content: Gear with distinct modifiers, consumables for creature trophies",
+  "context": {
+   "version": 1,
+   "pack": "run01"
+  }
+ },
+ "provenance": {
+  "origin": "ai",
+  "provider": "claude-world-creator",
+  "model": "claude-opus-5-5",
+  "prompt_version": 1,
+  "request_hash": "9fcfc3577f8256280bca88bba247fb488cda1b4bda17cb53dc622788caff5506"
+ },
+ "content": {
+  "schema_version": 1,
+  "definitions": [
+   {
+    "content_id": "ai:run01/duskfang_blade",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Duskfang blade",
+    "description": "A blade set with a dusk fang. It bites deeper into bleeding foes.",
+    "metadata": {
+     "category": "weapon"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:status/bleed",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": false,
+     "stack_limit": 1,
+     "equipment": {
+      "slot": "weapon",
+      "stats": {
+       "attack": 5
+      },
+      "requirements": {
+       "level": 2
+      },
+      "effect_modifiers": [
+       {
+        "type": "damage",
+        "percent": 30,
+        "conditions": [
+         {
+          "type": "target_status",
+          "status": "core:status/bleed"
+         }
+        ]
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/antler_sling",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Antler sling",
+    "description": "Light, accurate, and kind to ranged techniques.",
+    "metadata": {
+     "category": "weapon"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": false,
+     "stack_limit": 1,
+     "equipment": {
+      "slot": "weapon",
+      "stats": {
+       "attack": 3
+      },
+      "skill_modifiers": [
+       {
+        "tags": [
+         "ranged"
+        ],
+        "range_add": 1,
+        "power_percent": 20
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/mossback_mantle",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Mossback mantle",
+    "description": "Living moss soaks up venom before it reaches you.",
+    "metadata": {
+     "category": "armor"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": false,
+     "stack_limit": 1,
+     "equipment": {
+      "slot": "armor",
+      "stats": {
+       "defense": 2,
+       "max_hp": 6
+      },
+      "effect_modifiers": [
+       {
+        "type": "resistance",
+        "element": "wood",
+        "percent": 35
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/tideshell_helm",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Tideshell helm",
+    "description": "Barnacled shell that shrugs off cold water and frost.",
+    "metadata": {
+     "category": "helmet"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": false,
+     "stack_limit": 1,
+     "equipment": {
+      "slot": "helmet",
+      "stats": {
+       "defense": 2
+      },
+      "effect_modifiers": [
+       {
+        "type": "resistance",
+        "element": "water",
+        "percent": 30
+       },
+       {
+        "type": "resistance",
+        "element": "ice",
+        "percent": 20
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/lurkerhide_boots",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Lurkerhide boots",
+    "description": "Slick boots that shorten every poison that gets through.",
+    "metadata": {
+     "category": "boots"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:status/poison",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "stackable": false,
+     "stack_limit": 1,
+     "equipment": {
+      "slot": "boots",
+      "stats": {
+       "defense": 1,
+       "max_hp": 2
+      },
+      "effect_modifiers": [
+       {
+        "type": "status_duration",
+        "status": "core:status/poison",
+        "add": -2
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/harefoot_charm",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item",
+    "name": "Harefoot charm",
+    "description": "Light feet: movement techniques cost half.",
+    "metadata": {
+     "category": "accessory"
+    },
+    "dependencies": [],
+    "payload": {
+     "stackable": false,
+     "stack_limit": 1,
+     "equipment": {
+      "slot": "accessory",
+      "stats": {
+       "max_hp": 2
+      },
+      "skill_modifiers": [
+       {
+        "tags": [
+         "movement"
+        ],
+        "cost_percent": -50
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/use/tide_pearl",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item_use",
+    "name": "Swallow a tide pearl",
+    "description": "",
+    "metadata": {
+     "category": "item_use"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tide_pearl",
+      "version": 1
+     },
+     {
+      "content_id": "core:status/ward",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "item": {
+      "content_id": "ai:run01/tide_pearl",
+      "version": 1
+     },
+     "verb": "Swallow",
+     "consume": 1,
+     "effects": [
+      {
+       "type": "apply_status",
+       "content_id": "core:status/ward",
+       "version": 1
+      },
+      {
+       "type": "quench",
+       "amount": 60
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/use/lurker_gland",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "item_use",
+    "name": "Press a lurker gland",
+    "description": "",
+    "metadata": {
+     "category": "item_use"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/lurker_gland",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "item": {
+      "content_id": "ai:run01/lurker_gland",
+      "version": 1
+     },
+     "verb": "Apply",
+     "consume": 1,
+     "effects": [
+      {
+       "type": "cleanse",
+       "harmful": true
+      },
+      {
+       "type": "heal",
+       "amount": 3
+      }
+     ]
+    }
+   },
+   {
+    "content_id": "ai:run01/gear/dusk_wolf",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Duskfang spoils",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/dusk_wolf",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/duskfang_blade",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/dusk_wolf",
+      "version": 1
+     },
+     "chance_per_10000": 1200,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/duskfang_blade",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "quality": {
+         "pho_thong": 30,
+         "uu_tu": 40,
+         "hiem_co": 22,
+         "su_thi": 8
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/gear/mossback",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Mossback spoils",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/mossback_boar",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/mossback_mantle",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/mossback_boar",
+      "version": 1
+     },
+     "chance_per_10000": 2000,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/mossback_mantle",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "quality": {
+         "phe_pham": 15,
+         "pho_thong": 55,
+         "uu_tu": 25,
+         "hiem_co": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/gear/tidecaller",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Tidecaller spoils",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/tideshell_helm",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/tidecaller_crab",
+      "version": 1
+     },
+     "chance_per_10000": 1500,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/tideshell_helm",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "quality": {
+         "phe_pham": 15,
+         "pho_thong": 55,
+         "uu_tu": 25,
+         "hiem_co": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/gear/glimmer",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Glimmer spoils",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/glimmer_stag",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/antler_sling",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/glimmer_stag",
+      "version": 1
+     },
+     "chance_per_10000": 3500,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/antler_sling",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "quality": {
+         "pho_thong": 30,
+         "uu_tu": 40,
+         "hiem_co": 22,
+         "su_thi": 8
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/gear/mire",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Lurker spoils",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "ai:run01/mire_lurker",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/lurkerhide_boots",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "ai:run01/mire_lurker",
+      "version": 1
+     },
+     "chance_per_10000": 2000,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/lurkerhide_boots",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "quality": {
+         "phe_pham": 15,
+         "pho_thong": 55,
+         "uu_tu": 25,
+         "hiem_co": 5
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "content_id": "ai:run01/gear/wayfarer",
+    "version": 1,
+    "schema_version": 1,
+    "kind": "loot_extension",
+    "name": "Wayfarer's charm",
+    "description": "Run 01 distribution.",
+    "metadata": {
+     "category": "loot_extension"
+    },
+    "dependencies": [
+     {
+      "content_id": "core:wayfarer_cache",
+      "version": 1
+     },
+     {
+      "content_id": "ai:run01/harefoot_charm",
+      "version": 1
+     }
+    ],
+    "payload": {
+     "source": {
+      "content_id": "core:wayfarer_cache",
+      "version": 1
+     },
+     "chance_per_10000": 1500,
+     "table": {
+      "guaranteed": [
+       {
+        "content_id": "ai:run01/harefoot_charm",
+        "version": 1,
+        "min": 1,
+        "max": 1,
+        "quality": {
+         "phe_pham": 15,
+         "pho_thong": 55,
+         "uu_tu": 25,
+         "hiem_co": 5
+        }
+       }
+      ]
+     }
+    }
+   }
+  ]
+ }
+}

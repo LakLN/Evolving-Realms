@@ -28,7 +28,7 @@ def godot(args, command, **options):
     with tempfile.TemporaryDirectory(prefix="er-authoring-") as folder:
         output = Path(folder) / "result.json"
         argv = [str(executable), "--headless", "--path", str(ROOT), "--script",
-                "res://src/content/authoring_cli.gd", "--", "--database=" + str(Path(args.database).resolve()),
+                "res://src/content/authoring_cli.gd", "--", "--database=" + (str(Path(args.database).resolve()) if args.database else ""),
                 "--command=" + command, "--output=" + str(output)]
         options.setdefault("world", getattr(args, "world", ""))
         argv.extend("--%s=%s" % (key, value) for key, value in options.items())
@@ -47,7 +47,7 @@ def godot(args, command, **options):
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--database", required=True, help="Explicit database file (never implicit personal save)")
+    p.add_argument("--database", help="Explicit database file (never implicit personal save); required except pack-check")
     p.add_argument("--godot", default=str(ROOT / ".tools/godot/Godot_v4.7.2-stable_win64.exe"))
     commands = p.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="Create a laboratory World and install existing packs")
@@ -68,6 +68,17 @@ def parser():
         sub.add_argument("--proposal", required=True)
         if command == "reject":
             sub.add_argument("--reason", default="")
+    pack_status = commands.add_parser("pack-status", help="Stage of every module of a content pack in one World")
+    pack_status.add_argument("--world", required=True)
+    pack_apply = commands.add_parser("pack-apply", help="Draft, confirm and activate a content pack into ONE World")
+    target = pack_apply.add_mutually_exclusive_group(required=True)
+    target.add_argument("--world")
+    target.add_argument("--create-world", metavar="NAME", help="New World (random seed unless --seed)")
+    pack_apply.add_argument("--seed", type=int)
+    pack_apply.add_argument("--modules", default="", help="Comma-separated module IDs (default: all, in order)")
+    commands.add_parser("pack-check", help="Dry run of a pack in a throwaway database")
+    for sub in (pack_status, pack_apply, commands.choices["pack-check"]):
+        sub.add_argument("--pack", default=str(ROOT / "content/ai_packs/run01"))
     for command, text in [("proposals", "Latest stage, validation and missing capabilities of every proposal"),
                           ("registered", "Active AI-generated definitions now visible to gameplay")]:
         commands.add_parser(command, help=text).add_argument("--world", required=True)
@@ -76,6 +87,9 @@ def parser():
 
 def main():
     args = parser().parse_args()
+    if not args.database and args.command != "pack-check":
+        print("Authoring failed: --database is required (an explicit file, never your personal save)", file=sys.stderr)
+        return 1
     try:
         if args.command == "generate":
             settings = Settings.from_env()
@@ -87,6 +101,17 @@ def main():
                 file = Path(folder) / "response.json"
                 file.write_text(json.dumps(envelope, ensure_ascii=False), encoding="utf-8")
                 result = godot(args, "draft", file=str(file))
+        elif args.command in ("pack-status", "pack-apply", "pack-check"):
+            options = {"pack": str(Path(args.pack).resolve())}
+            if args.command == "pack-apply":
+                if args.create_world:
+                    options["create-world"] = args.create_world
+                    options["world"] = ""
+                if args.seed is not None:
+                    options["seed"] = args.seed
+                if args.modules:
+                    options["modules"] = args.modules
+            result = godot(args, args.command, **options)
         elif args.command == "init":
             result = godot(args, "init", name=args.name, seed=args.seed)
         elif args.command in ("review", "confirm", "activate"):
