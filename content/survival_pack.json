@@ -1,0 +1,13 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {"content_id":"core:berries","version":1,"schema_version":1,"kind":"item","name":"Wild berries","description":"Sweet berries. Eat to ease hunger a little.","metadata":{"category":"food"},"payload":{"stackable":true,"stack_limit":30}},
+    {"content_id":"core:fresh_water","version":1,"schema_version":1,"kind":"item","name":"Fresh water","description":"A flask of clean spring water. Drink to quench thirst.","metadata":{"category":"drink"},"payload":{"stackable":true,"stack_limit":10}},
+    {"content_id":"core:berry_bush","version":1,"schema_version":1,"kind":"resource","name":"Berry bush","description":"Pick ripe berries.","dependencies":[{"content_id":"core:berries","version":1}],"payload":{"interaction":"gather","visual":"berry","spawn":{"biomes":["forest","meadow"],"per_10000":45,"priority":30},"loot":{"rolls":1,"entries":[{"content_id":"core:berries","version":1,"min":2,"max":4,"weight":1}]}}},
+    {"content_id":"core:fresh_spring","version":1,"schema_version":1,"kind":"resource","name":"Fresh spring","description":"Fill flasks with clean water.","dependencies":[{"content_id":"core:fresh_water","version":1}],"payload":{"interaction":"gather","visual":"spring","spawn":{"biomes":["forest","meadow","beach"],"per_10000":30,"priority":30},"loot":{"rolls":1,"entries":[{"content_id":"core:fresh_water","version":1,"min":1,"max":2,"weight":1}]}}},
+    {"content_id":"core:use/berries","version":1,"schema_version":1,"kind":"item_use","name":"Eat berries","dependencies":[{"content_id":"core:berries","version":1}],"payload":{"item":{"content_id":"core:berries","version":1},"verb":"Eat","consume":1,"effects":[{"type":"sate","amount":120}]}},
+    {"content_id":"core:use/fresh_water","version":1,"schema_version":1,"kind":"item_use","name":"Drink water","dependencies":[{"content_id":"core:fresh_water","version":1}],"payload":{"item":{"content_id":"core:fresh_water","version":1},"verb":"Drink","consume":1,"effects":[{"type":"quench","amount":400}]}},
+    {"content_id":"core:use/raw_meat","version":1,"schema_version":1,"kind":"item_use","name":"Eat raw meat","dependencies":[{"content_id":"core:raw_meat","version":1}],"payload":{"item":{"content_id":"core:raw_meat","version":1},"verb":"Eat","consume":1,"effects":[{"type":"sate","amount":300}]}},
+    {"content_id":"core:use/herb","version":1,"schema_version":1,"kind":"item_use","name":"Apply herb","dependencies":[{"content_id":"core:herb","version":1}],"payload":{"item":{"content_id":"core:herb","version":1},"verb":"Apply","consume":1,"effects":[{"type":"heal","amount":5}]}}
+  ]
+}

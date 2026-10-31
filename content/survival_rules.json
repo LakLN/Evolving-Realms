@@ -1,0 +1,12 @@
+{
+  "rules_version": 1,
+  "scale": 1000,
+  "needs": {
+    "hunger": {"per_action": {"default": 1, "attack": 3, "rest": 1}, "warning": 600, "danger": 850},
+    "thirst": {"per_action": {"default": 2, "attack": 3, "rest": 1}, "warning": 600, "danger": 850}
+  },
+  "recovery": {"per_turn": 10, "rest_per_turn": 25},
+  "starvation": {"damage_per_turn": 20},
+  "rest": {"max_turns": 10},
+  "autosave": {"normal_interval": 25, "safe_hp_percent": 34, "permadeath_safe_interval": 10, "permadeath_risk_hp_percent": 50}
+}

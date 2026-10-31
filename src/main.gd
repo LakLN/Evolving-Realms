@@ -32,6 +32,8 @@ var _interaction_hint: Label
 var _target_hint: Label
 var _hp_bar: ProgressBar
 var _hp_label: Label
+var _survival_label: Label
+var _use_button: Button
 var _death_panel: PanelContainer
 var _death_text: Label
 var _death_reload: Button
@@ -150,7 +152,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD/Arrows: move    E: interact    F: attack    Tab: next target    Space: wait    I: inventory    Ctrl+S: save    Esc: save & menu", 15)
+	_label(column, "WASD/Arrows: move   E: interact   F: attack   Tab: target   Space: wait   R: rest   I: inventory (U: use)   Ctrl+S: save   Esc: menu", 15)
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -162,7 +164,7 @@ func _build_hud(parent: Control) -> void:
 	top.offset_bottom = 86
 	_hud.add_child(top)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 20)
+	row.add_theme_constant_override("separation", 12)
 	top.add_child(row)
 	_info = _label(row, "", 17)
 	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -177,6 +179,7 @@ func _build_hud(parent: Control) -> void:
 	fill.bg_color = Color("c9483f")
 	_hp_bar.add_theme_stylebox_override("fill", fill)
 	health.add_child(_hp_bar)
+	_survival_label = _label(health, "", 13)
 	_button(row, "Inventory [I]", _toggle_inventory).focus_mode = Control.FOCUS_NONE
 	_button(row, "Save [Ctrl+S]", _save_game).focus_mode = Control.FOCUS_NONE
 	var menu_button := _button(row, "Menu [Esc]", _return_to_menu)
@@ -192,7 +195,7 @@ func _build_hud(parent: Control) -> void:
 	_notice = _label(column, "", 17)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
-	_label(column, "WASD/Arrows: move (walk into a hostile = attack)  |  E: gather/open  |  F: attack  |  Tab: next target  |  Space: wait  |  I: inventory", 15)
+	_label(column, "WASD: move (into hostile = attack) | E: gather/open | F: attack | Tab: target | Space: wait | R: rest | I: inventory, U: use", 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
 
@@ -219,6 +222,9 @@ func _build_inventory(parent: Control) -> void:
 	_inventory_detail = _label(column, "", 16)
 	_inventory_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inventory_detail.custom_minimum_size.y = 150
+	_inventory_list.item_activated.connect(func(_index: int) -> void: _use_selected())
+	_use_button = _button(column, "Use selected [U / Enter]", _use_selected)
+	_use_button.focus_mode = Control.FOCUS_NONE
 	_button(column, "Close [I / Esc]", _toggle_inventory)
 	_inventory_panel.hide()
 
@@ -271,19 +277,40 @@ func _toggle_inventory() -> void:
 	_inventory_panel.visible = not _inventory_panel.visible
 	_hold_delay = 0.2
 	if _inventory_panel.visible:
-		_inventory_rows = session.inventory_rows()
-		_inventory_list.clear()
-		for item in _inventory_rows:
-			_inventory_list.add_item("%s  x%d" % [item.name, item.quantity])
-			_inventory_list.set_item_tooltip(_inventory_list.item_count - 1, "%s / %s" % [item.name, item.type])
-		if _inventory_rows.is_empty():
-			_inventory_detail.text = "Empty. Explore and gather resources or open chests."
-		else:
-			_inventory_list.select(0)
-			_show_inventory_item(0)
+		_refresh_inventory()
 		_inventory_list.grab_focus()
 	else:
 		get_viewport().gui_release_focus()
+
+func _refresh_inventory(selected: String = "") -> void:
+	_inventory_rows = session.inventory_rows()
+	_inventory_list.clear()
+	var index := 0
+	for item in _inventory_rows:
+		var usable: bool = not session.use_for(item.content_id).is_empty()
+		_inventory_list.add_item("%s  x%d%s" % [item.name, item.quantity, "   [usable]" if usable else ""])
+		_inventory_list.set_item_tooltip(_inventory_list.item_count - 1, "%s / %s" % [item.name, item.type])
+		if item.content_id == selected:
+			index = _inventory_list.item_count - 1
+	_use_button.disabled = _inventory_rows.is_empty()
+	if _inventory_rows.is_empty():
+		_inventory_detail.text = "Empty. Explore and gather resources or open chests."
+	else:
+		_inventory_list.select(index)
+		_show_inventory_item(index)
+
+func selected_item_id() -> String:
+	var picked := _inventory_list.get_selected_items()
+	return "" if picked.is_empty() or picked[0] >= _inventory_rows.size() else _inventory_rows[picked[0]].content_id
+
+func _use_selected() -> void:
+	var content_id := selected_item_id()
+	if session == null or session.is_dead() or content_id.is_empty():
+		return
+	var accepted: bool = session.use_item(content_id)
+	_after_action(accepted)
+	if _inventory_panel.visible:
+		_refresh_inventory(content_id)
 
 func _show_inventory_item(index: int) -> void:
 	var item: Dictionary = _inventory_rows[index]
@@ -291,6 +318,13 @@ func _show_inventory_item(index: int) -> void:
 	_inventory_detail.text = "%s\n%s / v%d / Quantity: %d\n%s\n%s" % [item.name, item.type, item.version, item.quantity, stacking, item.description]
 	if not item.stackable and not item.slots.is_empty():
 		_inventory_detail.text += "\nItem ID: " + str(item.slots[0].instance_id).left(22) + "..."
+	var use: Dictionary = session.use_for(item.content_id)
+	var effects := PackedStringArray()
+	for effect in use.get("payload", {}).get("effects", []):
+		var amount: int = effect.amount if effect.type == "heal" else effect.amount * 100 / int(session.survival.rules.scale)
+		effects.append({"heal": "+%d HP", "sate": "-%d%% hunger", "quench": "-%d%% thirst"}[effect.type] % amount)
+	_inventory_detail.text += "\n" + ("Use (%s): %s. Spends 1 turn." % [use.payload.get("verb", "Use"), ", ".join(effects)] if not use.is_empty() else "No use yet.")
+	_use_button.disabled = use.is_empty()
 
 func _label(parent: Node, text: String, size: int) -> Label:
 	var label := Label.new()
@@ -410,6 +444,10 @@ func _update_info() -> void:
 	_hp_label.text = "HP %d / %d  ATK %d DEF %d" % [stats.hp, stats.max_hp, stats.attack, stats.defense]
 	_hp_bar.max_value = int(stats.max_hp)
 	_hp_bar.value = int(stats.hp)
+	var worst: int = session.survival.worst_level(stats)
+	var recovery := "regen" if worst == 0 and int(stats.hp) < int(stats.max_hp) else ("no regen" if worst > 0 and int(stats.hp) < int(stats.max_hp) else "")
+	_survival_label.text = "Hunger %d%%  Thirst %d%%%s" % [session.survival.percent(stats, "hunger"), session.survival.percent(stats, "thirst"), "" if recovery.is_empty() else "  " + recovery]
+	_survival_label.modulate = [Color("c8c8c8"), Color("f0c060"), Color("ff7a6b"), Color("ff4b3e")][worst]
 	var foe := current_target()
 	map_view.target_id = "" if foe.is_empty() else foe.instance_id
 	if foe.is_empty():
@@ -457,6 +495,15 @@ func _attack() -> void:
 func _wait() -> void:
 	_after_action(session.wait_turn(), "You wait a turn.")
 
+func _rest() -> void:
+	if not session.rest():
+		_after_action(false)
+		return
+	var summary: Dictionary = session.last_result
+	_after_action(true)
+	var why: String = {"rested": "", "healed": " Fully healed.", "danger": " Interrupted: danger in sight!", "attacked": " Interrupted: you were attacked!", "needs": "", "died": ""}[summary.reason]
+	_notice.text = ("Rested %d turn%s (%+d HP).%s %s" % [summary.turns, "" if summary.turns == 1 else "s", summary.hp_gained, why, _notice.text]).strip_edges()
+
 func _after_action(accepted: bool, quiet: String = "") -> void:
 	## Shared feedback for every turn-spending action.
 	if not accepted:
@@ -489,6 +536,19 @@ static func describe_events(events: Array) -> String:
 				parts.append("You have died.")
 			"death_save_failed":
 				parts.append("Could not record the death: " + event.error)
+			"use":
+				var effects := PackedStringArray()
+				for change in event.changes:
+					effects.append("%s %d -> %d" % [{"hp": "HP", "hunger": "hunger", "thirst": "thirst"}[change.stat], change.before, change.after])
+				parts.append("%s: %s (%s)." % [event.verb, event.name, ", ".join(effects)])
+			"survival":
+				parts.append({"warning": "You are getting %s.", "danger": "You are badly %s — find food and water!", "depleted": "You are starving and dehydrating: %s now costs HP!"}[event.level] % {"hunger": "hungry", "thirst": "thirsty"}.get(event.need, event.need))
+			"starvation":
+				parts.append("Starvation hurts you (-%d HP)." % event.damage)
+			"autosave":
+				parts.append("Autosaved.")
+			"autosave_failed":
+				parts.append("Autosave failed: " + event.error)
 	return " ".join(parts)
 
 func _interact() -> void:
@@ -536,6 +596,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_cycle_target()
 	elif event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
 		_wait()
+	elif event.keycode == KEY_R or event.physical_keycode == KEY_R:
+		_rest()
 	else:
 		for action in MOVE_KEYS:
 			if event.is_action_pressed(action):
@@ -552,6 +614,9 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 	elif _is_save_shortcut(event):
 		_save_game()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_U or event.physical_keycode == KEY_U:
+		_use_selected()
 		get_viewport().set_input_as_handled()
 
 static func _is_save_shortcut(event: InputEventKey) -> bool:

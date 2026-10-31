@@ -48,8 +48,6 @@ func _test_rules() -> void:
 	var stats := Combat.player_stats({"custom": 1})
 	check(stats.hp == 30 and stats.max_hp == 30 and stats.custom == 1 and Combat.valid_stats(stats, true), "Player defaults fill missing combat stats, keep unknown keys")
 	check(not Combat.valid_stats({"max_hp": 0, "attack": 1, "defense": 0}) and not Combat.valid_stats({"max_hp": 5, "attack": 1, "defense": 0, "hp": 9}, true), "Invalid combat stats rejected")
-	var wounded := {"hp": 5, "max_hp": 30}
-	check(Combat.regenerate(wounded, 10) == 1 and wounded.hp == 6 and Combat.regenerate(wounded, 11) == 0, "Regeneration only on every 10th turn")
 
 func _definition(disposition: String, flee_radius: int = 0) -> Dictionary:
 	return {"name": "Test", "payload": {"disposition": disposition, "stats": {"max_hp": 10, "attack": 3, "defense": 0}, "movement": {"biomes": ["forest"], "leash": 10}, "ai": {"detect_radius": 6, "wander_per_10000": 10000, "flee_radius": flee_radius, "flee_below_percent": 0}}}

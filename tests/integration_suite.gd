@@ -9,6 +9,7 @@ const Acceptance = preload("res://src/acceptance/standalone_check.gd")
 var checks := 0
 var failures := 0
 var directory := ""
+const CHILD_FRAME_LIMIT := "30000" # Child processes exit (and fail) instead of hanging.
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -124,7 +125,7 @@ func _test_acceptance_processes() -> void:
 	var database := directory + "/acceptance.sqlite"
 	for phase in ["write", "crash", "verify"]:
 		var output: Array = []
-		var code := OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--database=" + database, "--acceptance=" + phase], output, true)
+		var code := OS.execute(OS.get_executable_path(), ["--headless", "--quit-after", CHILD_FRAME_LIMIT, "--path", ProjectSettings.globalize_path("res://"), "--", "--database=" + database, "--acceptance=" + phase], output, true)
 		var log := str(output)
 		print("Acceptance ", phase, " exit ", code, ": ", log.right(400))
 		if phase == "crash":
@@ -134,10 +135,10 @@ func _test_acceptance_processes() -> void:
 	var copy := directory + "/legacy-copy.sqlite"
 	DirAccess.copy_absolute(database, copy)
 	var output: Array = []
-	var code := OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--database=" + copy, "--acceptance=legacy"], output, true)
+	var code := OS.execute(OS.get_executable_path(), ["--headless", "--quit-after", CHILD_FRAME_LIMIT, "--path", ProjectSettings.globalize_path("res://"), "--", "--database=" + copy, "--acceptance=legacy"], output, true)
 	check(code == 0 and str(output).contains(" 0 failures") and not str(output).contains("SCRIPT ERROR"), "Existing save resumes and saves without losing items")
 	var output_refused: Array = []
-	code = OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--acceptance=write"], output_refused, true)
+	code = OS.execute(OS.get_executable_path(), ["--headless", "--quit-after", CHILD_FRAME_LIMIT, "--path", ProjectSettings.globalize_path("res://"), "--", "--acceptance=write"], output_refused, true)
 	check(code == 2, "Acceptance refuses to run against the default personal save")
 	_check_consistency(database)
 

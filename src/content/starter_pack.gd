@@ -3,6 +3,8 @@ const Terrain = preload("res://src/world/terrain_v1.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
 const PATH := "res://content/starter_pack.json"
 const CREATURES_PATH := "res://content/creatures_pack.json"
+const SURVIVAL_PATH := "res://content/survival_pack.json"
+const ALL_PATHS := [PATH, CREATURES_PATH, SURVIVAL_PATH] # Install order: dependencies first.
 var last_error := ""
 
 func install(registry: RefCounted, world_id: String, path: String = PATH) -> bool:

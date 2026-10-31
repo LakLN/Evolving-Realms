@@ -78,15 +78,19 @@ func _test_objects_and_actions() -> void:
 	check(not session.objects.materialize(bad), "Malformed object reference is rejected without runtime execution")
 	var turn := int(session.run.state.turn)
 	check(not session.interact("missing:object") and int(session.run.state.turn) == turn, "Missing object interaction spends no turn")
-	check(not session.perform_action({"type": "attack"}) and int(session.run.state.turn) == turn, "Unsupported action is rejected without executing code")
+	check(not session.perform_action({"type": "teleport"}) and int(session.run.state.turn) == turn, "Unsupported action is rejected without executing code")
 	var gathering := Helpers.route_to_object(session, "gather")
 	check(not gathering.is_empty(), "Find reachable sample resource")
 	if gathering.is_empty():
 		store.close()
 		return
 	var resource_id: String = gathering.instance.instance_id
-	if gathering.route.size() > 1:
-		check(not session.interact(resource_id) and int(session.run.state.turn) == turn, "Remote resource cannot be harvested")
+	var remote := ""
+	for chunk in session.objects.chunks.values():
+		for instance in chunk:
+			if remote.is_empty() and absi(int(instance.position.x) - session.position.x) + absi(int(instance.position.y) - session.position.y) > 1:
+				remote = instance.instance_id
+	check(not remote.is_empty() and not session.interact(remote) and int(session.run.state.turn) == turn, "Remote resource cannot be harvested")
 	check(Helpers.walk(session, gathering.route), "Walk to resource without object collision")
 	var loot_before := session.preview_loot(resource_id)
 	turn = int(session.run.state.turn)

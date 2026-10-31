@@ -78,6 +78,37 @@ func award(registry: RefCounted, world_id: String, inventory: Dictionary, loot: 
 	last_error = ""
 	return {"inventory": next, "received": received}
 
+func remove(inventory: Dictionary, content_id: String, quantity: int) -> Dictionary:
+	## Returns a copy with `quantity` units removed ({} + last_error on failure).
+	## Takes from the last stack slot / newest individual record first.
+	var next := inventory.duplicate(true)
+	var entry: Variant = next.get(content_id)
+	if not entry is Dictionary or not Data.integer(entry.get("quantity")) or quantity < 1 or quantity > int(entry.quantity):
+		return _error("Not enough of this item")
+	if entry.has("stacks"):
+		var slots: Array = entry.stacks
+		var total := 0
+		for slot in slots:
+			total += int(slot) if Data.integer(slot) else 0
+		if total != int(entry.quantity):
+			return _error("Inventory stack total mismatch; item not used")
+		var remaining := quantity
+		while remaining > 0:
+			var taken := mini(remaining, int(slots.back()))
+			slots[slots.size() - 1] = int(slots.back()) - taken
+			remaining -= taken
+			if slots.back() == 0:
+				slots.pop_back()
+	if entry.has("instances"):
+		if not entry.instances is Array or entry.instances.size() != int(entry.quantity):
+			return _error("Inventory instance total mismatch; item not used")
+		entry.instances.resize(entry.instances.size() - quantity)
+	entry.quantity = int(entry.quantity) - quantity
+	if entry.quantity == 0:
+		next.erase(content_id)
+	last_error = ""
+	return {"inventory": next}
+
 func rows(registry: RefCounted, world_id: String, inventory: Dictionary) -> Array:
 	var result: Array = []
 	var keys: Array = inventory.keys()

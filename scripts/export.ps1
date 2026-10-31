@@ -35,9 +35,11 @@ Saves: %APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite
 (shared with runs started from the Godot editor; never stored in this folder).
 
 Controls: WASD / arrows move (walk into a hostile creature to attack), E gather/open/pick up,
-F attack adjacent target, Tab next target, Space wait, I inventory,
+F attack adjacent target, Tab next target, Space wait, R rest, I inventory (U use item),
 Ctrl+S save, Esc close inventory or save & return to menu.
-Normal mode: death reloads your last save. Permadeath: death ends the run.
+Watch Hunger/Thirst under the HP bar: eat berries/meat, drink spring water, apply herbs.
+Normal mode: autosaves when safe; death reloads your last save.
+Permadeath: saves every risky action (and every 10 safe ones); death ends the run.
 Closing the window saves first. If saving fails, close again to quit without saving.
 '@ | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $build 'README.txt')
 Write-Host "PASS export: $build"
@@ -60,7 +62,7 @@ $database = Join-Path $work 'acceptance.sqlite'
 $display = @('--headless')
 if ($Render) { $display = @() }
 foreach ($phase in @('write', 'crash', 'verify')) {
-    $result = Invoke-Standalone $phase ($display + @('--', "--database=$database", "--acceptance=$phase"))
+    $result = Invoke-Standalone $phase ($display + @('--quit-after', '30000', '--', "--database=$database", "--acceptance=$phase"))
     $result.Log | Set-Content -Encoding UTF8 -LiteralPath ".tools/standalone-$phase.log"
     if ($phase -eq 'crash') {
         if ($result.Log -notmatch 'terminating without saving' -or $result.Log -match 'FAIL:') { throw "Standalone crash phase failed. See .tools/standalone-crash.log" }
@@ -74,7 +76,7 @@ foreach ($phase in @('write', 'crash', 'verify')) {
     }
     Write-Host "PASS standalone $phase - $summary"
 }
-$result = Invoke-Standalone 'refuse-default' @('--headless', '--', '--acceptance=write')
+$result = Invoke-Standalone 'refuse-default' @('--headless', '--quit-after', '30000', '--', '--acceptance=write')
 if ($result.Code -ne 2) { throw 'Standalone acceptance did not refuse the personal save file' }
 Write-Host 'PASS standalone refuses acceptance against the default save'
 if ($Render) { Write-Host "Screenshots: $work\standalone-*.png" }

@@ -6,7 +6,6 @@ extends RefCounted
 const Loot = preload("res://src/core/loot_table.gd")
 const Data = preload("res://src/data/json_data.gd")
 const PLAYER_DEFAULTS := {"max_hp": 30, "attack": 5, "defense": 1}
-const REGEN_INTERVAL := 10 # Player regains 1 HP on every 10th turn.
 const STAT_LIMIT := 100000
 
 static func valid_stats(stats: Variant, require_hp: bool = false) -> bool:
@@ -38,10 +37,3 @@ static func resolve(attacker: Dictionary, defender: Dictionary, key: String) -> 
 	var damage := maxi(1, attack + variance - int(defender.defense))
 	var remaining := maxi(0, int(defender.hp) - damage)
 	return {"damage": damage, "variance": variance, "hp": remaining, "killed": remaining == 0}
-
-static func regenerate(stats: Dictionary, turn: int) -> int:
-	## Returns HP gained this turn (already applied to stats).
-	if turn % REGEN_INTERVAL != 0 or int(stats.hp) <= 0 or int(stats.hp) >= int(stats.max_hp):
-		return 0
-	stats.hp = int(stats.hp) + 1
-	return 1

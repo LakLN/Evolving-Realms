@@ -1,6 +1,134 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint A complete (creatures, combat, death)
+## Current checkpoint: Milestone 02 Checkpoint B complete (survival, consumables, rest, save safety)
+
+Continued from f745d25 (clean tree) on explicit user approval of Checkpoint B only.
+Read AGENTS and all design/API docs plus source first. Reused: GameStore atomic
+revision-checked saves, `perform_action` turn order, Combat, Inventory, Content
+Registry and Run State. No SQLite migration (user_version 2, record schema 1), no
+terrain/object/creature generation change, no edits to starter or creature pack v1
+definitions. Not started: talents, skills, quality tiers, equipment, crafting,
+alchemy, NPCs, quests, AI World Creator, pets, multiplayer, Checkpoint C.
+
+### Implemented
+
+- **Survival** (`content/survival_rules.json` + `src/core/survival.gd`):
+  - hunger/thirst on a 0..1000 scale, with costs per action type (default 1 / 2,
+    attack 3 / 3, rest 1 / 1);
+  - warning at 600 (recovery stops), danger at 850, depleted at 1000 (1 HP every
+    5 turns);
+  - recovery accumulator: 1 HP / 10 turns, 1 HP / 4 turns while resting; replaces
+    Checkpoint A's fixed regen at the same base rate;
+  - threshold events; all numbers are data and validated on load.
+  - Extension point for temperature/disease/poison: new needs or tick steps.
+- **Item use** (`item_use` definitions, capability `definition.item_use`,
+  `src/core/item_effects.gd` with `heal` / `sate` / `quench` handlers):
+  - new `content/survival_pack.json` adds berries, fresh water, berry bushes, springs
+    and four uses (berries, water, existing raw meat, existing wild herb), with
+    immutable v1 items untouched;
+  - `use` action: validate and plan the inventory removal first, then apply; exactly
+    one turn; refused uses change nothing;
+  - `Inventory.remove()` handles stacks, individual records and legacy entries.
+- **Rest:** `rest` action + `ExplorationSession.rest()`: up to 10 real turns (creatures act
+  each turn), refused with a hostile in sight, interrupted by attack/danger/warnings/
+  full HP/death.
+- **Saving:**
+  - normal-mode autosave every 25 turns, only when safe (no visible threat,
+    HP ≥ 34%, no need at danger), retried each turn;
+  - permadeath commits every risky action (threat in sight, damage this turn,
+    HP < 50%, need at danger) and every 10 safe actions; death is saved immediately.
+- **Found and fixed** (the per-action commit cost grows with explored fog):
+  - explored tiles no longer sorted on every save (discovery order, appended);
+  - `GameStore.save_run` no longer reloads and revalidates the whole old state.
+  - Measured average action time with commits: 35/164/650 ms at 1k/5k/20k explored
+    tiles before, 2/8/28 ms after (risky turns about 78 ms at 5k).
+- **UI:**
+  - Hunger/Thirst line under the HP bar (amber/red), shown with regen or no-regen;
+  - inventory `[usable]` tags, use description, "Use selected [U / Enter]" button;
+  - R rest; messages for use, warnings, starvation, autosave, rest summary;
+  - berry and spring icons;
+  - HUD spacing tightened. A check now verifies the Menu button stays fully visible
+    in the widest HUD state; it caught a real overflow.
+- **Test robustness:**
+  - child Godot processes in the integration suite and export verification get
+    `--quit-after 30000`, so a broken scene fails instead of hanging. A parse error
+    had caused a hang during development;
+  - the D "remote resource" check no longer depends on object layout (new bushes
+    had made it skip silently, 65/66);
+  - the "unsupported action" check uses a truly unknown action type.
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Render -Service -Export
+```
+
+All pass (exit 0):
+- B data 96/96; C world 49/49; C gameplay 22/22 headless, 24/24 OpenGL; D interactions
+  66/66; D gameplay 17/17 headless, 20/20 OpenGL; E integration 34/34; A combat 75/75
+  (the obsolete regen check was removed); A combat UI 20/20 headless, 23/23 OpenGL;
+  startup; optional service and pip check.
+- **New survival suite 60/60:**
+  - rules validation; needs per action and threshold warnings;
+  - refused actions cost nothing;
+  - recovery rate; no recovery when hungry; never above max HP; starvation damage;
+  - 300 idle turns from a fresh start cause no damage;
+  - survival state round-trips through save/load;
+  - item use: not hungry → refused, nothing consumed; item without a use kept;
+    missing items refused; exactly one unit consumed and stacks consistent;
+    effect applied once and reported;
+  - reload neither restores used items nor re-applies effects; an unsaved use rolls
+    back atomically;
+  - a new consumable works through data only; unknown effect types are refused;
+  - rest: real turns, needs keep changing, faster recovery, creatures keep acting,
+    refused with a hostile in sight;
+  - autosave: after 25 safe turns writes a complete state; manual save still works
+    after it; no autosave at critical HP;
+  - permadeath in separate killed processes: safe turns committed every 10, death
+    durable after an abrupt kill, the dead run cannot be loaded, Blueprint
+    unchanged, SQLite integrity clean;
+  - every at-risk permadeath action committed (10/10); low HP counts as risk;
+  - Run A/B independent; a Checkpoint A-style save loads with defaults.
+- **New survival UI suite 10/10 headless, 12/12 OpenGL:**
+  - HUD needs line; widest HUD state fits;
+  - warning color and no-regen text;
+  - `[usable]` tag, use description and enabled button;
+  - U eats one item and spends one turn; U on wood is refused and explained;
+  - R rest summary.
+  - Screenshots inspected: `.tools/m02b-inventory-use.png`, `m02b-rest.png`.
+- **Exported release exe** (rebuilt by `-Export`), run from a temp working dir with a temp DB, OpenGL:
+  - write 23/23: everything from Checkpoint A plus gathering berries, eating one with
+    U from the inventory and resting with R;
+  - abrupt kill;
+  - verify 9/9;
+  - default-save refusal.
+  `standalone-survival.png` was inspected (hunger 89 → 0 after eating).
+- **Old saves in the exported exe** (`legacy` phase on copies), created by the code of
+  a34096a (B), 61afbe9 (C), d3c9675 (D), 0eeeb4f (Milestone 01) and f745d25
+  (Checkpoint A, through its own acceptance flow including a creature kill): 5/5,
+  3/3, 3/3, 5/5, 5/5. The Checkpoint A save kept its inventory and killed creature,
+  gained survival defaults and four item uses.
+
+Automated real-engine input/rendering with inspected screenshots; no human hand
+playthrough is claimed.
+
+### Remaining limits
+
+- No temperature, disease, poison, cooking, sleeping/camps, item drop/destroy.
+- Resources do not respawn, so food and water are finite per explored area.
+- One save slot per run: autosave and manual save both write the latest state; no
+  save history or restore points.
+- A permadeath crash can roll back at most 9 safe turns (never a death). Risky turns
+  pay a full save whose cost still grows with explored fog; chunked fog storage
+  (a migration) is the real fix.
+- Balance is first-pass. Anti-cheat (restoring copied save files) is out of scope.
+- Earlier limits (fog growth, Windows x64 only, unsigned exe, greedy creature AI) remain.
+
+### Next step
+
+Stop. The user reviews this build. Milestone 02 Checkpoint C needs explicit approval.
+
+## Milestone 02 Checkpoint A record (historical)
 
 Continued from 0eeeb4f (Milestone 01 complete, clean tree), on explicit user approval
 of Milestone 02 Checkpoint A only. Read AGENTS and all design/API docs plus source

@@ -10,6 +10,9 @@ const Inventory = preload("res://src/core/inventory.gd")
 const Creatures = preload("res://src/world/world_creatures.gd")
 const Roster = preload("res://src/run/creature_roster.gd")
 const Combat = preload("res://src/core/combat.gd")
+const Survival = preload("res://src/core/survival.gd")
+const ItemEffects = preload("res://src/core/item_effects.gd")
+const Packs = preload("res://src/content/starter_pack.gd")
 const SIGHT_RADIUS := 7
 signal action_completed(action: Dictionary, result: Dictionary)
 var store: RefCounted
@@ -25,13 +28,20 @@ var last_error := ""
 var objects: RefCounted
 var last_result: Dictionary = {}
 var roster: RefCounted
+var survival := Survival.new()
+## item content_id@version -> active item_use definition (data only).
+var uses: Dictionary = {}
+## Normal-mode periodic autosave in turns; -1 = rules default, 0 = off.
+## Permadeath commits every action while at risk and every few safe actions.
+var autosave_interval := -1
+var last_save_turn := 0
 ## Combat/AI events of the last accepted action, in order (for UI feedback).
 var last_events: Array = []
 var _action_handlers: Dictionary = {}
 
 func _init(data_store: RefCounted) -> void:
 	store = data_store
-	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action}
+	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action}
 
 func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal") -> bool:
 	if not Data.seed_value(run_seed):
@@ -45,7 +55,9 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var spawn := Spawn.select(generator, run_seed, biome)
 	if spawn.is_empty():
 		return _fail("No accessible spawn found for biome " + biome)
-	var created: Dictionary = store.create_run(world_id, run_seed, spawn, mode, Combat.player_stats({}))
+	if not survival.load_rules():
+		return _fail(survival.last_error)
+	var created: Dictionary = store.create_run(world_id, run_seed, spawn, mode, survival.normalize(Combat.player_stats({})))
 	if created.is_empty():
 		return _fail(store.last_error)
 	return _activate(blueprint, created) and save()
@@ -78,13 +90,27 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 		discovered[Vector2i(int(entry.x), int(entry.y))] = true
 	var next_cache := Chunks.new(generator)
 	next_cache.follow(tile)
+	var rules := Survival.new()
+	if not rules.load_rules():
+		return _fail(rules.last_error)
+	var packs := Packs.new()
+	for path in Packs.ALL_PATHS:
+		# Idempotent append-only install; survival resources must exist before objects load.
+		if not packs.install(store.content, blueprint.world_id, path):
+			return _fail(packs.last_error)
+	var next_uses := _load_uses(blueprint.world_id)
+	if not last_error.is_empty():
+		return false
 	var next_objects := Objects.new()
 	if not next_objects.configure(blueprint, generator, store.content, next_cache) or not next_objects.follow(tile):
 		return _fail(next_objects.last_error)
 	var saved_stats: Variant = loaded.state.character.stats
-	if not saved_stats is Dictionary or not Combat.valid_stats(Combat.player_stats(saved_stats), true):
-		return _fail("Saved character combat stats are invalid; save was not changed")
-	loaded.state.character.stats = Combat.player_stats(saved_stats) # Milestone 01 saves get defaults.
+	if not saved_stats is Dictionary:
+		return _fail("Saved character stats are invalid; save was not changed")
+	var normalized := rules.normalize(Combat.player_stats(saved_stats)) # Older saves get defaults.
+	if not Combat.valid_stats(normalized, true) or not rules.valid_stats(normalized):
+		return _fail("Saved character combat/survival stats are invalid; save was not changed")
+	loaded.state.character.stats = normalized
 	var layer := Creatures.new()
 	var next_roster := Roster.new()
 	if not layer.configure(blueprint, generator, store.content) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
@@ -97,6 +123,9 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	cache = next_cache
 	objects = next_objects
 	roster = next_roster
+	survival = rules
+	uses = next_uses
+	last_save_turn = int(loaded.state.turn)
 	last_result = {}
 	last_events = []
 	dirty = false
@@ -120,16 +149,19 @@ func perform_action(action: Dictionary) -> bool:
 		return _fail("No active run or unsupported action")
 	if not _action_handlers[action.type].call(action):
 		return false
-	# Turn order: player action, turn counter, regeneration, then each active creature once.
+	# Turn order: player action, turn counter, survival (needs, recovery,
+	# starvation), each active creature once, death, then the autosave policy.
 	last_events = last_result.get("events", []).duplicate(true)
 	run.state.turn = int(run.state.turn) + 1
 	dirty = true
-	if Combat.regenerate(stats(), int(run.state.turn)) > 0:
-		last_events.append({"type": "regen", "hp": stats().hp})
-	last_events.append_array(roster.take_turn(self))
+	last_events.append_array(survival.tick(stats(), str(action.type)))
+	if int(stats().hp) > 0:
+		last_events.append_array(roster.take_turn(self))
 	last_error = ""
 	if int(stats().hp) <= 0:
 		_die()
+	else:
+		_autosave()
 	last_result["events"] = last_events.duplicate(true)
 	action_completed.emit(action.duplicate(true), last_result.duplicate(true))
 	return true
@@ -153,6 +185,144 @@ func _die() -> void:
 func _wait_action(_action: Dictionary) -> bool:
 	last_result = {"type": "wait"}
 	return true
+
+func threatened() -> bool:
+	## A visible hostile or provoked creature: resting is unsafe, autosave waits.
+	for creature in roster.creatures.values():
+		if not creature.dead and visible.has(creature.position) and roster.aggressive(creature):
+			return true
+	return false
+
+func _rest_action(_action: Dictionary) -> bool:
+	if threatened():
+		return _fail("You cannot rest with a hostile creature in sight (no turn spent)")
+	last_result = {"type": "rest"}
+	return true
+
+func rest(max_turns: int = -1) -> bool:
+	## Rest turn by turn (creatures act every turn). Stops on danger, damage, a new
+	## survival warning, full HP or death. last_result summarizes the whole rest.
+	var limit := int(survival.rules.rest.max_turns) if max_turns < 1 else max_turns
+	var hp_before := int(stats().hp)
+	var events: Array = []
+	var turns := 0
+	var reason := "rested"
+	for _turn in limit:
+		if not perform_action({"type": "rest"}):
+			if turns == 0:
+				return false
+			break
+		turns += 1
+		events.append_array(last_events)
+		var interrupted := ""
+		for event in last_events:
+			if event.type == "hit" and event.target == "player":
+				interrupted = "attacked"
+			elif event.type in ["survival", "starvation"] and interrupted.is_empty():
+				interrupted = "needs"
+		if is_dead():
+			reason = "died"
+			break
+		if not interrupted.is_empty() or threatened():
+			reason = interrupted if not interrupted.is_empty() else "danger"
+			break
+		if hp_before < int(stats().max_hp) and int(stats().hp) >= int(stats().max_hp):
+			reason = "healed"
+			break
+	last_events = events
+	last_result = {"type": "rest", "turns": turns, "hp_gained": int(stats().hp) - hp_before, "reason": reason, "events": events}
+	last_error = ""
+	return true
+
+func use_for(content_id: String) -> Dictionary:
+	## Active item_use definition for the version of this item held in the run.
+	var entry: Variant = run.state.inventory.get(content_id)
+	return {} if not entry is Dictionary else uses.get("%s@%d" % [content_id, int(entry.version)], {})
+
+func use_item(content_id: String) -> bool:
+	return perform_action({"type": "use", "content_id": content_id})
+
+func _use_action(action: Dictionary) -> bool:
+	## Validate and plan everything first; only then change stats and inventory.
+	if not action.get("content_id") is String or not run.state.inventory.has(action.content_id):
+		return _fail("You do not have that item (no turn spent)")
+	var entry: Dictionary = run.state.inventory[action.content_id]
+	var item: Dictionary = store.content.load_definition(world.world_id, action.content_id, int(entry.version))
+	var name := str(item.get("name", action.content_id))
+	var use := use_for(action.content_id)
+	if use.is_empty():
+		return _fail("%s has no use yet (no turn spent)" % name)
+	var trial := stats().duplicate(true)
+	var changes := ItemEffects.apply(trial, use.payload.effects)
+	if changes.is_empty():
+		return _fail("%s would have no effect right now (no turn spent)" % name)
+	var inventory := Inventory.new()
+	var removal := inventory.remove(run.state.inventory, action.content_id, int(use.payload.get("consume", 1)))
+	if removal.is_empty():
+		return _fail(inventory.last_error)
+	run.state.inventory = removal.inventory
+	for key in trial:
+		stats()[key] = trial[key]
+	last_result = {"type": "use", "content_id": action.content_id, "events": [{"type": "use", "name": name, "verb": str(use.payload.get("verb", "Use")), "changes": changes}]}
+	return true
+
+func _load_uses(world_id: String) -> Dictionary:
+	## Item uses are append-only definitions; the latest active version of a use
+	## rule wins. Two different rules for the same item version are a conflict.
+	var result := {}
+	var owners := {}
+	last_error = ""
+	for header in store.content.list_definitions(world_id):
+		if header.kind != "item_use" or header.status != "active":
+			continue
+		var definition: Dictionary = store.content.load_definition(world_id, header.content_id, int(header.version))
+		var payload: Variant = definition.get("payload")
+		var target: Variant = payload.get("item") if payload is Dictionary else null
+		var problem := "Item use needs payload.item {content_id, version}" if not target is Dictionary or not Data.identifier(target.get("content_id")) or not Data.integer(target.get("version")) else ItemEffects.validate(payload.get("effects"))
+		if problem.is_empty() and (not Data.integer(payload.get("consume", 1)) or payload.get("consume", 1) < 1 or payload.get("consume", 1) > 100):
+			problem = "Item use consume must be 1..100"
+		if problem.is_empty():
+			var item: Dictionary = store.content.load_definition(world_id, target.content_id, int(target.version))
+			var pinned := false
+			for dependency in definition.get("dependencies", []):
+				pinned = pinned or (dependency.content_id == target.content_id and dependency.version == target.version)
+			if item.get("kind") != "item" or item.get("status") != "active" or not pinned:
+				problem = "Item use must target an active, pinned item"
+		if not problem.is_empty():
+			_fail("%s: %s" % [header.content_id, problem])
+			return {}
+		var key := "%s@%d" % [target.content_id, int(target.version)]
+		if owners.has(key) and owners[key] != header.content_id:
+			_fail("Conflicting item uses for " + key)
+			return {}
+		owners[key] = header.content_id
+		result[key] = definition
+	return result
+
+func _autosave() -> void:
+	## Permadeath: commit every action while death is possible (threat in sight,
+	## damage this turn, low HP, a need at danger) and every N safe actions otherwise.
+	## A crash can therefore only roll back harmless safe turns, never a death.
+	## Normal: every N turns, only when safe, so reloading never starts in a lost fight.
+	if run.mode == "permadeath":
+		var interval := int(survival.rules.autosave.permadeath_safe_interval)
+		if (at_risk() or int(run.state.turn) - last_save_turn >= interval) and not save():
+			last_events.append({"type": "autosave_failed", "error": last_error})
+		return
+	var interval := int(survival.rules.autosave.normal_interval) if autosave_interval < 0 else autosave_interval
+	if interval <= 0 or int(run.state.turn) - last_save_turn < interval or not safe_to_autosave():
+		return
+	if save():
+		last_events.append({"type": "autosave", "turn": int(run.state.turn)})
+	else:
+		last_events.append({"type": "autosave_failed", "error": last_error})
+
+func at_risk() -> bool:
+	var hurt := last_events.any(func(event: Dictionary) -> bool: return (event.type == "hit" and event.target == "player") or event.type == "starvation")
+	return hurt or threatened() or int(stats().hp) * 100 < int(survival.rules.autosave.permadeath_risk_hp_percent) * int(stats().max_hp) or survival.worst_level(stats()) >= 2
+
+func safe_to_autosave() -> bool:
+	return not threatened() and int(stats().hp) * 100 >= int(survival.rules.autosave.safe_hp_percent) * int(stats().max_hp) and survival.worst_level(stats()) < 2
 
 func _attack_action(action: Dictionary) -> bool:
 	if not action.get("target_id") is String:
@@ -297,6 +467,7 @@ func _reveal() -> void:
 				visible[target] = true
 				if not explored.has(target):
 					explored[target] = true
+					run.state.explored.append({"x": target.x, "y": target.y}) # Discovery order.
 					dirty = true
 
 func _line_visible(target: Vector2i) -> bool:
@@ -310,14 +481,16 @@ func save() -> bool:
 	if not dirty:
 		last_error = ""
 		return true
-	var tiles: Array = explored.keys()
-	tiles.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
-	run.state.explored = []
-	for tile in tiles:
-		run.state.explored.append({"x": tile.x, "y": tile.y})
+	# Explored tiles are appended as they are revealed (discovery order, unique), so a
+	# save does not sort or rebuild them. Rebuild only if the set was changed directly.
+	if run.state.explored.size() != explored.size():
+		run.state.explored = []
+		for tile in explored:
+			run.state.explored.append({"x": tile.x, "y": tile.y})
 	if not store.save_run(run.run_id, int(run.revision), run.state):
 		return _fail(store.last_error)
 	run.revision = int(run.revision) + 1
+	last_save_turn = int(run.state.turn)
 	dirty = false
 	last_error = ""
 	return true

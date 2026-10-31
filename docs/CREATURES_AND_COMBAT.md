@@ -79,8 +79,8 @@ revision-checked transaction.
 
 ## Turns and combat
 
-`perform_action` order: player action → turn + 1 → regeneration (1 HP every 10th
-turn) → each living creature within Chebyshev 12 of the player decides exactly once,
+`perform_action` order: player action → turn + 1 → survival tick (needs, recovery,
+starvation; see SURVIVAL_AND_ITEMS.md) → each living creature within Chebyshev 12 of the player decides exactly once,
 in instance-ID order. Rejected actions (blocked, no/invalid/dead target, out of
 range or sight) spend no turn and change nothing. Actions:
 

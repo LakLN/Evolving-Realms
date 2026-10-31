@@ -1,10 +1,11 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 02, Checkpoint A complete** (Milestone 01 complete).
+Current state: **Milestone 02, Checkpoint B complete** (Milestone 01 complete).
 Create/select a world, explore seeded biomes, gather resources, open chests, meet
-creatures by biome, fight them turn by turn on the map, collect their loot and face
-death in normal or permadeath runs, in the editor or as a standalone Windows x64 build.
+creatures by biome, fight them turn by turn on the map, manage hunger and thirst,
+eat, drink, heal and rest, and face death in normal or permadeath runs, in the editor
+or as a standalone Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
 
 ## Play the standalone Windows build
@@ -39,17 +40,28 @@ editor's F5 (Run Project). F5 belongs to the editor; the game saves with **Ctrl+
    turn. Every accepted action spends one turn, then nearby creatures act once.
    Refused actions (no target, blocked) spend nothing. Kills drop loot straight into the
    inventory, once. HP (top bar) regenerates 1 point every 10 turns.
-6. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
+6. Survival: **Hunger** and **Thirst** (under the HP bar) rise every turn (faster
+   when fighting). Above 60% they turn amber and HP stops regenerating; above 85% red;
+   at 100% you lose 1 HP every 5 turns. Berry bushes give berries, fresh springs give
+   water, creatures drop raw meat and herb patches give healing herbs. Open the
+   inventory (**I**), select an item marked `[usable]` and press **U** / Enter (or
+   **Use selected**). Using an item spends one turn. Items with no use, or that would
+   have no effect right now, are refused without spending anything. **R** rests up
+   to 10 turns (faster healing); creatures still act every turn, and resting stops
+   when danger appears. It is refused with a hostile creature in sight.
+   Normal runs autosave every 25 turns when safe; permadeath saves every risky action
+   (and every 10 safe ones).
+7. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
    return to the menu. **Permadeath:** the death is saved, the run is marked ENDED
    and cannot be continued; start a new run in the same world.
-7. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
+8. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
    Movement pauses while it is open. **I / Esc** closes inventory.
-8. **Ctrl+S** or **Save** saves locally, also while inventory is open.
+9. **Ctrl+S** or **Save** saves locally, also while inventory is open.
    **Esc** / **Menu** saves before leaving the map (Esc closes inventory first).
    Window close also saves. If a save fails, the game stays open and reports the error;
    closing again quits *without* saving (only changes since the last save are lost).
-   There is no autosave: a crash or forced kill returns to the last save.
-9. Choose a saved run and **Continue selected run**, or create another run in the
+   A crash or forced kill returns to the last manual save or autosave.
+10. Choose a saved run and **Continue selected run**, or create another run in the
    same world. Geography stays consistent; inventory, discovery, object and creature
    state are independent per run. Chests and creatures pay only once per run and reload
    cannot reroll loot or revive killed creatures.
@@ -60,7 +72,8 @@ chests are non-blocking; terrain collision is unchanged. New UI-created Worlds
 also establish a seeded fixed Wayfarer's cache in their Blueprint. Existing Worlds
 keep their Blueprint and receive procedural resources/chests through the data pack.
 Creature/combat design, data format and limits: [docs/CREATURES_AND_COMBAT.md](docs/CREATURES_AND_COMBAT.md).
-No talents, item quality, skills, equipment, crafting or item-use effects yet.
+Survival, item use, rest and autosave: [docs/SURVIVAL_AND_ITEMS.md](docs/SURVIVAL_AND_ITEMS.md).
+No talents, item quality, skills, equipment or crafting yet.
 
 PowerShell commands from the repository root:
 
@@ -144,7 +157,7 @@ the vendored godot-sqlite v4.9 GDExtension; Python is entirely optional.
 
 ## Handoff
 
-Read [progress](docs/PROGRESS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
+Read [progress](docs/PROGRESS.md), [survival and items](docs/SURVIVAL_AND_ITEMS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
 [world system](docs/WORLD_SYSTEM.md), [data API](docs/DATA_API.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 Default saves live at `user://realms.sqlite`, outside the repository. Native Windows

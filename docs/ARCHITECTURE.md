@@ -6,7 +6,8 @@ authoring process, not a dependency for movement, saving or combat.
 
 ## Modules and planned layout
 
-- src/core: weighted LootTable, Inventory, Combat rules and CreatureAI decisions.
+- src/core: weighted LootTable, Inventory, Combat rules, CreatureAI decisions,
+  Survival rules and ItemEffects handlers.
 - src/world: implemented terrain_v1, bounded chunk cache, spawn selector,
   TileMapLayer renderer, world_objects v1 layer and code-native placeholder art.
 - src/run: implemented ExplorationSession: cardinal actions/turns, sight,
@@ -149,6 +150,17 @@ in ID order. Combat formulas live only in src/core/combat.gd. Normal-mode deaths
 refused by both the session and GameStore. Permadeath saves the death immediately and
 relies on the existing dead-run read-only rule. No schema or generation version
 changed. Details: [CREATURES_AND_COMBAT.md](CREATURES_AND_COMBAT.md).
+
+## Survival and item use — Milestone 02 Checkpoint B
+
+Survival numbers are data (content/survival_rules.json) applied by src/core/survival.gd
+once per accepted action. The turn order is: action, turn+1, survival tick, creatures,
+death, autosave. Hunger/thirst/recovery accumulators live in `character.stats`.
+Consumable behavior is `kind: item_use` data (capability `definition.item_use`)
+mapping an item@version to effects handled in src/core/item_effects.gd, so immutable
+v1 items gain uses without edits. Normal mode autosaves when safe; permadeath commits
+every risky action and every 10 safe ones. Both use the existing atomic save. No schema change.
+Details: [SURVIVAL_AND_ITEMS.md](SURVIVAL_AND_ITEMS.md).
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

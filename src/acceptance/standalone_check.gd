@@ -69,6 +69,22 @@ func _write() -> void:
 	if prey.is_empty():
 		return
 	await _capture("standalone-combat.png")
+	# Survival: pick berries, eat one from the inventory with U, then rest with R.
+	check(not (await _use_nearest("gather", "core:berry_bush")).is_empty(), "Gather berries from a berry bush")
+	var hunger := int(app.session.stats().hunger)
+	var berries := int(app.session.run.state.inventory.get("core:berries", {}).get("quantity", 0))
+	await _key(KEY_I)
+	for index in app._inventory_rows.size():
+		if app._inventory_rows[index].content_id == "core:berries":
+			app._inventory_list.select(index)
+			app._show_inventory_item(index)
+	await _key(KEY_U)
+	check(hunger > 0 and app.session.run.state.inventory.get("core:berries", {}).get("quantity", 0) == berries - 1 and int(app.session.stats().hunger) < hunger and app._notice.text.contains("Eat"), "U eats one berry from the inventory and lowers hunger")
+	await _capture("standalone-survival.png")
+	await _key(KEY_ESCAPE)
+	var rest_turn := int(app.session.run.state.turn)
+	await _key(KEY_R)
+	check((int(app.session.run.state.turn) > rest_turn and app._notice.text.contains("Rested")) or app._notice.text.contains("cannot rest"), "R rests turn by turn (or is refused with danger in sight)")
 	var inventory: Dictionary = app.session.run.state.inventory.duplicate(true)
 	var turn := int(app.session.run.state.turn)
 	for _attempt in 3:
@@ -190,8 +206,8 @@ func _hunt() -> Dictionary:
 	print("Hunt gave up: prey=%s disp=%s pos=%s player=%s hp=%s dead=%s notice=%s" % [prey.get("instance_id"), prey.get("definition", {}).get("payload", {}).get("disposition"), last.get("position"), app.session.position, last.get("hp"), last.get("dead"), app._notice.text])
 	return {}
 
-func _use_nearest(interaction: String) -> Dictionary:
-	var found := route_to_object(app.session, interaction)
+func _use_nearest(interaction: String, content_id: String = "") -> Dictionary:
+	var found := route_to_object(app.session, interaction, [], content_id)
 	if found.is_empty() or not await _walk(found.route):
 		return {}
 	# E picks the deterministic nearest target; keep pressing until this one is used.
@@ -296,12 +312,12 @@ static func nearest_creature(session: RefCounted, dispositions: Array) -> Dictio
 			best_distance = distance
 	return best
 
-static func route_to_object(session: RefCounted, interaction: String, excluded: Array = []) -> Dictionary:
+static func route_to_object(session: RefCounted, interaction: String, excluded: Array = [], content_id: String = "") -> Dictionary:
 	## Route to a tile where an unconsumed object with this interaction is in E range.
 	var candidates := {}
 	for chunk in session.objects.chunks.values():
 		for instance in chunk:
-			if instance.instance_id in excluded or session.is_consumed(instance.instance_id) or session.objects.definition_for(instance).payload.interaction != interaction:
+			if instance.instance_id in excluded or session.is_consumed(instance.instance_id) or session.objects.definition_for(instance).payload.interaction != interaction or (not content_id.is_empty() and instance.content_id != content_id):
 				continue
 			var point := Vector2i(int(instance.position.x), int(instance.position.y))
 			for offset in [Vector2i.ZERO] + Spawn.DIRECTIONS:

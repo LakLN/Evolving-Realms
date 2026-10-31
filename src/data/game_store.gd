@@ -98,12 +98,17 @@ func list_runs(world_id: String) -> Array:
 func save_run(run_id: String, expected_revision: int, state: Dictionary) -> bool:
 	if not _db.execute("BEGIN IMMEDIATE"):
 		return false
-	var run := load_run(run_id)
-	if run.is_empty():
-		return _db.rollback(last_error)
+	# Only the header is needed here; re-reading and re-validating the whole old state
+	# made every save cost twice its size (matters for per-action permadeath commits).
+	var rows := _db.rows("SELECT world_id,mode,revision,schema_version,json_extract(state_json,'$.status') AS status FROM runs WHERE run_id=?", [run_id])
+	if rows.is_empty():
+		return _db.rollback(last_error if not last_error.is_empty() else "Run not found")
+	var run: Dictionary = rows[0]
+	if run.schema_version != 1:
+		return _db.rollback("Unsupported run schema version")
 	if run.revision != expected_revision:
 		return _db.rollback("Stale run revision; reload before saving")
-	if run.mode == "permadeath" and run.state.status == "dead":
+	if run.mode == "permadeath" and run.status == "dead":
 		return _db.rollback("A dead permadeath run is read-only")
 	if run.mode == "normal" and state.get("status") == "dead":
 		return _db.rollback("Normal-mode death is never saved; the last living save stays authoritative")

@@ -189,6 +189,13 @@ func _draw_object_icon(point: Vector2, visual: String, consumed: bool) -> void:
 		"stone":
 			_object_layer.draw_circle(point + Vector2(-4, 3), 6, Color("c3c8cb"))
 			_object_layer.draw_circle(point + Vector2(5, -4), 5, Color("8e9fa9"))
+		"berry":
+			_object_layer.draw_circle(point + Vector2(0, 2), 9, Color("3f7a3a"))
+			for offset in [Vector2(-4, -1), Vector2(3, -3), Vector2(1, 4)]:
+				_object_layer.draw_circle(point + offset, 3, Color("c2365a"))
+		"spring":
+			_object_layer.draw_circle(point, 10, Color("2f6f9f"))
+			_object_layer.draw_circle(point + Vector2(-2, -2), 5, Color("8fd3ff"))
 		"coin":
 			_object_layer.draw_circle(point, 7, Color("e7c55d"))
 			_object_layer.draw_circle(point, 4, Color("a67d35"), false, 1)

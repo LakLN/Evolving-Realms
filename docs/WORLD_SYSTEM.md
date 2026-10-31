@@ -97,7 +97,8 @@ corner sight; it is not a strict tactical shadowcasting system. Run.explored is 
 in-memory coordinate set; visible is transient. Visible cells have no overlay,
 remembered cells get a dark translucent tile, unseen cells an opaque tile.
 
-Save writes sorted unique `{x,y}` entries to the existing state.explored array,
+Save writes unique `{x,y}` entries (discovery order since Milestone 02 B; older saves
+keep their order) to the existing state.explored array,
 current position and turns; inventory, stats and entity mutations are preserved.
 Expected revision behavior is unchanged. Bounded terrain memory does not bound the
 growing explored set/save size: chunked fog persistence is future optimization.
@@ -109,8 +110,8 @@ Run -> map. Blank seeds use a random seed then persist it; no new World/Run is
 created implicitly on startup. HUD reports position, biome, turns, exploration,
 chunk count and unsaved marker. Hover saved runs for full ID/creation timestamp.
 
-WASD/arrows move; E interacts; F attacks; Tab picks a target; Space waits; I shows
-inventory. Ctrl+S saves. Esc closes inventory
+WASD/arrows move; E interacts; F attacks; Tab picks a target; Space waits; R rests;
+I shows inventory (U uses an item). Ctrl+S saves. Esc closes inventory
 first, otherwise Esc or Save & menu saves before unloading terrain.
 Window close saves before quit. On save failure the map remains open with an error;
 the app never silently discards unsaved changes or chooses a fresh DB as a fallback.
