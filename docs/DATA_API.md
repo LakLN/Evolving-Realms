@@ -88,7 +88,8 @@ required. Empty inventory/explored/entity_mutations are valid. Entity IDs must
 resolve to fixed instances in this run's world. No mutation means original state,
 so a new run automatically sees resources/chests reset. Every save replaces the
 entire mutation map; omitting an entry resets it for that run only. Game rules for
-mutation payloads, stats and item effects belong to later gameplay checkpoints.
+object mutation payloads and inventory slots are now implemented by Checkpoint D;
+stats/item effects still belong to later gameplay checkpoints.
 
 `load_run` reads body/revision/mutations in a single SQLite statement. Save takes
 an IMMEDIATE transaction, checks revision, validates references, updates body and
@@ -105,6 +106,9 @@ Use `store.content`:
 - `list_definitions(world_id)` returns ID/version/kind/status headers.
 - `create_instance(world_id, instance)` persists an immutable fixed placement.
 - `load_instance(world_id, instance_id)` and `list_instances(world_id)` load placements.
+- `list_instances_in_bounds(world_id,min_x,min_y,max_x,max_y)` returns placements
+  inside inclusive integer tile bounds. It uses bound parameters and JSON positions;
+  no new table/index/migration is introduced. Use it for chunk-local object loading.
 
 IDs are namespaced strings matching `^[a-z][a-z0-9_]*:[a-z0-9_./-]+$`, max 128
 characters. Caller supplies stable definition/instance IDs (e.g. world tile and
@@ -179,7 +183,12 @@ them back. Reopening v2 makes no new backup and runs no migration. Unknown futur
 versions and nonempty unversioned databases are refused without migration.
 No downgrade, automatic backup pruning or recovery UI is provided.
 
-Checkpoint C keeps these contracts and migrations unchanged. See
+Checkpoints C/D keep these contracts and migrations unchanged. D adds optional
+`stacks` or `instances` inside an inventory entry and consumed/loot receipt data
+inside an entity mutation. These are payload extensions, not new top-level state
+fields. Legacy entries keep version/quantity and unknown data. Gameplay actions
+must use ExplorationSession; low-level persistence intentionally remains generic.
+See [OBJECTS_AND_INVENTORY.md](OBJECTS_AND_INVENTORY.md) for examples. See
 [WORLD_SYSTEM.md](WORLD_SYSTEM.md) for gameplay APIs, deterministic terrain,
 spawn checks, turns and per-run explored/visible state. Low-level B-created runs
 with blocked positions remain readable here, but gameplay refuses to resume them
@@ -209,7 +218,7 @@ test success. Unexpected errors still need investigation.
 Pinned Windows x64 debug/release DLLs, license, source and SHA256 are in
 `addons/godot-sqlite/`. No service lifecycle, Python executable or manual server
 launch is needed in Windows exports. Checkpoint E must include the GDExtension,
-matching DLL and **non-resource `src/data/migrations/*.sql` files in export filters**,
+matching DLL and **non-resource `src/data/migrations/*.sql` and `content/starter_pack.json` files in export filters**,
 then verify both clean and existing saves in a standalone Windows build. Export
 templates, standalone packaging, other architectures and large-world performance
 are not verified in B. Explored-tile arrays/full run saves are deliberately simple;

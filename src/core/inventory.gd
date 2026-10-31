@@ -1,0 +1,100 @@
+extends RefCounted
+## Existing B content-ID totals, optionally with stack slots / unique item records.
+const Data = preload("res://src/data/json_data.gd")
+var last_error := ""
+
+func award(registry: RefCounted, world_id: String, inventory: Dictionary, loot: Array, identity_key: String) -> Dictionary:
+	var next := inventory.duplicate(true)
+	var received: Array = []
+	for index in loot.size():
+		var drop: Variant = loot[index]
+		if not drop is Dictionary or not Data.identifier(drop.get("content_id")) or not Data.integer(drop.get("version")) or not Data.integer(drop.get("quantity")) or drop.quantity < 1 or drop.quantity > 1000:
+			return _error("Invalid inventory award")
+		var definition: Dictionary = registry.load_definition(world_id, drop.content_id, int(drop.version))
+		if definition.is_empty() or definition.get("kind") != "item" or definition.get("status") != "active":
+			return _error("Only active item definitions can enter inventory")
+		var payload: Dictionary = definition.payload
+		var limit: Variant = payload.get("stack_limit", 1)
+		if not Data.integer(limit) or limit < 1 or limit > 1000000 or not payload.get("stackable", limit > 1) is bool:
+			return _error("Invalid item stacking rules")
+		var stackable: bool = payload.get("stackable", limit > 1)
+		var entry: Dictionary = next.get(drop.content_id, {"version": int(drop.version), "quantity": 0}).duplicate(true)
+		if entry.version != drop.version:
+			return _error("Inventory version conflict; existing version was preserved")
+		var before := int(entry.quantity)
+		if before < 0 or before + int(drop.quantity) > 1000000:
+			return _error("Inventory quantity exceeds supported per-item capacity")
+		if stackable:
+			if entry.has("stacks") and not entry.stacks is Array:
+				return _error("Inventory stack slots must be an array")
+			var slots: Array = entry.get("stacks", []).duplicate()
+			if not entry.has("stacks"):
+				var remaining := before
+				while remaining > 0:
+					var count := mini(remaining, int(limit))
+					slots.append(count)
+					remaining -= count
+			var total := 0
+			for slot in slots:
+				if not Data.integer(slot) or slot < 1 or slot > limit:
+					return _error("Corrupt inventory stack slots")
+				total += int(slot)
+			if total != before:
+				return _error("Inventory stack total mismatch")
+			var remaining := int(drop.quantity)
+			for slot in slots.size():
+				var count := mini(remaining, int(limit) - int(slots[slot]))
+				slots[slot] = int(slots[slot]) + count
+				remaining -= count
+			while remaining > 0:
+				var count := mini(remaining, int(limit))
+				slots.append(count)
+				remaining -= count
+			entry.stacks = slots
+		else:
+			if before + int(drop.quantity) > 10000 or (entry.has("instances") and not entry.instances is Array):
+				return _error("Invalid or excessive individual item records")
+			var instances: Array = entry.get("instances", []).duplicate(true)
+			if not entry.has("instances"):
+				for unit in before:
+					instances.append({"instance_id": "item:" + (identity_key.get_slice("/source/", 0) + "/legacy/" + drop.content_id + "/" + str(unit)).sha256_text(), "metadata": {"legacy": true}})
+			if instances.size() != before:
+				return _error("Inventory instance total mismatch")
+			var ids := {}
+			for instance in instances:
+				if not instance is Dictionary or not Data.identifier(instance.get("instance_id")) or ids.has(instance.instance_id):
+					return _error("Invalid or duplicate individual item ID")
+				ids[instance.instance_id] = true
+			for unit in int(drop.quantity):
+				var item_id := "item:" + (identity_key + "/drop/" + str(index) + "/unit/" + str(unit)).sha256_text()
+				if ids.has(item_id):
+					return _error("This individual item award was already applied")
+				instances.append({"instance_id": item_id, "metadata": {"source": identity_key}})
+				ids[item_id] = true
+			entry.instances = instances
+		entry.quantity = before + int(drop.quantity)
+		next[drop.content_id] = entry
+		received.append({"content_id": drop.content_id, "version": int(drop.version), "quantity": int(drop.quantity), "name": definition.name})
+	last_error = ""
+	return {"inventory": next, "received": received}
+
+func rows(registry: RefCounted, world_id: String, inventory: Dictionary) -> Array:
+	var result: Array = []
+	var keys: Array = inventory.keys()
+	keys.sort()
+	for content_id in keys:
+		var entry: Dictionary = inventory[content_id]
+		var definition: Dictionary = registry.load_definition(world_id, content_id, int(entry.version))
+		if definition.is_empty():
+			continue
+		var raw_limit: Variant = definition.payload.get("stack_limit", 1)
+		var limit := int(raw_limit) if Data.integer(raw_limit) and raw_limit > 0 else 1
+		var flag: Variant = definition.payload.get("stackable", limit > 1)
+		var stackable: bool = flag if flag is bool else false
+		var slots: Variant = entry.get("stacks", []) if stackable else entry.get("instances", [])
+		result.append({"content_id": content_id, "version": entry.version, "name": definition.name, "description": definition.description, "type": definition.metadata.get("category", definition.kind), "quantity": entry.quantity, "stackable": stackable, "slots": slots if slots is Array else [], "stack_limit": limit})
+	return result
+
+func _error(message: String) -> Dictionary:
+	last_error = message
+	return {}

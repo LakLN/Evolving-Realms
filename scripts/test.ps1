@@ -26,9 +26,12 @@ try {
     Invoke-EngineCheck -Name 'data' -EngineArgs @('--headless', '--script', 'res://tests/data_suite.gd') -Summary 'CHECKPOINT B: \d+ checks, 0 failures' -ExpectedNativeErrors 2
     Invoke-EngineCheck -Name 'world' -EngineArgs @('--headless', '--script', 'res://tests/world_suite.gd') -Summary 'CHECKPOINT C WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'gameplay' -EngineArgs @('--headless', '--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'interactions' -EngineArgs @('--headless', '--script', 'res://tests/interaction_suite.gd') -Summary 'CHECKPOINT D INTERACTIONS: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'interaction-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-interactions' -EngineArgs @('--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
     }
     if ($Service) {
         & '.venv/Scripts/python.exe' -E scripts/check_service.py

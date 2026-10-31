@@ -4,8 +4,10 @@
 
 GameStore remains the only persistence API. Database user_version=2 and record
 schemas=1 are unchanged. No HTTP, Python, internet, LLM or content generator service
-is needed for gameplay. C adds exploration only: no inventory UI, collection,
-chests, creatures, combat, talents or world-edit mechanics.
+is needed for gameplay. C established exploration. D now adds resources/chests,
+loot and inventory on a separate non-blocking object layer; see
+[OBJECTS_AND_INVENTORY.md](OBJECTS_AND_INVENTORY.md). Creatures, combat, talents
+and world-edit mechanics remain outside the implemented scope.
 
 ## Modules
 
@@ -86,7 +88,8 @@ error, leaving its record untouched; no automatic migration/teleport is performe
 Only successful cardinal steps change character.position and add one turn. Invalid
 directions and blocked steps change neither position nor turn. Holding a movement
 key repeats after 0.2 seconds, then every 0.14 seconds, at most one step per frame.
-These are player movement turns only, not an enemy/status simulation framework.
+These are player actions only, not an enemy/status simulation framework. In D,
+successful gather/open/pickup actions use the same dispatcher and spend one turn.
 
 Sight is radius 7, circular, with integer Bresenham line of sight. The first opaque
 tile is visible; tiles behind it are hidden. This basic ray model permits diagonal
@@ -106,7 +109,8 @@ Run -> map. Blank seeds use a random seed then persist it; no new World/Run is
 created implicitly on startup. HUD reports position, biome, turns, exploration,
 chunk count and unsaved marker. Hover saved runs for full ID/creation timestamp.
 
-WASD/arrows move; F5 saves. Esc or Save & menu saves before unloading terrain.
+WASD/arrows move; E interacts; I shows inventory. F5 saves. Esc closes inventory
+first, otherwise Esc or Save & menu saves before unloading terrain.
 Window close saves before quit. On save failure the map remains open with an error;
 the app never discards unsaved changes or chooses a fresh DB as a fallback. There
 is no per-step autosave/crash recovery guarantee; use F5 during long exploration.

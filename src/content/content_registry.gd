@@ -3,6 +3,9 @@ extends RefCounted
 const Data = preload("res://src/data/json_data.gd")
 const SUPPORTED_CAPABILITIES := ["definition.item", "definition.resource", "definition.chest"]
 var _db: RefCounted
+var last_error: String:
+	get:
+		return _db.last_error
 
 func _init(database: RefCounted) -> void:
 	_db = database
@@ -129,6 +132,17 @@ func list_instances(world_id: String) -> Array:
 	var result: Array = []
 	for row in _db.rows("SELECT instance_json FROM content_instances WHERE world_id=? ORDER BY instance_id", [world_id]):
 		result.append(JSON.parse_string(row.instance_json))
+	return result
+
+func list_instances_in_bounds(world_id: String, min_x: int, min_y: int, max_x: int, max_y: int) -> Array:
+	# Inclusive integer bounds. Keep gameplay SQL behind the existing registry API.
+	var result: Array = []
+	for row in _db.rows("SELECT instance_json FROM content_instances WHERE world_id=? AND json_extract(instance_json,'$.position.x') BETWEEN ? AND ? AND json_extract(instance_json,'$.position.y') BETWEEN ? AND ? ORDER BY instance_id", [world_id, min_x, max_x, min_y, max_y]):
+		var instance: Variant = JSON.parse_string(row.instance_json)
+		if not instance is Dictionary:
+			_db.fail("Corrupt content instance")
+			return []
+		result.append(instance)
 	return result
 
 func _error(message: String) -> Dictionary:

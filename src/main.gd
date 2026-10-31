@@ -4,6 +4,7 @@ const Store = preload("res://src/data/game_store.gd")
 const Session = preload("res://src/run/exploration_session.gd")
 const MapView = preload("res://src/world/map_view.gd")
 const Data = preload("res://src/data/json_data.gd")
+const StarterPack = preload("res://src/content/starter_pack.gd")
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
 var database_path := "user://realms.sqlite"
@@ -24,6 +25,11 @@ var _resume: Button
 var _status: Label
 var _info: Label
 var _notice: Label
+var _interaction_hint: Label
+var _inventory_panel: PanelContainer
+var _inventory_list: ItemList
+var _inventory_detail: Label
+var _inventory_rows: Array = []
 var _hold_delay := 0.0
 var _data_ready := false
 
@@ -50,6 +56,7 @@ func _ready() -> void:
 	frame.theme = ui_theme
 	_build_menu(frame)
 	_build_hud(frame)
+	_build_inventory(frame)
 	_data_ready = store.open(database_path)
 	_create_world.disabled = not _data_ready
 	_refresh_worlds()
@@ -108,7 +115,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD / Arrows: move    F5: save    Esc: save and return to menu", 16)
+	_label(column, "WASD / Arrows: move    E: interact    I: inventory    F5: save    Esc: save & menu", 16)
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -124,18 +131,73 @@ func _build_hud(parent: Control) -> void:
 	top.add_child(row)
 	_info = _label(row, "", 17)
 	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_button(row, "Inventory [I]", _toggle_inventory).focus_mode = Control.FOCUS_NONE
 	_button(row, "Save [F5]", _save_game).focus_mode = Control.FOCUS_NONE
 	_button(row, "Save & menu [Esc]", _return_to_menu).focus_mode = Control.FOCUS_NONE
 	var bottom := PanelContainer.new()
 	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	bottom.offset_top = -78
+	bottom.offset_top = -100
 	_hud.add_child(bottom)
 	var column := VBoxContainer.new()
 	bottom.add_child(column)
 	_notice = _label(column, "", 17)
-	_label(column, "WASD / Arrows  |  Green: forest, olive: meadow, sand: beach  |  Trees, rocks & water block movement", 15)
+	_interaction_hint = _label(column, "", 17)
+	_label(column, "WASD / Arrows: move  |  E: gather / open / pick up  |  I: inventory  |  Objects do not block movement", 15)
 	_label(column, "Black: unexplored  /  Dim: remembered  /  Bright: visible. Blocked steps cost no turns.", 15)
 	_hud.hide()
+
+func _build_inventory(parent: Control) -> void:
+	_inventory_panel = PanelContainer.new()
+	_inventory_panel.anchor_left = 1.0
+	_inventory_panel.anchor_right = 1.0
+	_inventory_panel.anchor_top = 0.5
+	_inventory_panel.anchor_bottom = 0.5
+	_inventory_panel.offset_left = -395
+	_inventory_panel.offset_right = -20
+	_inventory_panel.offset_top = -235
+	_inventory_panel.offset_bottom = 235
+	parent.add_child(_inventory_panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	_inventory_panel.add_child(column)
+	_label(column, "INVENTORY", 24)
+	_inventory_list = ItemList.new()
+	_inventory_list.custom_minimum_size = Vector2(365, 210)
+	_inventory_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_inventory_list.item_selected.connect(_show_inventory_item)
+	column.add_child(_inventory_list)
+	_inventory_detail = _label(column, "", 16)
+	_inventory_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_inventory_detail.custom_minimum_size.y = 150
+	_button(column, "Close [I / Esc]", _toggle_inventory)
+	_inventory_panel.hide()
+
+func _toggle_inventory() -> void:
+	if session == null or _menu.visible:
+		return
+	_inventory_panel.visible = not _inventory_panel.visible
+	_hold_delay = 0.2
+	if _inventory_panel.visible:
+		_inventory_rows = session.inventory_rows()
+		_inventory_list.clear()
+		for item in _inventory_rows:
+			_inventory_list.add_item("%s  x%d" % [item.name, item.quantity])
+			_inventory_list.set_item_tooltip(_inventory_list.item_count - 1, "%s / %s" % [item.name, item.type])
+		if _inventory_rows.is_empty():
+			_inventory_detail.text = "Empty. Explore and gather resources or open chests."
+		else:
+			_inventory_list.select(0)
+			_show_inventory_item(0)
+		_inventory_list.grab_focus()
+	else:
+		get_viewport().gui_release_focus()
+
+func _show_inventory_item(index: int) -> void:
+	var item: Dictionary = _inventory_rows[index]
+	var stacking := "Stackable / limit %d per stack" % item.stack_limit if item.stackable else "Non-stackable / %d individual items" % item.quantity
+	_inventory_detail.text = "%s\n%s / v%d / Quantity: %d\n%s\n%s" % [item.name, item.type, item.version, item.quantity, stacking, item.description]
+	if not item.stackable and not item.slots.is_empty():
+		_inventory_detail.text += "\nItem ID: " + str(item.slots[0].instance_id).left(22) + "..."
 
 func _label(parent: Node, text: String, size: int) -> Label:
 	var label := Label.new()
@@ -203,7 +265,11 @@ func _on_create_world() -> void:
 	var seed_value: Variant = _parse_seed(_world_seed)
 	if seed_value == null:
 		return
-	var world := store.create_world(_name_entry.text, seed_value)
+	var blueprint := StarterPack.blueprint(seed_value)
+	if blueprint.is_empty():
+		_message("Could not establish a valid landmark for this seed.", true)
+		return
+	var world := store.create_world(_name_entry.text, seed_value, 1, blueprint)
 	if world.is_empty():
 		_message(store.last_error, true)
 		return
@@ -244,9 +310,27 @@ func _enter_map(active_session: RefCounted) -> void:
 
 func _update_info() -> void:
 	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d)  |  %s  |  Turn %d  |  Explored %d  |  Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	var target: Dictionary = session.interaction_target()
+	_interaction_hint.text = "E: interact on your tile or a cardinal neighbor.  I: view inventory."
+	if not target.is_empty():
+		var definition: Dictionary = session.objects.definition_for(target)
+		_interaction_hint.text = "E: %s %s  /  (%d, %d)" % [str(definition.payload.interaction).capitalize(), definition.name, target.position.x, target.position.y]
+
+func _interact() -> void:
+	if session == null or _inventory_panel.visible:
+		return
+	if session.interact():
+		var received := PackedStringArray()
+		for item in session.last_result.received:
+			received.append("%s x%d" % [item.name, item.quantity])
+		_notice.text = "Received: " + ", ".join(received)
+		map_view.refresh()
+	else:
+		_notice.text = session.last_error
+	_update_info()
 
 func move_player(direction: Vector2i) -> bool:
-	if session == null or _menu.visible:
+	if session == null or _menu.visible or _inventory_panel.visible:
 		return false
 	var moved: bool = session.try_move(direction)
 	if moved:
@@ -260,10 +344,16 @@ func move_player(direction: Vector2i) -> bool:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if session == null or _menu.visible or not event is InputEventKey or not event.pressed or event.echo:
 		return
+	if _inventory_panel.visible:
+		return
 	if event.keycode == KEY_F5 or event.physical_keycode == KEY_F5:
 		_save_game()
 	elif event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE:
 		_return_to_menu()
+	elif event.keycode == KEY_E or event.physical_keycode == KEY_E:
+		_interact()
+	elif event.keycode == KEY_I or event.physical_keycode == KEY_I:
+		_toggle_inventory()
 	else:
 		for action in MOVE_KEYS:
 			if event.is_action_pressed(action):
@@ -272,8 +362,18 @@ func _unhandled_key_input(event: InputEvent) -> void:
 				break
 	get_viewport().set_input_as_handled()
 
+func _input(event: InputEvent) -> void:
+	if _inventory_panel == null or not _inventory_panel.visible or not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if event.keycode in [KEY_I, KEY_ESCAPE] or event.physical_keycode in [KEY_I, KEY_ESCAPE]:
+		_toggle_inventory()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_F5 or event.physical_keycode == KEY_F5:
+		_save_game()
+		get_viewport().set_input_as_handled()
+
 func _process(delta: float) -> void:
-	if session == null or _menu.visible:
+	if session == null or _menu.visible or _inventory_panel.visible:
 		return
 	_hold_delay -= delta
 	if _hold_delay > 0:
@@ -298,6 +398,7 @@ func _return_to_menu() -> void:
 		return
 	var world_id: String = session.world.world_id
 	session = null
+	_inventory_panel.hide()
 	map_view.clear_map()
 	map_view.hide()
 	_hud.hide()

@@ -10,10 +10,11 @@
   obstacles, accessible spawn, cardinal movement/turns, camera, fog and discovery,
   World/Run menu and save/resume. These turn/exploration/menu features were
   explicitly included in the user's expanded C scope. SQLite schema unchanged.
-- D (not started; requires next user instruction): resources/chests, inventory
-  interactions and UI, extend action/turn participants as required. Reuse C's fog,
-  menu and saves instead of implementing them again.
-- E: integrated regression/acceptance, save management hardening as needed,
+- D (complete): biome-based non-blocking resources, procedural/fixed chests,
+  weighted deterministic loot, pickup/gather/open actions, stack/individual item
+  records, inventory UI and per-run object deltas. Reuses C's map/fog/menu and B's
+  schema/save contracts; no SQLite migration.
+- E (not started; requires next user instruction): integrated regression/acceptance, save management hardening as needed,
   Windows export and standalone gameplay verification.
 
 Acceptance: create seeded world, explore and gather/open chests in run 1, save,

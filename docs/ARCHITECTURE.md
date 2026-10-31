@@ -6,14 +6,15 @@ authoring process, not a dependency for movement, saving or combat.
 
 ## Modules and planned layout
 
-- src/core: future general turn participants, inventory and effect handlers.
+- src/core: implemented weighted LootTable and Inventory model; future simulation/effects.
 - src/world: implemented terrain_v1, bounded chunk cache, spawn selector,
-  TileMapLayer renderer and code-native placeholder atlas.
+  TileMapLayer renderer, world_objects v1 layer and code-native placeholder art.
 - src/run: implemented ExplorationSession: cardinal actions/turns, sight,
-  per-run discovery and save/resume over GameStore.
-- src/main.gd: World/Run menu, keyboard input, camera/HUD integration and save-on-exit.
+  per-run discovery, extensible action dispatch and save/resume over GameStore.
+- src/main.gd: World/Run menu, keyboard input, camera/HUD, inventory and save-on-exit.
 - src/data: implemented local database, migrations and World/Run persistence facade.
 - src/content: definitions, validation, registry and capability checks.
+- content/starter_pack.json: immutable sample item/object definitions and distribution/loot data.
 - service: optional provider abstraction, world context, structured proposals.
 - src/evolution: future compatibility/migrations and mechanic proposals.
 
@@ -84,6 +85,41 @@ the immutable generator, backed by established definitions/instances, then use
 the same resolved terrain for rendering, collision and spawn. Never store edits
 in run exploration or rewrite v1 noise. No overlay mechanic or DB migration is
 introduced in C.
+
+## Objects, actions and inventory — Checkpoint D
+
+WorldObjects composes the frozen v1 terrain with independent object-generation
+streams. Only walkable cells receive objects; all objects are non-blocking. Stable
+procedural IDs use global chunk/local tile coordinates. Existing authored/materialized
+instances have precedence; one object per cell, deterministic priority/ID rule
+ordering and chunk ownership prevent duplicates. New UI-created World Blueprints
+contain a seeded sample cache descriptor. Older blueprints are never rewritten.
+
+StarterPack installs immutable version-1 sample definitions idempotently through
+Content Registry. Gameplay payloads, pinned item dependencies, distributions and
+loot tables are validated before use. New resource types need data, not ID-specific
+gameplay branches. WorldObjects keeps nine object chunks alongside C's terrain;
+registry bounds queries avoid loading all world instances into RAM.
+
+Procedural placements are derived, not copied wholesale into SQLite. Interaction
+materializes the selected placement to satisfy existing mutation foreign keys.
+Only run-specific consumed/opened/remaining/receipt deltas and inventory are saved.
+The existing transaction commits them together; no schema or GameStore changes.
+Unconsumed catalog additions may add/change derived objects on next session load;
+already materialized placements and pinned definitions remain authoritative.
+
+ExplorationSession.perform_action dispatches structured move/interact actions to
+trusted code handlers. Only accepted actions spend one turn. Interactions require
+current/cardinal-neighbor range, sight and an unconsumed instance. Loot is derived
+from world seed, generation version, Run seed, instance ID and pinned definition
+with private SHA256 draw keys. Repeated input and save/reload cannot duplicate or
+reroll rewards. Validation/award planning happens before mutable run state changes.
+
+Inventory retains B's content-ID -> version/quantity entries. Optional stack slots
+or individual item records extend entry JSON without replacing legacy data. A
+content ID still pins one version per run; a conflicting-version award is refused.
+No equipment, crafting, dropping, trading or item-use system is introduced.
+Details/examples and known limits: [OBJECTS_AND_INVENTORY.md](OBJECTS_AND_INVENTORY.md).
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

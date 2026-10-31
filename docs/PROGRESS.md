@@ -1,6 +1,92 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: C complete; D not started
+## Current checkpoint: D complete; E not started
+
+Continued from verified commit 61afbe9 with a clean working tree. Read required
+workflow/design/API docs and current source before changes. Terrain v1, chunk
+generation/spawn, SQLite schema/migrations and GameStore save contracts remain
+unchanged. Scope was D only; no build/export, combat, creatures, talents, skills,
+crafting, AI provider or engine evolution work.
+
+### Implemented in D
+
+- content/starter_pack.json: seven item and eight resource/chest definitions,
+  configured biome distributions/rarity, visuals, pinned dependencies, guaranteed
+  and weighted loot. Forest branches/herbs, coastal shells/stones, meadow fibers,
+  loose coins and rare chests; new types run through data without ID-specific logic.
+- WorldObjects v1: deterministic coordinate streams, stable per-cell procedural
+  IDs, one object per valid tile, non-blocking objects, fixed/materialized precedence
+  and nine-chunk object cache. No terrain algorithm or geography changes.
+- New UI Worlds have a seeded Wayfarer's cache descriptor in fixed_locations.
+  Existing blueprints are not edited. Fixed descriptors materialize once through
+  Content Registry; unchanged procedural placements are not copied into saves.
+  Registry adds a read-only bounds query and public last_error accessor.
+- Interact on own/cardinal-neighbor visible tile; gather, open or pickup. Structured
+  perform_action dispatches trusted move/interact handlers and emits completion;
+  accepted actions spend exactly one turn. Invalid/depleted actions spend none.
+- Loot draws are deterministic from world/Run seeds, pinned definition and object
+  identity; no shared RNG or reload rerolls. Planning validates first; then inventory
+  and consumed/opened/remaining/receipt deltas change together and save atomically
+  through the existing B transaction/revision check. No per-run respawn rule added.
+- Inventory keeps content-ID version/quantity contract; optional stack slots and
+  stable individual item IDs extend JSON payloads. Partial stacks fill first;
+  non-stackable instances keep separate IDs. Legacy totals/unknown data preserved.
+- Placeholder objects and target highlighting under existing fog; E interaction,
+  loot notifications, I inventory panel (name/description/type/quantity/stack rules),
+  inventory navigation pauses movement and spends no turns. F5/Save and Esc flows
+  retained; Esc closes inventory first.
+- docs/OBJECTS_AND_INVENTORY.md and updated README/API/architecture/roadmap.
+  No SQLite migration was necessary; user_version remains 2, record schemas remain 1.
+
+### D verification
+
+Actual Godot 4.7.2 and native SQLite. Full command:
+
+```powershell
+.\scripts\test.ps1 -Render -Service
+```
+
+- Existing B data **96/96**, C world **49/49**, C gameplay **20/20 headless** and
+  **22/22 Windows OpenGL** checks all pass. Terrain golden fixtures unchanged.
+- D interactions **66/66**: object determinism/order/biome/valid positions, fixed
+  and derived merging, missing/distant/depleted interactions, exact turns,
+  pickup/gather/open, no repeated payout, weighted distribution, fixed cache
+  unique IDs, stack splitting/merging, legacy entries, data-only new object rules,
+  consumed-instance precedence, eviction/boundary uniqueness, Run A/B isolation,
+  malformed content/reference rejection and no FK violations/schema change.
+- Populated pre-D schema-2 fixture receives content additively and then gathers/
+  saves without losing old inventory, custom stats/character data or Blueprint.
+  Separate native Godot processes write/read chest receipt and inventory and
+  reject another payout after application restart.
+- D actual-scene UI **16/16 headless**, **19/19 Windows OpenGL**: real menu signals,
+  injected E/I/F5/Esc/arrow events, resource highlight, item notification, inventory
+  metadata/navigation, chest opening, save/continue and independent second run.
+- Captured/visually inspected native OpenGL artifacts in .tools/:
+  checkpoint-d-resources.png, checkpoint-d-inventory.png, checkpoint-d-opened-chest.png.
+  This is automated real-engine input/rendering plus screenshot inspection; no
+  human manual playthrough claimed.
+- CLI editor import/startup, optional FastAPI real HTTP health and pip check pass.
+  Only B's two intentionally injected native SQL errors are allowed by the runner;
+  no unexpected script/extension/native errors. Logs: .tools/test-*.log.
+  Tests use UUID user://checkpoint_d_tests/ files, not production saves.
+
+### Remaining limits / next checkpoint
+
+No standalone Windows export produced. E must install matching templates, include
+native SQLite DLL, migration SQL and content/starter_pack.json, then verify clean
+and existing saves in a standalone build. Do not start E without a new user request.
+Milestone 01 remains incomplete until E is verified.
+
+Inventory is receive/store/view only: no equipment, item-use, drop, crafting or
+weight system. Each item ID pins one version per Run; conflicting-version awards
+are refused. New data rules activate on session reload and may affect unmaterialized
+placements; persisted placements/versions remain authoritative. No auto-upgrade,
+respawn or permanent terrain-edit mechanic. Spatial JSON bounds scans and growing
+per-run fog/mutation/inventory payloads need profiling before very large worlds.
+Manual F5/orderly exits persist; forced termination can lose unsaved actions.
+Inherited C coordinate/spawn/LOS/placeholder limits remain documented.
+
+## Checkpoint C record (historical)
 
 Continued from verified commit a34096a with a clean working tree. Read AGENTS and
 all required design/API documents before implementation. Checkpoints A/B and their
