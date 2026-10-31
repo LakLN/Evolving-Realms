@@ -93,7 +93,7 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var generator := Terrain.new()
 	if not generator.configure(int(blueprint.seed), int(blueprint.generation_version)):
 		return _fail(generator.last_error)
-	var spawn := Spawn.select(generator, run_seed, biome)
+	var spawn := Spawn.select(generator, run_seed, biome, Spawn.RUN_SELECTION_VERSION)
 	if spawn.is_empty():
 		return _fail("No accessible spawn found for biome " + biome)
 	if not survival.load_rules():

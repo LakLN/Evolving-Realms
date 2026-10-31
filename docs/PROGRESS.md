@@ -1556,3 +1556,48 @@ Run isolation, encounters and ledger revisions. No Windows export for this task.
 See [CHUNK_PERFORMANCE.md](CHUNK_PERFORMANCE.md) for methodology, raw report
 paths, rendering limits and post-Agent-1 cherry-pick/retest instructions.
 Worktree retained; no new gameplay or milestone work started.
+
+
+## Run 01 / Task B - World, spawn and evolution (2026-11-01)
+
+Isolated `feature/run01-world` at `D:/Game/RPG-run01-world`, based on `cc5c8fb`
+(master with Batch 02/chunk optimization). No main worktree edits, official player
+World/Run creation, merge or Windows export.
+
+World/Run creation and spawn were already seeded and deterministic. Found a real
+bad start: World -99 / Run 7301 / beach lands on a 167-cell island under policy v1.
+New gameplay Runs now request spawn policy v2: retain the old candidate streams,
+biome and local checks, then require >=256 connected cells and a path to radius 24
+inside a bounded +/-24 flood fill. No loot/site targeting or geography edits.
+The existing spawn JSON records selection_version=2; no schema migration.
+Default v1 selection stays available for Blueprint landmarks/legacy API callers;
+resume uses stored positions, so old Runs and World ID/seed/Blueprint stay intact.
+
+Spawn audit: 128 different World/Run seed pairs -> 128 distinct starts, forest 41 /
+beach 45 / meadow 42, no failures; one World with 32 Run seeds -> 32 distinct starts;
+36 requested-biome cases including signed seed limits pass. Nine real new Runs
+have reachable berries 4-33 steps away and water 6-27 steps away in the loaded 3x3.
+The corrected -99 beach has 7462 reachable loaded cells (previously 167). No density
+or content-pack changes were warranted from this sample. These observations are
+not global survival guarantees.
+
+Verification (targeted only):
+
+- `.\scripts\godot.ps1 --headless --script res://tests/run01_world_suite.gd`:
+  20 checks, 0 failures, including explicit old v1 spawn resume/no rewrite,
+  closed-island regression, saved fog/position restore and World/Run isolation.
+- `.\scripts\test.ps1 -Only world,ai-world,discoveries -Smoke`: all passed;
+  data 96/0, world 49/0, integration 41/0, AI World 41/0, discoveries 40/0;
+  8 offline provider tests OK; import/startup PASS. Existing terrain v1 golden
+  fixtures, load order and cross-process persistence still pass.
+- `.tools/run01-world-before.json` / `run01-world.json` retain distribution audits;
+  `.tools/test-run01-world.log` and related suite logs retain results.
+- No full regression/export; `git diff --check` clean.
+
+World evolution uses the existing activation/revision flow, verified by the
+AI-world/discovery suites: session reload refreshes catalog, new regions receive
+new revisions, established regions remain pinned. Resource/chest v1 distributions
+are not ledger-versioned; arbitrary new object rules can affect unmaterialized
+placements after reload. No automatic reset/World upgrade, terrain overlay or
+retroactive region evolution is implemented. See [RUN01_WORLD.md](RUN01_WORLD.md)
+for measured distribution, compatibility policy, limits and integration commands.

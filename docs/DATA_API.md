@@ -69,6 +69,11 @@ Spawn is `{position: {x: integer, y: integer}, biome: nonempty String}`. B valid
 structure, not terrain walkability or biome correctness; ExplorationSession supplies those. Seeds
 are signed 32-bit. World generator version 1 is the only supported identifier;
 terrain generation itself is implemented in C without changing this schema/API.
+New Run 01 gameplay spawns additionally store `selection_version: 2`; missing means
+the original v1 selection policy. This is an additive field in spawn JSON, not a
+terrain generation version or database migration. Resume uses the saved coordinates,
+not a fresh selection; creating a new Run never edits previous spawns.
+
 
 Run mutable state has exactly these six fields:
 

@@ -80,6 +80,23 @@ It requires walkable ground, at least two walkable cardinal neighbors and at lea
 20 connected tiles within a 5-tile neighborhood. It does not guarantee every
 island connects to every other area. No fallback spawns in water or deletes saves.
 
+Run 01 adds **Run spawn selection v2**, separately from frozen terrain generation
+v1. `ExplorationSession.start_new` calls `Spawn.select(..., 2)`: after the v1
+accessibility checks a bounded flood fill requires at least 256 connected walkable
+tiles and a path reaching Chebyshev radius 24, within the +/-24 square. It rejects
+small islands/pockets, without consulting resources, encounters or special places.
+It does not prove continent-wide connectivity or guarantee survival/food forever.
+Candidates, biome choice and search bounds stay unchanged. New spawns store
+`selection_version: 2` in their existing spawn JSON; no schema migration.
+
+`Spawn.select` defaults to v1 for old callers and Blueprint landmark generation.
+That preserves existing seed-derived World descriptors. Unknown selection versions
+return an empty result. Saved Runs (including v1 without the field) load their stored
+position/spawn directly and are never rerolled or teleported. See
+[RUN01_WORLD.md](RUN01_WORLD.md) for the island regression, distribution audit and
+World evolution limits.
+
+
 New Runs are created through unchanged GameStore.create_run, initial sight is
 saved, and previous Runs remain intact. Resume checks the saved tile against v1
 terrain. A legacy B-only run at a blocked/out-of-range location is refused with an
