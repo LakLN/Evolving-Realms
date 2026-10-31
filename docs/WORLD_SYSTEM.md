@@ -1,0 +1,134 @@
+# World and exploration — Checkpoint C
+
+## Boundaries
+
+GameStore remains the only persistence API. Database user_version=2 and record
+schemas=1 are unchanged. No HTTP, Python, internet, LLM or content generator service
+is needed for gameplay. C adds exploration only: no inventory UI, collection,
+chests, creatures, combat, talents or world-edit mechanics.
+
+## Modules
+
+| Module | Responsibility |
+|---|---|
+| `src/world/terrain_v1.gd` | Pure seeded tile/biome/obstacle generation |
+| `src/world/chunk_cache.gd` | Retain 3x3 chunks around the current global tile |
+| `src/world/spawn_selector.gd` | Deterministic run-seeded accessible spawn search |
+| `src/run/exploration_session.gd` | Position, valid movement/turns, visibility, save/load |
+| `src/world/map_view.gd` | Chunk-local TileMapLayers, render origin, player/camera |
+| `src/world/tile_palette.gd` | Small generated placeholder tile atlas |
+| `src/main.gd` | Menu, keyboard/held input, HUD, save/menu/exit flow |
+
+Terrain is derived immutable data. Only World seed/generation version determine it;
+Run seed and exploration order do not. Chunks are 32x32 tiles (32 pixels per tile).
+Global integer tile = chunk*32 + local; floor division and positive modulo handle
+negative positions. Gameplay is bounded to +/-1,000,000 tiles on each axis. Beyond
+that bound terrain is impassable water, avoiding integer/render overflow promises.
+
+## Frozen generation v1
+
+Coordinate hashing uses explicit 32-bit masks, integer XOR/multiply/shift, all
+intermediates within signed 64-bit range. It incorporates the full signed world
+seed, coordinates and fixed stream tags; never Godot's process hash or global RNG.
+Q1024 smooth interpolation over lattice values creates coherent regions. Elevation
+combines scales 96/32, stream tags 11/12. Moisture scale 72/tag 21 divides inland
+forest and meadow. Elevation <340 is ocean, <425 is beach; the rest is forest when
+moisture >=500 and meadow otherwise. Stream 31 adds sparse rocks and forest trees.
+Water, trees and rocks are impassable; trees/rocks also obstruct sight.
+
+`Terrain.configure(seed, generation_version)` accepts v1 only. Keep this file and
+its thresholds/hash frozen for established v1 worlds. A future algorithm needs a
+new generator/version dispatch and compatibility changes; never replace v1 in place.
+Tests pin SHA256 bytes (row-major tile IDs) for seed 1847:
+
+| Chunk | SHA256 |
+|---|---|
+| (-2,-1) | `12542b41e3d4c786aaa1a9c4e59d5511db506866091bc9dca364e58a04cd3c85` |
+| (0,0) | `ec1993e796376e612aa95d02ce0eb9aa1fe394ae306f534f6290efecd1bf8efb` |
+| (3,4) | `fcb424e6d90e2da82f75e861af6e631e7d6b39d84b956bb83791ec42cce9b422` |
+
+ChunkCache retains exactly nine terrain arrays; distant arrays and render nodes
+are evicted. Returning regenerates the same bytes. Collision/LOS use cached tiles.
+Two TileMapLayers per chunk render ground and fog using local cells 0..31. A
+render origin at the player's current chunk rebases positions without changing
+global data or saved coordinates. Camera2D follows the player's local marker.
+
+Fixed terrain modifications are deliberately not implemented. A future resolved
+terrain overlay can use world-scoped established content instances (current
+unsupported terrain kinds stay pending), keeping base v1 immutable. It must feed
+rendering, cache, collision and spawn consistently. Do not put permanent edits in
+Run State or patch procedural noise to make a local change.
+
+## Session API
+
+```gdscript
+const Session = preload("res://src/run/exploration_session.gd")
+var session := Session.new(open_game_store)
+if session.start_new(world_id, run_seed, "forest"):
+    session.try_move(Vector2i.RIGHT)
+    if not session.save():
+        push_error(session.last_error)
+# Or: session.resume(existing_run_id)
+```
+
+Spawn choices: any/forest/beach/meadow. A private hash stream (101-103) selects a
+biome/candidates using Run seed without consuming terrain randomness. Search is
+bounded to 4096 candidates within +/-2048 tiles, and fails explicitly if none fit.
+It requires walkable ground, at least two walkable cardinal neighbors and at least
+20 connected tiles within a 5-tile neighborhood. It does not guarantee every
+island connects to every other area. No fallback spawns in water or deletes saves.
+
+New Runs are created through unchanged GameStore.create_run, initial sight is
+saved, and previous Runs remain intact. Resume checks the saved tile against v1
+terrain. A legacy B-only run at a blocked/out-of-range location is refused with an
+error, leaving its record untouched; no automatic migration/teleport is performed.
+
+Only successful cardinal steps change character.position and add one turn. Invalid
+directions and blocked steps change neither position nor turn. Holding a movement
+key repeats after 0.2 seconds, then every 0.14 seconds, at most one step per frame.
+These are player movement turns only, not an enemy/status simulation framework.
+
+Sight is radius 7, circular, with integer Bresenham line of sight. The first opaque
+tile is visible; tiles behind it are hidden. This basic ray model permits diagonal
+corner sight; it is not a strict tactical shadowcasting system. Run.explored is an
+in-memory coordinate set; visible is transient. Visible cells have no overlay,
+remembered cells get a dark translucent tile, unseen cells an opaque tile.
+
+Save writes sorted unique `{x,y}` entries to the existing state.explored array,
+current position and turns; inventory, stats and entity mutations are preserved.
+Expected revision behavior is unchanged. Bounded terrain memory does not bound the
+growing explored set/save size: chunked fog persistence is future optimization.
+
+## UI lifecycle and failure behavior
+
+Create/select World -> choose biome/optional Run seed -> new Run or continue saved
+Run -> map. Blank seeds use a random seed then persist it; no new World/Run is
+created implicitly on startup. HUD reports position, biome, turns, exploration,
+chunk count and unsaved marker. Hover saved runs for full ID/creation timestamp.
+
+WASD/arrows move; F5 saves. Esc or Save & menu saves before unloading terrain.
+Window close saves before quit. On save failure the map remains open with an error;
+the app never discards unsaved changes or chooses a fresh DB as a fallback. There
+is no per-step autosave/crash recovery guarantee; use F5 during long exploration.
+Minimum logical window is 1000x700, default 1100x720 with canvas scaling.
+
+## Verification
+
+`scripts/test.ps1` runs CLI import, existing B data tests, world tests, headless
+actual-menu/input/renderer tests and startup. `-Render` additionally runs the same
+gameplay flow with Windows OpenGL and captures `.tools/checkpoint-c-map.png` and
+`checkpoint-c-menu.png`. `-Service` checks the pre-existing optional FastAPI service.
+Diagnostics are under `.tools/test-*.log`; unique test databases use
+`user://checkpoint_c_tests/` and never the normal save file.
+
+Coverage includes fixed v1 fixtures, seed differences, reversed chunk order,
+negative seams, 36 spawns across four World seeds/three biomes, invalid movement,
+77 actual movement steps across four chunks/two biomes, LOS/fog, eviction/reload,
+Run isolation, exact save/load and separate-process geography/state persistence.
+Actual scene tests press menu buttons and inject keyboard events through Godot,
+cross rendered chunk boundaries, check camera/fog layers, save/resume and reopen
+the menu with both Runs. OpenGL screenshots are visually inspected; this is
+automated input/renderer verification, not a claim of human manual playtesting.
+
+No standalone Windows export is produced in C. Checkpoint E must still include
+SQLite DLLs and migration SQL in export, then verify standalone lifecycle/saves.

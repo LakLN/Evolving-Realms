@@ -6,11 +6,15 @@
   version control and reproducible commands. Verify CLI import and startup.
 - B (complete): local SQLite adapter, migrations, World/Run repositories, schemas, validated
   Content Registry and mock provider. Test isolation, round trip, rejection paths.
-- C (not started; requires next user instruction): deterministic chunk generation, three biomes (forest, beach, third terrain),
-  TileMapLayer, obstacles, valid spawn, keyboard movement and following camera.
-- D: turn manager, fog/exploration, resource/chest instances, inventory and UI.
-- E: integrated save/resume, multiple runs/worlds UI, regression tests, Windows
-  export and manual gameplay acceptance.
+- C (complete): deterministic 32x32 chunks, forest/beach/meadow, TileMapLayer,
+  obstacles, accessible spawn, cardinal movement/turns, camera, fog and discovery,
+  World/Run menu and save/resume. These turn/exploration/menu features were
+  explicitly included in the user's expanded C scope. SQLite schema unchanged.
+- D (not started; requires next user instruction): resources/chests, inventory
+  interactions and UI, extend action/turn participants as required. Reuse C's fog,
+  menu and saves instead of implementing them again.
+- E: integrated regression/acceptance, save management hardening as needed,
+  Windows export and standalone gameplay verification.
 
 Acceptance: create seeded world, explore and gather/open chests in run 1, save,
 restart, resume unchanged, create independent run 2 with reset resources and the

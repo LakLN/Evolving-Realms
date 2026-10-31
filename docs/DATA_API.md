@@ -24,7 +24,8 @@ func example() -> void:
         push_error(store.last_error)
         store.close()
         return
-    # Checkpoint C must select a valid tile using the actual world generator.
+    # Low-level persistence example only. Actual gameplay must use
+    # ExplorationSession.start_new to select a terrain-valid spawn (see WORLD_SYSTEM).
     var run := store.create_run(world.world_id, 901,
         {"position": {"x": 0, "y": 0}, "biome": "forest"})
     if not run.is_empty():
@@ -65,9 +66,9 @@ New established locations/resources/AI additions use append-only content instanc
 they do not rewrite initial geography. No world deletion/reset API exists.
 
 Spawn is `{position: {x: integer, y: integer}, biome: nonempty String}`. B validates
-structure, not terrain walkability or biome correctness; C supplies those. Seeds
+structure, not terrain walkability or biome correctness; ExplorationSession supplies those. Seeds
 are signed 32-bit. World generator version 1 is the only supported identifier;
-terrain generation itself is not implemented in B.
+terrain generation itself is implemented in C without changing this schema/API.
 
 Run mutable state has exactly these six fields:
 
@@ -177,6 +178,12 @@ All pending DDL and user_version changes commit in one transaction; failure roll
 them back. Reopening v2 makes no new backup and runs no migration. Unknown future
 versions and nonempty unversioned databases are refused without migration.
 No downgrade, automatic backup pruning or recovery UI is provided.
+
+Checkpoint C keeps these contracts and migrations unchanged. See
+[WORLD_SYSTEM.md](WORLD_SYSTEM.md) for gameplay APIs, deterministic terrain,
+spawn checks, turns and per-run explored/visible state. Low-level B-created runs
+with blocked positions remain readable here, but gameplay refuses to resume them
+without silently moving the character or rewriting the save.
 
 Default file is Godot's user data directory, ordinarily
 `%APPDATA%/Godot/app_userdata/Evolving Realms/realms.sqlite` on Windows. It survives

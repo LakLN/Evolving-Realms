@@ -1,6 +1,88 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: B complete; C not started
+## Current checkpoint: C complete; D not started
+
+Continued from verified commit a34096a with a clean working tree. Read AGENTS and
+all required design/API documents before implementation. Checkpoints A/B and their
+data contracts remain intact; no SQLite schema, migration, native dependency or
+GameStore implementation changed.
+
+### Implemented in C
+
+- Frozen generation v1: seed-based integer value noise for coherent forest,
+  beach, meadow and ocean regions; independent obstacle/spawn hash streams; three
+  golden SHA256 terrain fixtures protect established geography.
+- Global/negative tile coordinates, 32x32 chunks, 3x3 streaming/eviction cache.
+  Nine terrain arrays/rendered chunks maximum, not the full world in memory.
+- Chunk-local ground/fog TileMapLayers with procedural placeholder atlas;
+  rebased render origin, player marker and following Camera2D.
+- Accessible Run-seeded spawn in any or chosen land biome; at least two adjacent
+  exits and 20 connected nearby cells. Immutable spawn/current position stored
+  separately through the existing B API.
+- WASD/arrows, held-key repeat, cardinal grid movement. Exactly one turn per
+  accepted movement; blocked/diagonal moves spend none. No enemy/turn simulation.
+- Circular radius-7 sight with blocker LOS; unknown/remembered/visible fog.
+  Per-run discovery saves to the existing explored array, current sight is rebuilt
+  locally. New Runs never inherit discovery.
+- World creation/selection, optional World/Run seeds, start-biome selector,
+  saved-run list/continue, HUD (position/biome/turn/chunks), F5 Save, Esc Save & menu,
+  save-before-window-close. Save failures keep the map open and report an error.
+- scripts/test.ps1 orchestrates CLI import, all native suites and startup,
+  optional OpenGL and existing optional service checks. Rejects unexpected engine
+  errors, preserves suite logs under .tools/.
+- docs/WORLD_SYSTEM.md explains API, algorithm/version rules, limitations and
+  future fixed-terrain overlay seam. README gives the playable flow and controls.
+
+### C verification
+
+Actual Godot 4.7.2 / native SQLite, with production saves separate from UUID test
+fixtures under user://checkpoint_c_tests/. Command from repository root:
+
+```powershell
+.\scripts\test.ps1 -Render -Service
+```
+
+- B data suite: **96 checks, 0 failures**; legacy migration/rollback/reference and
+  independent-run behavior remain passing. Its two deliberately injected native
+  SQL errors are expected and checked by the runner; no other errors accepted.
+- C world suite: **49 checks, 0 failures**. Seed/version golden fixtures, chunk
+  visit order and eviction/reload, signed seeds, negative seams, biome coherence,
+  36 valid spawns over four seeds/all three land biomes; blocked/diagonal movement,
+  exact turns; 77 accepted steps across four chunks and a biome boundary; LOS and
+  fog; exact save/load; isolated Run B/World; invalid legacy positions and failed
+  session switching; separate-process terrain/position/fog persistence.
+- C headless actual-scene gameplay suite: **20 checks, 0 failures**. Menu button
+  signals and keyboard events through Godot, TileMapLayers, camera, rendered chunk
+  transitions, three fog states, F5/Esc, continue, independent second run and menu
+  reload with both saved Runs.
+- Windows OpenGL 3.3 / NVIDIA GTX 1650 Ti gameplay suite: **22 checks, 0 failures**,
+  including two captured screenshots. Visually inspected .tools/checkpoint-c-map.png
+  and checkpoint-c-menu.png: readable UI, player/camera, bright/remembered/unknown
+  terrain and both saved Runs. This is automated native rendering/input validation;
+  no human manual playthrough claimed.
+- Godot CLI editor import and headless app startup: exit 0, no script/extension
+  errors. Existing FastAPI real HTTP health smoke check and pip check also pass.
+
+### C remaining limits / next checkpoint
+
+No standalone Windows build/export attempted; Checkpoint E still needs export
+templates, GDExtension DLL and migration SQL packaging, standalone acceptance.
+Playable coordinates bounded to +/-1,000,000; spawn search covers +/-2048. Spawn
+guarantees a local connected area, not global land connectivity. Basic Bresenham
+LOS allows diagonal corner sight. Tiles/sprites are placeholders.
+
+Terrain chunks are bounded in RAM, but per-run discovered tiles/save JSON grow
+with exploration; large-run performance/fog storage optimization remains future
+work. Manual F5 saves and orderly menu/window exits persist; no guarantee against
+forced termination/crash between saves. Legacy B-only saves on blocked tiles are
+refused without teleporting or rewriting their position. No permanent terrain-edit
+mechanic, inventory UI, collection, chests, monsters, combat, talents or AI features.
+
+Next checkpoint is D (resources/chests/inventory and associated interactions),
+reusing C's movement/fog/menu and B's data layer. **Do not start D in this session.**
+Wait for a new user request. Milestone 01 as a whole is still incomplete.
+
+## Checkpoint B record (historical)
 
 Continued from verified commit da0faf3. Checkpoint A was preserved. Scope of this
 session was B only; no map, gameplay, turn system, combat or LLM implementation.

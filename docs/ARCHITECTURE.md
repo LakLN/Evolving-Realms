@@ -6,9 +6,12 @@ authoring process, not a dependency for movement, saving or combat.
 
 ## Modules and planned layout
 
-- src/core: accepted actions, turn manager, inventory and future effect handlers.
-- src/world: deterministic terrain, biome, chunk generation and fixed landmarks.
-- src/run: future character/spawn gameplay and exploration.
+- src/core: future general turn participants, inventory and effect handlers.
+- src/world: implemented terrain_v1, bounded chunk cache, spawn selector,
+  TileMapLayer renderer and code-native placeholder atlas.
+- src/run: implemented ExplorationSession: cardinal actions/turns, sight,
+  per-run discovery and save/resume over GameStore.
+- src/main.gd: World/Run menu, keyboard input, camera/HUD integration and save-on-exit.
 - src/data: implemented local database, migrations and World/Run persistence facade.
 - src/content: definitions, validation, registry and capability checks.
 - service: optional provider abstraction, world context, structured proposals.
@@ -21,7 +24,7 @@ Do not introduce microservices or a general event framework.
 
 WorldBlueprint: world_id (UUID), seed (signed 32-bit), schema_version,
 generation_version, name, created_at, fixed_locations. Immutable generation inputs.
-Coordinates are integer global tile positions. Planned chunks: 32x32 tiles;
+Coordinates are integer global tile positions. Implemented chunks: 32x32 tiles;
 use floor division for negative coordinates.
 
 RunState: run_id (UUID), world_id, seed, schema_version, mode (normal/permadeath),
@@ -64,10 +67,23 @@ and packaging limits: [DATA_API.md](DATA_API.md).
 
 ## Determinism and expansion
 
-Define a portable integer hash over world seed, generation version, coordinates
-and subsystem tag. Use independent terrain/entity/loot streams. Test chunk visit
-order, negative coordinates and golden fixtures. Persist significant fixed content.
-Keep generation v1 available for v1 worlds when introducing a new algorithm.
+Terrain generation v1 is now implemented with a portable coordinate hash and
+integer interpolated noise. Coherent elevation controls water/coast; moisture
+divides inland forest/meadow. Independent tags control elevation, moisture,
+obstacles and spawn. Only nine neighboring chunks stay cached/rendered; chunk-local
+TileMapLayer cells and a moving render origin keep global coordinates stable.
+Three SHA256 chunk fixtures freeze v1 geography. Keep v1 available when introducing
+a future algorithm; never change a v1 world's geography on load. Details and
+supported coordinate bounds: [WORLD_SYSTEM.md](WORLD_SYSTEM.md).
+
+Run positions, turns and discovered tiles use the existing schema unchanged.
+Visibility is recalculated locally on load; only explored tiles persist. A new Run
+has no inherited fog. Session saves preserve all other B state fields untouched.
+Fixed terrain edits remain future work: add a validated world-scoped overlay over
+the immutable generator, backed by established definitions/instances, then use
+the same resolved terrain for rendering, collision and spawn. Never store edits
+in run exploration or rewrite v1 noise. No overlay mechanic or DB migration is
+introduced in C.
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

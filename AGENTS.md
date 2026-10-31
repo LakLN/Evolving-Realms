@@ -1,7 +1,7 @@
 # Agent workflow
 
 Read docs/PROJECT_VISION.md, ARCHITECTURE.md, ROADMAP.md and PROGRESS.md before changes.
-Current authorized scope: Milestone 01 Checkpoint B only. Do not start C without a new user instruction.
+Current authorized scope: Milestone 01 Checkpoint C only. Do not start D without a new user instruction.
 Do not start Milestone 02 without user approval.
 Keep Godot gameplay local and independent of Python, internet, keys and AI providers.
 Use stable content IDs; separate blueprint, definitions, instances and per-run mutations.
@@ -15,3 +15,6 @@ Update docs/PROGRESS.md with actual commands, results, gaps and next steps; comm
 Exclude tools, caches, saves, secrets and builds from Git. Do not rewrite Git history.
 Use src/data/game_store.gd for gameplay persistence; no mandatory HTTP or Python.
 Preserve pinned native SQLite dependencies, their license and provenance. Read docs/DATA_API.md.
+Read docs/WORLD_SYSTEM.md before changing terrain, movement, spawn or fog.
+Terrain v1 is frozen by golden fixtures; new algorithms need a new generation version.
+Run scripts/test.ps1 for Godot regressions; use -Render for actual OpenGL gameplay and -Service for optional Python checks.
