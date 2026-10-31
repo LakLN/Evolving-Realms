@@ -130,13 +130,25 @@ class MockProvider:
         encounter = definition("haunt", "encounter", {
             "creature": ref("stalker"), "biomes": [biome], "per_10000": 40 + n % 20, "max_per_chunk": 2, "priority": 50,
             "conditions": [{"type": "biome_share", "biome": biome, "min_percent": 10}]}, [ref("stalker")])
+        # Location kind (Checkpoint I): a special place, its event and the relic it yields.
+        relic = definition("relic", "item", {"stackable": True, "stack_limit": 10})
+        omen = definition("omen", "world_event", {
+            "tone": "boon", "message": "Old power stirs as you attune to the place.",
+            "outcomes": [{"type": "grant_items", "items": [{**ref("relic"), "quantity": 1 + n % 2}]},
+                         {"type": "xp", "amount": 20 + n % 15}]}, [ref("relic")])
+        site = definition("site", "location", {
+            "category": ["anomaly", "ruin", "cave"][n % 3], "visual": "location",
+            "spawn": {"biomes": [biome], "per_10000": 40, "priority": 10,
+                      "conditions": [{"type": "biome_share", "biome": biome, "min_percent": 10}]},
+            "discovery": {"mode": "proximity", "radius": 3},
+            "interactions": [{"id": "attune", "verb": "Attune", "trigger": "interact", "event": ref("omen")}]}, [ref("omen")])
         kinds = {"skill": [skill, manual], "equipment": [gear], "item": [definition("salve", "item", {"stackable": True, "stack_limit": 10}),
             definition("salve_use", "item_use", {"item": ref("salve"), "consume": 1, "verb": "Apply",
                 "effects": [{"type": "heal", "amount": 3 + n % 6}]}, [ref("salve")])],
-            "talent": [talent], "creature": [trophy, stalker, encounter], "collection": [skill, manual, gear, talent, creature]}
+            "talent": [talent], "creature": [trophy, stalker, encounter], "location": [relic, omen, site], "collection": [skill, manual, gear, talent, creature]}
         definitions = kinds[request["kind"]]
         # Existing loot-extension handler distributes items/books; no ID-specific code.
-        items = [d for d in definitions if d["kind"] == "item"] if request["kind"] != "creature" else []
+        items = [d for d in definitions if d["kind"] == "item"] if request["kind"] not in ("creature", "location") else []
         if items:
             source = {"content_id": "core:wayfarer_cache", "version": 1}
             definitions.append(definition("distribution", "loot_extension", {
@@ -195,7 +207,7 @@ class ChatCompletionsProvider:
 def generate(request: dict, settings: Settings, allow_network: bool = False) -> dict:
     if settings.provider != "mock" and not allow_network:
         raise GenerationError("Real provider requires explicit --allow-network / allow_network=true")
-    if request.get("kind") not in ("item", "equipment", "skill", "talent", "creature", "collection") or not isinstance(request.get("prompt"), str) or not 1 <= len(request["prompt"]) <= 4096 or not isinstance(request.get("context"), dict) or not isinstance(request.get("request_id"), str) or not 1 <= len(request["request_id"]) <= 128:
+    if request.get("kind") not in ("item", "equipment", "skill", "talent", "creature", "location", "collection") or not isinstance(request.get("prompt"), str) or not 1 <= len(request["prompt"]) <= 4096 or not isinstance(request.get("context"), dict) or not isinstance(request.get("request_id"), str) or not 1 <= len(request["request_id"]) <= 128:
         raise GenerationError("Invalid generation request")
     encoded = json.dumps(request, allow_nan=False, sort_keys=True).encode()
     if len(encoded) > 120_000:

@@ -150,7 +150,7 @@ definitions form a directed acyclic graph; forward references are intentionally
 not accepted. Register dependencies first. No batch proposal graph resolver yet.
 
 Data-layer capabilities: `definition.item`, `definition.resource`,
-`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C), `definition.talent` (02 D), `definition.skill` (02 E), `definition.generation_proposal` (02 G, never active: authoring lifecycle records), `definition.encounter` and `definition.region` (02 H). These mean the definition can be registered, not that gameplay
+`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C), `definition.talent` (02 D), `definition.skill` (02 E), `definition.generation_proposal` (02 G, never active: authoring lifecycle records), `definition.encounter` and `definition.region` (02 H), `definition.location` and `definition.world_event` (02 I). These mean the definition can be registered, not that gameplay
 effects exist. Unknown capabilities or unknown kinds are retained as
 `pending_capability` with missing requirements. An inactive dependency also makes
 an otherwise active proposal pending. Explicit `draft`, `hidden` and
@@ -252,6 +252,14 @@ No SQL migration. Established regions are content instances `region:v1/<cx>/<cy>
 encounter_revision, chunk}`, plus one `region:v1/baseline` marker. They are immutable,
 skipped by the object layer and never part of Run state. Encounter homes materialize like
 v1 creatures as `enc:v1/...` instances. See [AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md).
+
+## Checkpoint I place records
+
+No SQL migration. Region records written now are `ledger_version: 2` with
+`layers: ["locations-v1"]`; older records have no layers. Places materialize as
+`loc:v1/...` instances on first discovery. Run mutation per place: `{location: 1,
+discovered, discovered_turn, resolved: {<interaction>: {turn, event, received}}}`.
+See [DISCOVERIES_AND_EVENTS.md](DISCOVERIES_AND_EVENTS.md).
 
 ## Checkpoint F status records
 

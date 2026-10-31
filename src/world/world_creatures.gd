@@ -140,7 +140,7 @@ func chunk_creatures(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray()
 		bytes = terrain.generate_chunk(chunk)
 	if ledger == null:
 		return generate_chunk(chunk, bytes)
-	var revision: int = ledger.establish(chunk, encounters.revision)
+	var revision: int = ledger.establish(chunk, ledger.revision)
 	if revision < 0:
 		_fail(ledger.last_error)
 		return []

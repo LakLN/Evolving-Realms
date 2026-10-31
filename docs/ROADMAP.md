@@ -64,6 +64,11 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
     immutable region ledger (established regions never change, legacy exploration sealed
     at revision 0), derived region context (biome shares, danger), mock creature +
     encounter played end to end. No migration, generation v1 unchanged.
+  - I (complete): special places and environmental events: `location` and `world_event`
+    definitions (discovery modes visible/proximity/hidden/search, discover/enter/interact
+    triggers, ordered and exclusive steps, item costs, outcomes on existing handlers),
+    `locations-v1` layer on ledger v2 region records, per-Run discovery/resolution, X
+    search, five sample places, mock AI location end to end. No migration.
   - Later checkpoints: not started; require user approval.
 03: deeper talent/skill mechanics (evolution, fusion, cultivation) as approved; talent
 awakening (02 D) and skill books with learning requirements (02 E) were delivered early.

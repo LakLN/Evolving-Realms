@@ -179,7 +179,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD/Arrows: move  E: interact  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills (1-9 use)  Ctrl+S: save  Esc: menu", 14)
+	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills (1-9 use)  Ctrl+S: save  Esc: menu", 14)
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -242,7 +242,7 @@ func _build_hud(parent: Control) -> void:
 	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
-	_label(column, "WASD: move (into hostile = attack) | E: gather/open | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills", 15)
+	_label(column, "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills", 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
 
@@ -1039,6 +1039,18 @@ func _update_info() -> void:
 	if not target.is_empty():
 		var definition: Dictionary = session.objects.definition_for(target)
 		_interaction_hint.text = "E: %s %s  /  (%d, %d)" % [str(definition.payload.interaction).capitalize(), definition.name, target.position.x, target.position.y]
+	elif not session.places.targets(session).is_empty():
+		_interaction_hint.text = place_hint(session.places.targets(session)[0])
+
+func place_hint(place: Dictionary) -> String:
+	## Name, state and the next interaction (with unmet requirements) of a known place.
+	var definition: Dictionary = session.locations.definition_for(place)
+	var state: String = session.places.state(session, place)
+	var next: Dictionary = session.places.next_interaction(session, place)
+	if next.is_empty():
+		return "%s [%s] — nothing more to do here." % [definition.name, state]
+	var needs: Array = session.places.unmet(session, session.locations.event(next.event).payload.get("conditions", []))
+	return "E: %s — %s [%s]%s" % [next.get("verb", "Explore"), definition.name, state, "  (needs %s)" % ", ".join(needs) if not needs.is_empty() else ""]
 
 func current_target() -> Dictionary:
 	## Selected adjacent creature; falls back to the first valid one (ID order).
@@ -1167,6 +1179,21 @@ func describe_events(events: Array) -> String:
 				parts.append({"warning": "You are getting %s.", "danger": "You are badly %s — find food and water!", "depleted": "You are starving and dehydrating: %s now costs HP!"}[event.level] % {"hunger": "hungry", "thirst": "thirsty"}.get(event.need, event.need))
 			"starvation":
 				parts.append("Starvation hurts you (-%d HP)." % event.damage)
+			"discovery":
+				parts.append("DISCOVERED: %s — %s" % [event.name, event.description])
+			"location":
+				var outcome := PackedStringArray()
+				for item in event.received:
+					outcome.append(_receipt_text(item))
+				for change in event.changes:
+					outcome.append("%s %d -> %d" % [{"hp": "HP", "hunger": "hunger", "thirst": "thirst"}.get(change.stat, change.stat), change.before, change.after])
+				if int(event.damage) > 0:
+					outcome.append("-%d HP" % int(event.damage))
+				parts.append("%s%s: %s%s" % ["⚠ " if event.tone == "bane" else "", event.verb, event.message, (" (" + ", ".join(outcome) + ")") if not outcome.is_empty() else ""])
+			"search":
+				if event.found.is_empty(): parts.append("You search the area but find nothing new.")
+			"location_error":
+				parts.append("Place could not be recorded: " + str(event.error))
 			"autosave":
 				parts.append("Autosaved.")
 			"autosave_failed":
@@ -1177,6 +1204,9 @@ func _interact() -> void:
 	if session == null or _panel_open():
 		return
 	if session.interact():
+		if session.last_result.get("place", false):
+			_after_action(true) # The place's own notice lists its rewards.
+			return
 		var received := PackedStringArray()
 		for item in session.last_result.received:
 			received.append(_receipt_text(item))
@@ -1184,6 +1214,12 @@ func _interact() -> void:
 		_notice.text = ("Received: " + ", ".join(received) + " " + _notice.text).strip_edges()
 	else:
 		_after_action(false)
+
+func _search() -> void:
+	## Declared rule: searching the surroundings always takes one turn.
+	if session == null or _panel_open():
+		return
+	_after_action(session.search(), "You search the area but find nothing.")
 
 func move_player(direction: Vector2i) -> bool:
 	if session == null or _menu.visible or _panel_open() or session.is_dead():
@@ -1210,6 +1246,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_return_to_menu()
 	elif event.keycode == KEY_E or event.physical_keycode == KEY_E:
 		_interact()
+	elif event.keycode == KEY_X or event.physical_keycode == KEY_X:
+		_search()
 	elif event.keycode == KEY_I or event.physical_keycode == KEY_I:
 		_toggle_inventory()
 	elif event.keycode == KEY_F or event.physical_keycode == KEY_F:

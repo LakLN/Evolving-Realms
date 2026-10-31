@@ -7,6 +7,7 @@ const Terrain = preload("res://src/world/terrain_v1.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Region = preload("res://src/world/region_context.gd")
+const Ledger = preload("res://src/world/region_ledger.gd")
 const GENERATION_VERSION := 1
 const BUDGET := 3 # Encounter homes per chunk, whatever the number of activated rules.
 const MAX_TOTAL := 6 # Never more creature homes per chunk than v1 already allows.
@@ -47,37 +48,35 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 	if not _between(p.get("per_10000"), 1, 200): return {"problem": "Encounter per_10000 must be 1..200", "missing": missing}
 	if not _between(p.get("max_per_chunk", 1), 1, BUDGET): return {"problem": "Encounter max_per_chunk must be 1..%d" % BUDGET, "missing": missing}
 	if not _between(p.get("priority", 50), 0, 100): return {"problem": "Encounter priority must be 0..100", "missing": missing}
-	var conditions: Variant = p.get("conditions", [])
-	if not conditions is Array or conditions.size() > 4: return {"problem": "Encounter conditions must be an array of at most 4", "missing": missing}
+	var problem := check_spawn_conditions(p.get("conditions", []), missing, "encounter")
+	if not problem.is_empty(): return {"problem": problem, "missing": missing}
+	return {"problem": "", "missing": missing}
+
+static func check_spawn_conditions(conditions: Variant, missing: Array, label: String) -> String:
+	## Region/tile conditions shared by encounters and locations (danger, biome share,
+	## nearby terrain). Unknown types are named `<label>.condition.<type>`.
+	if not conditions is Array or conditions.size() > 4: return "Spawn conditions must be an array of at most 4"
 	for condition in conditions:
-		if not condition is Dictionary or not condition.get("type") is String: return {"problem": "Encounter condition needs a type", "missing": missing}
+		if not condition is Dictionary or not condition.get("type") is String: return "Spawn condition needs a type"
 		if not CONDITIONS.has(condition.type):
-			missing.append("encounter.condition." + condition.type)
+			missing.append("%s.condition.%s" % [label, condition.type])
 			continue
 		for key in condition:
-			if key != "type" and key not in CONDITIONS[condition.type]: missing.append("parameter.encounter_condition.%s.%s" % [condition.type, key])
-		var problem := ""
+			if key != "type" and key not in CONDITIONS[condition.type]: missing.append("parameter.%s_condition.%s.%s" % [label, condition.type, key])
 		match condition.type:
 			"danger":
-				if not _between(condition.get("min", 0), 0, 3) or not _between(condition.get("max", 3), 0, 3) or condition.get("min", 0) > condition.get("max", 3): problem = "Danger condition needs 0 <= min <= max <= 3"
+				if not _between(condition.get("min", 0), 0, 3) or not _between(condition.get("max", 3), 0, 3) or condition.get("min", 0) > condition.get("max", 3): return "Danger condition needs 0 <= min <= max <= 3"
 			"biome_share":
-				if condition.get("biome") not in Region.SURFACES or not _between(condition.get("min_percent"), 1, 100): problem = "Biome share needs a surface and min_percent 1..100"
+				if condition.get("biome") not in Region.SURFACES or not _between(condition.get("min_percent"), 1, 100): return "Biome share needs a surface and min_percent 1..100"
 			"near_terrain":
-				if not NEAR.has(condition.get("terrain")) or not _between(condition.get("radius", 1), 1, 3): problem = "Near terrain needs water/tree/rock and radius 1..3"
-		if not problem.is_empty(): return {"problem": problem, "missing": missing}
-	return {"problem": "", "missing": missing}
+				if not NEAR.has(condition.get("terrain")) or not _between(condition.get("radius", 1), 1, 3): return "Near terrain needs water/tree/rock and radius 1..3"
+	return ""
+
+static func current_revision(registry: RefCounted, world_id: String) -> int:
+	return Ledger.current_revision(registry, world_id) # Shared with locations (Checkpoint I).
 
 static func _between(value: Variant, low: int, high: int) -> bool:
 	return Data.integer(value) and value >= low and value <= high
-
-static func current_revision(registry: RefCounted, world_id: String) -> int:
-	var result := 0
-	for header in registry.list_definitions(world_id):
-		if header.kind == "encounter" and header.status == "active":
-			var definition: Dictionary = registry.load_definition(world_id, header.content_id, int(header.version))
-			var value: Variant = definition.get("provenance", {}).get("encounter_revision", 0)
-			if Data.integer(value): result = maxi(result, int(value))
-	return result
 
 func configure(registry: RefCounted, world_id: String, creatures: RefCounted) -> bool:
 	rules.clear()

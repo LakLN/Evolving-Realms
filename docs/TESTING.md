@@ -71,6 +71,14 @@ mock and local stub only; it also writes the mock fixture) and then
 in real gameplay and save/reopen). Use `.\scripts\test.ps1 -Only ai-content -Smoke`;
 `-Service` additionally exercises `/generate` over real HTTP with the mock.
 
+## Checkpoint I suites
+
+`discoveries` (`tests/discovery_suite.gd`, after the Python tests write the location
+fixture) covers places, discovery, events, rewards once, Run isolation and the mock AI
+location pipeline. `discovery-gameplay` / `rendered-discoveries` (`-Render`) drive the
+real scene (X, Space, E) and capture `.tools/discoveries-gameplay.png`. Use
+`.\scripts\test.ps1 -Only discoveries,discovery-gameplay,ai-world -Smoke`.
+
 ## Checkpoint H suite
 
 `ai-world` (`tests/ai_world_suite.gd`, after the offline Python tests write the creature

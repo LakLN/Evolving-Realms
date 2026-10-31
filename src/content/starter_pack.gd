@@ -9,7 +9,8 @@ const TALENT_PATH := "res://content/talent_pack.json"
 const SKILL_PATH := "res://content/skill_pack.json"
 const EFFECT_PATH := "res://content/effect_pack.json"
 const WORLD_PATH := "res://content/world_pack.json"
-const ALL_PATHS := [PATH, CREATURES_PATH, SURVIVAL_PATH, EQUIPMENT_PATH, TALENT_PATH, SKILL_PATH, EFFECT_PATH, WORLD_PATH] # Install order: dependencies first.
+const LOCATION_PATH := "res://content/location_pack.json"
+const ALL_PATHS := [PATH, CREATURES_PATH, SURVIVAL_PATH, EQUIPMENT_PATH, TALENT_PATH, SKILL_PATH, EFFECT_PATH, WORLD_PATH, LOCATION_PATH] # Install order: dependencies first.
 var last_error := ""
 
 func install(registry: RefCounted, world_id: String, path: String = PATH) -> bool:

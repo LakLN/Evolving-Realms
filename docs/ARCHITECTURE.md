@@ -228,6 +228,16 @@ new content reaches only regions established later. `src/world/region_context.gd
 biome shares and a danger tier for authoring context. No schema or generation-version
 change. Details: [AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md).
 
+## Discoveries and events — Milestone 02 Checkpoint I
+
+`kind: location` places (distribution layer `locations-v1`, `src/world/world_locations.gd`)
+pin `kind: world_event` consequences (`src/core/world_events.gd`). Region records gain
+content `layers` (ledger v2); only regions recorded with `locations-v1` hold places, so H
+and legacy regions never change. Discovery and resolution are Run entity mutations
+handled by `src/run/location_runtime.gd` in the turn pipeline (after talents, before
+creatures) and the E/X actions; outcomes reuse inventory, status, vital, XP and resource
+handlers. No schema change. Details: [DISCOVERIES_AND_EVENTS.md](DISCOVERIES_AND_EVENTS.md).
+
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions
 may spawn. AI providers return data, never scripts. Future migrations, mechanic

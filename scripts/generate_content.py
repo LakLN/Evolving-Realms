@@ -56,7 +56,7 @@ def parser():
     commands.add_parser("worlds")
     gen = commands.add_parser("generate", help="Generate a draft only, never activate")
     gen.add_argument("--world", required=True)
-    gen.add_argument("--kind", choices=["item", "equipment", "skill", "talent", "creature", "collection"], required=True)
+    gen.add_argument("--kind", choices=["item", "equipment", "skill", "talent", "creature", "location", "collection"], required=True)
     gen.add_argument("--prompt", required=True)
     gen.add_argument("--request-id", default=None)
     gen.add_argument("--related", default="")

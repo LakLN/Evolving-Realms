@@ -98,6 +98,7 @@ replaced; a later proposal may add version 2 of an AI ID while Runs keep using v
 | Skill | learned from its generated book through the normal `learn` action, used in the turn system | playable, tested end to end |
 | Item use | normal `use` action | validated/registered |
 | Talent | joins the awakening pool of new Runs (existing Runs keep their talent) | validated/registered; effect composition tested |
+| Location + world event | `location` definition distributed per region (Checkpoint I); revision-stamped like encounters | playable, tested end to end (discovery, interaction, reward, save/load) |
 | Creature + encounter | `encounter` definition (Checkpoint H): biome/density/conditions; activation stamps an encounter revision; only regions established afterwards receive it | playable, tested end to end (spawn, combat, loot, save/load) |
 
 The end-to-end test opens the real cache, receives the generated manual and mantle,

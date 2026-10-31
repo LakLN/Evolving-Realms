@@ -10,7 +10,7 @@ const FIELDS := {
 	"limits": ["cooldown_turns", "charges", "every_tiles"],
 	"movement": ["biomes", "leash", "move_per_10000"],
 	"ai": ["detect_radius", "wander_per_10000", "flee_radius", "flee_below_percent"],
-	"spawn": ["biomes", "per_10000", "priority"], "loot": ["rolls", "entries", "guaranteed"],
+	"spawn": ["biomes", "per_10000", "priority", "conditions"], "loot": ["rolls", "entries", "guaranteed"],
 	"reference": ["content_id", "version"], "relation": ["type", "skill"],
 	"loot_entry": ["content_id", "version", "min", "max", "weight", "quality"],
 	"stat_modifier": ["stat", "add", "percent"], "stats": ["max_hp", "attack", "defense"],

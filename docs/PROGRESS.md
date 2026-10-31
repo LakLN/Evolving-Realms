@@ -1,6 +1,70 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint H complete (AI world integration, encounters, world consistency)
+## Current checkpoint: Milestone 02 Checkpoint I complete (discoveries, special places, environmental events)
+
+From clean `67f4b6b`. Scope I only; no later checkpoint started. No SQLite migration
+(user_version 2, record schema 1), no terrain/object/creature-generation change, no
+established pack edited (new append-only `content/location_pack.json`).
+
+Delivered (details: [DISCOVERIES_AND_EVENTS.md](DISCOVERIES_AND_EVENTS.md)):
+- `kind: location` (placement, discovery rule, ordered/exclusive interactions) and
+  `kind: world_event` (conditions, item cost, outcomes). Outcomes run on existing
+  handlers only: inventory award/loot, StatusRuntime, ItemEffects vitals, damage, XP,
+  energy restore. Unknown modes/triggers/outcomes/conditions are named pending capabilities.
+- Distribution layer `locations-v1`: ≤ 1 place per chunk, walkable land with ≥ 2 exits,
+  never on an object, biome + spawn conditions, stable `loc:v1/...` IDs, deterministic.
+- Region Ledger v2: new records carry `layers: ["locations-v1"]`; H-era and baseline
+  records have none and never gain places. World revision now covers encounters and
+  locations (`RegionLedger.current_revision`); activation stamps location revisions.
+- Bug fixed: the one-time baseline seal included the spawn of a Run being created in a
+  brand-new World, sealing its start area at revision 0 without layers. It now uses
+  explored tiles only (saved Runs always store their initial sight).
+- Per-Run discovery and resolution (`src/run/location_runtime.gd`) in the turn pipeline
+  after talents, before creatures; discovery modes visible / proximity / hidden
+  (talent perception, skill, stat, status, biome, any_of) / search; `enter` and `discover`
+  triggers; E interacts, new X search action (always one turn). Refusals spend nothing.
+- Five sample places (ruin with two-step inscription, search-only shrine with exclusive
+  offering/plunder, hidden spirit vein, miasma vent hazard, clear spring), mock provider
+  and CLI `--kind location`, authoring context vocabulary.
+- UI: X key and legend, place hint with state and unmet requirements, discovery/outcome
+  notices, diamond markers (dimmed when resolved). Fixed during review: rewards were listed
+  twice and XP reported twice; the legend was shortened to stay on screen.
+
+E2E demonstrated (`tests/discovery_suite.gd`): mock location → draft → validate →
+confirm → activate (World revision 1) → established regions keep places and creatures →
+entering an unestablished region establishes it with the AI site → proximity discovery →
+Attune → relic + XP → save → database reopen → resolved once. Plus the sample places in
+real gameplay, Run A/B independence, legacy save resume. CLI checked manually on a temp
+database (`generate --kind location → confirm → activate → registered`).
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1                      # full headless regression (chunk loading/turn order changed)
+.\scripts\test.ps1 -Only discoveries,discovery-gameplay,rendered-discoveries,ai-world,ai-content -Render -Smoke
+.\scripts\test.ps1 -Only discovery-gameplay,rendered-discoveries,interaction-gameplay -Render
+```
+
+All passed (exit 0): import; data 96; world 49; gameplay 22; interactions 66 + UI 17;
+integration 34; combat 75 + UI 20; survival 60 + UI 10; equipment 68 + UI 15; talents
+126 + UI 16; skills 105 + UI 21; effects 49 + UI 9; Python provider + CLI tests;
+ai-content 34; ai-world 41; discoveries 40; discovery UI 5 headless / 6 rendered; startup.
+The full regression ran before the two final UI text fixes; the suites touching that code
+were rerun afterwards. Screenshot `.tools/discoveries-gameplay.png` inspected. Not run:
+other OpenGL suites, `-Service`, exe export.
+
+### Remaining limits
+
+- One place per chunk; no interiors/dungeons, no quest engine (ordered steps only).
+- No repeatable, timed, weather or ambient random events; places never block or edit terrain.
+- Sense-radius talent markers do not show places yet.
+- Future authored place sets need a new layer tag so established regions stay intact.
+
+### Next step
+
+Stop. The user reviews this checkpoint. Any later checkpoint needs explicit approval.
+
+## Milestone 02 Checkpoint H record (historical)
 
 From clean `e2d122b`. Scope H only; no later checkpoint started. No SQLite migration
 (user_version 2, record schema 1), no terrain/object/creature-generation v1 change, no
@@ -68,10 +132,6 @@ headless (legacy Run in ai-world; B/C/D legacy saves in integration).
 - No respawn, populations, packs, migration or ecology; danger is a hashed tier.
 - Ledger rows grow with explored area (one per chunk); proposal records still unpruned.
 - No in-game authoring UI; real-provider output quality untested by design.
-
-### Next step
-
-Stop. The user reviews this checkpoint. Any later checkpoint needs explicit approval.
 
 ## Milestone 02 Checkpoint G record (historical)
 

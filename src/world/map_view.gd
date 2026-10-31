@@ -115,6 +115,7 @@ func _draw_objects() -> void:
 			_draw_object_icon(point, definition.payload.get("visual", "resource"), consumed)
 			if not target.is_empty() and target.instance_id == instance.instance_id:
 				_object_layer.draw_rect(Rect2(point - Vector2(14, 14), Vector2(28, 28)), Color("f8df8b"), false, 1.5)
+	_draw_places(origin)
 	if session.roster == null:
 		return
 	for creature in session.roster.creatures.values():
@@ -125,6 +126,28 @@ func _draw_objects() -> void:
 		_draw_creature(point, creature)
 		if creature.instance_id == target_id:
 			_object_layer.draw_rect(Rect2(point - Vector2(15, 15), Vector2(30, 30)), Color("fff2b0"), false, 2.0)
+
+func _draw_places(origin: Vector2i) -> void:
+	## Only places this Run has discovered (never hidden ones); resolved ones dimmed.
+	if session.locations == null:
+		return
+	var targets: Array = session.places.targets(session)
+	for place in session.locations.loaded():
+		var tile := Vector2i(int(place.position.x), int(place.position.y))
+		if not session.explored.has(tile) or not session.places.discovered(session, place.instance_id):
+			continue
+		var state: String = session.places.state(session, place)
+		var done: bool = state in ["resolved", "unavailable"]
+		var point := (Vector2(tile - origin) + Vector2(0.5, 0.5)) * Palette.SIZE
+		var colors := {"ruin": Color("c9b48a"), "shrine": Color("8fd0a8"), "vein": Color("9fd8ff"), "vent": Color("b6c46a"), "spring_site": Color("6fb9e8")}
+		var color: Color = colors.get(session.locations.definition_for(place).payload.get("visual", ""), Color("e2a8ff"))
+		if done:
+			color = color.darkened(0.55)
+		_object_layer.draw_colored_polygon(PackedVector2Array([point + Vector2(0, -13), point + Vector2(11, 0), point + Vector2(0, 13), point + Vector2(-11, 0)]), Color(0, 0, 0, 0.35))
+		_object_layer.draw_colored_polygon(PackedVector2Array([point + Vector2(0, -11), point + Vector2(9, 0), point + Vector2(0, 11), point + Vector2(-9, 0)]), color)
+		_object_layer.draw_circle(point, 3, Color("2b2238") if not done else Color(0.2, 0.2, 0.2))
+		if not targets.is_empty() and targets[0].instance_id == place.instance_id:
+			_object_layer.draw_rect(Rect2(point - Vector2(14, 14), Vector2(28, 28)), Color("f8df8b"), false, 1.5)
 
 func _draw_sensed() -> void:
 	## Unvisited, unconsumed objects within the talent's sense radius: a faint marker

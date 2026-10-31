@@ -10,6 +10,8 @@ const Inventory = preload("res://src/core/inventory.gd")
 const Creatures = preload("res://src/world/world_creatures.gd")
 const Roster = preload("res://src/run/creature_roster.gd")
 const Ledger = preload("res://src/world/region_ledger.gd")
+const Locations = preload("res://src/world/world_locations.gd")
+const LocationRuntime = preload("res://src/run/location_runtime.gd")
 const Combat = preload("res://src/core/combat.gd")
 const Survival = preload("res://src/core/survival.gd")
 const ItemEffects = preload("res://src/core/item_effects.gd")
@@ -40,6 +42,9 @@ var last_error := ""
 var objects: RefCounted
 var last_result: Dictionary = {}
 var roster: RefCounted
+## Special places of the loaded regions (World layer) and this Run's discoveries.
+var locations: RefCounted
+var places := LocationRuntime.new()
 var survival := Survival.new()
 ## item content_id@version -> active item_use definition (data only).
 var uses: Dictionary = {}
@@ -71,7 +76,7 @@ var _action_handlers: Dictionary = {}
 
 func _init(data_store: RefCounted) -> void:
 	store = data_store
-	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action, "learn": _learn_action, "skill": _skill_action}
+	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action, "learn": _learn_action, "skill": _skill_action, "search": _search_action}
 
 func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal") -> bool:
 	if not Data.seed_value(run_seed):
@@ -216,6 +221,9 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var ledger := Ledger.new()
 	if not ledger.configure(store.content, blueprint.world_id) or not ledger.seal_baseline(store):
 		return _fail(ledger.last_error)
+	var next_locations := Locations.new()
+	if not next_locations.configure(blueprint, generator, store.content, ledger, next_objects, skill_context, next_skill_rules) or not next_locations.follow(tile, next_cache.chunks):
+		return _fail(next_locations.last_error)
 	var layer := Creatures.new()
 	var next_roster := Roster.new()
 	if not layer.configure(blueprint, generator, store.content, ledger) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
@@ -228,6 +236,8 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	cache = next_cache
 	objects = next_objects
 	roster = next_roster
+	locations = next_locations
+	places.layer = next_locations
 	survival = rules
 	uses = next_uses
 	quality = tiers
@@ -240,6 +250,7 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	_definitions = {}
 	reload_talents() # Also derives effective stats.
 	var status_error := statuses.validate(self)
+	if status_error.is_empty(): status_error = places.validate(self)
 	if not status_error.is_empty(): return _fail(status_error + "; save was not changed")
 	last_save_turn = int(loaded.state.turn)
 	last_result = {}
@@ -305,7 +316,9 @@ func perform_action(action: Dictionary) -> bool:
 		last_events.append_array(statuses.tick(self))
 		if int(stats().hp) > 0:
 			last_events.append_array(_talent_tick())
-			last_events.append_array(roster.take_turn(self))
+			last_events.append_array(places.tick(self)) # Discoveries and "enter" events.
+			if int(stats().hp) > 0:
+				last_events.append_array(roster.take_turn(self))
 	last_events.append_array(statuses.finish_turn(self))
 	last_error = ""
 	if int(stats().hp) <= 0:
@@ -505,7 +518,7 @@ func _autosave() -> void:
 		last_events.append({"type": "autosave_failed", "error": last_error})
 
 func at_risk() -> bool:
-	var hurt := last_events.any(func(event: Dictionary) -> bool: return (event.type == "hit" and event.target == "player") or event.type == "starvation" or (event.type == "status_tick" and event.target == "player" and int(event.amount) < 0))
+	var hurt := last_events.any(func(event: Dictionary) -> bool: return (event.type == "hit" and event.target == "player") or event.type == "starvation" or (event.type == "status_tick" and event.target == "player" and int(event.amount) < 0) or (event.type == "location" and int(event.get("damage", 0)) > 0))
 	return hurt or threatened() or int(stats().hp) * 100 < int(survival.rules.autosave.permadeath_risk_hp_percent) * int(combat_stats().max_hp) or survival.worst_level(stats()) >= 2
 
 func safe_to_autosave() -> bool:
@@ -762,10 +775,11 @@ func _move_action(action: Dictionary) -> bool:
 func relocate(target: Vector2i) -> bool:
 	## Move the player to a validated walkable tile (a step or a skill), streaming chunks.
 	cache.follow(target)
-	if not objects.follow(target) or not roster.follow(target, cache.chunks):
+	if not objects.follow(target) or not locations.follow(target, cache.chunks) or not roster.follow(target, cache.chunks):
 		cache.follow(position)
 		objects.follow(position)
-		return _fail(objects.last_error if not objects.last_error.is_empty() else roster.last_error)
+		locations.follow(position, cache.chunks)
+		return _fail(objects.last_error if not objects.last_error.is_empty() else (locations.last_error if not locations.last_error.is_empty() else roster.last_error))
 	position = target
 	run.state.character.position = {"x": position.x, "y": position.y}
 	_reveal()
@@ -798,9 +812,25 @@ func interact(instance_id: String = "") -> bool:
 	if instance_id.is_empty():
 		var target := interaction_target()
 		if target.is_empty():
-			return _fail("No uncollected object on this tile or a cardinal neighbor")
+			target = location_target()
+		if target.is_empty():
+			return _fail("No uncollected object or known place on this tile or a cardinal neighbor")
 		instance_id = target.instance_id
 	return perform_action({"type": "interact", "instance_id": instance_id})
+
+func location_target() -> Dictionary:
+	## Nearest discovered place in reach that still offers an interaction.
+	for instance in places.targets(self):
+		if not places.next_interaction(self, instance).is_empty():
+			return instance
+	return {}
+
+func search() -> bool:
+	return perform_action({"type": "search"})
+
+func _search_action(_action: Dictionary) -> bool:
+	last_result = {"type": "search", "events": places.search(self)}
+	return true
 
 func preview_loot(instance_id: String) -> Array:
 	var instance: Dictionary = objects.find(instance_id)
@@ -816,6 +846,12 @@ func _object_loot(instance: Dictionary) -> Dictionary:
 func _interact_action(action: Dictionary) -> bool:
 	if not action.get("instance_id") is String:
 		return _fail("Interaction requires a stable object ID")
+	if action.instance_id.begins_with("loc:"):
+		var place: Dictionary = places.interact(self, action.instance_id, str(action.get("interaction", "")))
+		if place.is_empty():
+			return false
+		last_result = place
+		return true
 	var instance: Dictionary = objects.find(action.instance_id)
 	if instance.is_empty():
 		return _fail("Object is not in the loaded chunks")

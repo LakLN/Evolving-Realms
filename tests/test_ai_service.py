@@ -77,6 +77,17 @@ class ProvidersTest(unittest.TestCase):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(envelope, ensure_ascii=False), encoding="utf-8")
 
+    def test_mock_location_with_event_writes_world_fixture(self):
+        request = {"request_id": "checkpoint-i-fixture", "kind": "location",
+                   "prompt": "A place of old power in unexplored land", "context": {"version": 1}}
+        definitions = generate(request, Settings())["content"]["definitions"]
+        self.assertEqual([d["kind"] for d in definitions], ["item", "world_event", "location"])
+        site = definitions[2]
+        self.assertEqual(site["payload"]["interactions"][0]["event"], {"content_id": definitions[1]["content_id"], "version": 1})
+        target = ROOT / ".tools/ai/mock_location_bundle.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(generate(request, Settings()), ensure_ascii=False), encoding="utf-8")
+
     def test_configuration_and_explicit_network_gate(self):
         with patch.dict("os.environ", {}, clear=True):
             self.assertEqual(Settings.from_env().provider, "mock")

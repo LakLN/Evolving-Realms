@@ -4,7 +4,9 @@ const Skills = preload("res://src/core/skills.gd")
 const Talents = preload("res://src/core/talents.gd")
 const Effects = preload("res://src/core/effects.gd")
 const Encounters = preload("res://src/world/world_encounters.gd")
-const DEFINITIONS := ["definition.item", "definition.resource", "definition.chest", "definition.creature", "definition.item_use", "definition.loot_extension", "definition.talent", "definition.skill", "definition.status", "definition.generation_proposal", "definition.encounter", "definition.region"]
+const Locations = preload("res://src/world/world_locations.gd")
+const Events = preload("res://src/core/world_events.gd")
+const DEFINITIONS := ["definition.item", "definition.resource", "definition.chest", "definition.creature", "definition.item_use", "definition.loot_extension", "definition.talent", "definition.skill", "definition.status", "definition.generation_proposal", "definition.encounter", "definition.region", "definition.location", "definition.world_event"]
 
 static func all_supported() -> Array:
 	var result: Array = DEFINITIONS.duplicate()
@@ -28,7 +30,13 @@ static func all_supported() -> Array:
 	for condition in ["source_status", "target_status", "hp_below_percent", "hp_at_least_percent"]: result.append("effect.condition." + condition)
 	for effect in ["heal", "sate", "quench", "apply_status", "cleanse"]: result.append("item.effect." + effect)
 	result.append("creature.hit_effect.apply_status")
-	for condition in Encounters.CONDITIONS: result.append("encounter.condition." + condition)
+	for condition in Encounters.CONDITIONS:
+		result.append("encounter.condition." + condition)
+		result.append("location.condition." + condition)
+	for mode in Locations.DISCOVERY: result.append("location.discovery." + mode)
+	for trigger in Locations.TRIGGERS: result.append("location.trigger." + trigger)
+	for condition in Events.LOCAL_CONDITIONS: result.append("location.condition." + condition)
+	for outcome in Events.OUTCOMES: result.append("event.outcome." + outcome)
 	return result
 
 static func supports(capability: String) -> bool:

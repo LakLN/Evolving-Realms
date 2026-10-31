@@ -35,7 +35,7 @@ static func describe(layer: RefCounted, chunk: Vector2i) -> Dictionary:
 	## only: describing never establishes the chunk.
 	var bytes: PackedByteArray = layer.terrain.generate_chunk(chunk)
 	var revision: int = layer.ledger.established(chunk) if layer.ledger != null else -1
-	var effective: int = revision if revision >= 0 else layer.encounters.revision
+	var effective: int = revision if revision >= 0 else (layer.ledger.revision if layer.ledger != null else layer.encounters.revision)
 	var present := {}
 	for placement in layer.preview_chunk(chunk, effective, bytes):
 		present["%s@%d" % [placement.content_id, int(placement.version)]] = true
@@ -48,6 +48,6 @@ static func describe(layer: RefCounted, chunk: Vector2i) -> Dictionary:
 	var names: Array = present.keys()
 	names.sort()
 	return {"chunk": {"x": chunk.x, "y": chunk.y}, "danger": danger(layer.terrain, chunk), "biome_shares": shares,
-		"established": revision >= 0, "encounter_revision": effective, "world_encounter_revision": layer.encounters.revision,
+		"established": revision >= 0, "encounter_revision": effective, "world_revision": layer.ledger.revision if layer.ledger != null else layer.encounters.revision,
 		"present_creatures": names, "valid_creatures": valid,
 		"capabilities": ["definition.encounter"] + layer.encounters.condition_names().map(func(c: String) -> String: return "encounter.condition." + c)}

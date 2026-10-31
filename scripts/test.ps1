@@ -53,7 +53,7 @@ try {
     Invoke-EngineCheck -Name 'skill-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/skill_gameplay_suite.gd') -Summary 'M02 CHECKPOINT E GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'effects' -EngineArgs @('--headless', '--script', 'res://tests/effect_suite.gd') -Summary 'M02 CHECKPOINT F EFFECTS: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'effect-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
-    if ($selected.Count -eq 0 -or 'ai-content' -in $selected -or 'ai-world' -in $selected) {
+    if ($selected.Count -eq 0 -or 'ai-content' -in $selected -or 'ai-world' -in $selected -or 'discoveries' -in $selected) {
         # unittest reports on stderr; under 'Stop' Windows PowerShell 5.1 would throw on it.
         $previous = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
@@ -66,8 +66,11 @@ try {
     }
     Invoke-EngineCheck -Name 'ai-content' -EngineArgs @('--headless', '--script', 'res://tests/ai_content_suite.gd') -Summary 'M02 CHECKPOINT G AI CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'ai-world' -EngineArgs @('--headless', '--script', 'res://tests/ai_world_suite.gd') -Summary 'M02 CHECKPOINT H AI WORLD: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'discoveries' -EngineArgs @('--headless', '--script', 'res://tests/discovery_suite.gd') -Summary 'M02 CHECKPOINT I DISCOVERIES: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'discovery-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
+        Invoke-EngineCheck -Name 'rendered-discoveries' -EngineArgs @('--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-effects' -EngineArgs @('--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-interactions' -EngineArgs @('--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'

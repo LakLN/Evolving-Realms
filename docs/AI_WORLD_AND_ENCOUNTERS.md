@@ -120,6 +120,12 @@ on-hit status, death and loot, database reopen, leave/return without duplicates,
 revision 2 only in new regions, Run B independence, legacy save resume, explored ⊆
 established, registry/Blueprint invariants, region context.
 
+## Checkpoint I extension
+
+Region records now also carry content `layers` (ledger v2); the World revision covers
+encounters and locations alike (`RegionLedger.current_revision`). See
+[DISCOVERIES_AND_EVENTS.md](DISCOVERIES_AND_EVENTS.md).
+
 ## Limits
 
 - Establishment is World-level and first-come: if Run B establishes a region first, Run A

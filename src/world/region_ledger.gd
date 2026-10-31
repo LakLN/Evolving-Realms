@@ -9,10 +9,17 @@ const Pack = preload("res://src/content/starter_pack.gd")
 const Data = preload("res://src/data/json_data.gd")
 const RECORD := {"content_id": "core:region_record", "version": 1}
 const BASELINE_ID := "region:v1/baseline"
-const LEDGER_VERSION := 1
+const LEDGER_VERSION := 2
+## Content layers a region established by this code carries (Checkpoint I). Regions
+## recorded earlier (ledger v1, baseline) have none and never gain these layers.
+const LAYERS := ["locations-v1"]
+const REVISED_KINDS := ["encounter", "location"]
 var registry: RefCounted
 var world_id := ""
+## Current World distribution revision (encounters and locations; see current_revision).
+var revision := 0
 var _revisions: Dictionary = {}
+var _layers: Dictionary = {}
 var last_error := ""
 
 func configure(content: RefCounted, world: String) -> bool:
@@ -22,8 +29,26 @@ func configure(content: RefCounted, world: String) -> bool:
 	var pack := Pack.new()
 	if not pack.install(registry, world_id, Pack.WORLD_PATH):
 		return _fail(pack.last_error)
+	revision = current_revision(registry, world_id)
 	last_error = ""
 	return true
+
+static func current_revision(content: RefCounted, world: String) -> int:
+	## Highest activation revision stamped on active encounter/location definitions. The
+	## provenance key keeps its Checkpoint H name `encounter_revision` for both kinds.
+	var result := 0
+	for header in content.list_definitions(world):
+		if header.kind in REVISED_KINDS and header.status == "active":
+			var definition: Dictionary = content.load_definition(world, header.content_id, int(header.version))
+			var value: Variant = definition.get("provenance", {}).get("encounter_revision", 0)
+			if Data.integer(value): result = maxi(result, int(value))
+	return result
+
+func layers(chunk: Vector2i) -> Array:
+	## Content layers of an established chunk ([] for H/baseline records or unknown).
+	if established(chunk) < 0:
+		return []
+	return _layers.get(chunk, [])
 
 static func record_id(chunk: Vector2i) -> String:
 	return "region:v1/%d/%d" % [chunk.x, chunk.y]
@@ -42,9 +67,11 @@ func established(chunk: Vector2i) -> int:
 		_fail("Corrupt region record " + record_id(chunk))
 		return -1
 	_revisions[chunk] = int(revision)
+	var tags: Variant = record.metadata.get("layers", [])
+	_layers[chunk] = tags if tags is Array else []
 	return int(revision)
 
-func establish(chunk: Vector2i, revision: int) -> int:
+func establish(chunk: Vector2i, at_revision: int, with_layers: Array = LAYERS) -> int:
 	## Existing records always win; returns the pinned revision or -1 on failure.
 	last_error = ""
 	var known := established(chunk)
@@ -53,7 +80,7 @@ func establish(chunk: Vector2i, revision: int) -> int:
 	var origin := chunk * Terrain.CHUNK_SIZE
 	var record := {"instance_id": record_id(chunk), "content_id": RECORD.content_id, "version": RECORD.version,
 		"position": {"x": origin.x, "y": origin.y}, "origin": "procedural",
-		"metadata": {"ledger_version": LEDGER_VERSION, "encounter_revision": revision, "chunk": {"x": chunk.x, "y": chunk.y}}}
+		"metadata": {"ledger_version": LEDGER_VERSION, "encounter_revision": at_revision, "layers": with_layers.duplicate(), "chunk": {"x": chunk.x, "y": chunk.y}}}
 	if registry.create_instance(world_id, record).is_empty():
 		# Another process may have established it first; its record is authoritative.
 		var winner := established(chunk)
@@ -62,8 +89,9 @@ func establish(chunk: Vector2i, revision: int) -> int:
 			return winner
 		_fail(registry.last_error)
 		return -1
-	_revisions[chunk] = revision
-	return revision
+	_revisions[chunk] = at_revision
+	_layers[chunk] = with_layers.duplicate()
+	return at_revision
 
 func seal_baseline(store: RefCounted) -> bool:
 	## Once per World: chunks explored by any Run before the ledger existed were seen
@@ -79,10 +107,9 @@ func seal_baseline(store: RefCounted) -> bool:
 		var run: Dictionary = store.load_run(header.run_id)
 		if run.is_empty():
 			return _fail(store.last_error)
-		var tiles: Array = run.state.get("explored", []).duplicate()
-		tiles.append(run.state.get("character", {}).get("position", run.spawn.position))
-		tiles.append(run.spawn.position)
-		for tile in tiles:
+		# Explored tiles only: every saved Run stores its initial sight, while a Run being
+		# created right now has explored nothing yet and must not be sealed at revision 0.
+		for tile in run.state.get("explored", []):
 			if not Data.position(tile):
 				continue
 			var center := Terrain.chunk_of(Vector2i(int(tile.x), int(tile.y)))
@@ -92,7 +119,7 @@ func seal_baseline(store: RefCounted) -> bool:
 	var ordered: Array = chunks.keys()
 	ordered.sort()
 	for chunk in ordered:
-		if establish(chunk, 0) < 0:
+		if establish(chunk, 0, []) < 0: # Pre-ledger exploration: no later layers.
 			return false
 	var record := {"instance_id": BASELINE_ID, "content_id": RECORD.content_id, "version": RECORD.version,
 		"position": {"x": 0, "y": 0}, "origin": "procedural",

@@ -13,6 +13,8 @@ const Creatures = preload("res://src/world/world_creatures.gd")
 const Ledger = preload("res://src/world/region_ledger.gd")
 const Region = preload("res://src/world/region_context.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Locations = preload("res://src/world/world_locations.gd")
+const Events = preload("res://src/core/world_events.gd")
 
 static func capabilities() -> Dictionary:
 	var quality := Quality.new()
@@ -37,6 +39,10 @@ static func capabilities() -> Dictionary:
 		"encounters": {"fields": Encounters.FIELDS, "biomes": Terrain.BIOMES, "conditions": Encounters.CONDITIONS,
 			"surfaces": Region.SURFACES, "danger_tiers": [0, 1, 2, 3], "per_10000": [1, 200], "max_per_chunk": [1, Encounters.BUDGET],
 			"chunk_budget": Encounters.BUDGET, "creature_spawn_field": "unsupported for ai: creatures; declare an encounter definition"},
+		"locations": {"fields": Locations.FIELDS, "discovery_modes": Locations.DISCOVERY, "triggers": Locations.TRIGGERS,
+			"interaction_fields": ["id", "verb", "trigger", "event", "after", "exclusive"], "per_10000": [1, 50], "chunk_budget": Locations.BUDGET,
+			"spawn_conditions": Encounters.CONDITIONS, "event_fields": Events.FIELDS, "event_outcomes": Events.OUTCOMES,
+			"event_conditions": Events.LOCAL_CONDITIONS.keys() + Skills.CONDITIONS, "tones": Events.TONES},
 		"limits": {"definitions": 24, "effects_per_skill": 8, "status_duration": 100, "status_stacks": 20},
 		"unsupported": ["summon", "contracts", "quests", "creature_to_creature_status", "creature_max_hp_status"],
 		"parameter_contracts": {"objects": Contracts.FIELDS, "effects": Contracts.EFFECTS, "conditions": Contracts.CONDITIONS},
@@ -44,7 +50,8 @@ static func capabilities() -> Dictionary:
 			"Do not invent executable code or engine rules. Unknown capabilities stay pending.",
 			"Turns are local/offline; generation never runs during movement or load.",
 			"Distribution uses loot_extension or encounter definitions (biomes, density, conditions) that pin a creature.",
-			"New encounters reach only regions established after activation; explored regions never change.",
+			"New encounters and locations reach only regions established after activation; explored regions never change.",
+			"A location pins world_event definitions; events reuse item/status/xp/vital handlers and may cost pinned items.",
 			"New content uses ai: IDs. A review and explicit confirmation/activation are required."]}
 
 static func retrieve(store: RefCounted, world_id: String, query: String, related: Array = [], region: String = "") -> Dictionary:
