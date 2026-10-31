@@ -3,7 +3,8 @@ extends RefCounted
 const Skills = preload("res://src/core/skills.gd")
 const Talents = preload("res://src/core/talents.gd")
 const Effects = preload("res://src/core/effects.gd")
-const DEFINITIONS := ["definition.item", "definition.resource", "definition.chest", "definition.creature", "definition.item_use", "definition.loot_extension", "definition.talent", "definition.skill", "definition.status", "definition.generation_proposal"]
+const Encounters = preload("res://src/world/world_encounters.gd")
+const DEFINITIONS := ["definition.item", "definition.resource", "definition.chest", "definition.creature", "definition.item_use", "definition.loot_extension", "definition.talent", "definition.skill", "definition.status", "definition.generation_proposal", "definition.encounter", "definition.region"]
 
 static func all_supported() -> Array:
 	var result: Array = DEFINITIONS.duplicate()
@@ -27,6 +28,7 @@ static func all_supported() -> Array:
 	for condition in ["source_status", "target_status", "hp_below_percent", "hp_at_least_percent"]: result.append("effect.condition." + condition)
 	for effect in ["heal", "sate", "quench", "apply_status", "cleanse"]: result.append("item.effect." + effect)
 	result.append("creature.hit_effect.apply_status")
+	for condition in Encounters.CONDITIONS: result.append("encounter.condition." + condition)
 	return result
 
 static func supports(capability: String) -> bool:

@@ -10,6 +10,7 @@ const Stats = preload("res://src/core/character_stats.gd")
 const Survival = preload("res://src/core/survival.gd")
 const Items = preload("res://src/core/item_effects.gd")
 const Creatures = preload("res://src/world/world_creatures.gd")
+const Encounters = preload("res://src/world/world_encounters.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Capabilities = preload("res://src/content/capability_registry.gd")
 const Registry = preload("res://src/content/content_registry.gd")
@@ -19,7 +20,8 @@ const PAYLOAD_FIELDS := {
 	"talent": ["rank", "unique", "awakening", "passive", "abilities", "limitations"],
 	"creature": ["visual", "disposition", "stats", "movement", "ai", "spawn", "loot", "elements", "effect_modifiers", "on_hit_effects"],
 	"status": ["element", "duration", "max_stacks", "refresh", "harmful", "tick", "skip_every", "modifiers"],
-	"item_use": ["item", "consume", "verb", "effects"], "loot_extension": ["source", "chance_per_10000", "table"]}
+	"item_use": ["item", "consume", "verb", "effects"], "loot_extension": ["source", "chance_per_10000", "table"],
+	"encounter": Encounters.FIELDS}
 const OBJECT_ARRAYS := ["dependencies", "effects", "passive", "abilities", "conditions", "relations", "modifiers", "effect_modifiers", "skill_modifiers", "on_hit_effects", "entries", "guaranteed"]
 const ARRAYS := ["required_capabilities", "elements", "effect_types", "dispositions", "biomes", "tags", "skills", "values", "limitations"]
 const OBJECTS := ["stats", "equipment", "requirements", "skill_book", "item", "use", "learn", "cost", "target", "awakening", "limits", "ai", "movement", "spawn", "loot", "table", "source", "modifier", "tick"]
@@ -149,7 +151,9 @@ func validate(registry: RefCounted, world_id: String, content: Variant) -> Dicti
 			"item_use": verdict = _use(def, view, world_id, report.missing_capabilities)
 			"creature":
 				verdict = _creature(def, view, world_id)
-				if def.payload.has("spawn"): report.missing_capabilities.append("authoring.procedural_creature_distribution")
+				# The frozen v1 layer never admits new species; distribution is an encounter.
+				if def.payload.has("spawn"): report.missing_capabilities.append("creature.payload_spawn")
+			"encounter": verdict = Encounters.classify(def, view, world_id)
 			"loot_extension": verdict.problem = _loot(def, view, world_id, quality)
 		report.missing_capabilities.append_array(verdict.missing)
 		if not verdict.problem.is_empty(): report.errors.append({"category": "rule", "content_id": def.content_id, "message": verdict.problem})

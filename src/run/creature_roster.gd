@@ -48,7 +48,13 @@ func follow(tile: Vector2i, terrain_chunks: Dictionary) -> bool:
 	for y in range(next.y - 1, next.y + 2):
 		for x in range(next.x - 1, next.x + 2):
 			var chunk := Vector2i(x, y)
-			loaded[chunk] = chunks[chunk] if chunks.has(chunk) else layer.generate_chunk(chunk, terrain_chunks.get(chunk, PackedByteArray()))
+			if chunks.has(chunk):
+				loaded[chunk] = chunks[chunk]
+				continue
+			# Established-region aware: v1 homes plus the chunk's pinned encounters.
+			loaded[chunk] = layer.chunk_creatures(chunk, terrain_chunks.get(chunk, PackedByteArray()))
+			if not layer.last_error.is_empty():
+				return _fail(layer.last_error)
 	chunks = loaded
 	center = next
 	for id in creatures.keys():

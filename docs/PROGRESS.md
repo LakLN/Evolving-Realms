@@ -1,6 +1,79 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint G complete (AI content generation foundation)
+## Current checkpoint: Milestone 02 Checkpoint H complete (AI world integration, encounters, world consistency)
+
+From clean `e2d122b`. Scope H only; no later checkpoint started. No SQLite migration
+(user_version 2, record schema 1), no terrain/object/creature-generation v1 change, no
+established pack edited (new append-only `content/world_pack.json`).
+
+Delivered (details: [AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md)):
+- `kind: encounter` definitions (capability `definition.encounter`): pinned creature,
+  biomes within its movement biomes, `per_10000` 1..200, `max_per_chunk` 1..3, priority,
+  conditions `danger` / `biome_share` / `near_terrain`; unknown ones are named pending
+  capabilities. Engine validation shared by the authoring validator and the runtime.
+- Encounter generation v1 (`src/world/world_encounters.gd`) on top of the unchanged v1
+  homes: per-rule hash streams, hash-ordered candidates, caps of 3 encounter homes and 6
+  total per chunk, stable `enc:v1/<cx>/<cy>/<x>_<y>` IDs with encounter/revision metadata.
+  The v1 layer now ignores `ai`-origin creatures; AI `payload.spawn` stays pending
+  (`creature.payload_spawn`).
+- Region ledger (`src/world/region_ledger.gd`): one immutable World-scoped record per
+  chunk established at first load, pinning its encounter revision; existing records win,
+  also across processes. One-time baseline seals every Run's earlier exploration at
+  revision 0 (legacy worlds). Unloading never forgets a region.
+- Activation stamps `encounter_revision = current + 1` into encounter provenance and the
+  activated record; the in-lock preflight refuses a concurrent revision. Still atomic and
+  idempotent. Only regions established afterwards receive new encounters.
+- Region context (`src/world/region_context.gd`): biome shares and a hashed danger tier;
+  `AuthoringContext.retrieve(..., "chunk:x,y")` adds established state, revision, present
+  and valid species; the capability manifest lists the encounter vocabulary.
+- Mock provider `--kind creature`: hostile creature (element, resistance, on-hit core
+  status, trophy loot) + trophy + encounter. Collections unchanged.
+
+Flow demonstrated (`tests/ai_world_suite.gd`, real Registry/pipeline, Python mock fixture):
+legacy Run without ledger → H session seals baseline → pending creature / unknown condition
+refused, wrong biome invalid → mock creature drafted, confirmed, activated (revision 1,
+repeat is a no-op) → Run A's explored chunks unchanged (v1 homes identical, no AI) →
+entering an unestablished forest region establishes it at revision 1 → "Fieldcraft
+Stalker" appears, detects, chases and hits (applies its status) → killed in 10 turns →
+trophy ×2 via loot → save, database reopen, exact state, dead stays dead, no duplicates →
+leave (chunk unloaded, record kept) and return identical → revision 2 activation changes
+nothing in the revision-1 region; a new region gets revision 2 → Run B meets the same
+encounter alive → legacy save resumes → explored ⊆ established for all Runs. Also checked
+manually: CLI `init → generate --kind creature → confirm → activate (rev 1) → registered`
+on a temp database.
+
+Existing assertions adjusted (intent kept, nothing deleted): the G validation table now
+expects `creature.payload_spawn` instead of `authoring.procedural_creature_distribution`;
+the D "procedural objects are not copied" count excludes `region:` ledger records.
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Only ai-content,ai-world,world,interactions,combat,effects,survival -Smoke
+.\scripts\test.ps1      # full headless regression (no -Render/-Service/-Export)
+```
+
+Both passed (exit 0): import; data 96; world 49; gameplay 22; interactions 66 + UI 17;
+integration 34; combat 75 + UI 20; survival 60 + UI 10; equipment 68 + UI 15; talents
+126 + UI 16; skills 105 + UI 21; effects 49 + UI 9; offline Python provider + CLI tests;
+ai-content 34; ai-world 41; startup. Not run (TESTING.md, not a milestone end): OpenGL
+`-Render` suites, `-Service`, exe export / exported old-save check. Old saves are covered
+headless (legacy Run in ai-world; B/C/D legacy saves in integration).
+
+### Remaining limits
+
+- Establishment is World-level and first-come: whichever Run first loads a region fixes
+  its revision for all Runs (states stay per Run).
+- A loaded-but-unseen neighbor chunk counts as established (conservative).
+- No respawn, populations, packs, migration or ecology; danger is a hashed tier.
+- Ledger rows grow with explored area (one per chunk); proposal records still unpruned.
+- No in-game authoring UI; real-provider output quality untested by design.
+
+### Next step
+
+Stop. The user reviews this checkpoint. Any later checkpoint needs explicit approval.
+
+## Milestone 02 Checkpoint G record (historical)
 
 Codex started G from clean `6f4874c` and ran out of context before validating the
 pipeline. This session took over the uncommitted work without resetting or rewriting
@@ -60,10 +133,6 @@ activation before confirm → confirm → activate twice → proposals) on a tem
 - Proposal records with full envelopes accumulate in the world registry (no pruning).
 - No in-game authoring UI; use a laboratory database or a copy.
 - Not run (per TESTING.md, not a milestone end): full regression, OpenGL suites, exe export.
-
-### Next step
-
-Stop. The user reviews this checkpoint. Any later checkpoint needs explicit approval.
 
 ## Milestone 02 Checkpoint F record (historical)
 

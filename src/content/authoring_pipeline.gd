@@ -4,6 +4,8 @@ extends RefCounted
 const Validator = preload("res://src/content/authoring_validator.gd")
 const Context = preload("res://src/content/authoring_context.gd")
 const Data = preload("res://src/data/json_data.gd")
+const Ledger = preload("res://src/world/region_ledger.gd")
+const Encounters = preload("res://src/world/world_encounters.gd")
 var store: RefCounted
 var validator := Validator.new()
 var last_error := ""
@@ -60,8 +62,19 @@ func activate(world_id: String, id: String) -> Dictionary:
 			"prompt_version": origin.get("prompt_version", 1), "request_hash": str(origin.get("request_hash", "")),
 			"request_id": proposal.payload.envelope.request.request_id, "proposal_id": id}
 	var activated := _stage(id, int(proposal.version) + 1, "activated", proposal.payload.envelope, proposal.payload.envelope_hash, report)
+	# Encounters get the next World encounter revision. Only regions established after
+	# this commit receive them; earlier exploration is sealed first (see RegionLedger).
+	var revision := 0
+	var encounters: Array = definitions.filter(func(d: Dictionary) -> bool: return d.kind == "encounter")
+	if not encounters.is_empty():
+		var ledger := Ledger.new()
+		if not ledger.configure(store.content, world_id) or not ledger.seal_baseline(store): return _fail(ledger.last_error)
+		revision = Encounters.current_revision(store.content, world_id) + 1
+		for def in encounters: def.provenance.encounter_revision = revision
+		activated.payload.encounter_revision = revision
 	definitions.append(activated)
 	var committed: Dictionary = store.content.register_batch(world_id, definitions, func() -> String:
+		if revision > 0 and Encounters.current_revision(store.content, world_id) != revision - 1: return "Another encounter activation committed first; review and activate again"
 		var checked := validator.validate(store.content, world_id, proposal.payload.envelope.get("content"))
 		return "" if checked.status == "valid" else "Activation preflight failed: " + JSON.stringify(checked))
 	if committed.is_empty(): return _fail(store.last_error)

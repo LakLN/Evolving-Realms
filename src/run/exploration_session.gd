@@ -9,6 +9,7 @@ const Loot = preload("res://src/core/loot_table.gd")
 const Inventory = preload("res://src/core/inventory.gd")
 const Creatures = preload("res://src/world/world_creatures.gd")
 const Roster = preload("res://src/run/creature_roster.gd")
+const Ledger = preload("res://src/world/region_ledger.gd")
 const Combat = preload("res://src/core/combat.gd")
 const Survival = preload("res://src/core/survival.gd")
 const ItemEffects = preload("res://src/core/item_effects.gd")
@@ -210,9 +211,14 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var skill_error := next_skill_rules.validate(loaded.state.character, func(content_id: String, version: int) -> Dictionary: return next_skills.definitions.get("%s@%d" % [content_id, version], {}), next_character_rules.rules.stats.keys())
 	if not skill_error.is_empty():
 		return _fail(skill_error + "; save was not changed")
+	# World-scoped established regions: pre-ledger exploration is sealed at revision 0
+	# once, then every newly loaded chunk pins the current encounter revision.
+	var ledger := Ledger.new()
+	if not ledger.configure(store.content, blueprint.world_id) or not ledger.seal_baseline(store):
+		return _fail(ledger.last_error)
 	var layer := Creatures.new()
 	var next_roster := Roster.new()
-	if not layer.configure(blueprint, generator, store.content) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
+	if not layer.configure(blueprint, generator, store.content, ledger) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
 		return _fail(layer.last_error if not layer.last_error.is_empty() else next_roster.last_error)
 	terrain = generator
 	world = blueprint

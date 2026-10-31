@@ -114,14 +114,29 @@ class MockProvider:
             "ai": {"detect_radius": 4, "wander_per_10000": 2000, "flee_radius": 0, "flee_below_percent": 20},
             "effect_modifiers": [{"type": "resistance", "element": element, "percent": 25}],
             "loot": {"guaranteed": [{**ref("mantle"), "min": 1, "max": 1}]}}, [ref("mantle")])
-        # No spawn distribution: avoids changing established geography/encounter homes.
+        # Creature kind (Checkpoint H): a hunting species with its own trophy and an
+        # encounter definition. Collections keep the G shape (creature without encounter).
+        trophy = definition("trophy", "item", {"stackable": True, "stack_limit": 20})
+        biome = ["forest", "meadow"][n % 2]
+        stalker = definition("stalker", "creature", {
+            "visual": "creature", "disposition": "hostile", "elements": [element],
+            "stats": {"max_hp": 12 + n % 9, "attack": 3 + n % 3, "defense": 1},
+            "movement": {"biomes": ["forest", "meadow"], "leash": 8, "move_per_10000": 8000},
+            "ai": {"detect_radius": 5, "wander_per_10000": 2500, "flee_radius": 0, "flee_below_percent": 0},
+            "effect_modifiers": [{"type": "resistance", "element": element, "percent": 30}],
+            "on_hit_effects": [{"type": "apply_status", "content_id": "core:status/" + status, "version": 1}],
+            "loot": {"guaranteed": [{**ref("trophy"), "min": 1, "max": 2}]}},
+            [ref("trophy"), {"content_id": "core:status/" + status, "version": 1}])
+        encounter = definition("haunt", "encounter", {
+            "creature": ref("stalker"), "biomes": [biome], "per_10000": 40 + n % 20, "max_per_chunk": 2, "priority": 50,
+            "conditions": [{"type": "biome_share", "biome": biome, "min_percent": 10}]}, [ref("stalker")])
         kinds = {"skill": [skill, manual], "equipment": [gear], "item": [definition("salve", "item", {"stackable": True, "stack_limit": 10}),
             definition("salve_use", "item_use", {"item": ref("salve"), "consume": 1, "verb": "Apply",
                 "effects": [{"type": "heal", "amount": 3 + n % 6}]}, [ref("salve")])],
-            "talent": [talent], "creature": [gear, creature], "collection": [skill, manual, gear, talent, creature]}
+            "talent": [talent], "creature": [trophy, stalker, encounter], "collection": [skill, manual, gear, talent, creature]}
         definitions = kinds[request["kind"]]
         # Existing loot-extension handler distributes items/books; no ID-specific code.
-        items = [d for d in definitions if d["kind"] == "item"]
+        items = [d for d in definitions if d["kind"] == "item"] if request["kind"] != "creature" else []
         if items:
             source = {"content_id": "core:wayfarer_cache", "version": 1}
             definitions.append(definition("distribution", "loot_extension", {

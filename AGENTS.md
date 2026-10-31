@@ -1,7 +1,7 @@
 # Agent workflow
 
 Read docs/PROJECT_VISION.md, ARCHITECTURE.md, ROADMAP.md and PROGRESS.md before changes.
-Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment), D (talents), E (skills), F (effects/elements) and G (AI content foundation) are complete.
+Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment), D (talents), E (skills), F (effects/elements), G (AI content foundation) and H (AI world integration/encounters) are complete.
 Do not start a later Milestone 02 checkpoint or later milestones without user approval.
 Keep Godot gameplay local and independent of Python, internet, keys and AI providers.
 Use stable content IDs; separate blueprint, definitions, instances and per-run mutations.
@@ -39,3 +39,5 @@ scripts/test.ps1 runs the full regression by default; -Only/-Smoke select subset
 Read docs/EFFECTS_AND_ELEMENTS.md before changing status ticks, elements, resistance or effect modifiers.
 Read docs/AI_CONTENT.md before changing providers, authoring validation, proposals or activation.
 AI proposals never activate themselves; tests use the mock/local stub only, never a paid API.
+Read docs/AI_WORLD_AND_ENCOUNTERS.md before changing encounters, the region ledger or spawn layers.
+Established regions never change; never rewrite or delete region records or creature v1 homes.

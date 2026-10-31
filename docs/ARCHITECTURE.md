@@ -217,6 +217,17 @@ from handler tables, stores each stage as an append-only `generation_proposal` r
 reaching play through existing paths (loot extensions, books, awakening pool). Gameplay
 never calls Python. No schema change. Details: [AI_CONTENT.md](AI_CONTENT.md).
 
+## AI world integration — Milestone 02 Checkpoint H
+
+`kind: encounter` definitions distribute activated creatures by biome, density and a closed
+condition vocabulary (`src/world/world_encounters.gd`) on top of the frozen creature v1
+homes. `src/world/region_ledger.gd` keeps one immutable World-scoped record per
+established chunk (a content instance of `core:region_record`) pinning the encounter
+revision; activation stamps revisions atomically. Established regions never change;
+new content reaches only regions established later. `src/world/region_context.gd` derives
+biome shares and a danger tier for authoring context. No schema or generation-version
+change. Details: [AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md).
+
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions
 may spawn. AI providers return data, never scripts. Future migrations, mechanic

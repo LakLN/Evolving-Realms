@@ -44,7 +44,8 @@ func _test_objects_and_actions() -> void:
 		return
 	var fixed: Dictionary = store.content.load_instance(world.world_id, "landmark:wayfarer_cache")
 	check(not fixed.is_empty() and fixed.origin == "authored" and Helpers.same(fixed.position, world.blueprint.fixed_locations[0].position), "Blueprint landmark becomes one fixed world instance")
-	check(store.content.list_instances(world.world_id).size() == 1, "Unchanged procedural objects are not copied to SQLite")
+	# Established-region records (Milestone 02 H) are World ledger entries, not objects.
+	check(store.content.list_instances(world.world_id).filter(func(i: Dictionary) -> bool: return not str(i.instance_id).begins_with("region:")).size() == 1, "Unchanged procedural objects are not copied to SQLite")
 	var snapshots := {}
 	var origins: Array = session.objects.chunks.keys()
 	for chunk in origins:

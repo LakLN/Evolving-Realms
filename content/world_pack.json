@@ -1,0 +1,6 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {"content_id":"core:region_record","version":1,"schema_version":1,"kind":"region","name":"Established region","description":"World-scoped record that a chunk was established at an encounter revision. Never playable, never drawn.","metadata":{"category":"world"},"payload":{"ledger_version":1}}
+  ]
+}

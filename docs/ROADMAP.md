@@ -59,6 +59,11 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
     context, engine-backed validation with named missing capabilities, draft / confirm
     / reject / atomic activate lifecycle, developer CLI, generated manual/skill/gear
     played end to end through loot, learning, equipping and save/load. No migration.
+  - H (complete): AI world integration: `encounter` definitions (biome, density,
+    conditions) for activated AI creatures, atomic activation revisions, World-scoped
+    immutable region ledger (established regions never change, legacy exploration sealed
+    at revision 0), derived region context (biome shares, danger), mock creature +
+    encounter played end to end. No migration, generation v1 unchanged.
   - Later checkpoints: not started; require user approval.
 03: deeper talent/skill mechanics (evolution, fusion, cultivation) as approved; talent
 awakening (02 D) and skill books with learning requirements (02 E) were delivered early.

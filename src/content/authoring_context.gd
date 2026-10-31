@@ -8,6 +8,11 @@ const Talents = preload("res://src/core/talents.gd")
 const Effects = preload("res://src/core/effects.gd")
 const Quality = preload("res://src/core/item_quality.gd")
 const Stats = preload("res://src/core/character_stats.gd")
+const Encounters = preload("res://src/world/world_encounters.gd")
+const Creatures = preload("res://src/world/world_creatures.gd")
+const Ledger = preload("res://src/world/region_ledger.gd")
+const Region = preload("res://src/world/region_context.gd")
+const Terrain = preload("res://src/world/terrain_v1.gd")
 
 static func capabilities() -> Dictionary:
 	var quality := Quality.new()
@@ -29,13 +34,17 @@ static func capabilities() -> Dictionary:
 		"modifier_conditions": ["source_status", "target_status", "hp_below_percent", "hp_at_least_percent"],
 		"item_effects": ["heal", "sate", "quench", "apply_status", "cleanse"],
 		"creature_dispositions": ["passive", "neutral", "hostile"],
+		"encounters": {"fields": Encounters.FIELDS, "biomes": Terrain.BIOMES, "conditions": Encounters.CONDITIONS,
+			"surfaces": Region.SURFACES, "danger_tiers": [0, 1, 2, 3], "per_10000": [1, 200], "max_per_chunk": [1, Encounters.BUDGET],
+			"chunk_budget": Encounters.BUDGET, "creature_spawn_field": "unsupported for ai: creatures; declare an encounter definition"},
 		"limits": {"definitions": 24, "effects_per_skill": 8, "status_duration": 100, "status_stacks": 20},
 		"unsupported": ["summon", "contracts", "quests", "creature_to_creature_status", "creature_max_hp_status"],
 		"parameter_contracts": {"objects": Contracts.FIELDS, "effects": Contracts.EFFECTS, "conditions": Contracts.CONDITIONS},
 		"rules": ["Definitions are immutable and version-pinned; reference explicit dependencies.",
 			"Do not invent executable code or engine rules. Unknown capabilities stay pending.",
 			"Turns are local/offline; generation never runs during movement or load.",
-			"Distribution uses loot_extension or explicit authored encounters; no automatic map rewrite.",
+			"Distribution uses loot_extension or encounter definitions (biomes, density, conditions) that pin a creature.",
+			"New encounters reach only regions established after activation; explored regions never change.",
 			"New content uses ai: IDs. A review and explicit confirmation/activation are required."]}
 
 static func retrieve(store: RefCounted, world_id: String, query: String, related: Array = [], region: String = "") -> Dictionary:
@@ -69,5 +78,17 @@ static func retrieve(store: RefCounted, world_id: String, query: String, related
 	for id in related:
 		if not selected.any(func(d: Dictionary) -> bool: return d.content_id == id): return {"error": "Related content missing or exceeds context budget: " + str(id)}
 	return {"context_version": 1, "world": {"world_id": world_id, "name": world.name, "generation_version": world.generation_version},
-		"region": region, "capabilities": capabilities(), "related_definitions": selected,
+		"region": region, "region_context": region_context(store, world, region), "capabilities": capabilities(), "related_definitions": selected,
 		"retrieval": {"limit": 20, "included": selected.size(), "query": query, "truncated": ranked.size() > selected.size()}}
+
+static func region_context(store: RefCounted, world: Dictionary, region: String) -> Dictionary:
+	## "chunk:<x>,<y>" adds derived facts for that chunk (read only; never establishes it).
+	if not region.begins_with("chunk:"): return {}
+	var parts := region.trim_prefix("chunk:").split(",")
+	if parts.size() != 2 or not parts[0].strip_edges().is_valid_int() or not parts[1].strip_edges().is_valid_int(): return {"error": "Region must be chunk:<x>,<y>"}
+	var terrain := Terrain.new()
+	var ledger := Ledger.new()
+	var layer := Creatures.new()
+	if not terrain.configure(int(world.seed), int(world.generation_version)) or not ledger.configure(store.content, world.world_id) or not layer.configure(world, terrain, store.content, ledger):
+		return {"error": terrain.last_error + ledger.last_error + layer.last_error}
+	return Region.describe(layer, Vector2i(int(parts[0]), int(parts[1])))

@@ -34,7 +34,8 @@ const CONDITIONS := {
 	"any_of": ["conditions"], "chance_per_10000": ["value"], "every_turns": ["value"],
 	"need_at_least": ["need", "level"], "biome": ["values"], "target_category": ["values"],
 	"target_disposition": ["values"], "item_category": ["values"], "effect_type": ["values"], "lethal": [],
-	"source_status": ["status"], "target_status": ["status"], "mode": ["values"], "spawn_biome": ["values"]}
+	"source_status": ["status"], "target_status": ["status"], "mode": ["values"], "spawn_biome": ["values"],
+	"danger": ["min", "max"], "biome_share": ["biome", "min_percent"], "near_terrain": ["terrain", "radius"]}
 
 static func scan(value: Variant, label: String, missing: Array) -> void:
 	if not value is Dictionary: return
@@ -50,7 +51,7 @@ static func scan(value: Variant, label: String, missing: Array) -> void:
 			if key not in allowed: missing.append("parameter.%s.%s" % [label, key])
 	for key in value:
 		var child: Variant = value[key]
-		var next: String = {"modifier": "effect_modifier", "table": "loot", "source": "reference", "item": "reference", "skill": "reference", "tick": "effect"}.get(key, key)
+		var next: String = {"modifier": "effect_modifier", "table": "loot", "source": "reference", "item": "reference", "skill": "reference", "creature": "reference", "tick": "effect"}.get(key, key)
 		if child is Dictionary: scan(child, next, missing)
 		elif child is Array:
 			next = {"effects": "effect", "passive": "effect", "on_hit_effects": "effect", "conditions": "condition", "abilities": "ability", "relations": "relation", "modifiers": "stat_modifier", "effect_modifiers": "effect_modifier", "skill_modifiers": "skill_modifier", "entries": "loot_entry", "guaranteed": "loot_entry"}.get(key, key)

@@ -8,6 +8,7 @@ const Data = preload("res://src/data/json_data.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Combat = preload("res://src/core/combat.gd")
+const Encounters = preload("res://src/world/world_encounters.gd")
 const DISPOSITIONS := ["hostile", "neutral", "passive"]
 const MAX_PER_CHUNK := 6
 var world: Dictionary
@@ -15,10 +16,15 @@ var terrain: RefCounted
 var registry: RefCounted
 var definitions: Dictionary = {}
 var rules: Array = []
+## Milestone 02 H: encounter layer over v1 and the World's established-region ledger.
+## Without a ledger (pure tools/tests) only v1 homes exist.
+var encounters := Encounters.new()
+var ledger: RefCounted = null
 var last_error := ""
 
-func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted) -> bool:
+func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted, region_ledger: RefCounted = null) -> bool:
 	world = blueprint
+	ledger = region_ledger
 	terrain = generator
 	registry = content
 	var pack := Pack.new()
@@ -39,9 +45,12 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 		if not validate(definition):
 			return false
 		definitions[_key(definition.content_id, 1)] = definition
-		if definition.payload.has("spawn"):
+		# The frozen v1 layer never admits AI species; they spawn through encounters.
+		if definition.payload.has("spawn") and definition.get("provenance", {}).get("origin") != "ai":
 			rules.append({"definition": definition, "stream": Loot.number("creatures-v1/" + definition.content_id), "priority": int(definition.payload.spawn.get("priority", 20))})
 	rules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.priority < b.priority or (a.priority == b.priority and a.definition.content_id < b.definition.content_id))
+	if not encounters.configure(registry, world.world_id, self):
+		return _fail(encounters.last_error)
 	last_error = ""
 	return true
 
@@ -122,6 +131,38 @@ func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray())
 				break
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.instance_id < b.instance_id)
 	return result.slice(0, MAX_PER_CHUNK)
+
+func chunk_creatures(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray()) -> Array:
+	## Homes a Run sees in this chunk: v1 plus encounters of the revision the chunk was
+	## established at. The first load establishes it (World-scoped, immutable).
+	last_error = ""
+	if bytes.is_empty():
+		bytes = terrain.generate_chunk(chunk)
+	if ledger == null:
+		return generate_chunk(chunk, bytes)
+	var revision: int = ledger.establish(chunk, encounters.revision)
+	if revision < 0:
+		_fail(ledger.last_error)
+		return []
+	return preview_chunk(chunk, revision, bytes)
+
+func preview_chunk(chunk: Vector2i, revision: int, bytes: PackedByteArray = PackedByteArray()) -> Array:
+	## Pure: the chunk's homes at an encounter revision. Never writes.
+	if bytes.is_empty():
+		bytes = terrain.generate_chunk(chunk)
+	var homes := generate_chunk(chunk, bytes)
+	var result: Array = homes + encounters.generate(terrain, chunk, bytes, revision, homes)
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.instance_id < b.instance_id)
+	return result
+
+func habitats() -> Array:
+	## Creature definitions that can currently appear (v1 species and encounter species).
+	var result := {}
+	for rule in rules:
+		result[_key(rule.definition.content_id, 1)] = rule.definition
+	for rule in encounters.rules:
+		result[_key(rule.creature.content_id, int(rule.creature.version))] = rule.creature
+	return result.values()
 
 func definition_for(instance: Dictionary) -> Dictionary:
 	var key := _key(instance.content_id, int(instance.version))

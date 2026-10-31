@@ -150,7 +150,7 @@ definitions form a directed acyclic graph; forward references are intentionally
 not accepted. Register dependencies first. No batch proposal graph resolver yet.
 
 Data-layer capabilities: `definition.item`, `definition.resource`,
-`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C), `definition.talent` (02 D), `definition.skill` (02 E), `definition.generation_proposal` (02 G, never active: authoring lifecycle records). These mean the definition can be registered, not that gameplay
+`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C), `definition.talent` (02 D), `definition.skill` (02 E), `definition.generation_proposal` (02 G, never active: authoring lifecycle records), `definition.encounter` and `definition.region` (02 H). These mean the definition can be registered, not that gameplay
 effects exist. Unknown capabilities or unknown kinds are retained as
 `pending_capability` with missing requirements. An inactive dependency also makes
 an otherwise active proposal pending. Explicit `draft`, `hidden` and
@@ -244,6 +244,14 @@ timeout) roll back and keep the previous save and revision. The session stays di
 so a retry saves the same pending state once. Other architectures are not verified.
 Explored-tile arrays/full run saves are deliberately simple: 100k tiles take
 ~2.5 s to save. Use chunked fog storage with a migration before very large runs.
+
+## Checkpoint H region records
+
+No SQL migration. Established regions are content instances `region:v1/<cx>/<cy>` of
+`core:region_record` (content/world_pack.json) with metadata `{ledger_version: 1,
+encounter_revision, chunk}`, plus one `region:v1/baseline` marker. They are immutable,
+skipped by the object layer and never part of Run state. Encounter homes materialize like
+v1 creatures as `enc:v1/...` instances. See [AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md).
 
 ## Checkpoint F status records
 

@@ -63,6 +63,20 @@ class ProvidersTest(unittest.TestCase):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(envelope, ensure_ascii=False), encoding="utf-8")
 
+    def test_mock_creature_with_encounter_writes_world_fixture(self):
+        request = {"request_id": "checkpoint-h-fixture", "kind": "creature",
+                   "prompt": "A hunting beast for unexplored woodland", "context": {"version": 1}}
+        envelope = generate(request, Settings())
+        definitions = envelope["content"]["definitions"]
+        self.assertEqual([d["kind"] for d in definitions], ["item", "creature", "encounter"])
+        creature, encounter = definitions[1], definitions[2]
+        self.assertNotIn("spawn", creature["payload"])
+        self.assertEqual(encounter["payload"]["creature"], {"content_id": creature["content_id"], "version": 1})
+        self.assertTrue(set(encounter["payload"]["biomes"]) <= set(creature["payload"]["movement"]["biomes"]))
+        target = ROOT / ".tools/ai/mock_creature_bundle.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(envelope, ensure_ascii=False), encoding="utf-8")
+
     def test_configuration_and_explicit_network_gate(self):
         with patch.dict("os.environ", {}, clear=True):
             self.assertEqual(Settings.from_env().provider, "mock")

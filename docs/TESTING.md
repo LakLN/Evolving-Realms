@@ -70,3 +70,10 @@ mock and local stub only; it also writes the mock fixture) and then
 `tests/ai_content_suite.gd` (validation, lifecycle, atomic activation, generated content
 in real gameplay and save/reopen). Use `.\scripts\test.ps1 -Only ai-content -Smoke`;
 `-Service` additionally exercises `/generate` over real HTTP with the mock.
+
+## Checkpoint H suite
+
+`ai-world` (`tests/ai_world_suite.gd`, after the offline Python tests write the creature
+fixture) covers the region ledger, encounter rules, activation revisions and the
+AI creature encounter → combat → loot → reopen → return flow, Run isolation and legacy
+saves. Use `.\scripts\test.ps1 -Only ai-world,ai-content,world,combat -Smoke`.

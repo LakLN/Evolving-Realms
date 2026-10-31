@@ -155,7 +155,7 @@ func _initialize() -> void:
 	spawned.content_id = "ai:fixture/spawned_creature"
 	spawned.payload["spawn"] = {"biomes": ["forest"], "per_10000": 5, "priority": 10}
 	var spawn_report := Validator.new().validate(store.content, world.world_id, {"schema_version": 1, "definitions": [spawned]})
-	check(all_right and spawn_report.status == "pending_capability" and "authoring.procedural_creature_distribution" in spawn_report.missing_capabilities, "Unknown resource/element/condition/effect/field are pending; bad rank/slot/ID invalid; creature map spawning stays pending (%s)" % ", ".join(outcomes))
+	check(all_right and spawn_report.status == "pending_capability" and "creature.payload_spawn" in spawn_report.missing_capabilities, "Unknown resource/element/condition/effect/field are pending; bad rank/slot/ID invalid; an ai: creature cannot join the frozen v1 spawn layer (encounters only) (%s)" % ", ".join(outcomes))
 	# Reject is a final, recorded decision.
 	var rejected_gear: Dictionary = gear.duplicate(true)
 	rejected_gear.content_id = "ai:fixture/rejected"

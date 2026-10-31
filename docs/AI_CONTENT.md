@@ -16,7 +16,8 @@ generate request ─► context (Godot) ─► provider (Python: mock | chat_com
 No SQLite migration (user_version 2, record schema 1); no generation-version change;
 no edit to established packs. AI definitions must use `ai:` IDs, so authored `core:`
 content can never be overwritten. Not included: AI World Creator, quests, region
-generation, automatic engine changes, creature map spawning.
+generation, automatic engine changes. Creature map spawning arrived in Checkpoint H
+through `encounter` definitions; see [AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md).
 
 | Component | Responsibility |
 |---|---|
@@ -67,8 +68,8 @@ Tests use the mock and a local protocol stub only; no paid API is called.
 - **Capabilities:** anything outside the executable vocabulary is recorded by name and
   never treated as supported, e.g. `skill.resource.mana`, `effect.element.void`,
   `skill.condition.bloodline`, `skill.effect.creature.teleport_enemy`,
-  `payload.item.teleport`, `authoring.procedural_creature_distribution`,
-  `mechanic.summon`. Rule violations (unknown rank, slot, out-of-range stat, non-`ai:`
+  `payload.item.teleport`, `creature.payload_spawn` (H: use an encounter definition),
+  `encounter.condition.<unknown>`, `mechanic.summon`. Rule violations (unknown rank, slot, out-of-range stat, non-`ai:`
   ID) are `invalid`.
 
 ## Lifecycle
@@ -97,7 +98,7 @@ replaced; a later proposal may add version 2 of an AI ID while Runs keep using v
 | Skill | learned from its generated book through the normal `learn` action, used in the turn system | playable, tested end to end |
 | Item use | normal `use` action | validated/registered |
 | Talent | joins the awakening pool of new Runs (existing Runs keep their talent) | validated/registered; effect composition tested |
-| Creature | registered species without a map distribution; map spawning is `authoring.procedural_creature_distribution` (pending) | validated/registered, not encounterable yet |
+| Creature + encounter | `encounter` definition (Checkpoint H): biome/density/conditions; activation stamps an encounter revision; only regions established afterwards receive it | playable, tested end to end (spawn, combat, loot, save/load) |
 
 The end-to-end test opens the real cache, receives the generated manual and mantle,
 learns and uses the generated skill (cost and damage checked), equips the mantle,
@@ -139,7 +140,7 @@ Add `--allow-network` with a configured real provider to spend real API calls.
 ## Limits
 
 - The mock composes a fixed set of shapes; real output quality depends on the provider.
-- Creatures have no generated encounter/spawn path yet; talents only reach new Runs.
-- Distribution is limited to loot extensions on existing sources chosen by the proposal.
+- Talents only reach new Runs.
+- Distribution: loot extensions on existing sources, and encounters (Checkpoint H).
 - Proposal records (with full envelopes) accumulate in the world registry; no pruning.
 - No in-game authoring UI; the CLI targets a separate laboratory database or a copy.

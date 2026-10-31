@@ -131,3 +131,11 @@ Species may declare elements, effect_modifiers and pinned on_hit_effects. Existi
 creature definitions and placement v1 stay unchanged. Advanced statuses live in
 creature mutations; DoT shares the kill/loot/XP path without on_attack triggers.
 See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md) for the extended turn order.
+
+## Checkpoint H extension
+
+Creature homes a Run sees = v1 homes (unchanged; the v1 layer now ignores `ai`-origin
+species) + encounter homes `enc:v1/...` from activated `encounter` definitions at the
+revision the chunk was established at (World region ledger). Roster, AI, combat, loot,
+statuses and persistence are shared, with no species-specific code. See
+[AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md).
