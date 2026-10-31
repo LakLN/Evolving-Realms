@@ -1,7 +1,8 @@
 extends RefCounted
 ## World-scoped, immutable and version-pinned content. No generated code execution.
 const Data = preload("res://src/data/json_data.gd")
-const SUPPORTED_CAPABILITIES := ["definition.item", "definition.resource", "definition.chest", "definition.creature", "definition.item_use", "definition.loot_extension", "definition.talent", "definition.skill", "definition.status"]
+const Capabilities = preload("res://src/content/capability_registry.gd")
+const SUPPORTED_CAPABILITIES := Capabilities.DEFINITIONS
 var _db: RefCounted
 var last_error: String:
 	get:
@@ -21,6 +22,29 @@ func register_definition(world_id: String, definition: Dictionary) -> Dictionary
 		_db.rollback(_db.last_error)
 		return {}
 	return result
+
+func register_batch(world_id: String, sources: Array, preflight: Callable = Callable()) -> Dictionary:
+	# Authoring activation: definitions and lifecycle receipt commit together.
+	if sources.is_empty() or sources.size() > 25 or not _db.execute("BEGIN IMMEDIATE"): return {}
+	if preflight.is_valid():
+		var problem: String = preflight.call()
+		if not problem.is_empty():
+			_db.rollback(problem)
+			return {}
+	var result: Array = []
+	for source in sources:
+		if not source is Dictionary:
+			_db.rollback("Definition must be an object")
+			return {}
+		var registered := _register(world_id, source)
+		if registered.is_empty():
+			_db.rollback(_db.last_error)
+			return {}
+		result.append(registered)
+	if not _db.execute("COMMIT"):
+		_db.rollback(_db.last_error)
+		return {}
+	return {"definitions": result}
 
 func _register(world_id: String, source: Dictionary) -> Dictionary:
 	if not Data.valid(source):
@@ -61,7 +85,7 @@ func _register(world_id: String, source: Dictionary) -> Dictionary:
 	for capability in definition.required_capabilities:
 		if not capability is String or capability.is_empty():
 			return _error("Invalid capability name")
-		if capability not in SUPPORTED_CAPABILITIES and capability not in missing:
+		if not Capabilities.supports(capability) and capability not in missing:
 			missing.append(capability)
 	var dependencies_seen: Array = []
 	for dependency in definition.dependencies:

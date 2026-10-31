@@ -189,8 +189,11 @@ Tools and venv are ignored by Git. No machine PATH changes are required.
 ```
 
 `-I` / `-E` isolate the interpreter from unrelated inherited PYTHONPATH settings.
-The optional service currently exposes only `/health`; it is not an AI provider.
-No API key or paid service is used. SQLite is managed directly inside Godot through
+The optional service exposes `/health` and a stateless `/generate` (mock provider by
+default). AI content authoring is a developer tool, never needed to play: see
+[docs/AI_CONTENT.md](docs/AI_CONTENT.md) for `scripts/generate_content.py` (generate,
+review, confirm, reject, activate). No API key or paid service is used unless you
+configure one and pass `--allow-network`. SQLite is managed directly inside Godot through
 the vendored godot-sqlite v4.9 GDExtension; Python is entirely optional.
 
 ## Handoff

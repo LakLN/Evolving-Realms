@@ -150,7 +150,7 @@ definitions form a directed acyclic graph; forward references are intentionally
 not accepted. Register dependencies first. No batch proposal graph resolver yet.
 
 Data-layer capabilities: `definition.item`, `definition.resource`,
-`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C), `definition.talent` (02 D), `definition.skill` (02 E). These mean the definition can be registered, not that gameplay
+`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C), `definition.talent` (02 D), `definition.skill` (02 E), `definition.generation_proposal` (02 G, never active: authoring lifecycle records). These mean the definition can be registered, not that gameplay
 effects exist. Unknown capabilities or unknown kinds are retained as
 `pending_capability` with missing requirements. An inactive dependency also makes
 an otherwise active proposal pending. Explicit `draft`, `hidden` and

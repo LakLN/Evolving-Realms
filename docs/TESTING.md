@@ -62,3 +62,11 @@ invalid/pending content and save/restart/Run isolation. `effect-gameplay` exerci
 the real scene/input/menu; `rendered-effects` runs it on the native renderer and
 captures `.tools/effects-gameplay.png`. Use `-Only effects,effect-gameplay -Smoke`
 for a focused verification, or add `rendered-effects -Render` for this UI change.
+
+## Checkpoint G suites
+
+`ai-content` first runs the offline Python provider/CLI tests (`tests/test_ai_service.py`,
+mock and local stub only; it also writes the mock fixture) and then
+`tests/ai_content_suite.gd` (validation, lifecycle, atomic activation, generated content
+in real gameplay and save/reopen). Use `.\scripts\test.ps1 -Only ai-content -Smoke`;
+`-Service` additionally exercises `/generate` over real HTTP with the mock.

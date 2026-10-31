@@ -53,6 +53,18 @@ try {
     Invoke-EngineCheck -Name 'skill-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/skill_gameplay_suite.gd') -Summary 'M02 CHECKPOINT E GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'effects' -EngineArgs @('--headless', '--script', 'res://tests/effect_suite.gd') -Summary 'M02 CHECKPOINT F EFFECTS: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'effect-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
+    if ($selected.Count -eq 0 -or 'ai-content' -in $selected) {
+        # unittest reports on stderr; under 'Stop' Windows PowerShell 5.1 would throw on it.
+        $previous = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        $pythonLog = & '.venv/Scripts/python.exe' -E -m unittest discover -s tests -p test_ai_service.py 2>&1
+        $pythonCode = $LASTEXITCODE
+        $ErrorActionPreference = $previous
+        $pythonLog | Out-String | Set-Content -Encoding UTF8 -LiteralPath '.tools/test-ai-provider.log'
+        if ($pythonCode -ne 0) { Write-Host ($pythonLog | Out-String); throw 'Offline AI provider tests failed' }
+        Write-Host 'PASS offline AI provider tests (no paid calls). Log: .tools/test-ai-provider.log'
+    }
+    Invoke-EngineCheck -Name 'ai-content' -EngineArgs @('--headless', '--script', 'res://tests/ai_content_suite.gd') -Summary 'M02 CHECKPOINT G AI CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-effects' -EngineArgs @('--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'

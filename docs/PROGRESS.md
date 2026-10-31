@@ -1,6 +1,71 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint F complete (effects and elements)
+## Current checkpoint: Milestone 02 Checkpoint G complete (AI content generation foundation)
+
+Codex started G from clean `6f4874c` and ran out of context before validating the
+pipeline. This session took over the uncommitted work without resetting or rewriting
+it: read every new/changed file, ran what existed, then fixed and completed it.
+
+Found working as written (kept): provider abstraction with offline mock and HTTP Chat
+Completions adapter (timeout, retry only on 429/5xx, size limits, no redirects, explicit
+network gate, key never logged); stateless FastAPI `/generate`; bounded context without
+Run state; capability manifest derived from engine handler tables; validator over the
+real engine validators; append-only `generation_proposal` lifecycle records; atomic
+`register_batch` with in-lock preflight; idempotent activation; ai_content_suite with a
+real cache → learn → use skill → equip → save → reopen flow.
+
+Completed/fixed in this session:
+- `scripts/test.ps1`: the Python step threw under Windows PowerShell 5.1 because
+  unittest writes to stderr (`2>&1` + `Stop`), so `-Only ai-content` always failed.
+- Developer tool: added `reject` (final; activated content cannot be rejected),
+  `proposals` now shows each proposal's latest stage, validation, errors and missing
+  capabilities (was raw registry rows all labelled "draft"), new `registered` listing of
+  active AI definitions with their proposal/provider; precise refusal messages
+  (unconfirmed vs pending vs rejected instead of one misleading message).
+- Tests: one table check over validation categories (unknown resource/element/condition/
+  effect/field → pending with named requirement; bad rank/slot/non-`ai:` ID → invalid;
+  creature map spawn → pending), rejection lifecycle, and a CLI end-to-end test (real
+  Godot authoring process, temp DB, mock).
+- Docs: new [AI_CONTENT.md](AI_CONTENT.md); ARCHITECTURE, ROADMAP, AGENTS, README (the
+  service note was outdated), DATA_API, TESTING.
+
+Pipeline demonstrated: mock provider → validation → draft → confirm → activate → Wayfarer's
+cache loot extension → generated manual and mantle received by the real interaction →
+generated skill learned and used (energy cost, damage) → mantle equipped → generated
+talent composed with the skill's status → save → independent Run unaffected → database
+reopened with identical Run state. Same flow via the CLI up to activation and listing.
+
+Playable vs registered: items, equipment, books and skills are playable end to end; talents
+join the awakening pool of new Runs; creatures are validated/registered but have no
+encounter path (map spawning is a named pending capability). Pending proposals stay
+reviewable records and never become playable.
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Only ai-content,interactions,skills,talents,effects -Smoke -Service
+```
+
+All passed (exit 0): import; data 96/96; interactions 66/66; integration 34/34; talents
+126/126; skills 105/105; effects 49/49; offline Python provider + CLI tests 6/6 (no paid
+calls); ai-content 34/34; startup; FastAPI `/health` and `/generate` (mock) over real HTTP.
+Also run manually during development: the CLI flow (init → generate → review → refused
+activation before confirm → confirm → activate twice → proposals) on a temp database.
+
+### Remaining limits
+
+- The mock composes fixed shapes; real-provider quality untested by design (no paid calls).
+- No generated creature encounters; talents reach only new Runs; distribution only via
+  loot extensions on existing sources.
+- Proposal records with full envelopes accumulate in the world registry (no pruning).
+- No in-game authoring UI; use a laboratory database or a copy.
+- Not run (per TESTING.md, not a milestone end): full regression, OpenGL suites, exe export.
+
+### Next step
+
+Stop. The user reviews this checkpoint. Any later checkpoint needs explicit approval.
+
+## Milestone 02 Checkpoint F record (historical)
 
 From `ab3b9df`. Kept A?E, native offline SQLite and all immutable v1 packs. No schema,
 record-version or generation-version change. No later checkpoint started.

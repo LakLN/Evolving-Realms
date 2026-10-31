@@ -25,7 +25,9 @@ authoring process, not a dependency for movement, saving or combat.
 - src/data: implemented local database, migrations and World/Run persistence facade.
 - src/content: definitions, validation, registry and capability checks.
 - content/starter_pack.json: immutable sample item/object definitions and distribution/loot data.
-- service: optional provider abstraction, world context, structured proposals.
+- service: optional provider abstraction (offline mock, Chat Completions HTTP) and a
+  stateless /generate endpoint; src/content/authoring_*: context, validation and the
+  draft/confirm/activate lifecycle (Checkpoint G, see AI_CONTENT.md).
 - src/evolution: future compatibility/migrations and mechanic proposals.
 
 These are responsibility boundaries; create files when implementation needs them.
@@ -204,6 +206,16 @@ talent reactions); blink reuses `relocate()`. Passive/triggered skills are extra
 of the talent engine; trigger effects run with a re-entrancy guard (no chains). Timed
 statuses are a derived stat source. `character.skills/resources/statuses` are extra
 keys. No schema change. Details: [SKILLS.md](SKILLS.md).
+
+## AI content generation — Milestone 02 Checkpoint G
+
+Python providers only return untrusted JSON proposals. Godot builds a bounded context,
+validates proposals with the real engine validators and a capability manifest derived
+from handler tables, stores each stage as an append-only `generation_proposal` record
+(never playable) and activates confirmed, fully supported bundles with one
+`register_batch` transaction. Activated definitions are ordinary `ai:` registry content
+reaching play through existing paths (loot extensions, books, awakening pool). Gameplay
+never calls Python. No schema change. Details: [AI_CONTENT.md](AI_CONTENT.md).
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions
