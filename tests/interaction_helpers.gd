@@ -5,7 +5,7 @@ static func route_to_object(session: RefCounted, interaction: String, excluded: 
 	var candidates := {}
 	for chunk in session.objects.chunks.values():
 		for instance in chunk:
-			if instance.instance_id in excluded or session.is_consumed(instance.instance_id):
+			if instance.instance_id in excluded or session.is_consumed(instance.instance_id) or not session.perceives(instance):
 				continue
 			var definition: Dictionary = session.objects.definition_for(instance)
 			if definition.payload.interaction != interaction:

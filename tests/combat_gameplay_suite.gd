@@ -1,4 +1,5 @@
 extends SceneTree
+const Session = preload("res://src/run/exploration_session.gd")
 ## Milestone 02 Checkpoint A through the real main scene, keyboard events and renderer.
 const Data = preload("res://src/data/json_data.gd")
 const Acceptance = preload("res://src/acceptance/standalone_check.gd")
@@ -8,6 +9,7 @@ var checks := 0
 var failures := 0
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	call_deferred("_run")
 
 func check(condition: bool, label: String) -> bool:

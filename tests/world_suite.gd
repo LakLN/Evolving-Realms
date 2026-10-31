@@ -10,6 +10,7 @@ var checks := 0
 var directory := ""
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	directory = ProjectSettings.globalize_path("user://checkpoint_c_tests/" + Data.uuid())
 	DirAccess.make_dir_recursive_absolute(directory)
 	print("World test artifacts: ", directory)

@@ -6,6 +6,7 @@ const Session = preload("res://src/run/exploration_session.gd")
 const Acceptance = preload("res://src/acceptance/standalone_check.gd")
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	var args := OS.get_cmdline_user_args()
 	var store := Store.new()
 	var session := Session.new(store)

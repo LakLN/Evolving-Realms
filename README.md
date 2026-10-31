@@ -1,10 +1,11 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 02, Checkpoint C complete** (Milestone 01 complete).
+Current state: **Milestone 02, Checkpoint D complete** (Milestone 01 complete).
 Create/select a world, explore seeded biomes, gather resources, open chests, meet
 creatures by biome, fight them turn by turn on the map, manage hunger and thirst,
 eat, drink, heal and rest, find equipment in 10 quality tiers, equip it and level up,
+awaken a random talent (rank F to SSS) that changes how each run plays,
 and face death in normal or permadeath runs, in the editor or as a standalone
 Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
@@ -62,17 +63,25 @@ editor's F5 (Run Project). F5 belongs to the editor; the game saves with **Ctrl+
    slots; **U** unequips the selected slot. Equipping or unequipping spends one turn.
    Kills give XP; each level adds max HP and attack (defense every second level),
    with no fixed level cap.
-8. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
+8. Talents: every new run awakens one random talent with a rank from F (Phàm Tục) to
+   SSS (Nghịch Thiên), shown on an awakening screen at the start (**Enter** to begin).
+   Talents act on their own triggers: in combat, when hit, when gathering, opening
+   chests, using items, exploring new land or every few turns; some have cooldowns,
+   charges or trade-offs. Messages like `[C] Hồi Khí: HP +9.` report activations.
+   **T** shows your talent with its live counters; **C** shows it too. The talent is
+   saved with the run: loading never rerolls it. Some talents reveal hidden buried
+   caches. Runs saved before talents existed awaken one on their first load.
+9. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
    return to the menu. **Permadeath:** the death is saved, the run is marked ENDED
    and cannot be continued; start a new run in the same world.
-9. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
+10. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
    Movement pauses while it is open. **I / Esc** closes inventory.
-10. **Ctrl+S** or **Save** saves locally, also while inventory is open.
+11. **Ctrl+S** or **Save** saves locally, also while inventory is open.
    **Esc** / **Menu** saves before leaving the map (Esc closes inventory first).
    Window close also saves. If a save fails, the game stays open and reports the error;
    closing again quits *without* saving (only changes since the last save are lost).
    A crash or forced kill returns to the last manual save or autosave.
-11. Choose a saved run and **Continue selected run**, or create another run in the
+12. Choose a saved run and **Continue selected run**, or create another run in the
    same world. Geography stays consistent; inventory, discovery, object and creature
    state are independent per run. Chests and creatures pay only once per run and reload
    cannot reroll loot or revive killed creatures.
@@ -85,7 +94,8 @@ keep their Blueprint and receive procedural resources/chests through the data pa
 Creature/combat design, data format and limits: [docs/CREATURES_AND_COMBAT.md](docs/CREATURES_AND_COMBAT.md).
 Survival, item use, rest and autosave: [docs/SURVIVAL_AND_ITEMS.md](docs/SURVIVAL_AND_ITEMS.md).
 Equipment, quality tiers, loot progression and levels: [docs/EQUIPMENT_AND_PROGRESSION.md](docs/EQUIPMENT_AND_PROGRESSION.md).
-No talents, skills, crafting or equipment enhancement yet.
+Talent ranks, awakening, effect vocabulary and sample talents: [docs/TALENTS.md](docs/TALENTS.md).
+No skill books, talent evolution, crafting or equipment enhancement yet.
 
 PowerShell commands from the repository root:
 
@@ -169,7 +179,7 @@ the vendored godot-sqlite v4.9 GDExtension; Python is entirely optional.
 
 ## Handoff
 
-Read [progress](docs/PROGRESS.md), [equipment and progression](docs/EQUIPMENT_AND_PROGRESSION.md), [survival and items](docs/SURVIVAL_AND_ITEMS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
+Read [progress](docs/PROGRESS.md), [talents](docs/TALENTS.md), [equipment and progression](docs/EQUIPMENT_AND_PROGRESSION.md), [survival and items](docs/SURVIVAL_AND_ITEMS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
 [world system](docs/WORLD_SYSTEM.md), [data API](docs/DATA_API.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 Default saves live at `user://realms.sqlite`, outside the repository. Native Windows

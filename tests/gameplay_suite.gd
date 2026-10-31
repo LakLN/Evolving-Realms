@@ -1,4 +1,5 @@
 extends SceneTree
+const Session = preload("res://src/run/exploration_session.gd")
 ## Actual main scene, button signals, engine keyboard events and renderer checks.
 const Data = preload("res://src/data/json_data.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
@@ -10,6 +11,7 @@ var app: Control
 var db_path := ""
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	call_deferred("_run")
 
 func check(condition: bool, label: String) -> void:

@@ -39,8 +39,15 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
     replace, effective stats (base + level growth + gear), loot extensions with
     quality weights, XP/levels per progression track without a hard cap, character &
     gear UI. No migration.
-  - D and later: not started; require user approval.
-03: randomized talents, effect handlers, skill books and learning requirements.
+  - D (complete): talent awakening per Run with 9 data-defined ranks (F Phàm Tục …
+    SSS Nghịch Thiên) and configurable weights, `talent` definitions (capability
+    `definition.talent`) built from a closed trigger/condition/effect vocabulary,
+    plan-then-commit effect handlers (stats, combat, hits taken, gathering, chests,
+    item use, exploration, turn triggers), hidden objects with perception, stored
+    counters only, awakening screen / talent sheet / panel line. No migration.
+  - Later checkpoints: not started; require user approval.
+03: skill books, learning requirements and deeper talent mechanics (evolution etc.);
+randomized talent awakening and the effect-handler base were delivered early in 02 D.
 04: real provider, region content, quests, context, dependencies and persistence.
 05: capabilities, mechanic proposals, isolated development, tests, migrations,
 compatibility and explicit integration approval.

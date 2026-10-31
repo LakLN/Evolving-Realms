@@ -100,6 +100,9 @@ starvation; Milestone 02 B) live in `character.stats` with no schema change.
 Milestone 02 C adds `character.equipment` (slot -> {content_id, version, instance_id,
 metadata}) and `character.progression` (track -> {xp, level}) as extra character keys;
 item instance metadata may carry `quality` (tier ID).
+Milestone 02 D adds `character.talents` (array of {content_id, version, rank, slot,
+awakened_turn, awakening_version, state}); state holds per-ability counters only (see
+[TALENTS.md](TALENTS.md)).
 
 `load_run` reads body/revision/mutations in a single SQLite statement. Save takes
 an IMMEDIATE transaction, checks revision, validates references, updates body and
@@ -144,7 +147,7 @@ definitions form a directed acyclic graph; forward references are intentionally
 not accepted. Register dependencies first. No batch proposal graph resolver yet.
 
 Data-layer capabilities: `definition.item`, `definition.resource`,
-`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C). These mean the definition can be registered, not that gameplay
+`definition.chest`, `definition.creature` (Milestone 02 A), `definition.item_use` (02 B), `definition.loot_extension` (02 C), `definition.talent` (02 D). These mean the definition can be registered, not that gameplay
 effects exist. Unknown capabilities or unknown kinds are retained as
 `pending_capability` with missing requirements. An inactive dependency also makes
 an otherwise active proposal pending. Explicit `draft`, `hidden` and

@@ -12,6 +12,7 @@ var directory := ""
 const CHILD_FRAME_LIMIT := "30000" # Child processes exit (and fail) instead of hanging.
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	call_deferred("_run")
 
 func check(condition: bool, label: String) -> bool:

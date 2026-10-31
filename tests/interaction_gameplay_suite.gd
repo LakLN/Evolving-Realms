@@ -1,4 +1,5 @@
 extends SceneTree
+const Session = preload("res://src/run/exploration_session.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Helpers = preload("res://tests/interaction_helpers.gd")
 var app: Control
@@ -6,6 +7,7 @@ var checks := 0
 var failures := 0
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	call_deferred("_run")
 
 func check(condition: bool, label: String) -> void:

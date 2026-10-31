@@ -11,6 +11,8 @@ var _tiles: TileSet
 var camera: Camera2D
 var _player := Node2D.new()
 var _object_layer := Node2D.new()
+## Objects sensed through fog by a perception talent, drawn above the fog layer.
+var _sense_layer := Node2D.new()
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -18,6 +20,9 @@ func _ready() -> void:
 	_object_layer.z_index = 1
 	_object_layer.draw.connect(_draw_objects)
 	add_child(_object_layer)
+	_sense_layer.z_index = 5
+	_sense_layer.draw.connect(_draw_sensed)
+	add_child(_sense_layer)
 	_player.z_index = 10
 	_player.draw.connect(_draw_player)
 	add_child(_player)
@@ -36,6 +41,7 @@ func clear_map() -> void:
 	chunk_nodes.clear()
 	session = null
 	_object_layer.queue_redraw()
+	_sense_layer.queue_redraw()
 
 func refresh() -> void:
 	if session == null:
@@ -63,6 +69,7 @@ func refresh() -> void:
 	_player.position = (Vector2(session.position - origin) + Vector2(0.5, 0.5)) * Palette.SIZE
 	_player.queue_redraw()
 	_object_layer.queue_redraw()
+	_sense_layer.queue_redraw()
 	camera.reset_smoothing()
 	camera.force_update_scroll()
 
@@ -96,7 +103,7 @@ func _draw_objects() -> void:
 	for objects in session.objects.chunks.values():
 		for instance in objects:
 			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
-			if not session.explored.has(tile):
+			if not session.explored.has(tile) or not session.perceives(instance):
 				continue
 			var definition: Dictionary = session.objects.definition_for(instance)
 			var consumed: bool = session.is_consumed(instance.instance_id)
@@ -116,6 +123,22 @@ func _draw_objects() -> void:
 		_draw_creature(point, creature)
 		if creature.instance_id == target_id:
 			_object_layer.draw_rect(Rect2(point - Vector2(15, 15), Vector2(30, 30)), Color("fff2b0"), false, 2.0)
+
+func _draw_sensed() -> void:
+	## Unvisited, unconsumed objects within the talent's sense radius: a faint marker
+	## (hidden ones only with perception). Nothing here reveals terrain or saves fog.
+	if session == null or session.objects == null or int(session.talents.perception().sense_radius) <= 0:
+		return
+	var origin: Vector2i = session.cache.center * Terrain.CHUNK_SIZE
+	for objects in session.objects.chunks.values():
+		for instance in objects:
+			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
+			if session.visible.has(tile) or not session.senses(tile) or session.is_consumed(instance.instance_id) or not session.perceives(instance):
+				continue
+			var point := (Vector2(tile - origin) + Vector2(0.5, 0.5)) * Palette.SIZE
+			var hidden: bool = session.objects.definition_for(instance).payload.get("hidden", false)
+			var color := Color(0.98, 0.84, 0.45, 0.85) if hidden else Color(0.75, 0.88, 1.0, 0.7)
+			_sense_layer.draw_colored_polygon(PackedVector2Array([point + Vector2(0, -7), point + Vector2(7, 0), point + Vector2(0, 7), point + Vector2(-7, 0)]), color)
 
 func _draw_creature(point: Vector2, creature: Dictionary) -> void:
 	var payload: Dictionary = creature.definition.payload
@@ -151,6 +174,11 @@ func show_events(events: Array) -> void:
 			"regen":
 				text = "+1"
 				color = Color("8be08b")
+			"talent":
+				if event.get("quiet", false):
+					continue
+				text = str(event.name)
+				color = Color("d9b8ff")
 			_:
 				continue
 		var popup := Label.new()
@@ -196,6 +224,11 @@ func _draw_object_icon(point: Vector2, visual: String, consumed: bool) -> void:
 		"spring":
 			_object_layer.draw_circle(point, 10, Color("2f6f9f"))
 			_object_layer.draw_circle(point + Vector2(-2, -2), 5, Color("8fd3ff"))
+		"cache":
+			_object_layer.draw_circle(point + Vector2(0, 4), 10, Color("6b5233"))
+			_object_layer.draw_rect(Rect2(point - Vector2(6, 4), Vector2(12, 8)), Color("c9a24f"))
+			_object_layer.draw_line(point + Vector2(-8, -9), point + Vector2(-4, -5), Color("fff1b0"), 2)
+			_object_layer.draw_line(point + Vector2(8, -9), point + Vector2(4, -5), Color("fff1b0"), 2)
 		"coin":
 			_object_layer.draw_circle(point, 7, Color("e7c55d"))
 			_object_layer.draw_circle(point, 4, Color("a67d35"), false, 1)

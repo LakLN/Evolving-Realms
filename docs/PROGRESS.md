@@ -1,6 +1,129 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint C complete (equipment, quality, loot progression, growth)
+## Current checkpoint: Milestone 02 Checkpoint D complete (talent awakening, ranks, talent effects)
+
+Continued from 450db3b (clean tree) on explicit user approval of Checkpoint D only.
+Read AGENTS and all design/API docs plus source first. Reused: Content Registry (new
+capability `definition.talent`), pack installer, `perform_action` turn order, roster
+combat, loot/receipt path, item use, CharacterStats modifier derivation and atomic
+revision-checked saves. No SQLite migration (user_version 2, record schema 1), no
+generation-version change, no edit to existing v1 packs. Not started: skill books, deep
+skills, talent evolution, copying/stealing talents, AI World Creator, pets/contracts,
+multiplayer, any later checkpoint. Design and data format: [TALENTS.md](TALENTS.md).
+
+### Implemented
+
+- **9 ranks as data** (`content/talent_rules.json`): F Phàm Tục, E Sơ Đẳng, D Phổ Thông,
+  C Ưu Tú, B Tinh Anh, A Trác Việt, S Siêu Phàm, SS Truyền Kỳ, SSS Nghịch Thiên; strict
+  order, colors (SS black-gold, SSS animated rainbow), configurable rank weights
+  (2800 … 30) and talents per run (1). Unique is a separate flag.
+- **Talent definitions** (`kind: talent`): ID/version, name, description, rank, unique,
+  awakening weight/conditions (mode, start biome), passive effects, abilities with
+  trigger + conditions + effects + limits, limitation notes, metadata, capability
+  dependencies. Closed vocabulary: 8 triggers (turn, explore, attack, kill, hit taken,
+  gather, open, use item), 11 conditions, 15 effect types, limits (cooldown, charges,
+  every N new tiles). Unknown types become pending capabilities (listed, never awakened
+  or executed; a held one is dormant). Invalid data stops the session explicitly.
+- **Awakening v1:** a Run without a `talents` key draws once (rank by weight, then talent
+  by weight) with SHA256 keys from World/Run seeds, checks conditions and run-scoped
+  uniqueness, stores `character.talents`, and the UI reveals it. Loading never draws
+  again. Runs saved before D awaken once on first load.
+- **Effect system** (`talents.gd`, `talent_runtime.gd`, session handlers): plan, then
+  commit, so refused actions spend nothing; stored counters only (uses, cooldown end,
+  exploration progress). Passive stats and growth are a derived modifier source in
+  `CharacterStats.effective()` (shown as "talent" in the breakdown); never stored.
+  Hooks: turn/explore triggers after survival, player strikes and kills, creature hits
+  (three passes: mitigation, escaping death, recovery), gather/open loot inside the
+  preview (receipt = preview), item use scaling.
+- **Hidden objects:** `core:buried_cache` (`payload.hidden`) is invisible and unusable
+  without a perception talent; a sense radius shows objects through fog on the map.
+- **12 playable sample talents + 1 pending** across all ranks: Iron Stomach, Thick Skin
+  (F), Forager, Wayfarer (E), Beast Hunter (D), Second Wind, Spirit Eye (C), Bloodthirst
+  (B), Berserker (A), Lucky Star (S), Undying Body (SS), Fate Reversal (SSS); Beast Tamer
+  (B) stays pending (`mechanic.pet_contract`). Mechanics: TALENTS.md.
+- **UI:** awakening screen (modal, Enter closes), **T** talent sheet with live counters,
+  talent line in the character panel, `[rank] Name: summary` messages, floating names,
+  buried-cache icon and sensed markers. Help lines and exported README mention T.
+- **Found and fixed (pre-existing since Checkpoint C):** a save with current HP above the
+  *base* max HP (armor at full HP, or after a level-up) was refused on load. HP is now
+  validated structurally and clamped against the effective maximum. Regression check
+  added to the equipment suite.
+- **Test infrastructure:** suites written before D set `ExplorationSession.auto_awaken =
+  false` so their exact-number expectations keep measuring baseline rules; route helpers
+  skip objects the player cannot perceive. The real acceptance (integration child
+  processes and the exported exe) always awakens and now checks the awakening screen,
+  talent persistence after crash/restart and legacy awakening.
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Render -Service -Export
+```
+
+All pass (exit 0):
+- B data 96/96; C world 49/49; C gameplay 22/22 headless, 24/24 OpenGL; D interactions
+  66/66; D gameplay 17/17, 20/20; E integration 34/34 (its child acceptance runs include
+  the awakening checks); A combat 75/75; A UI 20/20, 23/23; B survival 60/60; B UI
+  10/10, 12/12; C equipment 68/68 (+2: HP-above-base reload regression); C UI 15/15,
+  17/17; startup; optional FastAPI health and pip check.
+- **New talent suite 126/126:** rank order/titles/styles and ID serialization; invalid
+  rank, future awakening version and duplicate unique rejected; pool of 12 across 9 ranks;
+  Beast Tamer pending; unknown trigger/effect/condition preserved as pending and never
+  awakened even when only SSS can roll; dormant talents execute nothing; invalid data
+  refused explicitly; 20,000 draws match the weight table (F 5612/5600 … SSS 60/60),
+  same-rank split by weight, Forager's start-biome condition, zero weight, multi-talent
+  uniqueness; a new run awakens the deterministic draw, stored, never rerolled over three
+  loads; 40 run seeds give 10 talents / 7 ranks; the same unique talent in two
+  independent runs; Run A/B independent; Blueprint unchanged; every sample effect in
+  gameplay (Thick Skin, Berserker and Undying stats; Iron Stomach hunger 16 vs 20 and
+  food +25%; Fate Reversal toll; Bloodthirst herb 2 HP and a refused use spends nothing;
+  Forager 2→3 with receipt = preview; Lucky Star chest extra roll paid once across
+  reload; Spirit Eye hidden cache refused without the talent, dug up with it; Wayfarer
+  berries after 60 new tiles with progress reloaded exactly; Beast Hunter +2 vs beasts
+  and a real kill's XP +50%; Berserker below half HP; Lucky Star kill chance 139/400;
+  Second Wind cooldown surviving reload; Undying two escapes, cooldown, third blow kills,
+  and a real wolf hit at 1 HP survived; Fate Reversal 74/400 negated, growth capped at
+  25/15 stacks, derived not stored); three reloads identical; unsaved changes do not
+  leak; C- and B-era saves awaken once and keep it; an empty list is respected; five
+  corrupt records refused unchanged; permadeath commits the spent escape.
+- **New talent UI suite 16/16 headless, 19/19 OpenGL:** awakening screen with rank, title,
+  color, description and rules; movement blocked; Enter closes; T sheet; Esc; character
+  panel line and fit; Wayfarer feedback "[E] Lữ Khách: found Wild berries x2" via real
+  movement; counters in the panel; continue without a second reveal; SSS rainbow sheet;
+  a second run reveals its own talent. Screenshots inspected: `.tools/m02d-awakening.png`,
+  `m02d-character.png`, `m02d-sss.png` (diacritics render; a gear list cut short in the
+  first capture was fixed).
+- **Exported release exe** (rebuilt by `-Export`), temp working dir and DB, OpenGL:
+  write 31/31 (adds the awakening screen in Run 1 and Run 2), abrupt kill, verify 9/9
+  (talents part of the compared state), default-save refusal. `standalone-awakening.png`
+  inspected.
+- **Old saves in the exported exe:** saves written by the acceptance flow of 450db3b
+  (Checkpoint C), af691c3 (Checkpoint B) and 0eeeb4f (Milestone 01), run from temporary
+  git worktrees, then copies loaded with `--acceptance=legacy`: 7/7 each; every run kept
+  inventory/object states and awakened one talent that stayed fixed on reload.
+
+Automated real-engine input/rendering with inspected screenshots; no human hand
+playthrough is claimed.
+
+### Remaining limits
+
+- Sample content only: 12 playable talents, one per run; first-pass balance, ranks not
+  balanced against each other. Weights are placeholders in data.
+- Effects are limited to the vocabulary; new mechanics need handlers, tests and approval.
+  Hit reactions cannot kill attackers (no reflect).
+- `talents_per_run` > 1 works in logic, but the UI is designed for one talent.
+- Pre-D suites run with awakening disabled; talent interactions with their scenarios are
+  covered by the talent suites and the real acceptance instead.
+- The buried-cache rule adds hidden objects to free tiles of not-yet-materialized areas
+  in existing worlds (the same additive rule as Checkpoint B's bushes).
+- Earlier limits (fog save cost, one save slot, greedy AI, Windows x64 only, unsigned exe)
+  remain.
+
+### Next step
+
+Stop. The user reviews this build. Any later checkpoint needs explicit approval.
+
+## Milestone 02 Checkpoint C record (historical)
 
 Continued from af691c3 (clean tree) on explicit user approval of Checkpoint C only.
 Read AGENTS and all design/API docs plus source first. Reused: Content Registry,

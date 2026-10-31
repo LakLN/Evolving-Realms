@@ -15,6 +15,7 @@ var failures := 0
 var directory := ""
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	directory = ProjectSettings.globalize_path("user://m02b_tests/" + Data.uuid())
 	DirAccess.make_dir_recursive_absolute(directory)
 	print("Survival artifacts: ", directory)

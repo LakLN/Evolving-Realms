@@ -5,7 +5,8 @@ extends RefCounted
 ## equipped item records. Effective values are recomputed from scratch every time:
 ##   total = (base + growth + gear flat) * (100 + gear percent) / 100
 ## so reloading or re-equipping can never stack modifiers. Future power paths
-## (cultivation, magic, talents, inheritance) add tracks or modifier sources here.
+## (cultivation, magic, inheritance) add tracks or modifier sources here; talents
+## arrive as a modifier source (see effective()).
 const Data = preload("res://src/data/json_data.gd")
 const PATH := "res://content/character_rules.json"
 var rules: Dictionary = {}
@@ -129,8 +130,10 @@ func gear_bonus(definition: Dictionary, metadata: Dictionary) -> Dictionary:
 		flat[modifier.stat] = int(flat.get(modifier.stat, 0)) + int(modifier.get("add", 0))
 	return {"flat": flat, "percent": percent, "quality": tier}
 
-func effective(base_stats: Dictionary, character: Dictionary, definition_for: Callable) -> Dictionary:
-	## {stats: {stat: total}, breakdown: {stat: {base, growth, gear, percent}}}.
+func effective(base_stats: Dictionary, character: Dictionary, definition_for: Callable, sources: Array = []) -> Dictionary:
+	## {stats: {stat: total}, breakdown: {stat: {base, growth, gear, talent, percent}}}.
+	## sources: further derived modifiers {flat, percent} (talents). breakdown.talent is
+	## exactly what the sources add on top of base + growth + gear.
 	var growth := {}
 	for track_id in rules.tracks:
 		var at_level := level(character, track_id)
@@ -148,13 +151,24 @@ func effective(base_stats: Dictionary, character: Dictionary, definition_for: Ca
 			flat[stat] = int(flat.get(stat, 0)) + int(bonus.flat[stat])
 		for stat in bonus.percent:
 			percent[stat] = int(percent.get(stat, 0)) + int(bonus.percent[stat])
+	var extra_flat := {}
+	var extra_percent := {}
+	for source in sources:
+		for stat in source.get("flat", {}):
+			extra_flat[stat] = int(extra_flat.get(stat, 0)) + int(source.flat[stat])
+		for stat in source.get("percent", {}):
+			extra_percent[stat] = int(extra_percent.get(stat, 0)) + int(source.percent[stat])
 	var totals := {}
 	var breakdown := {}
 	for stat in rules.stats:
 		var raw := int(base_stats.get(stat, 0)) + int(growth.get(stat, 0)) + int(flat.get(stat, 0))
-		totals[stat] = maxi(1 if stat == "max_hp" else 0, raw * (100 + int(percent.get(stat, 0))) / 100)
-		breakdown[stat] = {"base": int(base_stats.get(stat, 0)), "growth": int(growth.get(stat, 0)), "gear": totals[stat] - int(base_stats.get(stat, 0)) - int(growth.get(stat, 0)), "percent": int(percent.get(stat, 0))}
+		var without := _total(stat, raw, int(percent.get(stat, 0)))
+		totals[stat] = _total(stat, raw + int(extra_flat.get(stat, 0)), int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0)))
+		breakdown[stat] = {"base": int(base_stats.get(stat, 0)), "growth": int(growth.get(stat, 0)), "gear": without - int(base_stats.get(stat, 0)) - int(growth.get(stat, 0)), "talent": totals[stat] - without, "percent": int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0))}
 	return {"stats": totals, "breakdown": breakdown}
+
+func _total(stat: String, raw: int, percent: int) -> int:
+	return maxi(1 if stat == "max_hp" else 0, raw * (100 + percent) / 100)
 
 func requirement_error(definition: Dictionary, character: Dictionary) -> String:
 	var needed: Dictionary = definition.payload.equipment.get("requirements", {})

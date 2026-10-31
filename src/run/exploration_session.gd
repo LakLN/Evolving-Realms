@@ -16,7 +16,12 @@ const Packs = preload("res://src/content/starter_pack.gd")
 const ItemQuality = preload("res://src/core/item_quality.gd")
 const CharacterStats = preload("res://src/core/character_stats.gd")
 const Equipment = preload("res://src/core/equipment.gd")
+const Talents = preload("res://src/core/talents.gd")
+const TalentRuntime = preload("res://src/core/talent_runtime.gd")
 const SIGHT_RADIUS := 7
+## Suites written before Milestone 02 D measure baseline rules with exact numbers, so
+## they switch this off: their runs then hold no talent. The game always awakens.
+static var auto_awaken := true
 signal action_completed(action: Dictionary, result: Dictionary)
 var store: RefCounted
 var terrain := Terrain.new()
@@ -42,6 +47,13 @@ var quality := ItemQuality.new()
 var character_rules := CharacterStats.new()
 ## "source@version" -> active loot_extension definitions (latest version per ID).
 var loot_extensions: Dictionary = {}
+var talent_rules := Talents.new()
+## {pool, pending, definitions, supported} for this World (see Talents.catalog).
+var talent_catalog: Dictionary = {"pool": [], "pending": [], "definitions": {}, "supported": {}}
+var talents := TalentRuntime.new()
+## Talent records awakened while this Run was activated; the UI reveals them once.
+var awakened_now: Array = []
+var _new_tiles := 0
 var _effective: Dictionary = {}
 var _definitions: Dictionary = {}
 ## Combat/AI events of the last accepted action, in order (for UI feedback).
@@ -151,7 +163,9 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	if not saved_stats is Dictionary:
 		return _fail("Saved character stats are invalid; save was not changed")
 	var normalized := rules.normalize(Combat.player_stats(saved_stats)) # Older saves get defaults.
-	if not Combat.valid_stats(normalized, true) or not rules.valid_stats(normalized):
+	# Current HP may exceed the stored base max_hp (armor, level growth, talents): it is
+	# checked structurally here and against the derived effective maximum on refresh.
+	if not Combat.valid_stats(normalized) or not Data.integer(normalized.get("hp")) or normalized.hp < 0 or normalized.hp > Combat.STAT_LIMIT or not rules.valid_stats(normalized):
 		return _fail("Saved character combat/survival stats are invalid; save was not changed")
 	loaded.state.character.stats = normalized
 	loaded.state.character = next_character_rules.normalize(loaded.state.character) # Older saves: no gear, level 1.
@@ -160,6 +174,23 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 		character_error = _validate_equipped(blueprint.world_id, loaded, next_character_rules)
 	if not character_error.is_empty():
 		return _fail(character_error + "; save was not changed")
+	var next_talent_rules := Talents.new()
+	if not next_talent_rules.load_rules():
+		return _fail(next_talent_rules.last_error)
+	var catalog := next_talent_rules.catalog(store.content, blueprint.world_id, next_character_rules.rules.stats.keys(), rules.rules.needs.keys())
+	if catalog.has("error"):
+		return _fail(catalog.error)
+	var awakened: Array = []
+	if not loaded.state.character.has("talents"):
+		# New Runs, and Runs saved before talents existed, awaken exactly once. The draw
+		# is keyed by the immutable World and Run seeds and the result is stored, so
+		# neither reloading nor a crash before the first save can reroll it.
+		if auto_awaken:
+			awakened = _awaken(next_talent_rules, catalog, blueprint, loaded)
+		loaded.state.character.talents = awakened
+	var talent_error := next_talent_rules.validate_records(loaded.state.character.talents, func(content_id: String, version: int) -> Dictionary: return catalog.definitions.get("%s@%d" % [content_id, version], {}))
+	if not talent_error.is_empty():
+		return _fail(talent_error + "; save was not changed")
 	var layer := Creatures.new()
 	var next_roster := Roster.new()
 	if not layer.configure(blueprint, generator, store.content) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
@@ -177,15 +208,36 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	quality = tiers
 	character_rules = next_character_rules
 	loot_extensions = next_extensions
+	talent_rules = next_talent_rules
+	talent_catalog = catalog
 	_definitions = {}
-	refresh_stats()
+	reload_talents() # Also derives effective stats.
 	last_save_turn = int(loaded.state.turn)
 	last_result = {}
 	last_events = []
-	dirty = false
+	awakened_now = awakened
+	dirty = not awakened.is_empty()
 	_reveal()
 	last_error = ""
 	return true
+
+func _awaken(rules: RefCounted, catalog: Dictionary, blueprint: Dictionary, loaded: Dictionary) -> Array:
+	var key := "talent-awakening-v%d/%d/%d/%d" % [Talents.AWAKENING_VERSION, int(blueprint.seed), int(blueprint.generation_version), int(loaded.seed)]
+	var records: Array = []
+	for definition in rules.awaken(catalog.pool, {"mode": loaded.mode, "spawn_biome": str(loaded.spawn.get("biome", ""))}, [], key):
+		records.append(rules.record(definition, records.size(), int(loaded.state.turn)))
+	return records
+
+func reload_talents() -> void:
+	## Rebuild the talent runtime from the stored records (live dictionaries in Run state).
+	talents.configure(run.state.character.talents, talent_definition, func(definition: Dictionary) -> bool: return talent_catalog.supported.has("%s@%d" % [definition.get("content_id", ""), int(definition.get("version", 0))]), "talent-v1/%d/%d" % [int(world.seed), int(run.seed)])
+	refresh_stats()
+
+func talent_definition(content_id: String, version: int) -> Dictionary:
+	return talent_catalog.definitions.get("%s@%d" % [content_id, version], {})
+
+func talent_supported(record: Dictionary) -> bool:
+	return talent_catalog.supported.has("%s@%d" % [record.content_id, int(record.version)])
 
 func try_move(direction: Vector2i) -> bool:
 	return perform_action({"type": "move", "delta": {"x": direction.x, "y": direction.y}})
@@ -201,15 +253,18 @@ func perform_action(action: Dictionary) -> bool:
 		return _fail("You are dead — no further actions")
 	if run.is_empty() or not Data.valid(action) or not _action_handlers.has(action.get("type")):
 		return _fail("No active run or unsupported action")
+	_new_tiles = 0
 	if not _action_handlers[action.type].call(action):
 		return false
 	# Turn order: player action, turn counter, survival (needs, recovery,
-	# starvation), each active creature once, death, then the autosave policy.
+	# starvation), talent turn/exploration triggers, each active creature once,
+	# death, then the autosave policy.
 	last_events = last_result.get("events", []).duplicate(true)
 	run.state.turn = int(run.state.turn) + 1
 	dirty = true
 	last_events.append_array(survival.tick(stats(), str(action.type), int(combat_stats().max_hp)))
 	if int(stats().hp) > 0:
+		last_events.append_array(_talent_tick())
 		last_events.append_array(roster.take_turn(self))
 	last_error = ""
 	if int(stats().hp) <= 0:
@@ -306,8 +361,22 @@ func _use_action(action: Dictionary) -> bool:
 	var use := use_for(action.content_id)
 	if use.is_empty():
 		return _fail("%s has no use yet (no turn spent)" % name)
+	# Talents may scale the item's effects or add their own; planned, not yet committed.
+	var context := _talent_context("use/%s/%d" % [action.content_id, int(run.state.turn)])
+	context.item_category = str(item.get("metadata", {}).get("category", ""))
+	context.effect_types = use.payload.effects.map(func(effect: Dictionary) -> String: return effect.type)
+	var plan: Array = talents.fire("on_use_item", context)
+	var effects: Array = use.payload.effects.duplicate(true)
+	for activation in plan:
+		for bonus in activation.ability.effects:
+			if bonus.type == "use_bonus":
+				for effect in effects:
+					if bonus.get("effect_types", []).is_empty() or effect.type in bonus.effect_types:
+						effect.amount = maxi(0, int(effect.amount) * (100 + int(bonus.percent)) / 100)
 	var trial := stats().duplicate(true)
-	var changes := ItemEffects.apply(trial, use.payload.effects, int(combat_stats().max_hp))
+	var changes := ItemEffects.apply(trial, effects, int(combat_stats().max_hp))
+	for activation in plan:
+		changes.append_array(_vital_effects(trial, activation.ability.effects))
 	if changes.is_empty():
 		return _fail("%s would have no effect right now (no turn spent)" % name)
 	var inventory := Inventory.new()
@@ -317,7 +386,11 @@ func _use_action(action: Dictionary) -> bool:
 	run.state.inventory = removal.inventory
 	for key in trial:
 		stats()[key] = trial[key]
-	last_result = {"type": "use", "content_id": action.content_id, "events": [{"type": "use", "name": name, "verb": str(use.payload.get("verb", "Use")), "changes": changes}]}
+	talents.commit(plan, int(run.state.turn))
+	var events: Array = [{"type": "use", "name": name, "verb": str(use.payload.get("verb", "Use")), "changes": changes}]
+	for activation in plan:
+		events.append(_talent_event(activation, _effect_summary(activation.ability.effects)))
+	last_result = {"type": "use", "content_id": action.content_id, "events": events}
 	return true
 
 func _load_uses(world_id: String) -> Dictionary:
@@ -384,11 +457,12 @@ func _attack_action(action: Dictionary) -> bool:
 	var result: Dictionary = roster.attack(self, action.target_id)
 	if result.is_empty():
 		return _fail(roster.last_error)
+	var xp_percent := _apply_strike(result)
 	for event in result.events.duplicate():
 		if event.type == "creature_death":
 			# Kill XP belongs to the same action as the kill and its loot.
 			var victim: Dictionary = roster.creatures[event.target]
-			result.events.append_array(gain_xp(character_rules.kill_xp(victim.definition.payload.stats)))
+			result.events.append_array(gain_xp(character_rules.kill_xp(victim.definition.payload.stats) * (100 + xp_percent) / 100))
 	last_result = result
 	return true
 
@@ -401,8 +475,8 @@ func gain_xp(amount: int, track_id: String = "adventurer") -> Array:
 	return events
 
 func refresh_stats() -> void:
-	## Effective stats are derived, never stored: base + growth + gear (see CharacterStats).
-	_effective = character_rules.effective(stats(), run.state.character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)))
+	## Effective stats are derived, never stored: base + growth + gear + talents (see CharacterStats).
+	_effective = character_rules.effective(stats(), run.state.character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)), [talents.modifiers()])
 	if int(stats().hp) > int(_effective.stats.max_hp):
 		stats().hp = int(_effective.stats.max_hp)
 
@@ -438,7 +512,7 @@ func compare_equipment(content_id: String, instance_id: String) -> Dictionary:
 		return {}
 	var character: Dictionary = run.state.character.duplicate(true)
 	character.equipment = trial.equipment
-	var after := character_rules.effective(stats(), character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)))
+	var after := character_rules.effective(stats(), character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)), [talents.modifiers()])
 	return {"before": _effective.stats, "after": after.stats, "slot": definition.payload.equipment.slot, "replaces": run.state.character.equipment.get(definition.payload.equipment.slot, {})}
 
 func _equip_action(action: Dictionary) -> bool:
@@ -629,7 +703,7 @@ func nearby_objects() -> Array:
 	for chunk in objects.chunks.values():
 		for instance in chunk:
 			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
-			if visible.has(tile) and absi(tile.x - position.x) + absi(tile.y - position.y) <= 1 and not is_consumed(instance.instance_id):
+			if visible.has(tile) and absi(tile.x - position.x) + absi(tile.y - position.y) <= 1 and not is_consumed(instance.instance_id) and perceives(instance):
 				result.append(instance)
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		var da := absi(int(a.position.x) - position.x) + absi(int(a.position.y) - position.y)
@@ -651,11 +725,14 @@ func interact(instance_id: String = "") -> bool:
 
 func preview_loot(instance_id: String) -> Array:
 	var instance: Dictionary = objects.find(instance_id)
-	if instance.is_empty():
-		return []
+	return [] if instance.is_empty() else _object_loot(instance).loot
+
+func _object_loot(instance: Dictionary) -> Dictionary:
+	## Base table + loot extensions, then planned gather/open talent effects.
 	var definition: Dictionary = objects.definition_for(instance)
 	var seed_key := "loot-v1/%d/%d/%d/%s@%d/%s" % [world.seed, world.generation_version, run.seed, instance.content_id, instance.version, instance.instance_id]
-	return loot_for(definition, seed_key)
+	var plan: Array = talents.fire("on_open" if definition.payload.interaction == "open" else "on_gather", _talent_context(instance.instance_id))
+	return {"loot": talent_loot(definition, seed_key, loot_for(definition, seed_key), plan), "plan": plan}
 
 func _interact_action(action: Dictionary) -> bool:
 	if not action.get("instance_id") is String:
@@ -668,8 +745,11 @@ func _interact_action(action: Dictionary) -> bool:
 		return _fail("Object is out of interaction range or sight")
 	if is_consumed(instance.instance_id):
 		return _fail("Already collected or opened — no turn spent")
+	if not perceives(instance):
+		return _fail("Object is out of interaction range or sight")
 	var inventory := Inventory.new()
-	var loot := preview_loot(instance.instance_id)
+	var planned := _object_loot(instance)
+	var loot: Array = planned.loot
 	var award := inventory.award(store.content, world.world_id, run.state.inventory, loot, "run:" + run.run_id + "/source/" + instance.instance_id)
 	if award.is_empty():
 		return _fail(inventory.last_error)
@@ -678,7 +758,11 @@ func _interact_action(action: Dictionary) -> bool:
 	var definition: Dictionary = objects.definition_for(instance)
 	run.state.inventory = award.inventory
 	run.state.entity_mutations[instance.instance_id] = {"consumed": true, "remaining": 0, "collected": definition.payload.interaction != "open", "opened": definition.payload.interaction == "open", "loot": loot, "received": award.received}
-	last_result = {"type": "interact", "name": definition.name, "received": award.received}
+	talents.commit(planned.plan, int(run.state.turn))
+	var events: Array = []
+	for activation in planned.plan:
+		events.append(_talent_event(activation, _effect_summary(activation.ability.effects)))
+	last_result = {"type": "interact", "name": definition.name, "received": award.received, "events": events}
 	return true
 
 func inventory_rows() -> Array:
@@ -693,6 +777,7 @@ func _reveal() -> void:
 				visible[target] = true
 				if not explored.has(target):
 					explored[target] = true
+					_new_tiles += 1
 					run.state.explored.append({"x": target.x, "y": target.y}) # Discovery order.
 					dirty = true
 
@@ -728,3 +813,221 @@ func _fail(message: String) -> bool:
 func _within_limits(tile: Dictionary) -> bool:
 	# Check JSON numbers before narrowing to Vector2i to prevent int32 wraparound.
 	return tile.x >= -Terrain.LIMIT and tile.x <= Terrain.LIMIT and tile.y >= -Terrain.LIMIT and tile.y <= Terrain.LIMIT
+
+# --- Talents: trusted handlers for the data vocabulary in src/core/talents.gd ---
+
+func perceives(instance: Dictionary) -> bool:
+	## Hidden objects (payload.hidden) exist for every Run, but only a perception
+	## talent lets the player see and use them.
+	return not objects.definition_for(instance).get("payload", {}).get("hidden", false) or talents.perception().hidden
+
+func senses(tile: Vector2i) -> bool:
+	## Sense radius: objects there are known even through fog (map markers only).
+	var radius := int(talents.perception().sense_radius)
+	var offset := tile - position
+	return radius > 0 and offset.x * offset.x + offset.y * offset.y <= radius * radius
+
+func _talent_context(key: String) -> Dictionary:
+	return {"turn": int(run.state.turn), "hp": int(stats().hp), "max_hp": int(_effective.stats.max_hp), "key": key, "biome": terrain.biome_at(position), "need_level": func(need: String) -> int: return survival.level(stats(), need) if survival.rules.needs.has(need) else 0}
+
+func _talent_event(activation: Dictionary, summary: String) -> Dictionary:
+	var definition: Dictionary = activation.talent.definition
+	return {"type": "talent", "talent": definition.content_id, "name": definition.name, "rank": definition.payload.rank, "ability": activation.ability.id, "summary": summary, "quiet": activation.ability.get("quiet", false)}
+
+static func _effect_summary(effects: Array) -> String:
+	var parts := PackedStringArray()
+	for effect in effects:
+		match effect.type:
+			"yield_bonus":
+				parts.append("+%d%% yield" % int(effect.percent))
+			"extra_loot_roll":
+				parts.append("extra loot")
+			"use_bonus":
+				parts.append("%+d%% effect" % int(effect.percent))
+			"grant_item":
+				parts.append("bonus find")
+	return ", ".join(parts)
+
+func _vital_effects(target: Dictionary, effects: Array) -> Array:
+	## Talent heal/need effects on a stats dictionary; returns real changes only.
+	var changes: Array = []
+	for effect in effects:
+		if effect.type == "heal" and int(target.hp) > 0:
+			var amount := int(effect.amount) if effect.has("amount") else maxi(1, int(_effective.stats.max_hp) * int(effect.percent_of_max) / 100)
+			var before := int(target.hp)
+			target.hp = mini(int(_effective.stats.max_hp), before + amount)
+			if int(target.hp) != before:
+				changes.append({"type": "heal", "stat": "hp", "before": before, "after": int(target.hp)})
+		elif effect.type == "need":
+			var before := int(target[effect.need])
+			target[effect.need] = clampi(before + int(effect.amount), 0, int(survival.rules.scale))
+			if int(target[effect.need]) != before:
+				changes.append({"type": "need", "stat": effect.need, "before": before, "after": int(target[effect.need])})
+	return changes
+
+static func _vital_summary(changes: Array) -> String:
+	var parts := PackedStringArray()
+	for change in changes:
+		parts.append("%s %+d" % ["HP" if change.stat == "hp" else str(change.stat), int(change.after) - int(change.before)])
+	return ", ".join(parts)
+
+func _talent_tick() -> Array:
+	## on_turn and on_explore (tiles newly discovered by this action). Applied and
+	## committed immediately: the action has already been accepted.
+	var events: Array = []
+	var turn := int(run.state.turn)
+	var context := _talent_context("turn/%d" % turn)
+	var activations: Array = talents.fire("on_turn", context)
+	if _new_tiles > 0:
+		context.new_tiles = _new_tiles
+		activations.append_array(talents.fire("on_explore", context))
+	for activation in activations:
+		if not activation.fired:
+			talents.commit([activation], turn) # Exploration progress only.
+			continue
+		var grants: Array = []
+		for effect in activation.ability.effects:
+			if effect.type == "grant_item":
+				grants.append({"content_id": effect.content_id, "version": int(effect.version), "quantity": int(effect.quantity)})
+		var received: Array = []
+		if not grants.is_empty():
+			var used := int(TalentRuntime.state(activation.talent.record, activation.ability.id).used)
+			var award := Inventory.new().award(store.content, world.world_id, run.state.inventory, grants, "run:%s/talent/%s/%s/%d" % [run.run_id, activation.talent.definition.content_id, activation.ability.id, used])
+			if award.is_empty():
+				continue # Refused (e.g. version conflict): nothing changes, it can fire later.
+			run.state.inventory = award.inventory
+			received = award.received
+		var levels := {}
+		for need in survival.rules.needs:
+			levels[need] = survival.level(stats(), need)
+		var changes := _vital_effects(stats(), activation.ability.effects)
+		for need in levels:
+			if survival.level(stats(), need) > levels[need]:
+				events.append({"type": "survival", "need": need, "level": Survival.LEVELS[survival.level(stats(), need)]})
+		talents.commit([activation], turn)
+		var parts := PackedStringArray()
+		for item in received:
+			parts.append("found %s x%d" % [item.name, int(item.quantity)])
+		if not changes.is_empty():
+			parts.append(_vital_summary(changes))
+		var event := _talent_event(activation, ", ".join(parts))
+		event.received = received
+		events.append(event)
+	return events
+
+func _target_of(creature: Dictionary) -> Dictionary:
+	return {"category": str(creature.definition.get("metadata", {}).get("category", "")), "disposition": str(creature.definition.payload.disposition)}
+
+func talent_strike(creature: Dictionary, result: Dictionary) -> Dictionary:
+	## Planned on_attack / on_kill effects on a resolved player hit (no state change).
+	var context := _talent_context("%s/%d" % [creature.instance_id, int(run.state.turn)])
+	context.target = _target_of(creature)
+	var attack: Array = talents.fire("on_attack", context)
+	var damage := int(result.damage)
+	for activation in attack:
+		for effect in activation.ability.effects:
+			if effect.type == "bonus_damage":
+				damage += int(effect.get("amount", 0)) + int(result.damage) * int(effect.get("percent", 0)) / 100
+	var hp := maxi(0, int(creature.hp) - damage)
+	var kill: Array = []
+	if hp == 0:
+		var kill_context := context.duplicate()
+		kill_context.key = creature.instance_id # Stable per creature, like its loot.
+		kill = talents.fire("on_kill", kill_context)
+	return {"result": {"damage": damage, "variance": result.variance, "hp": hp, "killed": hp == 0}, "base_damage": int(result.damage), "dealt": mini(damage, int(creature.hp)), "attack": attack, "kill": kill}
+
+func _apply_strike(result: Dictionary) -> int:
+	## Commit and apply an accepted strike's talent effects; returns the kill XP bonus %.
+	var strike: Dictionary = result.get("talent", {})
+	if strike.is_empty():
+		return 0
+	var turn := int(run.state.turn)
+	var xp_percent := 0
+	var max_before := int(_effective.stats.max_hp)
+	talents.commit(strike.attack + strike.kill, turn)
+	refresh_stats() # grow_stat stacks are uses: derived, never stored as stats.
+	stats().hp = mini(int(_effective.stats.max_hp), int(stats().hp) + maxi(0, int(_effective.stats.max_hp) - max_before))
+	for activation in strike.attack + strike.kill:
+		var parts := PackedStringArray()
+		for effect in activation.ability.effects:
+			match effect.type:
+				"bonus_damage":
+					parts.append("+%d damage" % (int(effect.get("amount", 0)) + int(strike.base_damage) * int(effect.get("percent", 0)) / 100))
+				"lifesteal":
+					var changes := _vital_effects(stats(), [{"type": "heal", "amount": maxi(1, int(strike.dealt) * int(effect.percent) / 100)}])
+					parts.append(_vital_summary(changes) if not changes.is_empty() else "already at full HP")
+				"heal":
+					var changes := _vital_effects(stats(), [effect])
+					parts.append(_vital_summary(changes) if not changes.is_empty() else "already at full HP")
+				"xp_bonus":
+					xp_percent += int(effect.percent)
+					parts.append("+%d%% XP" % int(effect.percent))
+				"extra_loot_roll":
+					parts.append("extra spoils")
+				"grow_stat":
+					var stacks := mini(int(TalentRuntime.state(activation.talent.record, activation.ability.id).used), int(effect.max_stacks))
+					parts.append("%s %+d (x%d)" % [character_rules.rules.stats[effect.stat].get("name", effect.stat), int(effect.amount) * stacks, stacks])
+		result.events.append(_talent_event(activation, ", ".join(parts)))
+	return xp_percent
+
+func talent_guard(creature: Dictionary, player: Dictionary, result: Dictionary) -> Dictionary:
+	## A creature's resolved hit on the player through on_hit_taken, in three passes:
+	## mitigation, escaping death, recovery. Applied and committed immediately.
+	var before := int(player.hp)
+	var damage := int(result.damage)
+	var hp := int(result.hp)
+	var events: Array = []
+	var turn := int(run.state.turn)
+	for phase in Talents.HIT_PHASES:
+		if phase == ["heal"] and hp <= 0:
+			continue # Recovery never revives.
+		var context := _talent_context("%s/%d" % [creature.instance_id, turn])
+		context.hp = hp
+		context.lethal = hp == 0
+		context.target = _target_of(creature)
+		for activation in talents.fire("on_hit_taken", context, phase):
+			var parts := PackedStringArray()
+			for effect in activation.ability.effects:
+				match effect.type:
+					"negate_hit":
+						damage = 0
+						hp = before
+						parts.append("the blow never happened")
+					"damage_reduction":
+						var cut := mini(damage, int(effect.get("amount", 0)) + damage * int(effect.get("percent", 0)) / 100)
+						damage -= cut
+						hp = maxi(0, before - damage)
+						parts.append("-%d damage" % cut)
+					"survive_lethal":
+						if hp == 0:
+							hp = int(effect.get("hp", 1))
+							parts.append("survived a killing blow")
+					"heal":
+						var vitals := {"hp": hp}
+						var changes := _vital_effects(vitals, [effect])
+						hp = int(vitals.hp)
+						parts.append(_vital_summary(changes) if not changes.is_empty() else "already at full HP")
+			talents.commit([activation], turn)
+			events.append(_talent_event(activation, ", ".join(parts)))
+	return {"hp": hp, "damage": damage, "events": events}
+
+func talent_loot(definition: Dictionary, seed_key: String, loot: Array, plan: Array) -> Array:
+	## Planned loot effects: bonus yield on stackable drops, extra base-table rolls
+	## with their own SHA256 keys, granted items. Deterministic, so preview == receipt.
+	var result := loot.duplicate(true)
+	for activation in plan:
+		if not activation.fired:
+			continue
+		for effect in activation.ability.effects:
+			match effect.type:
+				"yield_bonus":
+					for drop in result:
+						var item := _definition(drop.content_id, int(drop.version))
+						if item.get("payload", {}).get("stackable", false):
+							drop.quantity = mini(1000, int(drop.quantity) + maxi(1, int(drop.quantity) * int(effect.percent) / 100))
+				"extra_loot_roll":
+					if definition.payload.has("loot"):
+						result.append_array(Loot.new().roll(definition.payload.loot, "%s/talent/%s/%s" % [seed_key, activation.talent.definition.content_id, activation.ability.id]))
+				"grant_item":
+					result.append({"content_id": effect.content_id, "version": int(effect.version), "quantity": int(effect.quantity)})
+	return result

@@ -17,6 +17,7 @@ var failures := 0
 var directory := ""
 
 func _initialize() -> void:
+	Session.auto_awaken = false # Baseline rules: this suite predates talents (see TALENTS.md).
 	directory = ProjectSettings.globalize_path("user://m02c_tests/" + Data.uuid())
 	DirAccess.make_dir_recursive_absolute(directory)
 	print("Equipment artifacts: ", directory)
@@ -290,6 +291,12 @@ func _test_persistence_and_compatibility() -> void:
 	var again := Session.new(store)
 	again.resume(a.run.run_id)
 	check(Acceptance.same(again.effective_stats(), effective), "Second reload: same stats again")
+	var armor := _give(a, "core:hide_armor", "pho_thong", "armor-hp")
+	a.equip_item("core:hide_armor", armor)
+	a.stats().hp = int(a.combat_stats().max_hp)
+	check(a.save(), "Save at full HP above the base maximum (armor)")
+	var full := Session.new(store)
+	check(full.resume(a.run.run_id) and int(full.stats().hp) == 35 and int(full.combat_stats().max_hp) == 35, "Regression (found in M02 D): HP above base max HP reloads instead of being refused")
 	var b := Session.new(store)
 	check(b.start_new(a.world.world_id, 303, "meadow") and b.run.state.character.equipment.weapon.content_id == "core:wooden_club" and b.run.state.character.equipment.weapon.instance_id != a.run.state.inventory["core:wooden_club"].instances[0].instance_id and not b.run.state.inventory.has("core:traveler_blade"), "Run B has its own starter club; Run A's gear stays in Run A")
 	check(Acceptance.same(store.load_world(a.world.world_id).blueprint, Pack.blueprint(1847)), "Equipment never changes the World Blueprint")

@@ -6,6 +6,7 @@ const MapView = preload("res://src/world/map_view.gd")
 const Data = preload("res://src/data/json_data.gd")
 const StarterPack = preload("res://src/content/starter_pack.gd")
 const Acceptance = preload("res://src/acceptance/standalone_check.gd")
+const TalentText = preload("res://src/core/talent_text.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
@@ -41,6 +42,13 @@ var _slot_detail: Label
 var _unequip_button: Button
 var _slot_ids: Array = []
 var _rainbow: Array = [] # [ItemList, index, tier] rows animated for rainbow-style tiers
+var _talent_panel: PanelContainer
+var _talent_style: StyleBoxFlat
+var _talent_title: Label
+var _talent_rank: Label
+var _talent_name: Label
+var _talent_text: Label
+var _talent_line: Label
 var _death_panel: PanelContainer
 var _death_text: Label
 var _death_reload: Button
@@ -79,6 +87,7 @@ func _ready() -> void:
 	_build_hud(frame)
 	_build_inventory(frame)
 	_build_character(frame)
+	_build_talent_panel(frame)
 	_build_death_screen(frame)
 	var options := launch_options()
 	database_path = options.get("database", database_path)
@@ -160,7 +169,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD/Arrows: move  E: interact  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  Ctrl+S: save  Esc: menu", 14)
+	_label(column, "WASD/Arrows: move  E: interact  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  Ctrl+S: save  Esc: menu", 14)
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -203,7 +212,7 @@ func _build_hud(parent: Control) -> void:
 	_notice = _label(column, "", 17)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
-	_label(column, "WASD: move (into hostile = attack) | E: gather/open | F: attack | Tab: target | Space: wait | R: rest | I: items (U: use/equip) | C: gear", 15)
+	_label(column, "WASD: move (into hostile = attack) | E: gather/open | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent", 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
 
@@ -213,8 +222,8 @@ func _build_character(parent: Control) -> void:
 	_character_panel.anchor_bottom = 0.5
 	_character_panel.offset_left = 20
 	_character_panel.offset_right = 395
-	_character_panel.offset_top = -235
-	_character_panel.offset_bottom = 235
+	_character_panel.offset_top = -250
+	_character_panel.offset_bottom = 250
 	parent.add_child(_character_panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
@@ -222,6 +231,8 @@ func _build_character(parent: Control) -> void:
 	_label(column, "CHARACTER & GEAR", 22)
 	_character_summary = _label(column, "", 15)
 	_character_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_talent_line = _label(column, "", 14)
+	_talent_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_slot_list = ItemList.new()
 	_slot_list.custom_minimum_size = Vector2(355, 150)
 	_slot_list.item_selected.connect(_show_slot)
@@ -236,7 +247,7 @@ func _build_character(parent: Control) -> void:
 	_character_panel.hide()
 
 func _panel_open() -> bool:
-	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible)
+	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible)
 
 func _toggle_character() -> void:
 	if session == null or _menu.visible or session.is_dead():
@@ -276,8 +287,12 @@ func _refresh_character(selected_slot: String = "") -> void:
 		lines.append("%s  Level %d   XP %d / %d" % [session.character_rules.rules.tracks[track_id].get("name", track_id), int(track.level), int(track.xp), session.character_rules.xp_to_next(track_id, int(track.level))])
 	for stat in session.character_rules.rules.stats:
 		var part: Dictionary = effective.breakdown[stat]
-		lines.append("%s %d  = %d base + %d level + %d gear%s" % [session.character_rules.rules.stats[stat].name, effective.stats[stat], part.base, part.growth, part.gear, " (incl. %+d%%)" % part.percent if part.percent != 0 else ""])
+		var talent := " %s %d talent" % ["+" if int(part.talent) >= 0 else "-", absi(int(part.talent))] if int(part.talent) != 0 else ""
+		lines.append("%s %d  = %d base + %d level + %d gear%s%s" % [session.character_rules.rules.stats[stat].name, effective.stats[stat], part.base, part.growth, part.gear, talent, " (incl. %+d%%)" % part.percent if part.percent != 0 else ""])
 	_character_summary.text = "\n".join(lines)
+	_talent_line.text = talent_summary()
+	var held: Array = character.talents
+	_talent_line.modulate = session.talent_rules.color(held[0].rank) if not held.is_empty() else Color("b8b8b8")
 	_rainbow = _rainbow.filter(func(entry: Array) -> bool: return entry[0] != _slot_list)
 	_slot_list.clear()
 	_slot_ids = session.character_rules.slot_ids()
@@ -349,6 +364,101 @@ func _build_inventory(parent: Control) -> void:
 	_button(column, "Close [I / Esc]", _toggle_inventory)
 	_inventory_panel.hide()
 
+func _build_talent_panel(parent: Control) -> void:
+	## Awakening reveal at the start of a Run; T reopens it as the talent sheet.
+	_talent_panel = PanelContainer.new()
+	_talent_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_talent_panel.custom_minimum_size = Vector2(660, 0)
+	_talent_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_talent_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_talent_style = StyleBoxFlat.new()
+	_talent_style.bg_color = Color(0.06, 0.06, 0.09, 0.97)
+	_talent_style.set_border_width_all(2)
+	_talent_style.set_content_margin_all(22)
+	_talent_panel.add_theme_stylebox_override("panel", _talent_style)
+	parent.add_child(_talent_panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	_talent_panel.add_child(column)
+	_talent_title = _label(column, "", 18)
+	_talent_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_talent_title.modulate = Color("c9c0a0")
+	_talent_rank = _label(column, "", 30)
+	_talent_rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_talent_name = _label(column, "", 26)
+	_talent_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_talent_text = _label(column, "", 15)
+	_talent_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_talent_text.custom_minimum_size.x = 616
+	var close := _button(column, "Continue [Enter]", _close_talent)
+	close.focus_mode = Control.FOCUS_NONE
+	_talent_panel.hide()
+
+func show_talent(awakening: bool) -> void:
+	_inventory_panel.hide()
+	_character_panel.hide()
+	var held: Array = session.run.state.character.talents
+	_talent_title.text = "TALENT AWAKENED" if awakening else "TALENT"
+	_rainbow = _rainbow.filter(func(entry: Array) -> bool: return entry[0] != _talent_rank)
+	if held.is_empty():
+		_talent_rank.text = "—"
+		_talent_rank.modulate = Color("b8b8b8")
+		_talent_name.text = "No talent"
+		_talent_text.text = "This run holds no awakened talent."
+		_talent_style.border_color = Color("6f6f6f")
+	else:
+		var first: Dictionary = session.talent_definition(held[0].content_id, int(held[0].version))
+		_talent_rank.text = TalentText.rank_title(session.talent_rules, held[0].rank)
+		_talent_rank.modulate = session.talent_rules.color(held[0].rank)
+		_talent_name.text = first.name if held.size() == 1 else "%d talents" % held.size()
+		_talent_style.border_color = session.talent_rules.color(held[0].rank)
+		if session.talent_rules.rank(held[0].rank).get("style") == "rainbow":
+			_rainbow.append([_talent_rank, -1, held[0].rank])
+		var lines := PackedStringArray()
+		for record in held:
+			var definition: Dictionary = session.talent_definition(record.content_id, int(record.version))
+			if held.size() > 1:
+				lines.append(TalentText.label(session.talent_rules, definition))
+			lines.append(str(definition.get("description", "")))
+			lines.append_array(talent_lines(record))
+		lines.append("" if not awakening else "\nAwakened for this run only. It is saved with the run and never rerolled.")
+		_talent_text.text = "\n".join(lines).strip_edges()
+	_talent_panel.show()
+	_hold_delay = 0.2
+
+func talent_lines(record: Dictionary) -> PackedStringArray:
+	var stat_names := {}
+	for stat in session.character_rules.rules.stats:
+		stat_names[stat] = session.character_rules.rules.stats[stat].name
+	return TalentText.details(session.talent_rules, session.talent_definition(record.content_id, int(record.version)), record, int(session.run.state.turn), stat_names, func(content_id: String, version: int) -> String: return str(session._definition(content_id, version).get("name", content_id)), session.talent_supported(record))
+
+func talent_summary() -> String:
+	## Compact talent line for the character panel.
+	var held: Array = session.run.state.character.talents
+	if held.is_empty():
+		return "Talent: none awakened in this run."
+	var parts := PackedStringArray()
+	for record in held:
+		var definition: Dictionary = session.talent_definition(record.content_id, int(record.version))
+		var state := ""
+		for ability in definition.payload.get("abilities", []):
+			state += TalentText.status(ability, record, int(session.run.state.turn))
+		parts.append("Talent: %s%s" % [TalentText.label(session.talent_rules, definition), state])
+	return "\n".join(parts) + "  (T: details)"
+
+func _toggle_talent() -> void:
+	if session == null or _menu.visible or session.is_dead():
+		return
+	if _talent_panel.visible:
+		_close_talent()
+	else:
+		show_talent(false)
+
+func _close_talent() -> void:
+	_talent_panel.hide()
+	_hold_delay = 0.2
+	get_viewport().gui_release_focus()
+
 func _build_death_screen(parent: Control) -> void:
 	_death_panel = PanelContainer.new()
 	_death_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
@@ -377,6 +487,7 @@ func _build_death_screen(parent: Control) -> void:
 func _show_death() -> void:
 	_inventory_panel.hide()
 	_character_panel.hide()
+	_talent_panel.hide()
 	var permadeath: bool = session.run.mode == "permadeath"
 	_death_text.text = ("Permadeath: this run has ended and cannot be continued. The world remains; begin a new run from the menu." if permadeath else "Normal mode: the death was not saved. Load your last save to continue from it.") + "\nTurn %d." % int(session.run.state.turn)
 	_death_reload.visible = not permadeath
@@ -578,6 +689,10 @@ func _enter_map(active_session: RefCounted) -> void:
 	_update_info()
 	_notice.text = "Explore freely. Save with Ctrl+S; Esc saves and returns to the menu."
 	get_viewport().gui_release_focus()
+	_talent_panel.hide()
+	if not session.awakened_now.is_empty():
+		show_talent(true) # Reveal once; the record is already part of the Run state.
+		session.awakened_now = []
 
 func _update_info() -> void:
 	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s | Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
@@ -677,6 +792,8 @@ func describe_events(events: Array) -> String:
 			"hit":
 				if event.attacker == "player":
 					parts.append("You hit %s for %d (%d/%d)." % [event.name, event.damage, event.hp, event.max_hp])
+				elif int(event.damage) == 0:
+					parts.append("%s attacks, but deals no damage." % event.name)
 				else:
 					parts.append("%s hits you for %d!" % [event.name, event.damage])
 			"creature_death":
@@ -694,6 +811,9 @@ func describe_events(events: Array) -> String:
 				parts.append("Unequipped %s. %s" % [event.name, _stat_delta(event.before, event.after)])
 			"xp":
 				parts.append("+%d XP." % event.amount)
+			"talent":
+				if not event.get("quiet", false):
+					parts.append("[%s] %s: %s." % [event.rank, event.name, event.summary if not str(event.summary).is_empty() else "activated"])
 			"level_up":
 				parts.append("LEVEL UP! %s level %d." % [event.name, event.level])
 			"use":
@@ -760,6 +880,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_rest()
 	elif event.keycode == KEY_C or event.physical_keycode == KEY_C:
 		_toggle_character()
+	elif event.keycode == KEY_T or event.physical_keycode == KEY_T:
+		_toggle_talent()
 	else:
 		for action in MOVE_KEYS:
 			if event.is_action_pressed(action):
@@ -769,6 +891,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
+	if _talent_panel != null and _talent_panel.visible and event is InputEventKey and event.pressed and not event.echo:
+		if _is_save_shortcut(event):
+			_save_game()
+		elif event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_ESCAPE, KEY_T] or event.physical_keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE, KEY_ESCAPE, KEY_T]:
+			_close_talent()
+		get_viewport().set_input_as_handled() # Modal: no movement or other commands.
+		return
 	if _character_panel != null and _character_panel.visible and event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode in [KEY_C, KEY_ESCAPE] or event.physical_keycode in [KEY_C, KEY_ESCAPE]:
 			_toggle_character()
@@ -798,8 +927,12 @@ static func _is_save_shortcut(event: InputEventKey) -> bool:
 
 func _process(delta: float) -> void:
 	for entry in _rainbow:
-		if is_instance_valid(entry[0]) and entry[1] < entry[0].item_count:
-			entry[0].set_item_custom_fg_color(entry[1], session.quality.color(entry[2], Time.get_ticks_msec() / 1000.0) if session != null else Color.WHITE)
+		if not is_instance_valid(entry[0]) or session == null:
+			continue
+		if entry[0] is Label:
+			entry[0].modulate = session.talent_rules.color(entry[2], Time.get_ticks_msec() / 1000.0) # Rainbow talent rank.
+		elif entry[1] < entry[0].item_count:
+			entry[0].set_item_custom_fg_color(entry[1], session.quality.color(entry[2], Time.get_ticks_msec() / 1000.0))
 	if session == null or _menu.visible or _panel_open() or session.is_dead():
 		return
 	_hold_delay -= delta
@@ -836,6 +969,7 @@ func _return_to_menu() -> void:
 	session = null
 	_inventory_panel.hide()
 	_character_panel.hide()
+	_talent_panel.hide()
 	_death_panel.hide()
 	map_view.clear_map()
 	map_view.hide()

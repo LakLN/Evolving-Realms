@@ -1,0 +1,19 @@
+{
+  "rules_version": 1,
+  "_note": "Talent ranks in official order. Rank is potential, not a guarantee: a talent's own effects decide its power. Awakening weights are configurable and not final balance.",
+  "ranks": [
+    {"id": "F", "order": 1, "name": "Phàm Tục", "name_en": "Mortal", "color": "9e9e9e", "style": "plain"},
+    {"id": "E", "order": 2, "name": "Sơ Đẳng", "name_en": "Novice", "color": "e6e6e6", "style": "plain"},
+    {"id": "D", "order": 3, "name": "Phổ Thông", "name_en": "Ordinary", "color": "5fd068", "style": "plain"},
+    {"id": "C", "order": 4, "name": "Ưu Tú", "name_en": "Gifted", "color": "4f94ec", "style": "plain"},
+    {"id": "B", "order": 5, "name": "Tinh Anh", "name_en": "Elite", "color": "b06ae6", "style": "plain"},
+    {"id": "A", "order": 6, "name": "Trác Việt", "name_en": "Outstanding", "color": "f39436", "style": "plain"},
+    {"id": "S", "order": 7, "name": "Siêu Phàm", "name_en": "Transcendent", "color": "f4d23c", "style": "plain"},
+    {"id": "SS", "order": 8, "name": "Truyền Kỳ", "name_en": "Legendary", "color": "e0b44c", "style": "black_gold"},
+    {"id": "SSS", "order": 9, "name": "Nghịch Thiên", "name_en": "Heaven-Defying", "color": "ff5f5f", "style": "rainbow"}
+  ],
+  "awakening": {
+    "talents_per_run": 1,
+    "rank_weights": {"F": 2800, "E": 2300, "D": 1800, "C": 1300, "B": 900, "A": 500, "S": 280, "SS": 90, "SSS": 30}
+  }
+}

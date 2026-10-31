@@ -7,7 +7,8 @@ authoring process, not a dependency for movement, saving or combat.
 ## Modules and planned layout
 
 - src/core: weighted LootTable, Inventory, Combat rules, CreatureAI decisions,
-  Survival rules, ItemEffects handlers, ItemQuality, CharacterStats, Equipment.
+  Survival rules, ItemEffects handlers, ItemQuality, CharacterStats, Equipment,
+  Talents (ranks, validation, awakening), TalentRuntime (plan/commit), TalentText.
 - src/world: implemented terrain_v1, bounded chunk cache, spawn selector,
   TileMapLayer renderer, world_objects v1 layer and code-native placeholder art.
 - src/run: implemented ExplorationSession: cardinal actions/turns, sight,
@@ -174,6 +175,21 @@ derives them from base + growth + gear for combat, survival, healing and UI.
 independently keyed rolls to specific sources, so v1 tables and earlier results stay
 unchanged. No schema change. Details:
 [EQUIPMENT_AND_PROGRESSION.md](EQUIPMENT_AND_PROGRESSION.md).
+
+## Talents — Milestone 02 Checkpoint D
+
+Ranks and awakening weights are data (content/talent_rules.json); talents are `kind:
+talent` definitions (capability `definition.talent`, content/talent_pack.json) built
+only from a closed vocabulary of triggers, conditions, effects and limits. Unknown
+types are pending capabilities: listed, never awakened, never executed. A Run whose
+`character` has no `talents` key awakens once with a SHA256 draw keyed by World and
+Run seeds (rank by weight, then talent by weight) and stores the records; loading never
+draws again. `character.talents` holds only per-ability counters; passive and growth
+bonuses are a derived modifier source in `CharacterStats.effective()`. Hooks: talent
+turn/explore triggers after survival, player strikes and creature hits in the roster,
+loot in `preview_loot`/interact, item use. Planning never mutates; counters commit only
+when the action is accepted. Hidden objects (`payload.hidden`) need a perception talent.
+No schema change. Details: [TALENTS.md](TALENTS.md).
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

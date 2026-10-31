@@ -1,0 +1,55 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {"content_id":"core:buried_cache","version":1,"schema_version":1,"kind":"resource","name":"Buried cache","description":"A stash buried long ago. Only a perceptive eye notices the disturbed earth.","metadata":{"category":"hidden"},"dependencies":[{"content_id":"core:coin","version":1},{"content_id":"core:herb","version":1},{"content_id":"core:keepsake","version":1},{"content_id":"core:berries","version":1}],"payload":{"interaction":"pickup","visual":"cache","hidden":true,"spawn":{"biomes":["forest","beach","meadow"],"per_10000":25,"priority":40},"loot":{"guaranteed":[{"content_id":"core:coin","version":1,"min":4,"max":10}],"rolls":1,"entries":[{"content_id":"core:herb","version":1,"min":2,"max":4,"weight":40},{"content_id":"core:berries","version":1,"min":3,"max":6,"weight":40},{"content_id":"core:keepsake","version":1,"min":1,"max":1,"weight":20}]}}},
+
+    {"content_id":"core:talent/iron_stomach","version":1,"schema_version":1,"kind":"talent","name":"Bụng Sắt","description":"Your body wastes little. Hunger creeps up more slowly and food fills you more.","metadata":{"name_en":"Iron Stomach","tags":["survival"]},"payload":{"rank":"F","unique":false,"awakening":{"weight":100},"abilities":[
+      {"id":"slow_hunger","trigger":"on_turn","quiet":true,"conditions":[{"type":"every_turns","value":5}],"effects":[{"type":"need","need":"hunger","amount":-1}]},
+      {"id":"hearty_eater","trigger":"on_use_item","conditions":[{"type":"item_category","values":["food"]}],"effects":[{"type":"use_bonus","percent":25,"effect_types":["sate"]}]}]}},
+
+    {"content_id":"core:talent/thick_skin","version":1,"schema_version":1,"kind":"talent","name":"Da Dày","description":"Tough hide and a stubborn frame. Some blows barely land.","metadata":{"name_en":"Thick Skin","tags":["survival","combat"]},"payload":{"rank":"F","unique":false,"awakening":{"weight":100},"passive":[{"type":"stat","stat":"max_hp","add":4}],"abilities":[
+      {"id":"shrug_off","trigger":"on_hit_taken","conditions":[{"type":"chance_per_10000","value":2500}],"effects":[{"type":"damage_reduction","amount":2}]}]}},
+
+    {"content_id":"core:talent/forager","version":1,"schema_version":1,"kind":"talent","name":"Người Hái Lượm","description":"Raised among fields and woods, you take more from every plant and pile you gather.","metadata":{"name_en":"Forager","tags":["gathering"]},"payload":{"rank":"E","unique":false,"awakening":{"weight":100,"conditions":[{"type":"spawn_biome","values":["forest","meadow"]}]},"abilities":[
+      {"id":"bountiful_hands","trigger":"on_gather","effects":[{"type":"yield_bonus","percent":50}]}],"limitations":["Only awakens in runs that start in a forest or meadow.","Chests and creature loot are unaffected."]}},
+
+    {"content_id":"core:talent/wayfarer","version":1,"schema_version":1,"kind":"talent","name":"Lữ Khách","description":"The road provides. Walking unknown land, you keep finding berries and clean water.","metadata":{"name_en":"Wayfarer","tags":["exploration","survival"]},"dependencies":[{"content_id":"core:berries","version":1},{"content_id":"core:fresh_water","version":1}],"payload":{"rank":"E","unique":false,"awakening":{"weight":100},"abilities":[
+      {"id":"trail_berries","trigger":"on_explore","limits":{"every_tiles":60,"charges":30},"effects":[{"type":"grant_item","content_id":"core:berries","version":1,"quantity":2}]},
+      {"id":"trail_water","trigger":"on_explore","limits":{"every_tiles":100,"charges":20},"effects":[{"type":"grant_item","content_id":"core:fresh_water","version":1,"quantity":1}]}],"limitations":["Only newly discovered tiles count.","Limited finds per run."]}},
+
+    {"content_id":"core:talent/beast_hunter","version":1,"schema_version":1,"kind":"talent","name":"Thợ Săn","description":"You know where beasts are weak and learn from every hunt.","metadata":{"name_en":"Beast Hunter","tags":["combat"]},"payload":{"rank":"D","unique":false,"awakening":{"weight":100},"abilities":[
+      {"id":"weak_spot","trigger":"on_attack","conditions":[{"type":"target_category","values":["beast"]}],"effects":[{"type":"bonus_damage","amount":2}]},
+      {"id":"hunters_lore","trigger":"on_kill","conditions":[{"type":"target_category","values":["beast","herbivore"]}],"effects":[{"type":"xp_bonus","percent":50}]}]}},
+
+    {"content_id":"core:talent/second_wind","version":1,"schema_version":1,"kind":"talent","name":"Hồi Khí","description":"When a blow leaves you near collapse, your breath returns in a rush.","metadata":{"name_en":"Second Wind","tags":["survival","danger"]},"payload":{"rank":"C","unique":false,"awakening":{"weight":100},"abilities":[
+      {"id":"second_wind","trigger":"on_hit_taken","conditions":[{"type":"hp_below_percent","value":35}],"limits":{"cooldown_turns":40},"effects":[{"type":"heal","percent_of_max":30}]}]}},
+
+    {"content_id":"core:talent/spirit_eye","version":1,"schema_version":1,"kind":"talent","name":"Linh Nhãn","description":"Your eyes catch what others miss: buried caches, and objects hidden in the fog around you.","metadata":{"name_en":"Spirit Eye","tags":["exploration"]},"payload":{"rank":"C","unique":true,"awakening":{"weight":100},"passive":[{"type":"perception","hidden":true,"sense_radius":12}]}},
+
+    {"content_id":"core:talent/bloodthirst","version":1,"schema_version":1,"kind":"talent","name":"Khát Máu","description":"Wounds you deal mend your own. Gentle remedies, however, barely work on you.","metadata":{"name_en":"Bloodthirst","tags":["combat","trade-off"]},"payload":{"rank":"B","unique":false,"awakening":{"weight":100},"abilities":[
+      {"id":"drain","trigger":"on_attack","effects":[{"type":"lifesteal","percent":35}]},
+      {"id":"feast","trigger":"on_kill","effects":[{"type":"heal","amount":3}]},
+      {"id":"tainted_blood","trigger":"on_use_item","conditions":[{"type":"effect_type","values":["heal"]}],"effects":[{"type":"use_bonus","percent":-50,"effect_types":["heal"]}]}],"limitations":["Healing items restore half as much."]}},
+
+    {"content_id":"core:talent/beast_tamer","version":1,"schema_version":1,"kind":"talent","name":"Ngự Thú","description":"Beasts sense a kindred spirit and may accept a contract.","metadata":{"name_en":"Beast Tamer","tags":["companion"]},"required_capabilities":["mechanic.pet_contract"],"payload":{"rank":"B","unique":true,"awakening":{"weight":100},"abilities":[
+      {"id":"contract","trigger":"on_kill","effects":[{"type":"tame_creature","chance_per_10000":2000}]}]}},
+
+    {"content_id":"core:talent/berserker","version":1,"schema_version":1,"kind":"talent","name":"Cuồng Chiến","description":"Pain feeds your fury: the more you bleed, the harder you strike. Your guard suffers for it.","metadata":{"name_en":"Berserker","tags":["combat","danger","trade-off"]},"payload":{"rank":"A","unique":false,"awakening":{"weight":100},"passive":[{"type":"stat","stat":"defense","add":-1}],"abilities":[
+      {"id":"frenzy","trigger":"on_attack","conditions":[{"type":"hp_below_percent","value":50}],"effects":[{"type":"bonus_damage","percent":60,"amount":1}]},
+      {"id":"last_stand","trigger":"on_hit_taken","conditions":[{"type":"hp_below_percent","value":25}],"effects":[{"type":"damage_reduction","percent":30}]}],"limitations":["Defense -1 at all times.","Fury only while HP is below half."]}},
+
+    {"content_id":"core:talent/lucky_star","version":1,"schema_version":1,"kind":"talent","name":"Phúc Tinh","description":"Fortune follows you: chests hold more, and the wild sometimes gives twice.","metadata":{"name_en":"Lucky Star","tags":["loot"]},"payload":{"rank":"S","unique":false,"awakening":{"weight":100},"abilities":[
+      {"id":"treasure_sense","trigger":"on_open","effects":[{"type":"extra_loot_roll"}]},
+      {"id":"lucky_spoils","trigger":"on_kill","conditions":[{"type":"chance_per_10000","value":3500}],"effects":[{"type":"extra_loot_roll"}]},
+      {"id":"lucky_find","trigger":"on_gather","conditions":[{"type":"chance_per_10000","value":2500}],"effects":[{"type":"extra_loot_roll"}]}]}},
+
+    {"content_id":"core:talent/undying","version":1,"schema_version":1,"kind":"talent","name":"Bất Tử Chi Thân","description":"Death has refused you before. A killing blow leaves you standing, a few times per life, at the price of a frailer body.","metadata":{"name_en":"Undying Body","tags":["survival","danger","trade-off"]},"payload":{"rank":"SS","unique":true,"awakening":{"weight":100},"passive":[{"type":"stat","stat":"max_hp","percent":-15}],"abilities":[
+      {"id":"refuse_death","trigger":"on_hit_taken","conditions":[{"type":"lethal"}],"limits":{"charges":2,"cooldown_turns":60},"effects":[{"type":"survive_lethal","hp":1}]},
+      {"id":"undying_recovery","trigger":"on_hit_taken","conditions":[{"type":"hp_below_percent","value":10}],"limits":{"cooldown_turns":60},"effects":[{"type":"heal","percent_of_max":20}]}],"limitations":["Max HP -15%.","Only 2 escapes from death per run, at most one every 60 turns."]}},
+
+    {"content_id":"core:talent/fate_reversal","version":1,"schema_version":1,"kind":"talent","name":"Nghịch Thiên Cải Mệnh","description":"You rewrite fate itself: some blows simply never happened, and every foe you slay adds its life to yours. Heaven exacts a toll of constant hunger and thirst.","metadata":{"name_en":"Fate Reversal","tags":["combat","growth","trade-off"]},"payload":{"rank":"SSS","unique":true,"awakening":{"weight":100},"abilities":[
+      {"id":"unwritten_blow","trigger":"on_hit_taken","conditions":[{"type":"chance_per_10000","value":2000}],"effects":[{"type":"negate_hit"}]},
+      {"id":"devour_fate","trigger":"on_kill","conditions":[{"type":"target_disposition","values":["hostile","neutral"]}],"effects":[{"type":"grow_stat","stat":"max_hp","amount":2,"max_stacks":25},{"type":"grow_stat","stat":"attack","amount":1,"max_stacks":15}]},
+      {"id":"heavens_toll","trigger":"on_turn","quiet":true,"conditions":[{"type":"every_turns","value":4}],"effects":[{"type":"need","need":"hunger","amount":1},{"type":"need","need":"thirst","amount":1}]}],"limitations":["Hunger and thirst grow about 25% faster.","Growth only from hostile or neutral foes, capped per stat."]}}
+  ]
+}

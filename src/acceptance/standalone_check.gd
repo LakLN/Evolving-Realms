@@ -52,6 +52,7 @@ func _write() -> void:
 	await _frame()
 	if not check(app.session != null and app._hud.visible, "Menu creates World and starts Run 1"):
 		return
+	await _dismiss_awakening("standalone-awakening.png")
 	var run_id: String = app.session.run.run_id
 	var start_chunk: Vector2i = Terrain.chunk_of(app.session.position)
 	var crossing := route(app.session, func(tile: Vector2i) -> bool: return Terrain.chunk_of(tile) != start_chunk)
@@ -129,6 +130,7 @@ func _write() -> void:
 	await _frame()
 	if not check(app.session != null and app.session.run.run_id != run_id, "Start independent Run 2 in the same World"):
 		return
+	await _dismiss_awakening()
 	check(app.session.run.state.inventory.is_empty() and not app.session.is_consumed(chest.instance_id) and not app.session.is_consumed(resource.instance_id), "Run 2 has empty inventory and reset objects")
 	var run2_resource := await _use_nearest("gather")
 	check(not run2_resource.is_empty(), "Run 2 gathers independently")
@@ -138,6 +140,17 @@ func _write() -> void:
 	var file := FileAccess.open(_expected_path, FileAccess.WRITE)
 	file.store_string(JSON.stringify({"world_id": app._selected_world(), "blueprint": app.store.load_world(app._selected_world()).blueprint, "run_1": run_id, "run_2": run2_id, "chest": chest.instance_id, "creature": prey.instance_id, "state_1": snapshot, "state_2": _state_of(run2_id)}))
 	file.close()
+
+func _dismiss_awakening(screenshot: String = "") -> void:
+	## A new Run reveals its awakened talent; movement waits until Enter closes it.
+	var held: Array = app.session.run.state.character.get("talents", [])
+	check(held.size() == 1 and app._talent_panel.visible and app._talent_title.text == "TALENT AWAKENED" and app._talent_rank.text.begins_with(held[0].rank + " · "), "New run awakens one talent and shows it with its rank")
+	if not screenshot.is_empty():
+		await _capture(screenshot)
+	var turn := int(app.session.run.state.turn)
+	app.move_player(Vector2i.RIGHT)
+	await _key(KEY_ENTER)
+	check(not app._talent_panel.visible and int(app.session.run.state.turn) == turn, "Awakening screen blocks movement; Enter closes it")
 
 func _crash() -> void:
 	var expected: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(_expected_path))
@@ -191,6 +204,9 @@ func _legacy() -> void:
 				var old: Dictionary = before.mutations[id]
 				kept = kept and after.mutations.has(id) and (same(after.mutations[id], old) if not old.has("creature") else (not old.dead or after.mutations[id].dead))
 			check(same(after.inventory, before.inventory) and kept, "Legacy run %s keeps inventory, object states and dead creatures" % header.run_id.left(8))
+			# Runs saved before talents existed awaken once on first load; never again.
+			var again := Session.new(app.store)
+			check(again.resume(header.run_id) and not after.talents.is_empty() and same(app.store.load_run(header.run_id).state.character.talents, after.talents) and again.awakened_now.is_empty(), "Legacy run %s awakened one talent that stays fixed on reload" % header.run_id.left(8))
 	check(resumed > 0, "At least one legacy run resumes")
 
 func _continue(run_id: String) -> bool:
@@ -247,7 +263,7 @@ func _state(session: RefCounted) -> Dictionary:
 
 func _state_of(run_id: String) -> Dictionary:
 	var loaded: Dictionary = app.store.load_run(run_id)
-	return {} if loaded.is_empty() else {"revision": loaded.revision, "position": loaded.state.character.position, "turn": loaded.state.turn, "inventory": loaded.state.inventory, "mutations": loaded.state.entity_mutations, "explored": loaded.state.explored.size(), "equipment": loaded.state.character.get("equipment", {}), "progression": loaded.state.character.get("progression", {})}
+	return {} if loaded.is_empty() else {"revision": loaded.revision, "position": loaded.state.character.position, "turn": loaded.state.turn, "inventory": loaded.state.inventory, "mutations": loaded.state.entity_mutations, "explored": loaded.state.explored.size(), "equipment": loaded.state.character.get("equipment", {}), "progression": loaded.state.character.get("progression", {}), "talents": loaded.state.character.get("talents", [])}
 
 func _frame() -> void:
 	await app.get_tree().process_frame
@@ -335,7 +351,7 @@ static func route_to_object(session: RefCounted, interaction: String, excluded: 
 	var candidates := {}
 	for chunk in session.objects.chunks.values():
 		for instance in chunk:
-			if instance.instance_id in excluded or session.is_consumed(instance.instance_id) or session.objects.definition_for(instance).payload.interaction != interaction or (not content_id.is_empty() and instance.content_id != content_id):
+			if instance.instance_id in excluded or session.is_consumed(instance.instance_id) or not session.perceives(instance) or session.objects.definition_for(instance).payload.interaction != interaction or (not content_id.is_empty() and instance.content_id != content_id):
 				continue
 			var point := Vector2i(int(instance.position.x), int(instance.position.y))
 			for offset in [Vector2i.ZERO] + Spawn.DIRECTIONS:
