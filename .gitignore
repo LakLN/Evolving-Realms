@@ -1,0 +1,9 @@
+.godot/
+.tools/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+builds/
+data/*.sqlite*
+.env
