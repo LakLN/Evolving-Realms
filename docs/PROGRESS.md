@@ -8,7 +8,7 @@ regression with OpenGL, export and old-save checks only at milestone ends or fou
 changes. Invariant-guarding suites (items, Blueprint/Run State, save/load, permadeath,
 trigger loops, repeated actions, migrations) are never skipped when affected. No tests
 were removed. `scripts/test.ps1` gained `-Only` and `-Smoke`; the default is still the
-full regression. Verified: `.\scripts	est.ps1 -Only data` ran exactly import, data
+full regression. Verified: `.\scripts\test.ps1 -Only data` ran exactly import, data
 (96/96) and startup. AGENTS.md and README updated.
 
 ## Current checkpoint: Milestone 02 Checkpoint E complete (skills, skill books, abilities)
