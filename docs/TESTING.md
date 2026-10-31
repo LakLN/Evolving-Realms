@@ -1,0 +1,53 @@
+# Testing policy — lightweight during development
+
+Evolving Realms is in single-player gameplay and core-logic development, not release
+preparation. Favor feature speed while always protecting the invariants below.
+No test is deleted: every existing suite stays in the full regression.
+
+## When to run what
+
+| Moment | Run | Not required |
+|---|---|---|
+| While coding | Godot import (syntax), the suites that cover the code you touched: `.\scripts\test.ps1 -Only <suite>` | full regression, export, screenshots |
+| End of a checkpoint | logic suite of the new feature + related suites + invariant smoke + startup: `.\scripts\test.ps1 -Smoke -Only <new>,<related>`; check basic save/load when state changes | exe export, full OpenGL suite |
+| End of a milestone, or a foundational change (persistence, schema/migration, turn order, generation, shared engines) | `.\scripts\test.ps1 -Render -Service -Export`; old-save compatibility on the exported exe when persistence or data changed (see PROGRESS for the worktree method) | — |
+
+`-Smoke` adds `data` (SQLite persistence, migrations, rollback) and `integration` (the
+real acceptance flow: save, abrupt kill, reload without duplicates; legacy saves).
+`import` and `startup` always run. Names for `-Only` are the check names printed by the
+runner (e.g. `skills`, `talent-gameplay`, `rendered-skills`). Run a UI/gameplay suite or
+take a screenshot only when the UI changed significantly.
+
+## Invariants that are never skipped
+
+When a change can affect one of these, run the covering suites even in a quick run.
+
+| Invariant | Covered by |
+|---|---|
+| Items lost or duplicated | `interactions`, `equipment`, `skills` (books), `integration` |
+| World Blueprint / Run State changed wrongly | `world`, `data`, `integration` |
+| Save/load broken | `data`, `integration` (+ the feature suite's reload checks) |
+| Permadeath run continuing after death | `combat`, `survival` |
+| Talent/skill triggers looping or chaining | `talents`, `skills` |
+| An action applied more than once | `interactions`, `combat`, `skills`, `integration` |
+| Migration/schema losing data | `data` |
+
+## Writing tests
+
+- Test business rules, risky edge cases, interactions between systems, and every real
+  bug found (regression check).
+- Do not add duplicate checks to raise PASS counts; a few high-value checks per feature.
+- No refactors or optimizations only to raise coverage.
+
+## UI and graphics
+
+Placeholders are fine. Fix UI immediately only when something cannot be operated, key
+content is unreadable, controls are hidden, or the UI breaks gameplay. Record cosmetic
+issues in the backlog below instead.
+
+## Cosmetic backlog
+
+- Skills panel leaves empty space when few skills are learned.
+- The HUD info line is trimmed with "…" when coordinates/counters get long; a wider or
+  two-row HUD would show everything.
+- Rank, quality and talent colors are placeholders.

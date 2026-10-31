@@ -114,8 +114,10 @@ PowerShell commands from the repository root:
 
 ```powershell
 .\scripts\godot.ps1 --headless --editor --import
-.\scripts\test.ps1
-.\scripts\test.ps1 -Render -Service -Export
+.\scripts\test.ps1 -Only skills                 # while coding: touched suites (+ import, startup)
+.\scripts\test.ps1 -Smoke -Only skills,talents  # end of a checkpoint
+.\scripts\test.ps1                              # full headless regression
+.\scripts\test.ps1 -Render -Service -Export     # end of a milestone
 .\scripts\export.ps1 -Verify -Render
 .\scripts\godot.ps1 --editor
 ```
@@ -127,7 +129,7 @@ saves, menu/input/rendering integration and startup; it fails if a suite fails o
 emits unexpected engine errors. `-Render`
 adds windowed OpenGL gameplay and screenshots in `.tools/`. `-Service` requires
 the optional Python venv described below. `-Export` rebuilds and verifies the
-standalone exe. Logs are `.tools/test-*.log` and `.tools/standalone-*.log`.
+standalone exe. When to run which is defined in [docs/TESTING.md](docs/TESTING.md). Logs are `.tools/test-*.log` and `.tools/standalone-*.log`.
 
 ## Standalone build
 

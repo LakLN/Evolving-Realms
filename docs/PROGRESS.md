@@ -1,5 +1,16 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
+## Process update (after Checkpoint E): lightweight testing
+
+From the next checkpoint, testing follows [TESTING.md](TESTING.md): touched suites while
+coding, feature + related suites + `-Smoke` + startup at the end of a checkpoint, full
+regression with OpenGL, export and old-save checks only at milestone ends or foundational
+changes. Invariant-guarding suites (items, Blueprint/Run State, save/load, permadeath,
+trigger loops, repeated actions, migrations) are never skipped when affected. No tests
+were removed. `scripts/test.ps1` gained `-Only` and `-Smoke`; the default is still the
+full regression. Verified: `.\scripts	est.ps1 -Only data` ran exactly import, data
+(96/96) and startup. AGENTS.md and README updated.
+
 ## Current checkpoint: Milestone 02 Checkpoint E complete (skills, skill books, abilities)
 
 Continued from 86f9388 (clean tree) on explicit user approval of Checkpoint E only.

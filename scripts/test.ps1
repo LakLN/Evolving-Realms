@@ -1,10 +1,20 @@
-param([switch]$Render, [switch]$Service, [switch]$Export)
+## Default: full regression (every suite). Lightweight runs during development
+## (see docs/TESTING.md):
+##   -Only skills,talents      only these checks (by name, e.g. rendered-skills)
+##   -Smoke                    adds the invariant smoke set: data (persistence and
+##                             migrations) and integration (real save/crash/load,
+##                             no duplication, legacy saves)
+## import and startup always run.
+param([switch]$Render, [switch]$Service, [switch]$Export, [string[]]$Only = @(), [switch]$Smoke)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $projectRoot
+$selected = @($Only | ForEach-Object { $_ -split ',' } | Where-Object { $_ -ne '' })
+if ($Smoke) { $selected += @('data', 'integration') }
 
 function Invoke-EngineCheck {
     param([string]$Name, [string[]]$EngineArgs, [string]$Summary = '', [string[]]$ExpectedErrors = @())
+    if ($selected.Count -gt 0 -and $Name -notin @('import', 'startup') -and $Name -notin $selected) { return }
     $output = & "$PSScriptRoot/godot.ps1" @EngineArgs
     $code = $LASTEXITCODE
     $log = ($output | Out-String)

@@ -10,7 +10,13 @@ Seeded generation must not depend on chunk visit order. Version algorithm change
 Preserve unsupported content as pending capability; never execute generated code.
 Mechanic integration requires tests and user approval in a future evolution workflow.
 Keep modules small; no speculative framework or distributed services.
-Run relevant tests and Godot CLI import before declaring a checkpoint complete.
+Testing is lightweight during development; follow docs/TESTING.md. While coding run import and
+the touched suites only (scripts/test.ps1 -Only ...). End of checkpoint: feature + related suites,
+-Smoke and startup; export and the full OpenGL suite are not required. End of milestone or a
+foundational change: full regression with -Render -Service -Export and old-save checks.
+Never skip tests guarding item loss/duplication, Blueprint/Run State, save/load, permadeath,
+trigger loops, repeated actions or migrations. No duplicate tests for PASS counts; never delete
+existing tests. Fix UI now only if unusable/unreadable/hidden/gameplay-breaking; log cosmetics.
 Update docs/PROGRESS.md with actual commands, results, gaps and next steps; commit tested checkpoints.
 Exclude tools, caches, saves, secrets and builds from Git. Do not rewrite Git history.
 Use src/data/game_store.gd for gameplay persistence; no mandatory HTTP or Python.
@@ -27,4 +33,5 @@ Talent data never executes code: new effect types need engine handlers, tests an
 Preserve creatures-pack v1 definitions and creature-generation v1 identity.
 Preserve starter-pack v1 definitions and object-generation v1 identity; never overwrite established content.
 Terrain v1 is frozen by golden fixtures; new algorithms need a new generation version.
-Run scripts/test.ps1 for Godot regressions; use -Render for actual OpenGL gameplay and -Service for optional Python checks.
+scripts/test.ps1 runs the full regression by default; -Only/-Smoke select subsets, -Render adds OpenGL,
+-Service optional Python checks, -Export the standalone exe verification.
