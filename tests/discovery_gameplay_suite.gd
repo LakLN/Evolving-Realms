@@ -41,6 +41,8 @@ func run_test() -> void:
 		return finish()
 	session.relocate(beside(session, shrine))
 	app.map_view.refresh()
+	await key(KEY_SPACE)
+	check(not session.places.discovered(session, shrine.instance_id) and app._interaction_hint.text.contains("X: search"), "Near an undiscovered buried place the hint suggests searching, without revealing it")
 	await key(KEY_X)
 	check(session.places.discovered(session, shrine.instance_id) and app._notice.text.contains("DISCOVERED: Buried shrine"), "X searches and the notice names the hidden shrine")
 	check(app._interaction_hint.text.contains("Offer a herb") and app._interaction_hint.text.contains("Buried shrine"), "Hint shows the place, its state and the next interaction")

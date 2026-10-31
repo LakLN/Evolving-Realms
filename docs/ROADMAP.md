@@ -69,7 +69,12 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
     triggers, ordered and exclusive steps, item costs, outcomes on existing handlers),
     `locations-v1` layer on ledger v2 region records, per-Run discovery/resolution, X
     search, five sample places, mock AI location end to end. No migration.
-  - Later checkpoints: not started; require user approval.
+  - Final integration (complete): integrated play audit, chunk-mask fog persistence
+    (save time independent of explored tiles), batched mutation checks, readable side
+    panels, search cue for buried places, offline AI/F–I acceptance inside the exported exe,
+    balance probe and old-save checks, playtest guide. No SQL migration.
+
+Milestone 02 is complete. Milestone 03 has not started and needs approval.
 03: deeper talent/skill mechanics (evolution, fusion, cultivation) as approved; talent
 awakening (02 D) and skill books with learning requirements (02 E) were delivered early.
 04: real provider, region content, quests, context, dependencies and persistence.

@@ -1,7 +1,8 @@
 # Agent workflow
 
 Read docs/PROJECT_VISION.md, ARCHITECTURE.md, ROADMAP.md and PROGRESS.md before changes.
-Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment), D (talents), E (skills), F (effects/elements), G (AI content foundation), H (AI world integration/encounters) and I (discoveries/events) are complete.
+Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment), D (talents), E (skills), F (effects/elements), G (AI content foundation), H (AI world integration/encounters) and I (discoveries/events) are complete;
+Milestone 02 is complete (final integration and playtest build). Do not start Milestone 03 without approval.
 Do not start a later Milestone 02 checkpoint or later milestones without user approval.
 Keep Godot gameplay local and independent of Python, internet, keys and AI providers.
 Use stable content IDs; separate blueprint, definitions, instances and per-run mutations.

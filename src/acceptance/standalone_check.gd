@@ -5,6 +5,7 @@ extends RefCounted
 const Spawn = preload("res://src/world/spawn_selector.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Session = preload("res://src/run/exploration_session.gd")
+const Features = preload("res://src/acceptance/feature_check.gd")
 var app: Control
 var checks := 0
 var failures := 0
@@ -24,6 +25,8 @@ func run(main: Control, phase: String) -> void:
 		await _verify()
 	elif phase == "legacy":
 		_legacy()
+	elif phase in ["features", "features-verify"]:
+		await Features.new().run(self, app, phase) # Milestone 02 F–I in the exe.
 	else:
 		check(false, "Known acceptance phase: " + phase)
 	if app.session != null:

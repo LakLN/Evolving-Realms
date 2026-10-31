@@ -97,11 +97,11 @@ corner sight; it is not a strict tactical shadowcasting system. Run.explored is 
 in-memory coordinate set; visible is transient. Visible cells have no overlay,
 remembered cells get a dark translucent tile, unseen cells an opaque tile.
 
-Save writes unique `{x,y}` entries (discovery order since Milestone 02 B; older saves
-keep their order) to the existing state.explored array,
+Save writes one 32x32 bitmask record per explored chunk to the existing state.explored
+array (Milestone 02 final; legacy `{x,y}` tile lists still load and convert on save),
 current position and turns; inventory, stats and entity mutations are preserved.
-Expected revision behavior is unchanged. Bounded terrain memory does not bound the
-growing explored set/save size: chunked fog persistence is future optimization.
+Expected revision behavior is unchanged. Save size now grows with explored chunks
+(about 210 bytes each), not tiles; the in-memory explored set still grows with tiles.
 
 ## UI lifecycle and failure behavior
 
@@ -139,4 +139,5 @@ automated input/renderer verification, not a claim of human manual playtesting.
 
 Checkpoint E exports and verifies the standalone Windows build (README, Standalone
 build). Fog cost measured in E: about 9 new tiles and ~200 bytes of save JSON per
-exploratory step; 100k remembered tiles save in ~2.5 s and resume in ~1.7 s.
+exploratory step; 100k remembered tiles saved in ~2.5 s and resumed in ~1.7 s. With
+chunk masks (Milestone 02 final) see the before/after table in PROGRESS.

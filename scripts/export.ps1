@@ -26,7 +26,7 @@ foreach ($notice in @('GODOT-LICENSE.txt', 'GODOT-COPYRIGHT.txt')) {
     else { Write-Warning "Missing .tools/$notice; add Godot's license notices before distributing." }
 }
 @'
-Evolving Realms - Milestone 01 (Windows x64)
+Evolving Realms - Milestone 02 playtest build (Windows x64)
 
 Run EvolvingRealms.exe. Keep EvolvingRealms.pck and the libgdsqlite DLL beside it.
 No Python, server, internet or account is needed.
@@ -34,7 +34,8 @@ No Python, server, internet or account is needed.
 Saves: %APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite
 (shared with runs started from the Godot editor; never stored in this folder).
 
-Controls: WASD / arrows move (walk into a hostile creature to attack), E gather/open/pick up,
+Controls: WASD / arrows move (walk into a hostile creature to attack), E gather/open/pick up
+or interact with a known special place, X search the surroundings (one turn),
 F attack adjacent target, Tab next target, Space wait, R rest, I inventory (U use/equip),
 C character & gear (U unequip), T talent sheet, K skills (1-9 use a skill;
 Tab / WASD choose a target, Enter confirms, Esc cancels),
@@ -43,10 +44,16 @@ Each new run awakens one random talent (rank F..SSS), shown at the start; it is 
 with the run and never rerolled by loading. Manuals and scrolls found in chests teach
 skills: select one in the inventory and press U to learn it. Skills cost Energy (blue bar).
 Watch Hunger/Thirst under the HP bar: eat berries/meat, drink spring water, apply herbs.
+Special places (ruins, springs, shrines, hidden veins, miasma vents) show as diamonds once
+discovered; some are hidden until you search (X) or have the right talent/skill/stats.
+Content created with the AI developer tool is reviewed and activated beforehand and then
+plays fully offline; new content only appears in regions nobody has explored yet.
+A playtest guide (controls, how to play, checklist) is in PLAYTEST_GUIDE.md beside this file.
 Normal mode: autosaves when safe; death reloads your last save.
 Permadeath: saves every risky action (and every 10 safe ones); death ends the run.
 Closing the window saves first. If saving fails, close again to quit without saving.
 '@ | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $build 'README.txt')
+Copy-Item 'docs/PLAYTEST_GUIDE.md' (Join-Path $build 'PLAYTEST_GUIDE.md')
 Write-Host "PASS export: $build"
 Get-ChildItem -LiteralPath $build | ForEach-Object { Write-Host ("  {0,-52} {1,12:N0}" -f $_.Name, $_.Length) }
 
@@ -74,6 +81,22 @@ foreach ($phase in @('write', 'crash', 'verify')) {
         Write-Host 'PASS standalone crash (process terminated with unsaved actions)'
         continue
     }
+    $summary = [regex]::Match($result.Log, "STANDALONE ACCEPTANCE ${phase}: \d+ checks, \d+ failures \(\w+\)").Value
+    if ($result.Code -ne 0 -or $summary -notmatch ' 0 failures' -or $result.Log -match '(?m)^(ERROR:|SCRIPT ERROR:)') {
+        Write-Host $result.Log
+        throw "Standalone $phase failed (exit $($result.Code)). See .tools/standalone-$phase.log"
+    }
+    Write-Host "PASS standalone $phase - $summary"
+}
+# Milestone 02 F–I inside the exe: activate offline mock bundles (files written by the
+# deterministic mock; gameplay never calls Python or HTTP), play them, restart, verify.
+$fixtures = Join-Path $work 'fixtures'
+& '.venv/Scripts/python.exe' -I scripts/mock_fixtures.py $fixtures | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Could not write offline mock fixtures' }
+$featureDb = Join-Path $work 'features.sqlite'
+foreach ($phase in @('features', 'features-verify')) {
+    $result = Invoke-Standalone $phase ($display + @('--quit-after', '60000', '--', "--database=$featureDb", "--acceptance=$phase", "--fixtures=$fixtures"))
+    $result.Log | Set-Content -Encoding UTF8 -LiteralPath ".tools/standalone-$phase.log"
     $summary = [regex]::Match($result.Log, "STANDALONE ACCEPTANCE ${phase}: \d+ checks, \d+ failures \(\w+\)").Value
     if ($result.Code -ne 0 -or $summary -notmatch ' 0 failures' -or $result.Log -match '(?m)^(ERROR:|SCRIPT ERROR:)') {
         Write-Host $result.Log

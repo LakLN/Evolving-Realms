@@ -1,6 +1,134 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint I complete (discoveries, special places, environmental events)
+## Current state: Milestone 02 complete — final integration and playtest build
+
+From clean `36c6988`. Scope: integration audit, stability/persistence, save performance,
+first-pass balance probe, UI usability, offline AI checks, full regression, Windows export
+and exe acceptance, playtest guide. Milestone 03 not started. No SQL migration
+(user_version 2, record schema 1); no generation-version change; no pack edits.
+
+### Baseline before changes
+
+`.\scripts\test.ps1 -Render -Service -Export` on `36c6988`: everything passed (all logic,
+headless and OpenGL gameplay suites, Python provider/CLI, FastAPI, export, exe write 37/37
+→ abrupt kill → verify 9/9, default-save refusal). No failing or falsely passing suite
+was found; gaps were in what the exe acceptance covered (nothing from F–I).
+
+### Bugs found and fixed
+
+- **Authoring on a never-played World** (found by the new exe acceptance): a World
+  created in the menu had not installed the core packs, so proposals that reference core
+  statuses were judged "missing dependency" and could not be confirmed. The pipeline now
+  installs the established packs idempotently before drafting. Regression check in
+  `ai-content` (35 checks).
+- **Side panels covering the bottom notices** (OpenGL screenshots): with active statuses
+  the Skills panel grew over the notice lines; Inventory/Character buttons overlapped long
+  notices. Skills/Inventory/Character now have fixed frames above the notice area and scroll
+  long content; active statuses share one line; the inventory comparison and Equip button
+  stay visible.
+- **Buried places were practically undiscoverable**: search-only places gave no cue, so
+  finding one meant pressing X blindly. A vague hint ("The ground nearby looks
+  disturbed... X: search") now appears when one is within search range and in sight; it
+  never reveals the place or its tile. Covered in `discovery-gameplay`.
+
+### Save performance (dev machine, `tests/save_benchmark.gd`)
+
+Bottleneck at 20k tiles (~244 ms per save): recursive JSON validation of every explored
+tile (81 ms), per-tile position checks (43 ms), deep copy (16 ms), stringify (33 ms), SQL.
+Fix (no SQL migration): `explored` entries may now be 32x32 chunk bitmasks
+(`src/run/fog_mask.gd`); saves write chunk records only and re-encode just the chunks
+changed since the last save. Legacy tile lists load and convert on the next save; older
+builds cannot open new saves (no downgrade). Also: shallow body copy in `save_run`, one
+`json_each` query instead of one SELECT per entity mutation.
+
+| Explored tiles | Save before | Steady save after | Fog JSON before → after |
+|---|---|---|---|
+| 1,000 | 14 ms | 3 ms | 18.6 KB → 0.8 KB |
+| 5,000 | 85 ms | 5 ms | 93 KB → 2.4 KB |
+| 20,000 | 244 ms | 4 ms | 371 KB → 6 KB |
+| 100,000 | 960 ms | 9 ms | 1.86 MB → 25 KB |
+
+195 touched objects add ~15 ms per save. Resume takes ~1.0–1.3 s at every size: it is
+dominated by generating the 9 surrounding chunks (objects ~250 ms, creatures ~190 ms,
+terrain, places), the same work that causes a ~150–200 ms pause when crossing a chunk
+border. Left as is (generation v1 is frozen); recommended for Milestone 03.
+Integration now checks compact chunk records, a 100k-tile save under 500 ms, legacy
+conversion, identical reload and refusal of a malformed mask. Region ledger rows grow
+one per established chunk; proposal records and mutations grow with play (no pruning).
+
+### Balance probe (`tests/playtest_sim.gd`, bot through real `perform_action`)
+
+15 runs: 6 cautious + 6 hunting (normal, 1,500 turns) + 3 hunting permadeath (1,200 turns).
+- No deaths; minimum HP 40–85 %. Hunting runs: 3–15 kills, level 3–7, attack 11–20.
+- Survival is never a trap: 4–9 meals and 5–7 drinks per run were enough; no starvation.
+- 1–6 special places found per run; no stuck states; save/reload after each run exact.
+- Verdict: the game is on the easy side (wolves are rare and fall behind player growth).
+  Wolf stats and spawn rates live in the frozen creatures-pack v1, so no numbers were
+  changed; this is the main question for the human playtest (see PLAYTEST_GUIDE).
+  No infinite heal/damage loop or early-run breaking reward was observed.
+
+### Exe acceptance additions
+
+`export.ps1 -Verify` now also runs `features` / `features-verify` in the exported exe with
+a separate temp database: three offline mock bundles (`scripts/mock_fixtures.py`) are
+validated, confirmed and activated inside the exe (no Python/HTTP at gameplay), a Run is
+started, the AI creature is found in a newly established region and killed with F (its
+slow status and trophy loot apply), an AI place is revealed with Space and resolved with E,
+a generated manual is learned with U, Ctrl+S saves; after a restart the Run matches
+exactly, the encounter region is unchanged, the place pays nothing again and the creature
+stays dead. The build folder now ships `PLAYTEST_GUIDE.md` and an updated README.
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Render -Service -Export     # final, after all changes
+```
+
+All passed (exit 0): import; data 96; world 49; gameplay 22; interactions 66 + UI 17;
+integration 41 (7 new fog checks); combat 75 + UI 20; survival 60 + UI 10; equipment 68 +
+UI 15; talents 126 + UI 16; skills 105 + UI 21; effects 49 + UI 9; Python provider/CLI
+tests; ai-content 35; ai-world 41; discoveries 40; discovery UI 6; startup; OpenGL:
+discoveries 7, effects 10, gameplay 24, interactions 20, combat 23, survival 12,
+equipment 17, talents 19, skills 24; FastAPI `/health` and `/generate` (mock); export;
+exported exe (OpenGL window, temp working folder and database): write 37/37 → abrupt
+kill → verify 9/9 → features 17/17 → features-verify 5/5 → default-save refusal.
+
+Also run:
+- Old saves in the new exe: acceptance saves written by the code of `36c6988` (I),
+  `6f4874c` (F) and `0eeeb4f` (end of Milestone 01) from temporary git worktrees (removed
+  afterwards), copies opened with `--acceptance=legacy`: 7/7 each. Their tile lists
+  converted to chunk masks with no tile lost (1327 → 1332 and 189 → 201 after the phase's
+  move; 519 → 519).
+- The build folder copied elsewhere and run from another working folder: write 30/30.
+- Build contents: exe, pck, release SQLite DLL, licenses, README.txt, PLAYTEST_GUIDE.md;
+  no tests, `.tools` files or databases inside the pck.
+- `tests/save_benchmark.gd` and `tests/playtest_sim.gd` as described above; the developer
+  CLI via the offline Python tests. Screenshots inspected: effects, skills, inventory,
+  character, death, SSS awakening, discoveries.
+
+### Remaining limits
+
+- First-pass balance only; the game is easy for a careful player (see above).
+- ~1 s to start/resume a Run and ~0.15–0.2 s when crossing a chunk border (chunk generation).
+- New saves cannot be opened by builds older than this one.
+- Proposal records, region rows and entity mutations grow without pruning.
+- Cosmetic backlog in TESTING.md; placeholder art, no sound.
+- No human hand playthrough is claimed; all play was automated real-engine input.
+
+### Recommended for Milestone 03
+
+1. Human playtest with the guide; tune pressure (creature density/stats through a new
+   versioned pack or encounter rules, not by editing v1).
+2. Faster chunk generation (cache per chunk or move hash loops to native/compiled code).
+3. Quest/chain layer on top of ordered place interactions; more place and event variety.
+4. In-game review UI for AI proposals; pruning/archiving of old proposal records.
+5. Creature behaviours (packs, ranged), crafting from the many gathered materials.
+
+### Next step
+
+Stop. The user playtests the build. Milestone 03 needs explicit approval.
+
+## Milestone 02 Checkpoint I record (historical)
 
 From clean `67f4b6b`. Scope I only; no later checkpoint started. No SQLite migration
 (user_version 2, record schema 1), no terrain/object/creature-generation change, no
@@ -59,10 +187,6 @@ other OpenGL suites, `-Service`, exe export.
 - No repeatable, timed, weather or ambient random events; places never block or edit terrain.
 - Sense-radius talent markers do not show places yet.
 - Future authored place sets need a new layer tag so established regions stay intact.
-
-### Next step
-
-Stop. The user reviews this checkpoint. Any later checkpoint needs explicit approval.
 
 ## Milestone 02 Checkpoint H record (historical)
 

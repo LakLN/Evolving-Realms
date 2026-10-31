@@ -6,6 +6,7 @@ const Context = preload("res://src/content/authoring_context.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Ledger = preload("res://src/world/region_ledger.gd")
 const Encounters = preload("res://src/world/world_encounters.gd")
+const Packs = preload("res://src/content/starter_pack.gd")
 var store: RefCounted
 var validator := Validator.new()
 var last_error := ""
@@ -19,8 +20,19 @@ func latest(world_id: String, id: String) -> Dictionary:
 		if header.content_id == id and header.kind == "generation_proposal": version = maxi(version, int(header.version))
 	return store.content.load_definition(world_id, id, version) if version > 0 else {}
 
+func _ensure_packs(world_id: String) -> bool:
+	## A World created in the menu but never played has not installed the established
+	## packs yet; proposals may reference them (statuses, items). Idempotent, append-only.
+	var packs := Packs.new()
+	for path in Packs.ALL_PATHS:
+		if not packs.install(store.content, world_id, path):
+			last_error = packs.last_error
+			return false
+	return true
+
 func draft(world_id: String, envelope: Variant) -> Dictionary:
 	if store.load_world(world_id).is_empty(): return _fail(store.last_error)
+	if not _ensure_packs(world_id): return {}
 	if not envelope is Dictionary or not Data.valid(envelope) or JSON.stringify(envelope).to_utf8_buffer().size() > 350000 or envelope.get("schema_version") != 1 or not envelope.get("request") is Dictionary or not envelope.request.get("request_id") is String or envelope.request.request_id.is_empty() or envelope.request.request_id.length() > 128 or not envelope.get("provenance") is Dictionary:
 		return _fail("Invalid generation envelope/request/provenance")
 	var id := "proposal:" + str(envelope.request.request_id).sha256_text().substr(0, 32)

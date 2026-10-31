@@ -1,13 +1,16 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 02, Checkpoint F complete** (Milestone 01 complete).
+Current state: **Milestone 02 complete** (playtest build; Milestone 01 complete).
+New to the game? Start with [docs/PLAYTEST_GUIDE.md](docs/PLAYTEST_GUIDE.md).
 Create/select a world, explore seeded biomes, gather resources, open chests, meet
 creatures by biome, fight them turn by turn on the map, manage hunger and thirst,
 eat, drink, heal and rest, find equipment in 10 quality tiers, equip it and level up,
 awaken a random talent (rank F to SSS) that changes how each run plays, find skill
 manuals and learn active, passive and triggered skills that cost Energy,
 use elemental skills, damage/healing over time, cleansing and resistance,
+discover special places, hidden secrets and environmental events (X searches),
+meet reviewed AI-authored creatures, items, skills and places that play offline,
 and face death in normal or permadeath runs, in the editor or as a standalone
 Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
@@ -94,7 +97,15 @@ editor's F5 (Run Project). F5 belongs to the editor; the game saves with **Ctrl+
    Window close also saves. If a save fails, the game stays open and reports the error;
    closing again quits *without* saving (only changes since the last save are lost).
    A crash or forced kill returns to the last manual save or autosave.
-13. Choose a saved run and **Continue selected run**, or create another run in the
+13. Special places (Milestone 02 I): ruins, springs, shrines, spirit veins and miasma vents
+   appear as diamonds once discovered. Some are visible from afar, some only nearby, some
+   only with a perceptive talent, a skill or enough attack, and buried ones only by
+   searching (**X**, one turn; a hint appears when the ground nearby looks disturbed).
+   Next to a known place the bottom line shows `E: <action> — <place> [state] (needs …)`.
+   Places can have ordered steps, item costs or a choice that closes the alternative;
+   rewards and consequences happen once per run. See
+   [docs/DISCOVERIES_AND_EVENTS.md](docs/DISCOVERIES_AND_EVENTS.md).
+14. Choose a saved run and **Continue selected run**, or create another run in the
    same world. Geography stays consistent; inventory, discovery, object and creature
    state are independent per run. Chests and creatures pay only once per run and reload
    cannot reroll loot or revive killed creatures.

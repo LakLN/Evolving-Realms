@@ -7,6 +7,7 @@ extends RefCounted
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
 const Data = preload("res://src/data/json_data.gd")
+const FogMask = preload("res://src/run/fog_mask.gd")
 const RECORD := {"content_id": "core:region_record", "version": 1}
 const BASELINE_ID := "region:v1/baseline"
 const LEDGER_VERSION := 2
@@ -109,10 +110,7 @@ func seal_baseline(store: RefCounted) -> bool:
 			return _fail(store.last_error)
 		# Explored tiles only: every saved Run stores its initial sight, while a Run being
 		# created right now has explored nothing yet and must not be sealed at revision 0.
-		for tile in run.state.get("explored", []):
-			if not Data.position(tile):
-				continue
-			var center := Terrain.chunk_of(Vector2i(int(tile.x), int(tile.y)))
+		for center in FogMask.chunks(run.state.get("explored", [])): # Tiles or chunk masks.
 			for y in range(center.y - 1, center.y + 2):
 				for x in range(center.x - 1, center.x + 2):
 					chunks[Vector2i(x, y)] = true

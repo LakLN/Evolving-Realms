@@ -118,6 +118,18 @@ func search(session: RefCounted) -> Array:
 	events.push_front({"type": "search", "found": found})
 	return events
 
+func search_cue(session: RefCounted) -> bool:
+	## A vague cue (never the place or its tile) when an undiscovered search-only place
+	## is within searching range and in sight, so X is worth pressing.
+	for instance in layer.loaded():
+		if discovered(session, instance.instance_id) or layer.definition_for(instance).payload.get("discovery", {}).get("mode") != "search":
+			continue
+		var tile := Vector2i(int(instance.position.x), int(instance.position.y))
+		var rule: Dictionary = layer.definition_for(instance).payload.discovery
+		if session.visible.has(tile) and maxi(absi(tile.x - session.position.x), absi(tile.y - session.position.y)) <= maxi(int(rule.get("radius", 1)), SEARCH_RADIUS):
+			return true
+	return false
+
 func _discover(session: RefCounted, instance: Dictionary) -> Array:
 	if not layer.materialize(instance):
 		return [{"type": "location_error", "error": layer.last_error}]

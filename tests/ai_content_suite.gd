@@ -171,6 +171,11 @@ func _initialize() -> void:
 	bad.version = 2
 	check(store.content.register_batch(world.world_id, [first, bad]).is_empty() and store.content.load_definition(world.world_id, first.content_id, 1).is_empty(), "Failed batch rolls back earlier definitions without damaging saves")
 	check(Acceptance.same(store.load_run(run_id).state, snapshot), "All negative authoring cases leave the saved Run intact")
+	# Regression (Milestone 02 final): a World created in the menu but never played had
+	# no core packs, so proposals referencing core statuses were wrongly "missing".
+	var fresh: Dictionary = store.create_world("Never played", 99, 1, Packs.blueprint(99))
+	var fresh_draft: Dictionary = Pipeline.new(store).draft(fresh.world_id, request(envelope, "fresh-world", envelope.content.definitions))
+	check(not fresh_draft.is_empty() and fresh_draft.payload.report.status == "valid", "A never-played World can review proposals that reference core content")
 	store.close()
 	print("M02 CHECKPOINT G AI CONTENT: %d checks, %d failures" % [checks, failures])
 	quit(0 if failures == 0 else 1)

@@ -12,6 +12,7 @@ const Roster = preload("res://src/run/creature_roster.gd")
 const Ledger = preload("res://src/world/region_ledger.gd")
 const Locations = preload("res://src/world/world_locations.gd")
 const LocationRuntime = preload("res://src/run/location_runtime.gd")
+const FogMask = preload("res://src/run/fog_mask.gd")
 const Combat = preload("res://src/core/combat.gd")
 const Survival = preload("res://src/core/survival.gd")
 const ItemEffects = preload("res://src/core/item_effects.gd")
@@ -36,6 +37,11 @@ var world: Dictionary = {}
 var run: Dictionary = {}
 var position := Vector2i.ZERO
 var explored: Dictionary = {}
+## Explored tiles per chunk as 1024-bit masks, and their encoded save entries (only
+## chunks changed since the last save are re-encoded). See FogMask.
+var fog_masks: Dictionary = {}
+var _fog_entries: Dictionary = {}
+var _masked := 0 # Tiles recorded in fog_masks; differs from explored only if replaced directly.
 var visible: Dictionary = {}
 var dirty := false
 var last_error := ""
@@ -145,11 +151,13 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var tile := Vector2i(int(loaded.state.character.position.x), int(loaded.state.character.position.y))
 	if not generator.walkable(tile):
 		return _fail("Saved position is blocked or outside the playable world; save was not changed")
-	var discovered := {}
+	if not loaded.state.explored is Array or not FogMask.valid_all(loaded.state.explored):
+		return _fail("Saved discovery data is invalid; save was not changed")
 	for entry in loaded.state.explored:
-		if not _within_limits(entry):
+		if not FogMask.is_chunk(entry) and not _within_limits(entry):
 			return _fail("Saved discovery coordinates are outside the playable world; save was not changed")
-		discovered[Vector2i(int(entry.x), int(entry.y))] = true
+	var fog := FogMask.decode(loaded.state.explored) # Legacy tile lists and chunk masks.
+	var discovered: Dictionary = fog.tiles
 	var next_cache := Chunks.new(generator)
 	next_cache.follow(tile)
 	var rules := Survival.new()
@@ -233,6 +241,9 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	run = loaded
 	position = tile
 	explored = discovered
+	fog_masks = fog.masks
+	_fog_entries = {}
+	_masked = discovered.size()
 	cache = next_cache
 	objects = next_objects
 	roster = next_roster
@@ -893,7 +904,8 @@ func _reveal() -> void:
 				if not explored.has(target):
 					explored[target] = true
 					_new_tiles += 1
-					run.state.explored.append({"x": target.x, "y": target.y}) # Discovery order.
+					_fog_entries.erase(FogMask.mark(fog_masks, target)) # Re-encode this chunk on save.
+					_masked += 1
 					dirty = true
 
 func _line_visible(target: Vector2i) -> bool:
@@ -907,12 +919,7 @@ func save() -> bool:
 	if not dirty:
 		last_error = ""
 		return true
-	# Explored tiles are appended as they are revealed (discovery order, unique), so a
-	# save does not sort or rebuild them. Rebuild only if the set was changed directly.
-	if run.state.explored.size() != explored.size():
-		run.state.explored = []
-		for tile in explored:
-			run.state.explored.append({"x": tile.x, "y": tile.y})
+	run.state.explored = explored_entries()
 	if not store.save_run(run.run_id, int(run.revision), run.state):
 		return _fail(store.last_error)
 	run.revision = int(run.revision) + 1
@@ -920,6 +927,24 @@ func save() -> bool:
 	dirty = false
 	last_error = ""
 	return true
+
+func explored_entries() -> Array:
+	## Chunk records sorted by chunk; unchanged chunks reuse their cached encoding.
+	if explored.size() != _masked:
+		# The tile set was replaced directly (tools/tests): rebuild the masks from it.
+		fog_masks = {}
+		_fog_entries = {}
+		for tile in explored:
+			FogMask.mark(fog_masks, tile)
+		_masked = explored.size()
+	var keys: Array = fog_masks.keys()
+	keys.sort()
+	var result: Array = []
+	for chunk in keys:
+		if not _fog_entries.has(chunk):
+			_fog_entries[chunk] = FogMask.entry(chunk, fog_masks[chunk])
+		result.append(_fog_entries[chunk])
+	return result
 
 func _fail(message: String) -> bool:
 	last_error = message

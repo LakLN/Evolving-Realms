@@ -242,8 +242,13 @@ Exports keep the same `user://` folder as the editor.
 Save failures (e.g. another connection holding the write lock past the 3 s busy
 timeout) roll back and keep the previous save and revision. The session stays dirty,
 so a retry saves the same pending state once. Other architectures are not verified.
-Explored-tile arrays/full run saves are deliberately simple: 100k tiles take
-~2.5 s to save. Use chunked fog storage with a migration before very large runs.
+Explored tiles (Milestone 02 final): `explored` entries are either legacy tiles
+`{x, y}` or chunk records `{"chunk": {"x", "y"}, "mask": "<base64 of 128 bytes>"}`
+(1024 bits, row-major 32x32; bit = local y*32+x). The game writes chunk records only;
+both forms load, and legacy lists convert on the next save. No SQL migration: the
+body is still JSON TEXT and the six-field contract is unchanged. Builds older than this
+cannot open a save written by it (no downgrade). Measured on the dev machine: a save
+with 100k explored tiles went from ~960 ms to ~50 ms (see PROGRESS).
 
 ## Checkpoint H region records
 

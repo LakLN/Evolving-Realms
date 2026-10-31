@@ -8,6 +8,7 @@ const Packs = preload("res://src/content/starter_pack.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Acceptance = preload("res://src/acceptance/standalone_check.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const FogMask = preload("res://src/run/fog_mask.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
 const Ledger = preload("res://src/world/region_ledger.gd")
 const Inventory = preload("res://src/core/inventory.gd")
@@ -215,8 +216,8 @@ func _initialize() -> void:
 	check(legacy_session.resume(legacy.run_id), "Legacy save resumes with places installed: " + legacy_session.last_error)
 	var covered := true
 	for run_id in [run_a, b.run.run_id, legacy.run_id]:
-		for tile in store.load_run(run_id).state.explored:
-			covered = covered and a.locations.ledger.established(Terrain.chunk_of(Vector2i(int(tile.x), int(tile.y)))) >= 0
+		for seen in FogMask.chunks(store.load_run(run_id).state.explored): # Tiles or chunk masks.
+			covered = covered and a.locations.ledger.established(seen) >= 0
 	var keys := {}
 	var unique := true
 	for header in store.content.list_definitions(world.world_id):

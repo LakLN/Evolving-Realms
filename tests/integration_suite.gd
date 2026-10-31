@@ -6,6 +6,7 @@ const Session = preload("res://src/run/exploration_session.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
 const Acceptance = preload("res://src/acceptance/standalone_check.gd")
+const FogMask = preload("res://src/run/fog_mask.gd")
 var checks := 0
 var failures := 0
 var directory := ""
@@ -198,4 +199,23 @@ func _test_exploration_growth() -> void:
 	var size := FileAccess.open(directory + "/growth.sqlite", FileAccess.READ).get_length()
 	print("Fog scale: %d tiles, save %d ms, resume %d ms, database %d bytes" % [session.explored.size(), save_ms, load_ms, size])
 	check(save_ms < 5000 and load_ms < 5000, "100k-tile fog save/resume stays within 5 s")
+	# Milestone 02 final: explored tiles persist as 32x32 chunk masks, so save time and
+	# size follow explored chunks, not tiles. Legacy tile lists still load and convert.
+	var saved: Array = store.load_run(session.run.run_id).state.explored
+	check(saved.all(func(e: Dictionary) -> bool: return FogMask.is_chunk(e)) and FogMask.count(saved) == session.explored.size() and JSON.stringify(saved).length() < session.explored.size() / 2, "Explored tiles are stored as compact chunk masks (%d bytes for %d tiles)" % [JSON.stringify(saved).length(), session.explored.size()])
+	check(save_ms < 500, "100k-tile save no longer scales with tiles (%d ms; was ~960 ms)" % save_ms)
+	var legacy: Dictionary = store.load_run(session.run.run_id)
+	var tiles: Array = []
+	for tile in resumed.explored: tiles.append({"x": tile.x, "y": tile.y})
+	legacy.state.explored = tiles
+	check(store.save_run(legacy.run_id, legacy.revision, legacy.state), "A legacy tile-list body is still accepted")
+	var from_legacy := Session.new(store)
+	check(from_legacy.resume(legacy.run_id) and from_legacy.explored == resumed.explored and from_legacy.save() == true, "Legacy tile list loads to the same explored set")
+	from_legacy.dirty = true
+	check(from_legacy.save() and store.load_run(legacy.run_id).state.explored.all(func(e: Dictionary) -> bool: return FogMask.is_chunk(e)), "The next save converts legacy tiles to chunk masks")
+	var converted := Session.new(store)
+	check(converted.resume(legacy.run_id) and converted.explored == resumed.explored, "Converted save reloads the identical explored set")
+	var broken: Dictionary = store.load_run(legacy.run_id)
+	broken.state.explored = [{"chunk": {"x": 0, "y": 0}, "mask": "AAAA"}]
+	check(not store.save_run(broken.run_id, broken.revision, broken.state) and store.load_run(legacy.run_id).state.explored.size() == converted.run.state.explored.size(), "A malformed chunk mask is refused; the save is untouched")
 	store.close()

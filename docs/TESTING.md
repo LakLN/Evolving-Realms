@@ -71,6 +71,20 @@ mock and local stub only; it also writes the mock fixture) and then
 in real gameplay and save/reopen). Use `.\scripts\test.ps1 -Only ai-content -Smoke`;
 `-Service` additionally exercises `/generate` over real HTTP with the mock.
 
+## Milestone 02 final tools
+
+- `tests/save_benchmark.gd`: save/resume cost at 1k–100k explored tiles and with many
+  mutations (`.\scripts\godot.ps1 --headless --script res://tests/save_benchmark.gd`).
+- `tests/playtest_sim.gd`: a bot plays real Runs and prints survival/combat/progression
+  metrics. In PowerShell quote the separator: `... playtest_sim.gd '--' --turns=1500
+  --aggressive --mode=permadeath --seeds=707:808`. Diagnostic, not a balance oracle.
+- `export.ps1 -Verify` now also runs `features` / `features-verify` in the exe: offline
+  mock bundles (written by `scripts/mock_fixtures.py`) are activated, then an AI creature
+  is fought, an AI place resolved and a generated skill learned with real keys, and the
+  state is checked after a restart.
+- Old saves: create saves with `--acceptance=write` from temporary worktrees of older
+  commits, then open copies with the new exe and `--acceptance=legacy`.
+
 ## Checkpoint I suites
 
 `discoveries` (`tests/discovery_suite.gd`, after the Python tests write the location

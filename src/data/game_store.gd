@@ -3,6 +3,7 @@ extends RefCounted
 const Database = preload("res://src/data/database.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Registry = preload("res://src/content/content_registry.gd")
+const FogMask = preload("res://src/run/fog_mask.gd")
 var _db := Database.new()
 var content := Registry.new(_db)
 var last_error: String:
@@ -114,7 +115,7 @@ func save_run(run_id: String, expected_revision: int, state: Dictionary) -> bool
 		return _db.rollback("Normal-mode death is never saved; the last living save stays authoritative")
 	if not _validate_state(run.world_id, state):
 		return _db.rollback(last_error)
-	var body := state.duplicate(true)
+	var body := state.duplicate() # Shallow: only the mutation map is dropped from the body.
 	body.erase("entity_mutations")
 	if not _db.execute("UPDATE runs SET state_json=?,revision=revision+1 WHERE run_id=? AND revision=?", [JSON.stringify(body), run_id, expected_revision]):
 		return _db.rollback(last_error)
@@ -139,9 +140,8 @@ func _validate_state(world_id: String, state: Dictionary) -> bool:
 		return _db.fail("Character needs integer position and object stats")
 	if not state.inventory is Dictionary or not state.explored is Array or not state.entity_mutations is Dictionary:
 		return _db.fail("Invalid inventory, explored or entity_mutations container")
-	for tile in state.explored:
-		if not Data.position(tile):
-			return _db.fail("Explored tiles must have integer coordinates")
+	if not FogMask.valid_all(state.explored):
+		return _db.fail("Explored entries must be integer tiles or 32x32 chunk masks")
 	for content_id in state.inventory:
 		var stack: Variant = state.inventory[content_id]
 		if not Data.identifier(content_id) or not stack is Dictionary or not Data.integer(stack.get("version")) or not Data.integer(stack.get("quantity")) or stack.version < 1 or stack.quantity < 1:
@@ -154,8 +154,14 @@ func _validate_state(world_id: String, state: Dictionary) -> bool:
 	for instance_id in state.entity_mutations:
 		if not state.entity_mutations[instance_id] is Dictionary:
 			return _db.fail("Entity mutation must be an object")
-		if content.load_instance(world_id, instance_id).is_empty():
+	if not state.entity_mutations.is_empty():
+		# One query for all referenced instances (was one SELECT + parse per mutation).
+		var ids: Array = state.entity_mutations.keys()
+		var found: Array = _db.rows("SELECT COUNT(*) AS known FROM content_instances WHERE world_id=? AND instance_id IN (SELECT value FROM json_each(?))", [world_id, JSON.stringify(ids)])
+		if found.is_empty():
 			return false
+		if int(found[0].known) != ids.size():
+			return _db.fail("Content instance not found")
 	return true
 
 func _error(message: String) -> Dictionary:

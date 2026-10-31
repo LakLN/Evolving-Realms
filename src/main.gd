@@ -252,25 +252,23 @@ func _build_character(parent: Control) -> void:
 	_character_panel.anchor_bottom = 0.5
 	_character_panel.offset_left = 20
 	_character_panel.offset_right = 395
-	_character_panel.offset_top = -250
-	_character_panel.offset_bottom = 250
+	_character_panel.offset_top = -268 # Starts right under the top HUD.
+	_character_panel.offset_bottom = 175 # Ends above the bottom notice lines.
 	parent.add_child(_character_panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	_character_panel.add_child(column)
+	var column := _scroll_column(_character_panel, 8)
 	_label(column, "CHARACTER & GEAR", 22)
 	_character_summary = _label(column, "", 15)
 	_character_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_talent_line = _label(column, "", 14)
 	_talent_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_slot_list = ItemList.new()
-	_slot_list.custom_minimum_size = Vector2(355, 150)
+	_slot_list.custom_minimum_size = Vector2(355, 140)
 	_slot_list.item_selected.connect(_show_slot)
 	_slot_list.item_activated.connect(func(_index: int) -> void: _unequip_selected())
 	column.add_child(_slot_list)
 	_slot_detail = _label(column, "", 14)
 	_slot_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_slot_detail.custom_minimum_size.y = 40
+	_slot_detail.custom_minimum_size.y = 24
 	_unequip_button = _button(column, "Unequip selected [U / Enter]", _unequip_selected)
 	_unequip_button.focus_mode = Control.FOCUS_NONE
 	_button(column, "Close [C / Esc]", _toggle_character)
@@ -374,21 +372,19 @@ func _build_inventory(parent: Control) -> void:
 	_inventory_panel.anchor_bottom = 0.5
 	_inventory_panel.offset_left = -395
 	_inventory_panel.offset_right = -20
-	_inventory_panel.offset_top = -235
-	_inventory_panel.offset_bottom = 235
+	_inventory_panel.offset_top = -268 # Starts right under the top HUD.
+	_inventory_panel.offset_bottom = 175 # Ends above the bottom notice lines.
 	parent.add_child(_inventory_panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
-	_inventory_panel.add_child(column)
+	var column := _scroll_column(_inventory_panel, 10)
 	_label(column, "INVENTORY", 24)
 	_inventory_list = ItemList.new()
-	_inventory_list.custom_minimum_size = Vector2(365, 210)
+	_inventory_list.custom_minimum_size = Vector2(365, 150)
 	_inventory_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_inventory_list.item_selected.connect(_show_inventory_item)
 	column.add_child(_inventory_list)
 	_inventory_detail = _label(column, "", 16)
 	_inventory_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inventory_detail.custom_minimum_size.y = 150
+	_inventory_detail.custom_minimum_size.y = 130
 	_inventory_list.item_activated.connect(func(_index: int) -> void: _use_selected())
 	_use_button = _button(column, "Use selected [U / Enter]", _use_selected)
 	_use_button.focus_mode = Control.FOCUS_NONE
@@ -490,6 +486,18 @@ func _close_talent() -> void:
 	_hold_delay = 0.2
 	get_viewport().gui_release_focus()
 
+func _scroll_column(panel: PanelContainer, separation: int) -> VBoxContainer:
+	## Side panels keep a fixed frame and scroll long content instead of growing over
+	## the bottom notice lines.
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", separation)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
+	return column
+
 func _build_skills(parent: Control) -> void:
 	## K: learned skills with costs, cooldowns, conditions; U / Enter / 1-9 use one.
 	_skills_panel = PanelContainer.new()
@@ -497,12 +505,10 @@ func _build_skills(parent: Control) -> void:
 	_skills_panel.anchor_bottom = 0.5
 	_skills_panel.offset_left = 20
 	_skills_panel.offset_right = 415
-	_skills_panel.offset_top = -262
-	_skills_panel.offset_bottom = 218
+	_skills_panel.offset_top = -268
+	_skills_panel.offset_bottom = 175 # Ends above the bottom notice lines.
 	parent.add_child(_skills_panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 8)
-	_skills_panel.add_child(column)
+	var column := _scroll_column(_skills_panel, 8)
 	_label(column, "SKILLS", 22)
 	_skills_summary = _label(column, "", 15)
 	_skills_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -541,11 +547,14 @@ func _refresh_skills(selected: int = 0) -> void:
 	var lines := PackedStringArray()
 	for id in session.skill_rules.resource_ids():
 		lines.append("%s %d / %d" % [session.skill_rules.rules.resources[id].name, session.skills.resource(session, id), session.skills.resource_max(session, id)])
+	var active := PackedStringArray()
 	for status in session.run.state.character.statuses:
 		if status.has("remaining"):
-			lines.append("Active: " + session.statuses.describe(session, [status]))
+			active.append(session.statuses.describe(session, [status]))
 		else:
-			lines.append("Active: %s %s (%d turns left)" % [str(status.id).capitalize(), _status_text(status), int(status.until_turn) - int(session.run.state.turn)])
+			active.append("%s %s (%d turns left)" % [str(status.id).capitalize(), _status_text(status), int(status.until_turn) - int(session.run.state.turn)])
+	if not active.is_empty():
+		lines.append("Active: " + "; ".join(active)) # One wrapped line, not one per status.
 	_skills_summary.text = "\n".join(lines)
 	_skill_list.clear()
 	var turn := int(session.run.state.turn)
@@ -1041,6 +1050,8 @@ func _update_info() -> void:
 		_interaction_hint.text = "E: %s %s  /  (%d, %d)" % [str(definition.payload.interaction).capitalize(), definition.name, target.position.x, target.position.y]
 	elif not session.places.targets(session).is_empty():
 		_interaction_hint.text = place_hint(session.places.targets(session)[0])
+	elif session.places.search_cue(session):
+		_interaction_hint.text = "The ground nearby looks disturbed... X: search the surroundings."
 
 func place_hint(place: Dictionary) -> String:
 	## Name, state and the next interaction (with unmet requirements) of a known place.
