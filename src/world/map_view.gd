@@ -597,7 +597,7 @@ func show_events(events: Array) -> void:
 			"location":
 				var place_tile := Vector2i(int(event.position.x), int(event.position.y))
 				_burst(place_tile, Color("ff8a6b") if event.get("tone", "") == "bane" else Color("a8ffcf"), delay)
-				_show_items(event.get("received", []), place_tile, delay + 0.1)
+				_show_items(event.get("display_received", event.get("received", [])), place_tile, delay + 0.1)
 			"player_death":
 				_play_player("death")
 			"status_apply":
@@ -615,22 +615,9 @@ func show_received(items: Array, tile: Vector2i) -> void:
 	_burst(tile, Color("ffe7a0"), 0.0, 0.8)
 	_show_items(items, tile, 0.05)
 
-static func merge_received(items: Array) -> Array:
-	## Identical receipts (same item and quality from several loot rolls) shown once.
-	var merged: Array = []
-	var by_key := {}
-	for item in items:
-		var key := "%s|%s|%s" % [item.get("content_id", ""), item.get("name", ""), item.get("quality", "")]
-		if by_key.has(key):
-			by_key[key].quantity = int(by_key[key].get("quantity", 1)) + int(item.get("quantity", 1))
-		else:
-			by_key[key] = item.duplicate()
-			merged.append(by_key[key])
-	return merged
-
 func _show_items(items: Array, tile: Vector2i, delay: float) -> void:
 	var i := 0
-	for item in merge_received(items):
+	for item in items:
 		_popup(tile, "+%d %s" % [int(item.get("quantity", 1)), str(item.get("name", ""))], Color("fff1b0"), 0.0, delay + i * 0.25, 15, art.item_icon(str(item.get("content_id", "")), str(item.get("name", ""))) if art.ready() else null)
 		i += 1
 

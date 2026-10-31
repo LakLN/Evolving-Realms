@@ -888,7 +888,7 @@ func _interact_action(action: Dictionary) -> bool:
 	var events: Array = []
 	for activation in planned.plan:
 		events.append(_talent_event(activation, _effect_summary(activation.ability.effects)))
-	last_result = {"type": "interact", "name": definition.name, "received": award.received, "events": events}
+	last_result = {"type": "interact", "name": definition.name, "received": award.display_received, "events": events}
 	return true
 
 func inventory_rows() -> Array:
@@ -1031,6 +1031,7 @@ func _talent_tick() -> Array:
 			if effect.type == "grant_item":
 				grants.append({"content_id": effect.content_id, "version": int(effect.version), "quantity": int(effect.quantity)})
 		var received: Array = []
+		var display_received: Array = []
 		if not grants.is_empty():
 			var used := int(TalentRuntime.state(activation.talent.record, activation.ability.id).used)
 			var award := Inventory.new().award(store.content, world.world_id, run.state.inventory, grants, "run:%s/talent/%s/%s/%d" % [run.run_id, activation.talent.definition.content_id, activation.ability.id, used])
@@ -1038,6 +1039,7 @@ func _talent_tick() -> Array:
 				continue # Refused (e.g. version conflict): nothing changes, it can fire later.
 			run.state.inventory = award.inventory
 			received = award.received
+			display_received = award.display_received
 		var levels := {}
 		for need in survival.rules.needs:
 			levels[need] = survival.level(stats(), need)
@@ -1058,6 +1060,7 @@ func _talent_tick() -> Array:
 			parts.append(_vital_summary(changes))
 		var event := _talent_event(activation, ", ".join(parts))
 		event.received = received
+		event.display_received = display_received
 		events.append(event)
 	talents.resolving = false
 	return events

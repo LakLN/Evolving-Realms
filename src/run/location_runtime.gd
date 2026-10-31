@@ -207,7 +207,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 			for item in outcome.items: grants.append({"content_id": item.content_id, "version": int(item.version), "quantity": int(item.get("quantity", 1))})
 		elif outcome.type == "loot":
 			grants.append_array(Loot.new().roll(outcome.table, "%s/%d" % [key, index]))
-	var award := {"inventory": inventory, "received": []}
+	var award := {"inventory": inventory, "received": [], "display_received": []}
 	if not grants.is_empty():
 		award = tools.award(session.store.content, session.world.world_id, inventory, grants, "run:%s/location/%s/%s" % [session.run.run_id, instance.instance_id, interaction.id])
 		if award.is_empty():
@@ -232,7 +232,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	mutation.resolved[interaction.id] = {"turn": int(session.run.state.turn), "event": {"content_id": event.content_id, "version": int(event.version)}, "received": award.received.duplicate(true)}
 	session.run.state.entity_mutations[instance.instance_id] = mutation
 	session.dirty = true
-	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": p.get("message", ""), "tone": p.get("tone", "neutral"), "received": award.received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
+	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": p.get("message", ""), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
 	var source := {"content_id": event.content_id, "version": int(event.version), "actor": "player"}
 	for outcome in p.outcomes:
 		match outcome.type:
@@ -244,7 +244,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 				var current := int(session.skills.resource(session, outcome.resource))
 				resources[outcome.resource].value = mini(int(session.skills.resource_max(session, outcome.resource)), current + int(outcome.amount))
 	session.refresh_stats()
-	return {"events": events, "received": award.received}
+	return {"events": events, "received": award.display_received}
 
 func _refuse(session: RefCounted, message: String) -> Dictionary:
 	session.last_error = message

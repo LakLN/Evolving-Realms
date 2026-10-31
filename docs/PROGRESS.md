@@ -16,8 +16,8 @@ Presentation only; gameplay, saves, World Blueprint, content IDs unchanged.
   popups (burn, poison, bleed, slow, stun, ward, regeneration).
 - Fixes: a creature directly north of the hero is no longer hidden (hero turns
   see-through; y-sort kept); popups/effects/dying creatures shift with the view when it
-  re-centres on a chunk (FX layer + relative tweens); identical receipts are merged in
-  "Received", loot and place messages and in pickup popups (display only).
+  re-centres on a chunk (FX layer + relative tweens). Receipt display summaries now merge
+  only identical stackable drops; inventory awards and persisted raw receipts are unchanged.
 
 ### Verified (Batch 02)
 
@@ -27,6 +27,24 @@ Presentation only; gameplay, saves, World Blueprint, content IDs unchanged.
   abrupt kill, verify 9/9, features 17/17, features-verify 5/5, default-save refusal.
 - `tests/visual_probe.gd`: wolf, boar, rabbit, deer, crab beside the hero and in combat,
   meadow/beach/forest starts, chest, gathering, discovery, inventory and gear reviewed.
+- Added regression checks for identical stackable drops, differing attributes, and
+  separate non-stackable instances/qualities. The one award-planning display summary feeds
+  notices and popups; original receipts remain unchanged for Run mutations.
+
+### Integration verification (2026-11-01)
+
+- Cherry-picked `d6a690e` as `c4dee08`; its chunk-generation equivalence/performance
+  change integrated without conflict and left Batch 02 assets intact.
+- `.\scripts\test.ps1 -Smoke -Only interactions,interaction-gameplay,combat,equipment,
+  talents,discoveries,ai-world`: all passed (interactions 69, interaction gameplay 17,
+  combat 75, equipment 68, talents 126, discoveries 40, AI World 41; smoke data 96 and
+  integration 41; offline provider tests, import and startup passed).
+- `.\scripts\godot.ps1 --headless --script res://tests/chunk_performance_suite.gd`:
+  11 checks passed; old/new location placements match and neighbour checks fell from
+  59,253 to 28.
+- `.\scripts\export.ps1 -Verify -Render`: Windows x64 export passed (PCK 2,165,756 bytes);
+  standalone write 37, verify 9, features 17, features-verify 5 checks passed, crash
+  persistence and default-save refusal passed.
 
 ### Remaining asset requests
 

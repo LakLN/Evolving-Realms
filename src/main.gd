@@ -1167,7 +1167,7 @@ func describe_events(events: Array) -> String:
 					parts.append("%s hits you for %d!" % [event.name, event.damage])
 			"creature_death":
 				var received := PackedStringArray()
-				for item in MapView.merge_received(event.received):
+				for item in event.get("display_received", event.received):
 					received.append(_receipt_text(item))
 				parts.append("%s dies. Loot: %s." % [event.name, ", ".join(received)])
 			"player_death":
@@ -1217,7 +1217,7 @@ func describe_events(events: Array) -> String:
 				parts.append("DISCOVERED: %s — %s" % [event.name, event.description])
 			"location":
 				var outcome := PackedStringArray()
-				for item in MapView.merge_received(event.received):
+				for item in event.get("display_received", event.received):
 					outcome.append(_receipt_text(item))
 				for change in event.changes:
 					outcome.append("%s %d -> %d" % [{"hp": "HP", "hunger": "hunger", "thirst": "thirst"}.get(change.stat, change.stat), change.before, change.after])
@@ -1245,7 +1245,7 @@ func _interact() -> void:
 			_after_action(true) # The place's own notice lists its rewards.
 			return
 		var received := PackedStringArray()
-		for item in MapView.merge_received(session.last_result.received):
+		for item in session.last_result.received:
 			received.append(_receipt_text(item))
 		_after_action(true)
 		_notice.text = ("Received: " + ", ".join(received) + " " + _notice.text).strip_edges()

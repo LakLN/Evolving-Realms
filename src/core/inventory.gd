@@ -6,6 +6,8 @@ var last_error := ""
 func award(registry: RefCounted, world_id: String, inventory: Dictionary, loot: Array, identity_key: String) -> Dictionary:
 	var next := inventory.duplicate(true)
 	var received: Array = []
+	var display_received: Array = []
+	var display_keys: Array = []
 	for index in loot.size():
 		var drop: Variant = loot[index]
 		if not drop is Dictionary or not Data.identifier(drop.get("content_id")) or not Data.integer(drop.get("version")) or not Data.integer(drop.get("quantity")) or drop.quantity < 1 or drop.quantity > 1000:
@@ -81,8 +83,23 @@ func award(registry: RefCounted, world_id: String, inventory: Dictionary, loot: 
 		if drop.get("quality") is String:
 			receipt.quality = drop.quality
 		received.append(receipt)
+		var display_index := -1
+		var display_key: Dictionary = drop.duplicate(true)
+		display_key.erase("quantity")
+		if stackable:
+			for key_index in display_keys.size():
+				if display_keys[key_index] == display_key:
+					display_index = key_index
+					break
+		if display_index >= 0:
+			var displayed: Dictionary = display_received[display_index]
+			displayed.quantity = int(displayed.quantity) + int(drop.quantity)
+			display_received[display_index] = displayed
+		else:
+			display_received.append(receipt.duplicate(true))
+			display_keys.append(display_key)
 	last_error = ""
-	return {"inventory": next, "received": received}
+	return {"inventory": next, "received": received, "display_received": display_received}
 
 func remove(inventory: Dictionary, content_id: String, quantity: int) -> Dictionary:
 	## Returns a copy with `quantity` units removed ({} + last_error on failure).

@@ -133,7 +133,7 @@ func attack(session: RefCounted, target_id: String, options: Dictionary = {}) ->
 		creature.loot = loot
 		creature.received = award.received
 		session.run.state.inventory = award.inventory
-		events.append({"type": "creature_death", "target": creature.instance_id, "name": definition.name, "received": award.received, "position": _point(creature.position)})
+		events.append({"type": "creature_death", "target": creature.instance_id, "name": definition.name, "received": award.received, "display_received": award.display_received, "position": _point(creature.position)})
 	_commit(session, creature)
 	return {"type": "attack", "target": creature.instance_id, "events": events, "talent": strike}
 

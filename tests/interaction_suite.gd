@@ -192,6 +192,18 @@ func _test_inventory() -> void:
 	check(not result.is_empty() and result.inventory["core:wood"].quantity == 53 and result.inventory["core:wood"].stacks == [50, 3], "Stack limit splits 53 wood into 50+3")
 	result = inventory.award(store.content, world.world_id, result.inventory, [{"content_id":"core:wood","version":1,"quantity":49}], "run:test/source/b")
 	check(result.inventory["core:wood"].quantity == 102 and result.inventory["core:wood"].stacks == [50, 50, 2], "Awards merge partial stacks before creating another")
+	var repeated_drops := [
+		{"content_id":"core:wood","version":1,"quantity":2},
+		{"content_id":"core:wood","version":1,"quantity":3}
+	]
+	result = inventory.award(store.content, world.world_id, {}, repeated_drops, "run:test/source/repeated")
+	check(result.inventory["core:wood"].quantity == 5 and result.received.size() == 2 and result.display_received.size() == 1 and result.display_received[0].quantity == 5, "Display combines identical stackable drops without changing inventory awards or raw receipts")
+	var attributed_drops := [
+		{"content_id":"core:wood","version":1,"quantity":1,"attributes":{"source":"oak"}},
+		{"content_id":"core:wood","version":1,"quantity":1,"attributes":{"source":"birch"}}
+	]
+	result = inventory.award(store.content, world.world_id, {}, attributed_drops, "run:test/source/attributes")
+	check(result.display_received.size() == 2, "Display keeps same-name stackable drops with different attributes separate")
 	var legacy := {"core:wood": {"version": 1, "quantity": 4, "legacy_note": "keep"}}
 	result = inventory.award(store.content, world.world_id, legacy, [{"content_id":"core:wood","version":1,"quantity":3}], "run:test/source/c")
 	check(result.inventory["core:wood"].quantity == 7 and result.inventory["core:wood"].legacy_note == "keep" and not legacy["core:wood"].has("stacks"), "Legacy B stack entries extend without loss or input mutation")
@@ -200,6 +212,13 @@ func _test_inventory() -> void:
 	var unique: Dictionary = result.inventory["core:keepsake"]
 	check(unique.quantity == 2 and unique.instances.size() == 2 and unique.instances[0].instance_id != unique.instances[1].instance_id, "Non-stackable items have separate stable IDs")
 	check(inventory.award(store.content, world.world_id, result.inventory, unique_loot, "run:test/source/chest").is_empty(), "Duplicate individual item award is rejected")
+	var individual_drops := [
+		{"content_id":"core:keepsake","version":1,"quantity":1,"quality":"pho_thong"},
+		{"content_id":"core:keepsake","version":1,"quantity":1,"quality":"pho_thong"},
+		{"content_id":"core:keepsake","version":1,"quantity":1,"quality":"uu_tu"}
+	]
+	result = inventory.award(store.content, world.world_id, {}, individual_drops, "run:test/source/individual")
+	check(result.inventory["core:keepsake"].instances.size() == 3 and result.display_received.size() == 3 and result.display_received[0].quality == result.display_received[1].quality and result.display_received[1].quality != result.display_received[2].quality, "Display preserves separate non-stackable instances and their qualities")
 	var rows := inventory.rows(store.content, world.world_id, result.inventory)
 	check(rows.size() == 1 and rows[0].name == "Traveler's keepsake" and not rows[0].description.is_empty() and rows[0].type == "keepsake", "Inventory exposes name, description, quantity and item type")
 	check(inventory.award(store.content, world.world_id, {}, [{"content_id":"missing:item","version":1,"quantity":1}], "bad").is_empty(), "Missing loot item rejected before inventory changes")
