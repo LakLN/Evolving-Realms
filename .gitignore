@@ -7,3 +7,5 @@ __pycache__/
 builds/
 data/*.sqlite*
 .env
+# Godot native-library reload scratch files (keep actual vendored DLLs).
+addons/godot-sqlite/bin/~*.dll

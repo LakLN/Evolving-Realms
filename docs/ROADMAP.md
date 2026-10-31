@@ -2,11 +2,11 @@
 
 ## Milestone 01 — Offline foundation
 
-- A: environment, Godot boot scene, optional FastAPI skeleton, architecture,
+- A (complete): environment, Godot boot scene, optional FastAPI skeleton, architecture,
   version control and reproducible commands. Verify CLI import and startup.
-- B: local SQLite adapter, migrations, World/Run repositories, schemas, validated
+- B (complete): local SQLite adapter, migrations, World/Run repositories, schemas, validated
   Content Registry and mock provider. Test isolation, round trip, rejection paths.
-- C: deterministic chunk generation, three biomes (forest, beach, third terrain),
+- C (not started; requires next user instruction): deterministic chunk generation, three biomes (forest, beach, third terrain),
   TileMapLayer, obstacles, valid spawn, keyboard movement and following camera.
 - D: turn manager, fog/exploration, resource/chest instances, inventory and UI.
 - E: integrated save/resume, multiple runs/worlds UI, regression tests, Windows

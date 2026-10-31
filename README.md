@@ -1,8 +1,9 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 01, Checkpoint A**. This is a tested bootstrap screen;
-map, playable character, persistence and content generation are still pending.
+Current state: **Milestone 01, Checkpoint B complete**. The bootstrap screen opens
+the native SQLite store. World/Run persistence and validated content registration
+are available through GDScript; map, character and gameplay are still pending.
 
 ## Run
 
@@ -13,6 +14,7 @@ PowerShell commands from the repository root:
 
 ```powershell
 .\scripts\godot.ps1 --headless --editor --import
+.\scripts\godot.ps1 --headless --script res://tests/data_suite.gd
 .\scripts\godot.ps1 --headless --quit-after 5
 .\scripts\godot.ps1 --editor
 ```
@@ -42,10 +44,14 @@ Tools and venv are ignored by Git. No machine PATH changes are required.
 
 `-I` / `-E` isolate the interpreter from unrelated inherited PYTHONPATH settings.
 The optional service currently exposes only `/health`; it is not an AI provider.
-No API key or paid service is used. SQLite driver integration is Checkpoint B.
+No API key or paid service is used. SQLite is managed directly inside Godot through
+the vendored godot-sqlite v4.9 GDExtension; Python is entirely optional.
 
 ## Handoff
 
-Read [progress](docs/PROGRESS.md), [architecture](docs/ARCHITECTURE.md) and
-[roadmap](docs/ROADMAP.md). No Windows export exists at Checkpoint A; install
+Read [progress](docs/PROGRESS.md), [data API](docs/DATA_API.md),
+[architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
+Default saves live at `user://realms.sqlite`, outside the repository. Native Windows
+x64 debug/release SQLite DLLs and their license are committed in `addons/`; see
+[dependency provenance](addons/godot-sqlite/PROVENANCE.md). No Windows export exists; install
 matching export templates and verify a standalone executable in Checkpoint E.
