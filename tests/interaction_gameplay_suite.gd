@@ -44,6 +44,8 @@ func _run() -> void:
 		app.move_player(tile - app.session.position)
 		await process_frame
 	check(app._interaction_hint.text.begins_with("E: Gather") or app._interaction_hint.text.begins_with("E: Pick"), "HUD indicates an available interaction")
+	var hint_panel: Control = app._notice.get_parent().get_parent()
+	check(hint_panel.get_global_rect().end.y <= app.get_viewport_rect().size.y + 0.5, "Bottom HUD hints stay fully on-screen")
 	var target: Dictionary = app.session.interaction_target()
 	var turn := int(app.session.run.state.turn)
 	await _capture("checkpoint-d-resources.png")
@@ -75,8 +77,10 @@ func _run() -> void:
 		await _capture("checkpoint-d-opened-chest.png")
 	var inventory: Dictionary = app.session.run.state.inventory.duplicate(true)
 	var mutations: Dictionary = app.session.run.state.entity_mutations.duplicate(true)
-	await _key(KEY_F5)
-	check(not app.session.dirty and app._notice.text.contains("Saved"), "F5 persists gathered items and opened chest")
+	await _key(KEY_I)
+	await _save_shortcut()
+	check(app._inventory_panel.visible and not app.session.dirty and app._notice.text.contains("Saved"), "Ctrl+S with inventory open persists gathered items and opened chest")
+	await _key(KEY_I)
 	await _key(KEY_ESCAPE)
 	app._resume.pressed.emit()
 	await process_frame
@@ -95,10 +99,26 @@ func _run() -> void:
 	print("CHECKPOINT D GAMEPLAY: %d checks, %d failures (%s)" % [checks, failures, DisplayServer.get_name()])
 	quit(0 if failures == 0 else 1)
 
-func _key(key: int) -> void:
+func _save_shortcut() -> void:
+	# Hold Ctrl like a real keyboard so S is not also treated as movement.
+	var ctrl := InputEventKey.new()
+	ctrl.keycode = KEY_CTRL
+	ctrl.physical_keycode = KEY_CTRL
+	ctrl.ctrl_pressed = true
+	ctrl.pressed = true
+	Input.parse_input_event(ctrl)
+	await _key(KEY_S, true)
+	ctrl = ctrl.duplicate()
+	ctrl.ctrl_pressed = false
+	ctrl.pressed = false
+	Input.parse_input_event(ctrl)
+	await process_frame
+
+func _key(key: int, ctrl: bool = false) -> void:
 	var event := InputEventKey.new()
 	event.keycode = key
 	event.physical_keycode = key
+	event.ctrl_pressed = ctrl
 	event.pressed = true
 	Input.parse_input_event(event)
 	await process_frame

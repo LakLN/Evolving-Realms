@@ -12,6 +12,10 @@ authoring process, not a dependency for movement, saving or combat.
 - src/run: implemented ExplorationSession: cardinal actions/turns, sight,
   per-run discovery, extensible action dispatch and save/resume over GameStore.
 - src/main.gd: World/Run menu, keyboard input, camera/HUD, inventory and save-on-exit.
+  Opt-in launch arguments after `--`: `--database=<path>` and `--acceptance=<phase>`.
+- src/acceptance: opt-in release acceptance driving the real main scene. It ships in
+  the build so the exported exe itself can be checked. It requires an explicit
+  separate database and never runs in normal play.
 - src/data: implemented local database, migrations and World/Run persistence facade.
 - src/content: definitions, validation, registry and capability checks.
 - content/starter_pack.json: immutable sample item/object definitions and distribution/loot data.
@@ -120,6 +124,17 @@ or individual item records extend entry JSON without replacing legacy data. A
 content ID still pins one version per run; a conflicting-version award is refused.
 No equipment, crafting, dropping, trading or item-use system is introduced.
 Details/examples and known limits: [OBJECTS_AND_INVENTORY.md](OBJECTS_AND_INVENTORY.md).
+
+## Integration and release — Checkpoint E
+
+No new data contract, migration or generator version. The Windows build is the
+`windows` preset in export_presets.cfg plus scripts/export.ps1 (release x86_64,
+separate .pck, release SQLite DLL, license notices). Saves stay under the stable
+`user://` application folder outside the build. Save failures keep the previous
+committed save. A second close request after a failed save is the only path that
+discards unsaved play. Ctrl+S saves; F5 is left to the Godot editor.
+tests/integration_suite.gd covers write locks, stale sessions, failed exits, separate-
+process write/kill/verify, consistency across Blueprint/Run/Registry and fog growth.
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

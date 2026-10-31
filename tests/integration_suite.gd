@@ -1,0 +1,196 @@
+extends SceneTree
+## Checkpoint E: save failures, stale writes, abrupt exit, consistency and fog growth.
+const Store = preload("res://src/data/game_store.gd")
+const Database = preload("res://src/data/database.gd")
+const Session = preload("res://src/run/exploration_session.gd")
+const Data = preload("res://src/data/json_data.gd")
+const Pack = preload("res://src/content/starter_pack.gd")
+const Acceptance = preload("res://src/acceptance/standalone_check.gd")
+var checks := 0
+var failures := 0
+var directory := ""
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+func check(condition: bool, label: String) -> bool:
+	checks += 1
+	if condition:
+		print("PASS: ", label)
+	else:
+		failures += 1
+		printerr("FAIL: ", label)
+	return condition
+
+func _run() -> void:
+	directory = ProjectSettings.globalize_path("user://checkpoint_e_tests/" + Data.uuid())
+	DirAccess.make_dir_recursive_absolute(directory)
+	print("Integration artifacts: ", directory)
+	_test_locked_save()
+	_test_stale_second_session()
+	await _test_exit_after_failed_save()
+	_test_acceptance_processes()
+	_test_exploration_growth()
+	print("CHECKPOINT E INTEGRATION: %d checks, %d failures" % [checks, failures])
+	quit(0 if failures == 0 else 1)
+
+func _started(store: RefCounted, name: String) -> RefCounted:
+	var world: Dictionary = store.create_world(name, 1847, 1, Pack.blueprint(1847))
+	var session := Session.new(store)
+	check(session.start_new(world.world_id, 101, "meadow"), "Start run for " + name)
+	return session
+
+func _gather(session: RefCounted) -> bool:
+	var found := Acceptance.route_to_object(session, "gather")
+	if found.is_empty():
+		return false
+	for tile in found.route:
+		if not session.try_move(tile - session.position):
+			return false
+	return session.interact(found.instance.instance_id)
+
+func _test_locked_save() -> void:
+	var path := directory + "/locked.sqlite"
+	var store := Store.new()
+	store.open(path)
+	var session := _started(store, "Locked")
+	check(_gather(session) and session.dirty, "Gathered loot is pending save")
+	var inventory: Dictionary = session.run.state.inventory.duplicate(true)
+	var revision := int(session.run.revision)
+	var blocker := Database.new()
+	blocker.open(path)
+	check(blocker.execute("BEGIN IMMEDIATE"), "Second connection holds the write lock")
+	check(not session.save() and session.dirty and int(session.run.revision) == revision, "Save fails cleanly while the database cannot be written: " + session.last_error)
+	check(session.last_error.contains("locked"), "Write failure is reported to the player")
+	var saved: Dictionary = blocker.rows("SELECT state_json, revision FROM runs WHERE run_id=?", [session.run.run_id])[0]
+	check(JSON.parse_string(saved.state_json).inventory.is_empty() and int(saved.revision) == revision, "Failed save leaves the last good save untouched")
+	check(blocker.rows("SELECT COUNT(*) AS n FROM run_entity_states WHERE run_id=?", [session.run.run_id])[0].n == 0, "Failed save writes no partial object mutation")
+	blocker.execute("ROLLBACK")
+	blocker.close()
+	check(session.save() and not session.dirty, "Retry after the lock clears saves the pending state")
+	var loaded: Dictionary = store.load_run(session.run.run_id)
+	check(Acceptance.same(loaded.state.inventory, inventory) and loaded.state.entity_mutations.size() == 1, "Retried save contains items exactly once with their consumed object")
+	store.close()
+
+func _test_stale_second_session() -> void:
+	var store := Store.new()
+	store.open(directory + "/stale.sqlite")
+	var first := _started(store, "Stale")
+	var second := Session.new(store)
+	check(second.resume(first.run.run_id), "Second session opens the same run")
+	check(_gather(first) and first.save(), "First session saves loot")
+	var saved: Dictionary = store.load_run(first.run.run_id)
+	check(_gather(second), "Session generated before another materialized the object can still use it: " + second.last_error)
+	check(not second.save() and second.last_error.contains("Stale"), "Second, outdated session cannot overwrite newer save")
+	check(Acceptance.same(store.load_run(first.run.run_id).state, saved.state), "Stale write leaves the newer save intact")
+	# Two different Runs open at once (e.g. editor and exported build) share materialized placements.
+	var third := _started(store, "Concurrent")
+	var peer := Session.new(store)
+	check(peer.start_new(third.world.world_id, 101, "meadow"), "Peer Run loads chunks before any object is used")
+	check(_gather(third) and third.save(), "First Run materializes and gathers an object")
+	check(_gather(peer) and peer.save() and peer.run.state.entity_mutations.keys() == third.run.state.entity_mutations.keys(), "Peer Run gathers the same placement independently")
+	store.close()
+
+func _test_exit_after_failed_save() -> void:
+	var path := directory + "/exit.sqlite"
+	var app: Control = load("res://scenes/main.tscn").instantiate()
+	app.database_path = path
+	root.add_child(app)
+	await process_frame
+	app._name_entry.text = "Exit"
+	app._world_seed.text = "1847"
+	app._create_world.pressed.emit()
+	app._new_run.pressed.emit()
+	await process_frame
+	var moved := false
+	for direction in [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]:
+		moved = moved or app.move_player(direction)
+	var blocker := Database.new()
+	blocker.open(path)
+	blocker.execute("BEGIN IMMEDIATE")
+	app._request_exit()
+	check(moved and app.session != null and app._discard_on_exit and app._notice.text.contains("Close again"), "Failed save on window close keeps game open and offers explicit discard")
+	app._return_to_menu()
+	check(app.session != null and app._notice.text.contains("staying in game"), "Failed Save & menu keeps the map and its unsaved state")
+	blocker.execute("ROLLBACK")
+	blocker.close()
+	app._save_game()
+	check(not app.session.dirty and not app._discard_on_exit, "Successful save re-arms save-before-exit")
+	app._return_to_menu()
+	app.free()
+
+func _test_acceptance_processes() -> void:
+	# Same opt-in acceptance the exported build runs; here through the editor binary.
+	var database := directory + "/acceptance.sqlite"
+	for phase in ["write", "crash", "verify"]:
+		var output: Array = []
+		var code := OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--database=" + database, "--acceptance=" + phase], output, true)
+		var log := str(output)
+		print("Acceptance ", phase, " exit ", code, ": ", log.right(400))
+		if phase == "crash":
+			check(log.contains("terminating without saving") and not log.contains("FAIL:"), "Process killed with unsaved actions")
+		else:
+			check(code == 0 and log.contains("STANDALONE ACCEPTANCE %s:" % phase) and log.contains(" 0 failures"), "Separate-process acceptance " + phase)
+	var copy := directory + "/legacy-copy.sqlite"
+	DirAccess.copy_absolute(database, copy)
+	var output: Array = []
+	var code := OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--database=" + copy, "--acceptance=legacy"], output, true)
+	check(code == 0 and str(output).contains(" 0 failures"), "Existing save resumes and saves without losing items")
+	var output_refused: Array = []
+	code = OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--acceptance=write"], output_refused, true)
+	check(code == 2, "Acceptance refuses to run against the default personal save")
+	_check_consistency(database)
+
+func _check_consistency(path: String) -> void:
+	var store := Store.new()
+	check(store.open(path), "Reopen acceptance database")
+	var consistent := true
+	for world in store.list_worlds():
+		var blueprint: Dictionary = store.load_world(world.world_id).blueprint
+		for location in blueprint.fixed_locations:
+			var instance: Dictionary = store.content.load_instance(world.world_id, location.id)
+			consistent = consistent and not instance.is_empty() and Acceptance.same(instance.position, location.position)
+		for header in store.list_runs(world.world_id):
+			var run: Dictionary = store.load_run(header.run_id)
+			consistent = consistent and not run.is_empty()
+			for instance_id in run.state.entity_mutations:
+				consistent = consistent and not store.content.load_instance(world.world_id, instance_id).is_empty()
+			for content_id in run.state.inventory:
+				var definition: Dictionary = store.content.load_definition(world.world_id, content_id, int(run.state.inventory[content_id].version))
+				consistent = consistent and definition.get("status") == "active" and definition.get("kind") == "item"
+	check(consistent, "Blueprint landmarks, Run inventories/mutations and Content Registry agree")
+	store.close()
+
+func _test_exploration_growth() -> void:
+	var store := Store.new()
+	store.open(directory + "/growth.sqlite")
+	var session := _started(store, "Growth")
+	var steps := 0
+	while steps < 400:
+		var path := Acceptance.route(session, func(tile: Vector2i) -> bool: return not session.explored.has(tile))
+		if path.is_empty():
+			break
+		for tile in path:
+			if not session.try_move(tile - session.position):
+				break
+			steps += 1
+	session.save()
+	var per_step := float(session.explored.size()) / maxf(steps, 1)
+	var bytes := JSON.stringify(session.run.state.explored).length()
+	print("Exploration growth: %d steps, %d explored tiles, %.1f tiles/step, %d bytes (%.1f bytes/tile)" % [steps, session.explored.size(), per_step, bytes, float(bytes) / session.explored.size()])
+	check(steps >= 300, "Explored a long real route")
+	# Synthetic long run: 100,000 remembered tiles (~6,000+ exploratory steps).
+	for index in 100000:
+		session.explored[Vector2i(5000 + index % 400, 5000 + index / 400)] = true
+	session.dirty = true
+	var started := Time.get_ticks_msec()
+	check(session.save(), "Save with 100k explored tiles")
+	var save_ms := Time.get_ticks_msec() - started
+	started = Time.get_ticks_msec()
+	var resumed := Session.new(store)
+	check(resumed.resume(session.run.run_id) and resumed.explored.size() == session.explored.size(), "Resume with 100k explored tiles")
+	var load_ms := Time.get_ticks_msec() - started
+	var size := FileAccess.open(directory + "/growth.sqlite", FileAccess.READ).get_length()
+	print("Fog scale: %d tiles, save %d ms, resume %d ms, database %d bytes" % [session.explored.size(), save_ms, load_ms, size])
+	check(save_ms < 5000 and load_ms < 5000, "100k-tile fog save/resume stays within 5 s")
+	store.close()

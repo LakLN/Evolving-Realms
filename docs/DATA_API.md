@@ -217,9 +217,14 @@ test success. Unexpected errors still need investigation.
 
 Pinned Windows x64 debug/release DLLs, license, source and SHA256 are in
 `addons/godot-sqlite/`. No service lifecycle, Python executable or manual server
-launch is needed in Windows exports. Checkpoint E must include the GDExtension,
-matching DLL and **non-resource `src/data/migrations/*.sql` and `content/starter_pack.json` files in export filters**,
-then verify both clean and existing saves in a standalone Windows build. Export
-templates, standalone packaging, other architectures and large-world performance
-are not verified in B. Explored-tile arrays/full run saves are deliberately simple;
-measure and migrate later before very large runs.
+launch is needed in Windows exports. Checkpoint E's `windows` export preset ships the
+release DLL beside the exe and includes `src/data/migrations/*.sql` and
+`content/starter_pack.json` as non-resource files. The exported build passed clean
+saves, saves created by Checkpoint B/C/D code, abrupt termination and restart.
+Exports keep the same `user://` folder as the editor.
+
+Save failures (e.g. another connection holding the write lock past the 3 s busy
+timeout) roll back and keep the previous save and revision. The session stays dirty,
+so a retry saves the same pending state once. Other architectures are not verified.
+Explored-tile arrays/full run saves are deliberately simple: 100k tiles take
+~2.5 s to save. Use chunked fog storage with a migration before very large runs.

@@ -5,9 +5,11 @@ const Session = preload("res://src/run/exploration_session.gd")
 const MapView = preload("res://src/world/map_view.gd")
 const Data = preload("res://src/data/json_data.gd")
 const StarterPack = preload("res://src/content/starter_pack.gd")
+const Acceptance = preload("res://src/acceptance/standalone_check.gd")
+const DEFAULT_DATABASE := "user://realms.sqlite"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
-var database_path := "user://realms.sqlite"
+var database_path := DEFAULT_DATABASE
 var store := Store.new()
 var session: RefCounted
 var map_view: Node2D
@@ -32,6 +34,8 @@ var _inventory_detail: Label
 var _inventory_rows: Array = []
 var _hold_delay := 0.0
 var _data_ready := false
+var _discard_on_exit := false
+var _acceptance: RefCounted
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
@@ -57,10 +61,27 @@ func _ready() -> void:
 	_build_menu(frame)
 	_build_hud(frame)
 	_build_inventory(frame)
+	var options := launch_options()
+	database_path = options.get("database", database_path)
+	if options.has("acceptance") and ProjectSettings.globalize_path(database_path) == ProjectSettings.globalize_path(DEFAULT_DATABASE):
+		printerr("Acceptance checks require --database=<separate path>; personal saves are never opened")
+		get_tree().quit(2)
+		return
 	_data_ready = store.open(database_path)
 	_create_world.disabled = not _data_ready
 	_refresh_worlds()
 	_message("Choose a world or create one. Each run keeps its own progress." if _data_ready else store.last_error, not _data_ready)
+	if options.has("acceptance"):
+		_acceptance = Acceptance.new()
+		_acceptance.run(self, options.acceptance)
+
+static func launch_options() -> Dictionary:
+	## User arguments after `--`, e.g. `-- --database=D:/saves/test.sqlite`.
+	var options := {}
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--") and argument.contains("="):
+			options[argument.get_slice("=", 0).trim_prefix("--")] = argument.substr(argument.find("=") + 1)
+	return options
 
 func _build_menu(parent: Control) -> void:
 	_menu = Panel.new()
@@ -115,7 +136,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD / Arrows: move    E: interact    I: inventory    F5: save    Esc: save & menu", 16)
+	_label(column, "WASD / Arrows: move    E: interact    I: inventory    Ctrl+S: save    Esc: save & menu", 16)
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -132,11 +153,12 @@ func _build_hud(parent: Control) -> void:
 	_info = _label(row, "", 17)
 	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_button(row, "Inventory [I]", _toggle_inventory).focus_mode = Control.FOCUS_NONE
-	_button(row, "Save [F5]", _save_game).focus_mode = Control.FOCUS_NONE
+	_button(row, "Save [Ctrl+S]", _save_game).focus_mode = Control.FOCUS_NONE
 	_button(row, "Save & menu [Esc]", _return_to_menu).focus_mode = Control.FOCUS_NONE
 	var bottom := PanelContainer.new()
 	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	bottom.offset_top = -100
+	bottom.grow_vertical = Control.GROW_DIRECTION_BEGIN # Taller hint text grows upward, never off-screen.
 	_hud.add_child(bottom)
 	var column := VBoxContainer.new()
 	bottom.add_child(column)
@@ -304,8 +326,9 @@ func _enter_map(active_session: RefCounted) -> void:
 	map_view.show()
 	map_view.attach(session)
 	_hold_delay = 0.2
+	_discard_on_exit = false
 	_update_info()
-	_notice.text = "Explore freely. Save with F5; Esc saves and returns to the menu."
+	_notice.text = "Explore freely. Save with Ctrl+S; Esc saves and returns to the menu."
 	get_viewport().gui_release_focus()
 
 func _update_info() -> void:
@@ -346,8 +369,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if _inventory_panel.visible:
 		return
-	if event.keycode == KEY_F5 or event.physical_keycode == KEY_F5:
+	if _is_save_shortcut(event):
 		_save_game()
+	elif event.ctrl_pressed or event.alt_pressed:
+		return # Modified keys are not movement/interaction commands.
 	elif event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE:
 		_return_to_menu()
 	elif event.keycode == KEY_E or event.physical_keycode == KEY_E:
@@ -368,15 +393,19 @@ func _input(event: InputEvent) -> void:
 	if event.keycode in [KEY_I, KEY_ESCAPE] or event.physical_keycode in [KEY_I, KEY_ESCAPE]:
 		_toggle_inventory()
 		get_viewport().set_input_as_handled()
-	elif event.keycode == KEY_F5 or event.physical_keycode == KEY_F5:
+	elif _is_save_shortcut(event):
 		_save_game()
 		get_viewport().set_input_as_handled()
+
+static func _is_save_shortcut(event: InputEventKey) -> bool:
+	# Not F5: in the Godot editor F5 restarts the project and would drop unsaved play.
+	return event.ctrl_pressed and (event.keycode == KEY_S or event.physical_keycode == KEY_S)
 
 func _process(delta: float) -> void:
 	if session == null or _menu.visible or _inventory_panel.visible:
 		return
 	_hold_delay -= delta
-	if _hold_delay > 0:
+	if _hold_delay > 0 or Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT):
 		return
 	for action in MOVE_KEYS:
 		if Input.is_action_pressed(action):
@@ -387,7 +416,11 @@ func _process(delta: float) -> void:
 func _save_game() -> void:
 	if session == null:
 		return
-	_notice.text = "Saved to local SQLite." if session.save() else "Save failed: " + session.last_error
+	if session.save():
+		_discard_on_exit = false
+		_notice.text = "Saved to local SQLite."
+	else:
+		_notice.text = "Save failed: " + session.last_error
 	_update_info()
 
 func _return_to_menu() -> void:
@@ -411,8 +444,10 @@ func _message(text: String, error: bool = false) -> void:
 	_status.modulate = Color("f09283") if error else Color("d4c899")
 
 func _request_exit() -> void:
-	if session != null and not session.save():
-		_notice.text = "Cannot exit without saving: " + session.last_error
+	if session != null and not _discard_on_exit and not session.save():
+		# Never trap the player: a second close request explicitly discards unsaved play.
+		_discard_on_exit = true
+		_notice.text = "Save failed: %s  Close again to quit WITHOUT saving (changes since the last save are lost)." % session.last_error
 		return
 	get_tree().quit()
 

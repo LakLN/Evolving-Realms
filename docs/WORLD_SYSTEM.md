@@ -109,11 +109,12 @@ Run -> map. Blank seeds use a random seed then persist it; no new World/Run is
 created implicitly on startup. HUD reports position, biome, turns, exploration,
 chunk count and unsaved marker. Hover saved runs for full ID/creation timestamp.
 
-WASD/arrows move; E interacts; I shows inventory. F5 saves. Esc closes inventory
+WASD/arrows move; E interacts; I shows inventory. Ctrl+S saves. Esc closes inventory
 first, otherwise Esc or Save & menu saves before unloading terrain.
 Window close saves before quit. On save failure the map remains open with an error;
-the app never discards unsaved changes or chooses a fresh DB as a fallback. There
-is no per-step autosave/crash recovery guarantee; use F5 during long exploration.
+the app never silently discards unsaved changes or chooses a fresh DB as a fallback.
+Only a second close request after a failed save quits without saving (E). There
+is no per-step autosave/crash recovery guarantee; use Ctrl+S during long exploration.
 Minimum logical window is 1000x700, default 1100x720 with canvas scaling.
 
 ## Verification
@@ -134,5 +135,6 @@ cross rendered chunk boundaries, check camera/fog layers, save/resume and reopen
 the menu with both Runs. OpenGL screenshots are visually inspected; this is
 automated input/renderer verification, not a claim of human manual playtesting.
 
-No standalone Windows export is produced in C. Checkpoint E must still include
-SQLite DLLs and migration SQL in export, then verify standalone lifecycle/saves.
+Checkpoint E exports and verifies the standalone Windows build (README, Standalone
+build). Fog cost measured in E: about 9 new tiles and ~200 bytes of save JSON per
+exploratory step; 100k remembered tiles save in ~2.5 s and resume in ~1.7 s.

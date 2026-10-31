@@ -173,7 +173,8 @@ func materialize(instance: Dictionary) -> bool:
 		return false
 	var existing: Dictionary = registry.load_instance(world.world_id, instance.instance_id)
 	if not existing.is_empty():
-		if existing.content_id != instance.content_id or existing.version != instance.version or existing.position != instance.position:
+		# Compare numerically: stored JSON yields floats, freshly generated placements ints.
+		if existing.content_id != instance.content_id or int(existing.version) != int(instance.version) or int(existing.position.x) != int(instance.position.x) or int(existing.position.y) != int(instance.position.y):
 			return _fail("Established object conflicts with generated placement")
 		return true
 	if registry.last_error != "Content instance not found":

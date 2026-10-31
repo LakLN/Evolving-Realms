@@ -1,7 +1,7 @@
 # Agent workflow
 
 Read docs/PROJECT_VISION.md, ARCHITECTURE.md, ROADMAP.md and PROGRESS.md before changes.
-Current authorized scope: Milestone 01 Checkpoint D only. Do not start E without a new user instruction.
+Milestone 01 (Checkpoints A-E) is complete. Wait for the user to review the first build.
 Do not start Milestone 02 without user approval.
 Keep Godot gameplay local and independent of Python, internet, keys and AI providers.
 Use stable content IDs; separate blueprint, definitions, instances and per-run mutations.

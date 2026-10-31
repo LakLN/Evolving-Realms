@@ -151,7 +151,8 @@ E gathers/opens/picks up from a highlighted target; the HUD names it. I toggles 
 right-side inventory panel showing name, description, type, quantity and stack
 rules, plus an individual ID for non-stackables. Inventory navigation spends no
 turns and pauses keyboard movement. Esc closes the panel first; otherwise it
-saves and returns to menu. F5 works inside and outside inventory.
+saves and returns to menu. Ctrl+S saves inside and outside inventory (not F5,
+which the Godot editor uses to restart the project).
 
 `scripts/test.ps1 -Render -Service` runs all B/C/D suites, native OpenGL UI flows and
 the existing optional service health check. D covers generation order/biomes/valid
@@ -163,6 +164,7 @@ Tests use UUID databases under user://checkpoint_d_tests/, never production save
 This is automated real-engine input/rendering validation with inspected screenshots,
 not a claim of human manual playtesting.
 
-No Windows standalone build is produced in D. E must include the existing DLL,
-migration SQL and **content/starter_pack.json** in export filters and verify
-standalone saves. Do not start E without a new user request.
+Checkpoint E exports these files (DLL, migration SQL, content/starter_pack.json) in
+the standalone build and verifies gather/open/inventory/save there. E also fixed
+materialize comparing stored (float) and generated (int) coordinates, which refused
+an object already materialized by another concurrently open Run.

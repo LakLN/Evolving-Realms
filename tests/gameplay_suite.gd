@@ -84,7 +84,10 @@ func _run() -> void:
 	var saved_explored: Dictionary = app.session.explored.duplicate()
 	var saved_turn: int = app.session.run.state.turn
 	await _key(KEY_F5)
-	check(not app.session.dirty and app._notice.text.contains("Saved"), "F5 saves via actual input flow")
+	check(app.session.dirty, "F5 is not a game shortcut (Godot editor uses it to restart the project)")
+	await _save_shortcut()
+	check(not app.session.dirty and app._notice.text.contains("Saved"), "Ctrl+S saves via actual input flow")
+	check(app.session.position == saved_position and int(app.session.run.state.turn) == saved_turn, "Ctrl+S does not also move the player with S")
 	await _key(KEY_ESCAPE)
 	check(app._menu.visible and app.session == null and app._runs.item_count == 1, "Escape saves, releases terrain and returns to saved-run list")
 	check(app.map_view.chunk_nodes.is_empty(), "Leaving map releases rendered chunk nodes")
@@ -112,10 +115,26 @@ func _run() -> void:
 	print("CHECKPOINT C GAMEPLAY: %d checks, %d failures (%s)" % [checks, failures, DisplayServer.get_name()])
 	quit(0 if failures == 0 else 1)
 
-func _key(key: int) -> void:
+func _save_shortcut() -> void:
+	# Hold Ctrl like a real keyboard so S is not also treated as movement.
+	var ctrl := InputEventKey.new()
+	ctrl.keycode = KEY_CTRL
+	ctrl.physical_keycode = KEY_CTRL
+	ctrl.ctrl_pressed = true
+	ctrl.pressed = true
+	Input.parse_input_event(ctrl)
+	await _key(KEY_S, true)
+	ctrl = ctrl.duplicate()
+	ctrl.ctrl_pressed = false
+	ctrl.pressed = false
+	Input.parse_input_event(ctrl)
+	await process_frame
+
+func _key(key: int, ctrl: bool = false) -> void:
 	var event := InputEventKey.new()
 	event.keycode = key
 	event.physical_keycode = key
+	event.ctrl_pressed = ctrl
 	event.pressed = true
 	Input.parse_input_event(event)
 	await process_frame

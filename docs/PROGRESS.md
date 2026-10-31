@@ -1,6 +1,108 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: D complete; E not started
+## Current checkpoint: E complete — Milestone 01 complete
+
+Continued from commit d3c9675 with a clean tree. Read AGENTS, all design/API docs
+and the source first. Ran the full baseline before changing anything: B 96, C 49/20
+(+22 OpenGL), D 66/16 (+19 OpenGL), startup and service all passed. A–D systems are
+kept. No SQLite migration (user_version 2, record schema 1), no terrain/object
+generation version change, and no starter-pack edits. No combat, creatures,
+talents, quality tiers, AI World Creator or Milestone 02 work.
+
+### Changes in E
+
+- **Bug fix (world_objects.gd materialize):** the check for an already-established
+  placement compared stored JSON (float coordinates) with freshly generated (int)
+  placements using Dictionary `!=`. It wrongly refused "Established object conflicts"
+  when another session or process had materialized the object after this session
+  loaded the chunk, e.g. two runs of one world open at once. The fix compares numerically.
+  No data was ever lost; the action was refused. Regression tests added.
+- **Save key Ctrl+S instead of F5.** F5 is the Godot editor's Run Project shortcut. If
+  the editor has focus it restarts the game and drops unsaved play. Ctrl+S works
+  inside/outside inventory and does not also move with S (movement repeat is
+  suppressed while Ctrl/Alt is held). Buttons, hints, README and docs updated.
+- **No trap on failed exit save:** the window close used to refuse forever if saving
+  failed (e.g. stale revision from a second open instance). Now the first close keeps
+  the game open with the error. A second close explicitly quits without saving.
+  Any successful save re-arms this.
+- Bottom HUD panel grows upward; the fourth hint line used to extend past the window edge.
+- Opt-in launch arguments after `--`: `--database=<path>` and `--acceptance=write|crash|verify|legacy`
+  (src/acceptance/standalone_check.gd). They drive the real main scene and require a
+  separate DB; the default personal save is refused before it is opened (exit 2).
+- Windows export: official 4.7.2 templates (`.tpz` SHA512 matched release SHA512-SUMS)
+  installed to `%APPDATA%/Godot/export_templates/4.7.2.stable` (Windows x64 files only).
+  export_presets.cfg preset `windows` and scripts/export.ps1. scripts/test.ps1 adds the
+  integration suite and an `-Export` switch.
+
+### E verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Render -Service -Export
+```
+
+Final run, all pass:
+- import; B data **96/96**; C world **49/49**; C gameplay **22/22** headless and
+  **24/24** OpenGL; D interactions **66/66**; D gameplay **17/17** headless and **20/20**
+  OpenGL; startup; optional service health + pip check.
+- New **E integration 34/34** (tests/integration_suite.gd):
+  - a write lock held by another connection: save fails, last save/revision untouched,
+    no partial mutation; retry saves items exactly once;
+  - stale second session cannot overwrite; concurrent runs share a placement (bug above);
+  - failed window-close and failed Save & menu keep the map;
+  - separate processes run write → abrupt kill (`OS.kill`) with unsaved gather/move →
+    verify: last save exact, chest cannot pay twice, SQLite integrity/foreign keys clean;
+  - legacy resume of a copied save; refusal of the default save;
+  - Blueprint/Run/Registry consistency; fog growth measurement.
+  The three `database is locked` native errors are injected and the runner requires them.
+- **Standalone export** (`scripts/export.ps1 -Verify -Render`): builds
+  `builds/windows/EvolvingRealms.exe` (109 MB release template), `EvolvingRealms.pck`
+  (~92 KB: compiled scripts, scene, both migration SQL files, starter_pack.json; no
+  tests, no saves), `libgdsqlite.windows.template_release.x86_64.dll`, `licenses/`,
+  `README.txt`. The exported exe ran from a temp working directory (not the project) with a temp DB:
+  write **17/17** (OpenGL; 15/15 headless), abrupt kill, verify **8/8** (7/7 headless),
+  default-save refusal. Screenshots of the actual exe (map, inventory, restarted run)
+  were visually inspected: HUD, Ctrl+S labels, inventory quantities/stack rules,
+  opened chest, three fog levels, identical tile/turn/explored after restart.
+- Plain launch of the exe with no arguments (player path, real user dir): OpenGL
+  3.3 on GTX 1650 Ti, exit 0, no errors.
+- Old saves: temporary git worktrees of a34096a (B), 61afbe9 (C) and d3c9675 (D) created
+  saves with their own code: a B run with mock inventory/mutation, a C run of 60 moves
+  with 956 explored tiles, and a D run with a gathered resource and an opened chest.
+  The exported exe's `legacy` phase resumed, moved and saved every run with
+  inventory and object states unchanged (5/5, 3/3, 3/3). Worktrees were removed.
+  The personal `realms.sqlite` is empty (schema 2, no worlds), so there was no real
+  personal old save; a copy was opened read-only, and the original hash is unchanged.
+
+Automated real-engine input with inspected screenshots; no human hand playthrough is
+claimed. Manual check steps are in README (Standalone build).
+
+### Fog / exploration growth (measured)
+
+Real exploration: 400 steps → 3,769 tiles (~9.4 tiles/step), 21 bytes/tile JSON
+(~200 bytes/step). With 100k remembered tiles (roughly 10k exploratory steps), save
+takes ~2.3–2.5 s and resume ~1.7 s; the DB is 2.2 MB. No problem at Milestone 01
+play lengths, but every save rewrites and revalidates the whole array. Recommended later:
+chunk-keyed bitmask fog (128 bytes per 32x32 chunk) with an explicit migration,
+and/or incremental saves. Not rewritten in E.
+
+### Remaining limits
+
+- No autosave: a crash/kill returns to the last manual or exit save, never a partial one.
+- Second close after a failed save discards unsaved play, by explicit player choice.
+- Windows x64 only; unsigned exe (SmartScreen may warn); placeholder art; no icon.
+- Editor and export share `%APPDATA%/Godot/app_userdata/Evolving Realms`; changing the
+  project name would move saves.
+- Acceptance hook ships in the release (opt-in, separate DB only).
+- C/D limits remain: coordinate/spawn bounds, basic LOS, no respawn/equipment/
+  crafting/item use, no spatial index for materialized instances, fog growth above.
+
+### Next step
+
+Stop here. The user reviews the first build (`builds/windows/EvolvingRealms.exe`,
+rebuilt with `.\scripts\export.ps1`) before deciding the next steps. Milestone 02 needs
+explicit approval.
+
+## Checkpoint D record (historical)
 
 Continued from verified commit 61afbe9 with a clean working tree. Read required
 workflow/design/API docs and current source before changes. Terrain v1, chunk
@@ -70,12 +172,9 @@ Actual Godot 4.7.2 and native SQLite. Full command:
   no unexpected script/extension/native errors. Logs: .tools/test-*.log.
   Tests use UUID user://checkpoint_d_tests/ files, not production saves.
 
-### Remaining limits / next checkpoint
+### D remaining limits (at the time)
 
-No standalone Windows export produced. E must install matching templates, include
-native SQLite DLL, migration SQL and content/starter_pack.json, then verify clean
-and existing saves in a standalone build. Do not start E without a new user request.
-Milestone 01 remains incomplete until E is verified.
+No standalone export in D (done in E).
 
 Inventory is receive/store/view only: no equipment, item-use, drop, crafting or
 weight system. Each item ID pins one version per Run; conflicting-version awards

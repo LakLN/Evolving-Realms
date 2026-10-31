@@ -1,21 +1,22 @@
-param([switch]$Render, [switch]$Service)
+param([switch]$Render, [switch]$Service, [switch]$Export)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $projectRoot
 
 function Invoke-EngineCheck {
-    param([string]$Name, [string[]]$EngineArgs, [string]$Summary = '', [int]$ExpectedNativeErrors = 0)
+    param([string]$Name, [string[]]$EngineArgs, [string]$Summary = '', [string[]]$ExpectedErrors = @())
     $output = & "$PSScriptRoot/godot.ps1" @EngineArgs
     $code = $LASTEXITCODE
     $log = ($output | Out-String)
     $log | Set-Content -Encoding UTF8 -LiteralPath ".tools/test-$Name.log"
     $errors = [regex]::Matches($log, '(?m)^(ERROR:|SCRIPT ERROR:)').Count
-    if ($code -ne 0 -or $errors -ne $ExpectedNativeErrors -or ($Summary -ne '' -and $log -notmatch $Summary)) {
+    if ($code -ne 0 -or $errors -ne $ExpectedErrors.Count -or ($Summary -ne '' -and $log -notmatch $Summary)) {
         Write-Host $log
         throw "$Name failed (exit $code, native errors $errors). See .tools/test-$Name.log"
     }
-    if ($ExpectedNativeErrors -gt 0 -and ($log -notmatch 'SQL error: injected failure' -or $log -notmatch 'SQL error: table content_definitions already exists')) {
-        throw 'Unexpected native errors in data suite'
+    foreach ($expected in ($ExpectedErrors | Select-Object -Unique)) {
+        $wanted = @($ExpectedErrors | Where-Object { $_ -eq $expected }).Count
+        if ([regex]::Matches($log, "SQL error: $expected").Count -ne $wanted) { throw "Unexpected native errors in $Name" }
     }
     Write-Host "PASS $Name (exit $code). Log: .tools/test-$Name.log"
     if ($Summary -ne '') { Write-Host ([regex]::Match($log, $Summary).Value) }
@@ -23,15 +24,22 @@ function Invoke-EngineCheck {
 
 try {
     Invoke-EngineCheck -Name 'import' -EngineArgs @('--headless', '--editor', '--import')
-    Invoke-EngineCheck -Name 'data' -EngineArgs @('--headless', '--script', 'res://tests/data_suite.gd') -Summary 'CHECKPOINT B: \d+ checks, 0 failures' -ExpectedNativeErrors 2
+    Invoke-EngineCheck -Name 'data' -EngineArgs @('--headless', '--script', 'res://tests/data_suite.gd') -Summary 'CHECKPOINT B: \d+ checks, 0 failures' -ExpectedErrors @('injected failure', 'table content_definitions already exists')
     Invoke-EngineCheck -Name 'world' -EngineArgs @('--headless', '--script', 'res://tests/world_suite.gd') -Summary 'CHECKPOINT C WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'gameplay' -EngineArgs @('--headless', '--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'interactions' -EngineArgs @('--headless', '--script', 'res://tests/interaction_suite.gd') -Summary 'CHECKPOINT D INTERACTIONS: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'interaction-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
+    # Three injected write locks (save, window close, Save & menu) are expected.
+    Invoke-EngineCheck -Name 'integration' -EngineArgs @('--headless', '--script', 'res://tests/integration_suite.gd') -Summary 'CHECKPOINT E INTEGRATION: \d+ checks, 0 failures' -ExpectedErrors @('database is locked', 'database is locked', 'database is locked')
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-interactions' -EngineArgs @('--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
+    }
+    if ($Export) {
+        # Rebuild builds/windows and run the acceptance on the exported release exe.
+        & "$PSScriptRoot/export.ps1" -Verify -Render:$Render
+        if ($LASTEXITCODE -ne 0) { throw 'Standalone export verification failed' }
     }
     if ($Service) {
         & '.venv/Scripts/python.exe' -E scripts/check_service.py

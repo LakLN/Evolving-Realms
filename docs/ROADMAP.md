@@ -14,13 +14,18 @@
   weighted deterministic loot, pickup/gather/open actions, stack/individual item
   records, inventory UI and per-run object deltas. Reuses C's map/fog/menu and B's
   schema/save contracts; no SQLite migration.
-- E (not started; requires next user instruction): integrated regression/acceptance, save management hardening as needed,
-  Windows export and standalone gameplay verification.
+- E (complete): integrated regression/acceptance, save-failure/stale/abrupt-exit
+  hardening, B/C/D save compatibility, Ctrl+S instead of the editor's F5, Windows
+  x64 release export and verification of the exported exe. No migration; schema and
+  generation versions unchanged.
+
+Milestone 01 is complete. Next step: the user reviews the first build before any
+Milestone 02 scope is approved.
 
 Acceptance: create seeded world, explore and gather/open chests in run 1, save,
 restart, resume unchanged, create independent run 2 with reset resources and the
 same geography; register new structured content without editing gameplay logic.
-No real LLM or combat required. Do not call M01 complete until verified.
+No real LLM or combat required. Verified in Checkpoint E on the exported build.
 
 ## Later milestones (require scope approval)
 

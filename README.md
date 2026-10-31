@@ -1,15 +1,24 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 01, Checkpoint D complete**. Create/select a world,
+Current state: **Milestone 01 complete (Checkpoint E)**. Create/select a world,
 explore seeded biomes, gather resources, open chests and inspect inventory in
-independent saved runs.
+independent saved runs — in the editor or as a standalone Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
 
-## Run
+## Play the standalone Windows build
 
-Open `project.godot` with `.tools/godot/Godot_v4.7.2-stable_win64.exe`, then press F6
-on `scenes/main.tscn` or F5 to run the project. No Python/server/network is needed.
+Build once (see [Standalone build](#standalone-build)), then run
+`builds\windows\EvolvingRealms.exe`. Keep `EvolvingRealms.pck` and
+`libgdsqlite.windows.template_release.x86_64.dll` in the same folder; the folder
+can be copied anywhere. No Godot editor, Python, server, internet or account needed.
+Saves are always `%APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite`
+(shared with editor runs), never inside the build folder.
+
+## Run from the editor
+
+Open `project.godot` with `.tools/godot/Godot_v4.7.2-stable_win64.exe`, then press the
+editor's F5 (Run Project). F5 belongs to the editor; the game saves with **Ctrl+S**.
 
 1. Enter a world name and optional signed 32-bit seed, then click **Create world**.
    Existing worlds are available in the dropdown.
@@ -22,9 +31,11 @@ on `scenes/main.tscn` or F5 to run the project. No Python/server/network is need
    one turn. Depleted resources do not respawn in the same run.
 5. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
    Movement pauses while it is open. **I / Esc** closes inventory.
-6. **F5** or **Save** saves locally. **Esc** / **Save & menu** saves before leaving
-   the map (close inventory first).
-   Window close also saves; on failure the game stays open and reports the error.
+6. **Ctrl+S** or **Save** saves locally, also while inventory is open.
+   **Esc** / **Save & menu** saves before leaving the map (Esc closes inventory first).
+   Window close also saves. If a save fails, the game stays open and reports the error;
+   closing again quits *without* saving (only changes since the last save are lost).
+   There is no autosave: a crash or forced kill returns to the last save.
 7. Choose a saved run and **Continue selected run**, or create another run in the
    same world. Geography stays consistent; inventory, discovery and object state
    are independent per run. Chests pay only once per run and reload cannot reroll loot.
@@ -41,7 +52,8 @@ PowerShell commands from the repository root:
 ```powershell
 .\scripts\godot.ps1 --headless --editor --import
 .\scripts\test.ps1
-.\scripts\test.ps1 -Render -Service
+.\scripts\test.ps1 -Render -Service -Export
+.\scripts\export.ps1 -Verify -Render
 .\scripts\godot.ps1 --editor
 ```
 
@@ -51,7 +63,44 @@ The test runner checks real data, world logic, resources/loot/inventory, legacy
 saves, menu/input/rendering integration and startup; it fails if a suite fails or
 emits unexpected engine errors. `-Render`
 adds windowed OpenGL gameplay and screenshots in `.tools/`. `-Service` requires
-the optional Python venv described below. Logs are `.tools/test-*.log`.
+the optional Python venv described below. `-Export` rebuilds and verifies the
+standalone exe. Logs are `.tools/test-*.log` and `.tools/standalone-*.log`.
+
+## Standalone build
+
+Requires the official Godot 4.7.2 export templates. Download
+`Godot_v4.7.2-stable_export_templates.tpz` from the
+[4.7.2 release](https://github.com/godotengine/godot/releases/tag/4.7.2-stable) and check it
+against the release `SHA512-SUMS.txt`. Then either install it from the editor
+(Editor > Manage Export Templates > Install from File) or extract
+`templates/version.txt` and `templates/windows_*_x86_64*.exe` into
+`%APPDATA%\Godot\export_templates\4.7.2.stable\`.
+
+```powershell
+.\scripts\export.ps1                 # release build -> builds\windows
+.\scripts\export.ps1 -Verify -Render # plus acceptance on the exported exe
+```
+
+The `windows` preset in `export_presets.cfg` exports a release x86_64 exe, a separate
+`.pck` and the pinned release SQLite DLL. It includes the migration `.sql` files and
+`content/starter_pack.json`, and excludes `tests/` and any `*.sqlite` file. The
+script adds `licenses/` (godot-sqlite, Godot) and a player `README.txt`. `builds/`
+is ignored by Git.
+
+`-Verify` runs the exported exe from a temporary working directory with
+`-- --database=<temp file> --acceptance=write|crash|verify`:
+- create a world through the menu, cross a chunk, gather and open a chest;
+- save with Ctrl+S on a chunk edge while the inventory is open;
+- continue the run, then start an independent Run 2;
+- kill the process with unsaved actions, then restart and check the last save.
+
+The `legacy` phase opens a copy of an existing save. Acceptance refuses to start
+without `--database`, so personal saves are never opened.
+
+Manual check: run the exe, create a world, begin a run, gather (E), open a chest,
+view the inventory (I) and press Ctrl+S. Close the window, start the exe again,
+choose **Continue selected run**, and compare tile, turn and inventory. Then begin
+a second run: it should start empty, and the first run should be unchanged.
 
 ## Local toolchain
 
@@ -85,6 +134,5 @@ Read [progress](docs/PROGRESS.md), [objects and inventory](docs/OBJECTS_AND_INVE
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 Default saves live at `user://realms.sqlite`, outside the repository. Native Windows
 x64 debug/release SQLite DLLs and their license are committed in `addons/`; see
-[dependency provenance](addons/godot-sqlite/PROVENANCE.md). No Windows export exists; install
-matching export templates and verify a standalone executable in Checkpoint E.
-Export filters must include migration `.sql` files and `content/starter_pack.json`.
+[dependency provenance](addons/godot-sqlite/PROVENANCE.md). Release builds and their
+verification are described in [Standalone build](#standalone-build).
