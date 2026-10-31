@@ -197,4 +197,3 @@ func loaded_paths(session: RefCounted) -> Dictionary:
 				distances[next] = int(distances[tile]) + 1
 				queue.append(next)
 	return distances
-
