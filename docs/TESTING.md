@@ -93,6 +93,12 @@ location pipeline. `discovery-gameplay` / `rendered-discoveries` (`-Render`) dri
 real scene (X, Space, E) and capture `.tools/discoveries-gameplay.png`. Use
 `.\scripts\test.ps1 -Only discoveries,discovery-gameplay,ai-world -Smoke`.
 
+## Run 01 telemetry
+
+`telemetry` creates a temporary World and Run, saves accepted actions, exports and
+parses JSON through the CLI, checks saved values and confirms that exporting does
+not change the Run state or revision. Use `.\scripts\test.ps1 -Only telemetry`.
+
 ## Checkpoint H suite
 
 `ai-world` (`tests/ai_world_suite.gd`, after the offline Python tests write the creature

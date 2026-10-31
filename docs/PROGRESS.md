@@ -1,4 +1,19 @@
-# Progress — 2026-11-01 (Asia/Saigon)
+# Progress — 2026-11-02 (Asia/Saigon)
+
+## Run 01 — offline telemetry (feature/run01-telemetry)
+
+- Added a manual schema-v1 JSON summary/exporter reading saved World and Run data
+  through `GameStore`; no gameplay, save schema, or telemetry persistence changed.
+- Export writes locally under `user://telemetry/` by default. The usage guide and
+  an example produced from the test Run are in `docs/RUN01_TELEMETRY.md` and
+  `docs/examples/run01-telemetry-example.json`.
+- `.\scripts\test.ps1 -Only telemetry`: PASS; import, telemetry suite (32 checks),
+  and startup passed. The suite exercised a real saved Run, CLI JSON parsing,
+  empty/ended/legacy-field cases, and unchanged Run state/revision after export.
+- Actual playtime, combat attempt/outcome totals, and death cause remain unavailable:
+  the save layer does not persist them. No full regression or Windows export run.
+- Next: after a Playtest save, manually export the selected Run with
+  `.\scripts\export-telemetry.ps1 -RunId <full-run-id>`.
 
 ## Current state: Run 01 Task A — AI World Creator content pack (branch feature/run01-ai-content)
 

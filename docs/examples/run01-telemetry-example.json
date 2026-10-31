@@ -1,0 +1,176 @@
+{
+  "combat": {
+    "combat_attempts": {
+      "available": false,
+      "reason": "Combat attempts are not persisted as a history or counter.",
+      "value": null
+    },
+    "combat_losses": {
+      "available": false,
+      "reason": "Combat outcomes are not persisted as a history or counter.",
+      "value": null
+    },
+    "combat_wins": {
+      "available": false,
+      "reason": "Combat outcomes are not persisted as a history or counter.",
+      "value": null
+    },
+    "creatures_defeated": {
+      "available": true,
+      "source": "saved creature mutations marked dead",
+      "value": 0
+    },
+    "player_death_cause": {
+      "available": false,
+      "reason": "The cause of player death is not persisted.",
+      "value": null
+    }
+  },
+  "exploration": {
+    "explored_chunks": {
+      "available": true,
+      "source": "unique chunks represented in the saved explored mask",
+      "value": 2
+    },
+    "locations_discovered": [],
+    "locations_discovered_count": {
+      "available": true,
+      "source": "saved location discovery mutations",
+      "value": 0
+    }
+  },
+  "generated_at_utc": "2026-10-31T18:37:29Z",
+  "milestones": [
+    {
+      "timestamp": {
+        "available": true,
+        "source": "saved run creation record",
+        "value": "2026-10-31T18:37:27Z"
+      },
+      "turn": {
+        "available": true,
+        "source": "saved run creation record",
+        "value": 0
+      },
+      "type": "run_created"
+    }
+  ],
+  "progression": {
+    "skills_learned": {
+      "available": true,
+      "source": "saved character skill records",
+      "value": []
+    },
+    "talents": {
+      "available": true,
+      "source": "saved character talent records",
+      "value": []
+    },
+    "tracks": {
+      "adventurer": {
+        "level": {
+          "available": true,
+          "source": "saved progression track",
+          "value": 1
+        },
+        "xp": {
+          "available": true,
+          "source": "saved progression track",
+          "value": 0
+        }
+      }
+    },
+    "tracks_available": {
+      "available": true,
+      "source": "saved character progression field",
+      "value": true
+    }
+  },
+  "run": {
+    "created_at": "2026-10-31T18:37:27Z",
+    "mode": "normal",
+    "play_duration_seconds": {
+      "available": false,
+      "reason": "Actual play duration is not persisted; run creation time is not a playtime measure.",
+      "value": null
+    },
+    "run_id": "b172ce88-0c2f-46a6-8013-66621fb536bc",
+    "saved_status": {
+      "available": true,
+      "source": "saved Run state; normal-mode deaths after the last save are not recorded",
+      "value": "alive"
+    },
+    "seed": {
+      "available": true,
+      "source": "saved run header",
+      "value": 7301
+    },
+    "spawn": {
+      "x": -1005,
+      "y": -956
+    },
+    "spawn_biome": "meadow",
+    "turns_at_last_save": {
+      "available": true,
+      "source": "saved Run state",
+      "value": 3
+    }
+  },
+  "schema_version": 1,
+  "survival_snapshot": {
+    "resources": {
+      "energy": {
+        "progress": {
+          "available": true,
+          "source": "last saved character resources",
+          "value": 0
+        },
+        "value": {
+          "available": true,
+          "source": "last saved character resources",
+          "value": 20
+        }
+      }
+    },
+    "resources_available": {
+      "available": true,
+      "source": "saved character resources field",
+      "value": true
+    },
+    "stats": {
+      "hp": {
+        "available": true,
+        "source": "last saved character stats",
+        "value": 30
+      },
+      "hunger": {
+        "available": true,
+        "source": "last saved character stats",
+        "value": 3
+      },
+      "max_hp": {
+        "available": true,
+        "source": "last saved character stats",
+        "value": 30
+      },
+      "thirst": {
+        "available": true,
+        "source": "last saved character stats",
+        "value": 6
+      }
+    },
+    "turn": {
+      "available": true,
+      "source": "last saved Run state",
+      "value": 3
+    }
+  },
+  "world": {
+    "seed": {
+      "available": true,
+      "source": "saved world header",
+      "value": 1847
+    },
+    "world_id": "7289802c-2ccd-4ec0-8a58-a58d87324b27"
+  }
+}
