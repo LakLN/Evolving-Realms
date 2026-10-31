@@ -1,11 +1,12 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 02, Checkpoint B complete** (Milestone 01 complete).
+Current state: **Milestone 02, Checkpoint C complete** (Milestone 01 complete).
 Create/select a world, explore seeded biomes, gather resources, open chests, meet
 creatures by biome, fight them turn by turn on the map, manage hunger and thirst,
-eat, drink, heal and rest, and face death in normal or permadeath runs, in the editor
-or as a standalone Windows x64 build.
+eat, drink, heal and rest, find equipment in 10 quality tiers, equip it and level up,
+and face death in normal or permadeath runs, in the editor or as a standalone
+Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
 
 ## Play the standalone Windows build
@@ -51,17 +52,27 @@ editor's F5 (Run Project). F5 belongs to the editor; the game saves with **Ctrl+
    when danger appears. It is refused with a hostile creature in sight.
    Normal runs autosave every 25 turns when safe; permadeath saves every risky action
    (and every 10 safe ones).
-7. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
+7. Equipment and growth: you start with a Common wooden club equipped. Chests,
+   the Wayfarer's cache and some creatures can drop weapons, armor, helmets, boots and
+   accessories. Item names show their quality tier in color, from Phế Phẩm (gray) to
+   Tối Thượng (rainbow); higher tiers boost the item's stats. In the inventory, gear is
+   tagged `[gear]` and its detail compares it with what you wear ("Attack 7→10").
+   **U** / Enter equips it, and the replaced item returns to the inventory. **C** opens
+   the character & gear panel: level/XP, stats split into base + level + gear, five
+   slots; **U** unequips the selected slot. Equipping or unequipping spends one turn.
+   Kills give XP; each level adds max HP and attack (defense every second level),
+   with no fixed level cap.
+8. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
    return to the menu. **Permadeath:** the death is saved, the run is marked ENDED
    and cannot be continued; start a new run in the same world.
-8. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
+9. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
    Movement pauses while it is open. **I / Esc** closes inventory.
-9. **Ctrl+S** or **Save** saves locally, also while inventory is open.
+10. **Ctrl+S** or **Save** saves locally, also while inventory is open.
    **Esc** / **Menu** saves before leaving the map (Esc closes inventory first).
    Window close also saves. If a save fails, the game stays open and reports the error;
    closing again quits *without* saving (only changes since the last save are lost).
    A crash or forced kill returns to the last manual save or autosave.
-10. Choose a saved run and **Continue selected run**, or create another run in the
+11. Choose a saved run and **Continue selected run**, or create another run in the
    same world. Geography stays consistent; inventory, discovery, object and creature
    state are independent per run. Chests and creatures pay only once per run and reload
    cannot reroll loot or revive killed creatures.
@@ -73,7 +84,8 @@ also establish a seeded fixed Wayfarer's cache in their Blueprint. Existing Worl
 keep their Blueprint and receive procedural resources/chests through the data pack.
 Creature/combat design, data format and limits: [docs/CREATURES_AND_COMBAT.md](docs/CREATURES_AND_COMBAT.md).
 Survival, item use, rest and autosave: [docs/SURVIVAL_AND_ITEMS.md](docs/SURVIVAL_AND_ITEMS.md).
-No talents, item quality, skills, equipment or crafting yet.
+Equipment, quality tiers, loot progression and levels: [docs/EQUIPMENT_AND_PROGRESSION.md](docs/EQUIPMENT_AND_PROGRESSION.md).
+No talents, skills, crafting or equipment enhancement yet.
 
 PowerShell commands from the repository root:
 
@@ -157,7 +169,7 @@ the vendored godot-sqlite v4.9 GDExtension; Python is entirely optional.
 
 ## Handoff
 
-Read [progress](docs/PROGRESS.md), [survival and items](docs/SURVIVAL_AND_ITEMS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
+Read [progress](docs/PROGRESS.md), [equipment and progression](docs/EQUIPMENT_AND_PROGRESSION.md), [survival and items](docs/SURVIVAL_AND_ITEMS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
 [world system](docs/WORLD_SYSTEM.md), [data API](docs/DATA_API.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 Default saves live at `user://realms.sqlite`, outside the repository. Native Windows

@@ -15,7 +15,7 @@ static func validate(effects: Variant) -> String:
 			return "Item effect amount must be 1..100000"
 	return ""
 
-static func apply(stats: Dictionary, effects: Array) -> Array:
+static func apply(stats: Dictionary, effects: Array, max_hp: int = -1) -> Array:
 	## Mutates stats; returns only real changes [{type, stat, before, after}].
 	var changes: Array = []
 	for effect in effects:
@@ -23,7 +23,7 @@ static func apply(stats: Dictionary, effects: Array) -> Array:
 		var before := int(stats[stat])
 		match effect.type:
 			"heal":
-				stats.hp = mini(int(stats.max_hp), before + int(effect.amount))
+				stats.hp = mini(max_hp if max_hp > 0 else int(stats.max_hp), before + int(effect.amount))
 			"sate", "quench":
 				stats[stat] = maxi(0, before - int(effect.amount))
 		if int(stats[stat]) != before:

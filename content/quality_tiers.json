@@ -1,0 +1,16 @@
+{
+  "rules_version": 1,
+  "_note": "Quality is item grade, not drop rarity. stat_bonus_percent only scales equipment base stats.",
+  "tiers": [
+    {"id": "phe_pham", "rank": 1, "name": "Phế Phẩm", "name_en": "Scrap", "color": "8c8c8c", "style": "plain", "stat_bonus_percent": -20},
+    {"id": "pho_thong", "rank": 2, "name": "Phổ Thông", "name_en": "Common", "color": "e6e6e6", "style": "plain", "stat_bonus_percent": 0},
+    {"id": "uu_tu", "rank": 3, "name": "Ưu Tú", "name_en": "Fine", "color": "5fd068", "style": "plain", "stat_bonus_percent": 15},
+    {"id": "hiem_co", "rank": 4, "name": "Hiếm Có", "name_en": "Rare", "color": "4f94ec", "style": "plain", "stat_bonus_percent": 30},
+    {"id": "su_thi", "rank": 5, "name": "Sử Thi", "name_en": "Epic", "color": "b06ae6", "style": "plain", "stat_bonus_percent": 50},
+    {"id": "truyen_thuyet", "rank": 6, "name": "Truyền Thuyết", "name_en": "Legendary", "color": "f39436", "style": "plain", "stat_bonus_percent": 75},
+    {"id": "than_thoai", "rank": 7, "name": "Thần Thoại", "name_en": "Mythic", "color": "f4d23c", "style": "plain", "stat_bonus_percent": 100},
+    {"id": "chi_ton", "rank": 8, "name": "Chí Tôn", "name_en": "Supreme", "color": "d6f0fb", "style": "platinum", "stat_bonus_percent": 140},
+    {"id": "than_thanh", "rank": 9, "name": "Thần Thánh", "name_en": "Divine", "color": "e0b44c", "style": "black_gold", "stat_bonus_percent": 200},
+    {"id": "toi_thuong", "rank": 10, "name": "Tối Thượng", "name_en": "Paramount", "color": "ff5f5f", "style": "rainbow", "stat_bonus_percent": 300}
+  ]
+}

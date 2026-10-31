@@ -69,12 +69,18 @@ func award(registry: RefCounted, world_id: String, inventory: Dictionary, loot: 
 				var item_id := "item:" + (identity_key + "/drop/" + str(index) + "/unit/" + str(unit)).sha256_text()
 				if ids.has(item_id):
 					return _error("This individual item award was already applied")
-				instances.append({"instance_id": item_id, "metadata": {"source": identity_key}})
+				var metadata := {"source": identity_key}
+				if drop.get("quality") is String:
+					metadata.quality = drop.quality # Per-instance quality tier ID.
+				instances.append({"instance_id": item_id, "metadata": metadata})
 				ids[item_id] = true
 			entry.instances = instances
 		entry.quantity = before + int(drop.quantity)
 		next[drop.content_id] = entry
-		received.append({"content_id": drop.content_id, "version": int(drop.version), "quantity": int(drop.quantity), "name": definition.name})
+		var receipt := {"content_id": drop.content_id, "version": int(drop.version), "quantity": int(drop.quantity), "name": definition.name}
+		if drop.get("quality") is String:
+			receipt.quality = drop.quality
+		received.append(receipt)
 	last_error = ""
 	return {"inventory": next, "received": received}
 
@@ -123,7 +129,18 @@ func rows(registry: RefCounted, world_id: String, inventory: Dictionary) -> Arra
 		var flag: Variant = definition.payload.get("stackable", limit > 1)
 		var stackable: bool = flag if flag is bool else false
 		var slots: Variant = entry.get("stacks", []) if stackable else entry.get("instances", [])
-		result.append({"content_id": content_id, "version": entry.version, "name": definition.name, "description": definition.description, "type": definition.metadata.get("category", definition.kind), "quantity": entry.quantity, "stackable": stackable, "slots": slots if slots is Array else [], "stack_limit": limit})
+		var row := {"content_id": content_id, "version": entry.version, "name": definition.name, "description": definition.description, "type": definition.metadata.get("category", definition.kind), "quantity": entry.quantity, "stackable": stackable, "slots": slots if slots is Array else [], "stack_limit": limit, "definition": definition, "instance_id": "", "metadata": {}}
+		if definition.payload.has("equipment") and slots is Array and slots.size() == int(entry.quantity):
+			# Equipment: one row per individual instance (each has its own quality).
+			for record in slots:
+				var single := row.duplicate()
+				single.quantity = 1
+				single.slots = [record]
+				single.instance_id = str(record.get("instance_id", ""))
+				single.metadata = record.get("metadata", {})
+				result.append(single)
+			continue
+		result.append(row)
 	return result
 
 func _error(message: String) -> Dictionary:

@@ -35,7 +35,11 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
   - B (complete): data-driven hunger/thirst/recovery/starvation, item_use definitions
     with effect handlers, use/rest actions, safe normal autosave, permadeath commits
     on every risky action (and every 10 safe ones). No migration.
-  - C and later: not started; require user approval.
+  - C (complete): 10 data-defined quality tiers, five equipment slots, equip/unequip/
+    replace, effective stats (base + level growth + gear), loot extensions with
+    quality weights, XP/levels per progression track without a hard cap, character &
+    gear UI. No migration.
+  - D and later: not started; require user approval.
 03: randomized talents, effect handlers, skill books and learning requirements.
 04: real provider, region content, quests, context, dependencies and persistence.
 05: capabilities, mechanic proposals, isolated development, tests, migrations,

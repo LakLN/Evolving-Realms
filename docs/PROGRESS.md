@@ -1,6 +1,139 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint B complete (survival, consumables, rest, save safety)
+## Current checkpoint: Milestone 02 Checkpoint C complete (equipment, quality, loot progression, growth)
+
+Continued from af691c3 (clean tree) on explicit user approval of Checkpoint C only.
+Read AGENTS and all design/API docs plus source first. Reused: Content Registry,
+item instance records, LootTable/Inventory award, the `perform_action` turn order,
+Combat and atomic revision-checked saves. No SQLite migration (user_version 2, record
+schema 1), no generation change, no edits to existing v1 packs. Not started: talents,
+skill books, crafting/forging/alchemy, enhancement, NPCs/quests, AI World Creator,
+pets, multiplayer, Checkpoint D.
+
+### Implemented
+
+- **10 quality tiers** as central data (`content/quality_tiers.json`):
+  - Vietnamese names Phế Phẩm → Tối Thượng, strict ranks, colors;
+  - platinum / black-gold / rainbow styles;
+  - a per-tier gear stat bonus that is separate from drop chance.
+  - Quality is stored per item instance (tier ID in metadata) with an optional
+    definition default, so any item kind can be graded.
+- **Equipment:**
+  - five data slots (weapon, armor, helmet, boots, accessory);
+  - definitions with base stats, flat/percent modifiers and a level requirement;
+  - 8 sample items;
+  - `equip` / `unequip` turn actions over pure, count-preserving moves of
+    `{instance_id, metadata}` between inventory and `character.equipment`, validated
+    before change;
+  - refused actions cost nothing;
+  - loading refuses corrupt saves (invalid slot item, an instance both equipped and in
+    the inventory).
+- **Effective stats** (`src/core/character_stats.gd`):
+  - never stored, always `(base + level growth + gear flat) × (100 + gear %) / 100`;
+  - used by player and creature attacks, survival recovery, the healing cap,
+    autosave/permadeath risk checks and the HUD;
+  - HP is clamped when max HP drops.
+- **Loot progression:** `loot_extension` definitions (new capability) attach extra,
+  independently keyed rolls with a chance and quality weights to the Wayfarer's cache
+  (guaranteed Fine blade), weathered chests (40%), wolves, boars, deer and crabs.
+  Resources drop no gear. Base v1 rolls are unchanged, so nothing is rerolled.
+- **Progression:**
+  - XP from kills (data weights over creature stats), in the same action as the kill;
+  - per-track levels (`adventurer`) with a growth curve;
+  - no hard cap (`max_level: 0`);
+  - growth +3 HP / +1 ATK per level and +1 DEF every 2 levels;
+  - other power paths can be added as tracks or modifier sources.
+- **Starting kit (data):** new runs start with a Common wooden club equipped. Old runs
+  get no kit.
+- **UI:**
+  - HUD `Lv N HP a/b ATK x DEF y`;
+  - inventory rows `[Tier] Name` in tier colors with `[gear]`;
+  - details with tier rank/bonus, stats, requirement and comparison
+    ("If equipped (replaces …): Attack 7→10 (+3)");
+  - U equips;
+  - character & gear panel (C) with level/XP, base + level + gear breakdown, quality-
+    colored slots, U unequips;
+  - messages for equip/unequip, XP, level-ups and tiered loot.
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Render -Service -Export
+```
+
+All pass (exit 0):
+- B data 96/96; C world 49/49; C gameplay 22/22 headless and 24/24 OpenGL; D
+  interactions 66/66; D gameplay 17/17 and 20/20; E integration 34/34; A combat 75/75;
+  A combat UI 20/20 and 23/23 (HUD expectation updated to `Lv 1 HP 30/30 ATK 7`);
+  B survival 60/60; B survival UI 10/10 and 12/12; startup; optional service and pip.
+- **New equipment suite 66/66:**
+  - quality: 10 tiers in official order with Vietnamese names, strict ranks,
+    platinum/black-gold/rainbow styles, unknown tiers rejected, instance quality
+    overrides the definition default, no drop chance in tiers;
+  - starting kit: Common club equipped, empty inventory, ATK 7;
+  - equip/replace: one turn, ID and metadata preserved, every instance conserved;
+  - refusals: missing instance, non-equipment item, level requirement, empty or
+    unknown slot, unknown-slot and stackable definitions;
+  - modifiers: armor DEF/max HP, charm flat + percent, recompute and equip cycles
+    never stack, HP clamped when max HP drops;
+  - combat: a real player hit uses effective ATK (7 vs 3 unarmed for the same roll);
+    creature hits use effective defense and max HP;
+  - loot: extensions only on chosen sources (no resources); wolf rate about 20%
+    (86/400) with only its configured tiers; deterministic; base results unchanged;
+  - a real weathered chest opened by walking there gives a Fine Hide armor instance
+    equal to its preview; reload neither repays nor rerolls;
+  - XP formula; exact level thresholds; growth separate from base/gear; no hidden
+    cap (level 29 from large XP); a real kill grants its XP once; progression
+    survives reload;
+  - serialization of tier and instance IDs; reload twice with identical stats;
+    Run A/B separate kits; Blueprint unchanged;
+  - a duplicated instance in a save is refused; a Checkpoint B save loads with no
+    gear, level 1 and no added kit.
+- **New equipment UI suite 15/15 headless, 17/17 OpenGL:**
+  - HUD level/effective stats;
+  - C panel with the club in Common color and the base + level + gear breakdown;
+  - movement paused, Esc closes;
+  - Rare blade in tier color; Divine black-gold background; Paramount animated;
+  - detail with tier, stats and "replaces [Phổ Thông] Wooden club: Attack 7→10 (+3)";
+  - U equips with a swap message; the club returns;
+  - the panel fits; U unequips;
+  - save/continue keeps every instance and its quality.
+  - Screenshots inspected (Vietnamese diacritics render): `.tools/m02c-inventory.png`,
+    `m02c-character.png`.
+- **Exported release exe** (rebuilt by `-Export`), run from a temp working dir with a temp DB, OpenGL:
+  - write 26/26: everything from Checkpoint B plus unequipping the club in the gear
+    panel (C, U) and re-equipping the same instance from the inventory (I, U);
+  - abrupt kill;
+  - verify 9/9: equipment and progression are now part of the compared state;
+  - default-save refusal.
+  `standalone-gear.png` was inspected: the exe's own crab hunt dropped a Fine (Ưu Tú)
+  Shell helm through the real loot-extension path.
+- **Old saves in the exported exe** (`legacy` phase on copies), created by the code of
+  a34096a, 61afbe9, d3c9675, 0eeeb4f, f745d25 and af691c3 (Checkpoint B, through its
+  own acceptance flow): 5/5, 3/3, 3/3, 5/5, 5/5, 5/5. Checkpoint B runs gained empty
+  equipment and level 1 / 0 XP and kept their survival state and inventory.
+
+Automated real-engine input/rendering with inspected screenshots; no human hand
+playthrough is claimed.
+
+### Remaining limits
+
+- Sample content only: 8 items. No normal-loot tier above Epic, and no unique or
+  special-effect items yet.
+- No durability, enhancement, enchanting, sets, sockets, drop/sell/destroy.
+  Requirements support level only.
+- Creatures do not scale with player level. Balance (XP curve, drop rates, tier
+  bonuses) is first-pass.
+- A new loot extension changes what not-yet-opened sources will give; already opened
+  ones keep their receipts.
+- Earlier limits (fog save cost, one save slot, greedy AI, Windows x64 only, unsigned
+  exe) remain.
+
+### Next step
+
+Stop. The user reviews this build. Milestone 02 Checkpoint D needs explicit approval.
+
+## Milestone 02 Checkpoint B record (historical)
 
 Continued from f745d25 (clean tree) on explicit user approval of Checkpoint B only.
 Read AGENTS and all design/API docs plus source first. Reused: GameStore atomic

@@ -69,7 +69,7 @@ func worst_level(stats: Dictionary) -> int:
 		worst = maxi(worst, level(stats, need))
 	return worst
 
-func tick(stats: Dictionary, action_type: String) -> Array:
+func tick(stats: Dictionary, action_type: String, max_hp: int = -1) -> Array:
 	## One turn: needs grow by the action's cost, then recovery or starvation.
 	## Mutates stats; returns UI events. Recovery needs every need below warning.
 	var events: Array = []
@@ -92,7 +92,8 @@ func tick(stats: Dictionary, action_type: String) -> Array:
 			events.append({"type": "starvation", "damage": 1, "hp": stats.hp})
 		return events
 	stats.starvation = 0
-	if worst > 0 or int(stats.hp) <= 0 or int(stats.hp) >= int(stats.max_hp):
+	# max_hp: effective maximum (base + growth + gear); defaults to the stored base.
+	if worst > 0 or int(stats.hp) <= 0 or int(stats.hp) >= (max_hp if max_hp > 0 else int(stats.max_hp)):
 		stats.recovery = 0
 		return events
 	stats.recovery = int(stats.recovery) + int(rules.recovery.rest_per_turn if action_type == "rest" else rules.recovery.per_turn)

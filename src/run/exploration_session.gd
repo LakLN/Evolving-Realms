@@ -13,6 +13,9 @@ const Combat = preload("res://src/core/combat.gd")
 const Survival = preload("res://src/core/survival.gd")
 const ItemEffects = preload("res://src/core/item_effects.gd")
 const Packs = preload("res://src/content/starter_pack.gd")
+const ItemQuality = preload("res://src/core/item_quality.gd")
+const CharacterStats = preload("res://src/core/character_stats.gd")
+const Equipment = preload("res://src/core/equipment.gd")
 const SIGHT_RADIUS := 7
 signal action_completed(action: Dictionary, result: Dictionary)
 var store: RefCounted
@@ -35,13 +38,19 @@ var uses: Dictionary = {}
 ## Permadeath commits every action while at risk and every few safe actions.
 var autosave_interval := -1
 var last_save_turn := 0
+var quality := ItemQuality.new()
+var character_rules := CharacterStats.new()
+## "source@version" -> active loot_extension definitions (latest version per ID).
+var loot_extensions: Dictionary = {}
+var _effective: Dictionary = {}
+var _definitions: Dictionary = {}
 ## Combat/AI events of the last accepted action, in order (for UI feedback).
 var last_events: Array = []
 var _action_handlers: Dictionary = {}
 
 func _init(data_store: RefCounted) -> void:
 	store = data_store
-	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action}
+	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action}
 
 func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal") -> bool:
 	if not Data.seed_value(run_seed):
@@ -60,7 +69,34 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var created: Dictionary = store.create_run(world_id, run_seed, spawn, mode, survival.normalize(Combat.player_stats({})))
 	if created.is_empty():
 		return _fail(store.last_error)
-	return _activate(blueprint, created) and save()
+	return _activate(blueprint, created) and _grant_starting_items() and save()
+
+func _grant_starting_items() -> bool:
+	## Data-defined starting kit (new runs only); equipped items go straight to a slot.
+	var inventory := Inventory.new()
+	for index in character_rules.rules.get("starting_items", []).size():
+		var item: Dictionary = character_rules.rules.starting_items[index]
+		var drop := {"content_id": item.content_id, "version": int(item.version), "quantity": 1}
+		if item.has("quality"):
+			drop.quality = item.quality
+		var award := inventory.award(store.content, world.world_id, run.state.inventory, [drop], "run:%s/starter/%d" % [run.run_id, index])
+		if award.is_empty():
+			return _fail("Starting item: " + inventory.last_error)
+		run.state.inventory = award.inventory
+		if item.get("equip", false):
+			var records: Array = run.state.inventory[item.content_id].get("instances", [])
+			var definition := _definition(item.content_id, int(item.version))
+			if records.is_empty() or not definition.get("payload", {}).has("equipment"):
+				return _fail("Starting item cannot be equipped: " + str(item.content_id))
+			var equipped := Equipment.equip(run.state.inventory, run.state.character.equipment, item.content_id, records.back().instance_id, definition.payload.equipment.slot)
+			if equipped.has("error"):
+				return _fail(equipped.error)
+			run.state.inventory = equipped.inventory
+			run.state.character.equipment = equipped.equipment
+	refresh_stats()
+	stats().hp = int(_effective.stats.max_hp)
+	dirty = true
+	return true
 
 func resume(run_id: String) -> bool:
 	var loaded: Dictionary = store.load_run(run_id)
@@ -101,6 +137,13 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var next_uses := _load_uses(blueprint.world_id)
 	if not last_error.is_empty():
 		return false
+	var tiers := ItemQuality.new()
+	var next_character_rules := CharacterStats.new()
+	if not tiers.load_rules() or not next_character_rules.load_rules(tiers):
+		return _fail(tiers.last_error if not tiers.last_error.is_empty() else next_character_rules.last_error)
+	var next_extensions := _load_loot_extensions(blueprint.world_id, tiers, next_character_rules)
+	if not last_error.is_empty():
+		return false
 	var next_objects := Objects.new()
 	if not next_objects.configure(blueprint, generator, store.content, next_cache) or not next_objects.follow(tile):
 		return _fail(next_objects.last_error)
@@ -111,6 +154,12 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	if not Combat.valid_stats(normalized, true) or not rules.valid_stats(normalized):
 		return _fail("Saved character combat/survival stats are invalid; save was not changed")
 	loaded.state.character.stats = normalized
+	loaded.state.character = next_character_rules.normalize(loaded.state.character) # Older saves: no gear, level 1.
+	var character_error := next_character_rules.validate(loaded.state.character)
+	if character_error.is_empty():
+		character_error = _validate_equipped(blueprint.world_id, loaded, next_character_rules)
+	if not character_error.is_empty():
+		return _fail(character_error + "; save was not changed")
 	var layer := Creatures.new()
 	var next_roster := Roster.new()
 	if not layer.configure(blueprint, generator, store.content) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
@@ -125,6 +174,11 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	roster = next_roster
 	survival = rules
 	uses = next_uses
+	quality = tiers
+	character_rules = next_character_rules
+	loot_extensions = next_extensions
+	_definitions = {}
+	refresh_stats()
 	last_save_turn = int(loaded.state.turn)
 	last_result = {}
 	last_events = []
@@ -154,7 +208,7 @@ func perform_action(action: Dictionary) -> bool:
 	last_events = last_result.get("events", []).duplicate(true)
 	run.state.turn = int(run.state.turn) + 1
 	dirty = true
-	last_events.append_array(survival.tick(stats(), str(action.type)))
+	last_events.append_array(survival.tick(stats(), str(action.type), int(combat_stats().max_hp)))
 	if int(stats().hp) > 0:
 		last_events.append_array(roster.take_turn(self))
 	last_error = ""
@@ -226,7 +280,7 @@ func rest(max_turns: int = -1) -> bool:
 		if not interrupted.is_empty() or threatened():
 			reason = interrupted if not interrupted.is_empty() else "danger"
 			break
-		if hp_before < int(stats().max_hp) and int(stats().hp) >= int(stats().max_hp):
+		if hp_before < int(combat_stats().max_hp) and int(stats().hp) >= int(combat_stats().max_hp):
 			reason = "healed"
 			break
 	last_events = events
@@ -253,7 +307,7 @@ func _use_action(action: Dictionary) -> bool:
 	if use.is_empty():
 		return _fail("%s has no use yet (no turn spent)" % name)
 	var trial := stats().duplicate(true)
-	var changes := ItemEffects.apply(trial, use.payload.effects)
+	var changes := ItemEffects.apply(trial, use.payload.effects, int(combat_stats().max_hp))
 	if changes.is_empty():
 		return _fail("%s would have no effect right now (no turn spent)" % name)
 	var inventory := Inventory.new()
@@ -319,10 +373,10 @@ func _autosave() -> void:
 
 func at_risk() -> bool:
 	var hurt := last_events.any(func(event: Dictionary) -> bool: return (event.type == "hit" and event.target == "player") or event.type == "starvation")
-	return hurt or threatened() or int(stats().hp) * 100 < int(survival.rules.autosave.permadeath_risk_hp_percent) * int(stats().max_hp) or survival.worst_level(stats()) >= 2
+	return hurt or threatened() or int(stats().hp) * 100 < int(survival.rules.autosave.permadeath_risk_hp_percent) * int(combat_stats().max_hp) or survival.worst_level(stats()) >= 2
 
 func safe_to_autosave() -> bool:
-	return not threatened() and int(stats().hp) * 100 >= int(survival.rules.autosave.safe_hp_percent) * int(stats().max_hp) and survival.worst_level(stats()) < 2
+	return not threatened() and int(stats().hp) * 100 >= int(survival.rules.autosave.safe_hp_percent) * int(combat_stats().max_hp) and survival.worst_level(stats()) < 2
 
 func _attack_action(action: Dictionary) -> bool:
 	if not action.get("target_id") is String:
@@ -330,8 +384,180 @@ func _attack_action(action: Dictionary) -> bool:
 	var result: Dictionary = roster.attack(self, action.target_id)
 	if result.is_empty():
 		return _fail(roster.last_error)
+	for event in result.events.duplicate():
+		if event.type == "creature_death":
+			# Kill XP belongs to the same action as the kill and its loot.
+			var victim: Dictionary = roster.creatures[event.target]
+			result.events.append_array(gain_xp(character_rules.kill_xp(victim.definition.payload.stats)))
 	last_result = result
 	return true
+
+func gain_xp(amount: int, track_id: String = "adventurer") -> Array:
+	var max_before := int(combat_stats().max_hp)
+	var events := character_rules.gain_xp(run.state.character, amount, track_id)
+	refresh_stats()
+	# Growth in max HP is granted as current HP too.
+	stats().hp = mini(int(_effective.stats.max_hp), int(stats().hp) + maxi(0, int(_effective.stats.max_hp) - max_before))
+	return events
+
+func refresh_stats() -> void:
+	## Effective stats are derived, never stored: base + growth + gear (see CharacterStats).
+	_effective = character_rules.effective(stats(), run.state.character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)))
+	if int(stats().hp) > int(_effective.stats.max_hp):
+		stats().hp = int(_effective.stats.max_hp)
+
+func effective_stats() -> Dictionary:
+	return _effective
+
+func combat_stats() -> Dictionary:
+	## What combat and survival use: current HP plus effective max HP/attack/defense.
+	var result: Dictionary = _effective.stats.duplicate()
+	result.hp = int(stats().hp)
+	return result
+
+func _definition(content_id: String, version: int) -> Dictionary:
+	var key := "%s@%d" % [content_id, version]
+	if not _definitions.has(key):
+		_definitions[key] = store.content.load_definition(world.world_id, content_id, version)
+	return _definitions[key]
+
+func equip_item(content_id: String, instance_id: String) -> bool:
+	return perform_action({"type": "equip", "content_id": content_id, "instance_id": instance_id})
+
+func unequip_slot(slot: String) -> bool:
+	return perform_action({"type": "unequip", "slot": slot})
+
+func compare_equipment(content_id: String, instance_id: String) -> Dictionary:
+	## Effective stats if this inventory instance replaced what is in its slot.
+	var entry: Variant = run.state.inventory.get(content_id)
+	var definition := _definition(content_id, int(entry.version)) if entry is Dictionary else {}
+	if not definition.get("payload", {}).has("equipment"):
+		return {}
+	var trial: Dictionary = Equipment.equip(run.state.inventory, run.state.character.equipment, content_id, instance_id, definition.payload.equipment.slot)
+	if trial.has("error"):
+		return {}
+	var character: Dictionary = run.state.character.duplicate(true)
+	character.equipment = trial.equipment
+	var after := character_rules.effective(stats(), character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)))
+	return {"before": _effective.stats, "after": after.stats, "slot": definition.payload.equipment.slot, "replaces": run.state.character.equipment.get(definition.payload.equipment.slot, {})}
+
+func _equip_action(action: Dictionary) -> bool:
+	if not action.get("content_id") is String or not action.get("instance_id") is String or not run.state.inventory.has(action.content_id):
+		return _fail("You do not have that item (no turn spent)")
+	var definition := _definition(action.content_id, int(run.state.inventory[action.content_id].version))
+	if not definition.get("payload", {}).has("equipment"):
+		return _fail("%s cannot be equipped (no turn spent)" % definition.get("name", action.content_id))
+	var problem := character_rules.validate_equipment(definition)
+	if problem.is_empty():
+		problem = character_rules.requirement_error(definition, run.state.character)
+	if not problem.is_empty():
+		return _fail(problem + " (no turn spent)")
+	var slot: String = definition.payload.equipment.slot
+	var result := Equipment.equip(run.state.inventory, run.state.character.equipment, action.content_id, action.instance_id, slot)
+	if result.has("error"):
+		return _fail(result.error + " (no turn spent)")
+	var before: Dictionary = _effective.stats.duplicate()
+	run.state.inventory = result.inventory
+	run.state.character.equipment = result.equipment
+	refresh_stats()
+	var replaced := "" if result.replaced.is_empty() else str(_definition(result.replaced.content_id, int(result.replaced.version)).get("name", ""))
+	last_result = {"type": "equip", "events": [{"type": "equip", "name": definition.name, "slot": slot, "quality": quality.of(definition, result.equipment[slot].metadata), "replaced": replaced, "before": before, "after": _effective.stats.duplicate()}]}
+	return true
+
+func _unequip_action(action: Dictionary) -> bool:
+	if not action.get("slot") is String or not run.state.character.equipment.has(action.slot):
+		return _fail("Nothing is equipped in that slot (no turn spent)")
+	var record: Dictionary = run.state.character.equipment[action.slot]
+	var result := Equipment.unequip(run.state.inventory, run.state.character.equipment, action.slot)
+	if result.has("error"):
+		return _fail(result.error + " (no turn spent)")
+	var before: Dictionary = _effective.stats.duplicate()
+	run.state.inventory = result.inventory
+	run.state.character.equipment = result.equipment
+	refresh_stats()
+	last_result = {"type": "unequip", "events": [{"type": "unequip", "name": str(_definition(record.content_id, int(record.version)).get("name", "")), "slot": action.slot, "before": before, "after": _effective.stats.duplicate()}]}
+	return true
+
+func _validate_equipped(world_id: String, loaded: Dictionary, rules: RefCounted) -> String:
+	## Equipped items must resolve to valid equipment for their slot, and no item
+	## instance may exist both equipped and in the inventory (no duplication).
+	var seen := {}
+	for content_id in loaded.state.inventory:
+		for record in loaded.state.inventory[content_id].get("instances", []):
+			if record is Dictionary:
+				seen[record.get("instance_id")] = true
+	for slot in loaded.state.character.equipment:
+		var record: Dictionary = loaded.state.character.equipment[slot]
+		var definition: Dictionary = store.content.load_definition(world_id, record.content_id, int(record.version))
+		if definition.is_empty() or definition.get("status") != "active" or not definition.get("payload", {}).has("equipment") or definition.payload.equipment.get("slot") != slot or not rules.validate_equipment(definition).is_empty():
+			return "Equipped item in %s is missing or invalid" % slot
+		if seen.has(record.instance_id):
+			return "Item instance is both equipped and in the inventory"
+		seen[record.instance_id] = true
+	return ""
+
+func _load_loot_extensions(world_id: String, tiers: RefCounted, rules: RefCounted) -> Dictionary:
+	## Extra, independently keyed loot rolls attached to specific sources. Base v1
+	## loot tables stay untouched, so earlier results are never rerolled.
+	var latest := {}
+	last_error = ""
+	for header in store.content.list_definitions(world_id):
+		if header.status != "active":
+			continue
+		if header.kind == "item":
+			var item: Dictionary = store.content.load_definition(world_id, header.content_id, int(header.version))
+			var problem: String = rules.validate_equipment(item)
+			if not problem.is_empty():
+				_fail("%s: %s" % [header.content_id, problem])
+				return {}
+		elif header.kind == "loot_extension":
+			latest[header.content_id] = store.content.load_definition(world_id, header.content_id, int(header.version))
+	var result := {}
+	var ids: Array = latest.keys()
+	ids.sort()
+	for id in ids:
+		var definition: Dictionary = latest[id]
+		var payload: Variant = definition.get("payload")
+		var source: Variant = payload.get("source") if payload is Dictionary else null
+		var problem := ""
+		if not source is Dictionary or not Data.identifier(source.get("content_id")) or not Data.integer(source.get("version")):
+			problem = "needs payload.source {content_id, version}"
+		elif not Data.integer(payload.get("chance_per_10000", 10000)) or payload.get("chance_per_10000", 10000) < 0 or payload.get("chance_per_10000", 10000) > 10000:
+			problem = "chance_per_10000 must be 0..10000"
+		else:
+			var table := Loot.new()
+			if not table.validate(payload.get("table"), store.content, world_id):
+				problem = table.last_error
+		if problem.is_empty():
+			var pinned := {}
+			for dependency in definition.get("dependencies", []):
+				pinned["%s@%d" % [dependency.content_id, int(dependency.version)]] = true
+			if not pinned.has("%s@%d" % [source.content_id, int(source.version)]):
+				problem = "source must be a pinned dependency"
+			for entry in payload.table.get("guaranteed", []) + payload.table.get("entries", []):
+				if not pinned.has("%s@%d" % [entry.content_id, int(entry.version)]):
+					problem = "loot item must be a pinned dependency: " + str(entry.content_id)
+				for tier_id in entry.get("quality", {}):
+					if not tiers.has(tier_id):
+						problem = "unknown quality tier: " + str(tier_id)
+		if not problem.is_empty():
+			_fail("%s: %s" % [id, problem])
+			return {}
+		var key := "%s@%d" % [source.content_id, int(source.version)]
+		if not result.has(key):
+			result[key] = []
+		result[key].append(definition)
+	return result
+
+func loot_for(definition: Dictionary, seed_key: String) -> Array:
+	## Base table first (unchanged v1 results), then each extension with its own key.
+	var table := Loot.new()
+	var result: Array = table.roll(definition.payload.loot, seed_key) if definition.payload.has("loot") else []
+	for extension in loot_extensions.get("%s@%d" % [definition.content_id, int(definition.version)], []):
+		var key: String = seed_key + "/ext/" + extension.content_id
+		if Loot.number(key + "/chance") % 10000 < int(extension.payload.get("chance_per_10000", 10000)):
+			result.append_array(table.roll(extension.payload.table, key))
+	return result
 
 func attack_target(target_id: String = "") -> bool:
 	if target_id.is_empty():
@@ -429,7 +655,7 @@ func preview_loot(instance_id: String) -> Array:
 		return []
 	var definition: Dictionary = objects.definition_for(instance)
 	var seed_key := "loot-v1/%d/%d/%d/%s@%d/%s" % [world.seed, world.generation_version, run.seed, instance.content_id, instance.version, instance.instance_id]
-	return Loot.new().roll(definition.payload.loot, seed_key)
+	return loot_for(definition, seed_key)
 
 func _interact_action(action: Dictionary) -> bool:
 	if not action.get("instance_id") is String:

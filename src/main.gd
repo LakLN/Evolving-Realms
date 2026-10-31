@@ -34,6 +34,13 @@ var _hp_bar: ProgressBar
 var _hp_label: Label
 var _survival_label: Label
 var _use_button: Button
+var _character_panel: PanelContainer
+var _character_summary: Label
+var _slot_list: ItemList
+var _slot_detail: Label
+var _unequip_button: Button
+var _slot_ids: Array = []
+var _rainbow: Array = [] # [ItemList, index, tier] rows animated for rainbow-style tiers
 var _death_panel: PanelContainer
 var _death_text: Label
 var _death_reload: Button
@@ -71,6 +78,7 @@ func _ready() -> void:
 	_build_menu(frame)
 	_build_hud(frame)
 	_build_inventory(frame)
+	_build_character(frame)
 	_build_death_screen(frame)
 	var options := launch_options()
 	database_path = options.get("database", database_path)
@@ -152,7 +160,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD/Arrows: move   E: interact   F: attack   Tab: target   Space: wait   R: rest   I: inventory (U: use)   Ctrl+S: save   Esc: menu", 15)
+	_label(column, "WASD/Arrows: move  E: interact  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  Ctrl+S: save  Esc: menu", 14)
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -195,9 +203,122 @@ func _build_hud(parent: Control) -> void:
 	_notice = _label(column, "", 17)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
-	_label(column, "WASD: move (into hostile = attack) | E: gather/open | F: attack | Tab: target | Space: wait | R: rest | I: inventory, U: use", 15)
+	_label(column, "WASD: move (into hostile = attack) | E: gather/open | F: attack | Tab: target | Space: wait | R: rest | I: items (U: use/equip) | C: gear", 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
+
+func _build_character(parent: Control) -> void:
+	_character_panel = PanelContainer.new()
+	_character_panel.anchor_top = 0.5
+	_character_panel.anchor_bottom = 0.5
+	_character_panel.offset_left = 20
+	_character_panel.offset_right = 395
+	_character_panel.offset_top = -235
+	_character_panel.offset_bottom = 235
+	parent.add_child(_character_panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	_character_panel.add_child(column)
+	_label(column, "CHARACTER & GEAR", 22)
+	_character_summary = _label(column, "", 15)
+	_character_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_slot_list = ItemList.new()
+	_slot_list.custom_minimum_size = Vector2(355, 150)
+	_slot_list.item_selected.connect(_show_slot)
+	_slot_list.item_activated.connect(func(_index: int) -> void: _unequip_selected())
+	column.add_child(_slot_list)
+	_slot_detail = _label(column, "", 14)
+	_slot_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_slot_detail.custom_minimum_size.y = 40
+	_unequip_button = _button(column, "Unequip selected [U / Enter]", _unequip_selected)
+	_unequip_button.focus_mode = Control.FOCUS_NONE
+	_button(column, "Close [C / Esc]", _toggle_character)
+	_character_panel.hide()
+
+func _panel_open() -> bool:
+	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible)
+
+func _toggle_character() -> void:
+	if session == null or _menu.visible or session.is_dead():
+		return
+	_inventory_panel.hide()
+	_character_panel.visible = not _character_panel.visible
+	_hold_delay = 0.2
+	if _character_panel.visible:
+		_refresh_character()
+		_slot_list.grab_focus()
+	else:
+		get_viewport().gui_release_focus()
+
+func item_label(definition: Dictionary, metadata: Dictionary) -> String:
+	var tier: String = session.quality.of(definition, metadata)
+	return ("[%s] %s" % [session.quality.tier(tier).name, definition.get("name", "?")]) if not tier.is_empty() else str(definition.get("name", "?"))
+
+func _color_row(list: ItemList, index: int, definition: Dictionary, metadata: Dictionary) -> void:
+	var tier: String = session.quality.of(definition, metadata)
+	if tier.is_empty():
+		return
+	list.set_item_custom_fg_color(index, session.quality.color(tier))
+	match session.quality.tier(tier).get("style", "plain"):
+		"black_gold":
+			list.set_item_custom_bg_color(index, Color("17130c"))
+		"platinum":
+			list.set_item_custom_bg_color(index, Color("1d2a33"))
+		"rainbow":
+			_rainbow.append([list, index, tier])
+
+func _refresh_character(selected_slot: String = "") -> void:
+	var effective: Dictionary = session.effective_stats()
+	var character: Dictionary = session.run.state.character
+	var lines := PackedStringArray()
+	for track_id in session.character_rules.rules.tracks:
+		var track: Dictionary = character.progression[track_id]
+		lines.append("%s  Level %d   XP %d / %d" % [session.character_rules.rules.tracks[track_id].get("name", track_id), int(track.level), int(track.xp), session.character_rules.xp_to_next(track_id, int(track.level))])
+	for stat in session.character_rules.rules.stats:
+		var part: Dictionary = effective.breakdown[stat]
+		lines.append("%s %d  = %d base + %d level + %d gear%s" % [session.character_rules.rules.stats[stat].name, effective.stats[stat], part.base, part.growth, part.gear, " (incl. %+d%%)" % part.percent if part.percent != 0 else ""])
+	_character_summary.text = "\n".join(lines)
+	_rainbow = _rainbow.filter(func(entry: Array) -> bool: return entry[0] != _slot_list)
+	_slot_list.clear()
+	_slot_ids = session.character_rules.slot_ids()
+	var index := 0
+	for slot in _slot_ids:
+		var record: Dictionary = character.equipment.get(slot, {})
+		var definition: Dictionary = {} if record.is_empty() else session._definition(record.content_id, int(record.version))
+		_slot_list.add_item("%s:  %s" % [session.character_rules.slot_name(slot), "—" if record.is_empty() else item_label(definition, record.get("metadata", {}))])
+		if not record.is_empty():
+			_color_row(_slot_list, _slot_list.item_count - 1, definition, record.get("metadata", {}))
+		if slot == selected_slot:
+			index = _slot_list.item_count - 1
+	_slot_list.select(index)
+	_show_slot(index)
+
+func _show_slot(index: int) -> void:
+	var slot: String = _slot_ids[index]
+	var record: Dictionary = session.run.state.character.equipment.get(slot, {})
+	_unequip_button.disabled = record.is_empty()
+	_slot_detail.text = "Empty slot. Equip items from the inventory (I, then U)." if record.is_empty() else gear_text(session._definition(record.content_id, int(record.version)), record.get("metadata", {}))
+
+func gear_text(definition: Dictionary, metadata: Dictionary) -> String:
+	var bonus: Dictionary = session.character_rules.gear_bonus(definition, metadata)
+	var parts := PackedStringArray()
+	for stat in bonus.flat:
+		parts.append("%s %+d" % [session.character_rules.rules.stats.get(stat, {}).get("name", stat), int(bonus.flat[stat])])
+	for stat in bonus.percent:
+		parts.append("%s %+d%%" % [session.character_rules.rules.stats.get(stat, {}).get("name", stat), int(bonus.percent[stat])])
+	var tier: String = bonus.quality
+	var grade := "" if tier.is_empty() else "%s (%d/10, gear stats %+d%%)  " % [session.quality.tier(tier).name, session.quality.rank(tier), session.quality.bonus_percent(tier)]
+	var requirement: String = session.character_rules.requirement_error(definition, session.run.state.character)
+	return "%s%s: %s%s" % [grade, session.character_rules.slot_name(definition.payload.equipment.slot), ", ".join(parts), "\n" + requirement if not requirement.is_empty() else ""]
+
+func _unequip_selected() -> void:
+	var picked := _slot_list.get_selected_items()
+	if session == null or session.is_dead() or picked.is_empty():
+		return
+	var slot: String = _slot_ids[picked[0]]
+	_after_action(session.unequip_slot(slot))
+	if _character_panel.visible:
+		_refresh_character(slot)
 
 func _build_inventory(parent: Control) -> void:
 	_inventory_panel = PanelContainer.new()
@@ -255,6 +376,7 @@ func _build_death_screen(parent: Control) -> void:
 
 func _show_death() -> void:
 	_inventory_panel.hide()
+	_character_panel.hide()
 	var permadeath: bool = session.run.mode == "permadeath"
 	_death_text.text = ("Permadeath: this run has ended and cannot be continued. The world remains; begin a new run from the menu." if permadeath else "Normal mode: the death was not saved. Load your last save to continue from it.") + "\nTurn %d." % int(session.run.state.turn)
 	_death_reload.visible = not permadeath
@@ -274,6 +396,7 @@ func _reload_after_death() -> void:
 func _toggle_inventory() -> void:
 	if session == null or _menu.visible or session.is_dead():
 		return
+	_character_panel.hide()
 	_inventory_panel.visible = not _inventory_panel.visible
 	_hold_delay = 0.2
 	if _inventory_panel.visible:
@@ -285,12 +408,16 @@ func _toggle_inventory() -> void:
 func _refresh_inventory(selected: String = "") -> void:
 	_inventory_rows = session.inventory_rows()
 	_inventory_list.clear()
+	_rainbow = _rainbow.filter(func(entry: Array) -> bool: return entry[0] != _inventory_list)
 	var index := 0
 	for item in _inventory_rows:
 		var usable: bool = not session.use_for(item.content_id).is_empty()
-		_inventory_list.add_item("%s  x%d%s" % [item.name, item.quantity, "   [usable]" if usable else ""])
+		var gear: bool = item.definition.payload.has("equipment")
+		var tag := "   [gear]" if gear else ("   [usable]" if usable else "")
+		_inventory_list.add_item("%s%s%s" % [item_label(item.definition, item.metadata), "" if gear else "  x%d" % item.quantity, tag])
 		_inventory_list.set_item_tooltip(_inventory_list.item_count - 1, "%s / %s" % [item.name, item.type])
-		if item.content_id == selected:
+		_color_row(_inventory_list, _inventory_list.item_count - 1, item.definition, item.metadata)
+		if item.content_id == selected or (not item.instance_id.is_empty() and item.instance_id == selected):
 			index = _inventory_list.item_count - 1
 	_use_button.disabled = _inventory_rows.is_empty()
 	if _inventory_rows.is_empty():
@@ -307,7 +434,8 @@ func _use_selected() -> void:
 	var content_id := selected_item_id()
 	if session == null or session.is_dead() or content_id.is_empty():
 		return
-	var accepted: bool = session.use_item(content_id)
+	var row: Dictionary = _inventory_rows[_inventory_list.get_selected_items()[0]]
+	var accepted: bool = session.equip_item(content_id, row.instance_id) if row.definition.payload.has("equipment") else session.use_item(content_id)
 	_after_action(accepted)
 	if _inventory_panel.visible:
 		_refresh_inventory(content_id)
@@ -318,6 +446,19 @@ func _show_inventory_item(index: int) -> void:
 	_inventory_detail.text = "%s\n%s / v%d / Quantity: %d\n%s\n%s" % [item.name, item.type, item.version, item.quantity, stacking, item.description]
 	if not item.stackable and not item.slots.is_empty():
 		_inventory_detail.text += "\nItem ID: " + str(item.slots[0].instance_id).left(22) + "..."
+	if item.definition.payload.has("equipment"):
+		_inventory_detail.text = "%s\n%s\n%s" % [item_label(item.definition, item.metadata), gear_text(item.definition, item.metadata), item.description]
+		var comparison: Dictionary = session.compare_equipment(item.content_id, item.instance_id)
+		var changes := PackedStringArray()
+		for stat in comparison.get("after", {}):
+			if int(comparison.after[stat]) != int(comparison.before[stat]):
+				changes.append("%s %d→%d (%+d)" % [session.character_rules.rules.stats[stat].name, comparison.before[stat], comparison.after[stat], int(comparison.after[stat]) - int(comparison.before[stat])])
+		var current: Dictionary = comparison.get("replaces", {})
+		_inventory_detail.text += "\nIf equipped%s: %s" % ["" if current.is_empty() else " (replaces " + item_label(session._definition(current.content_id, int(current.version)), current.get("metadata", {})) + ")", "no stat change" if changes.is_empty() else ", ".join(changes)]
+		_use_button.text = "Equip selected [U / Enter]"
+		_use_button.disabled = false
+		return
+	_use_button.text = "Use selected [U / Enter]"
 	var use: Dictionary = session.use_for(item.content_id)
 	var effects := PackedStringArray()
 	for effect in use.get("payload", {}).get("effects", []):
@@ -440,13 +581,13 @@ func _enter_map(active_session: RefCounted) -> void:
 
 func _update_info() -> void:
 	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s | Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
-	var stats: Dictionary = session.stats()
-	_hp_label.text = "HP %d / %d  ATK %d DEF %d" % [stats.hp, stats.max_hp, stats.attack, stats.defense]
+	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
+	_hp_label.text = "Lv %d  HP %d/%d  ATK %d DEF %d" % [session.character_rules.level(session.run.state.character), stats.hp, stats.max_hp, stats.attack, stats.defense]
 	_hp_bar.max_value = int(stats.max_hp)
 	_hp_bar.value = int(stats.hp)
-	var worst: int = session.survival.worst_level(stats)
+	var worst: int = session.survival.worst_level(session.stats())
 	var recovery := "regen" if worst == 0 and int(stats.hp) < int(stats.max_hp) else ("no regen" if worst > 0 and int(stats.hp) < int(stats.max_hp) else "")
-	_survival_label.text = "Hunger %d%%  Thirst %d%%%s" % [session.survival.percent(stats, "hunger"), session.survival.percent(stats, "thirst"), "" if recovery.is_empty() else "  " + recovery]
+	_survival_label.text = "Hunger %d%%  Thirst %d%%%s" % [session.survival.percent(session.stats(), "hunger"), session.survival.percent(session.stats(), "thirst"), "" if recovery.is_empty() else "  " + recovery]
 	_survival_label.modulate = [Color("c8c8c8"), Color("f0c060"), Color("ff7a6b"), Color("ff4b3e")][worst]
 	var foe := current_target()
 	map_view.target_id = "" if foe.is_empty() else foe.instance_id
@@ -518,7 +659,18 @@ func _after_action(accepted: bool, quiet: String = "") -> void:
 	if session.is_dead():
 		_show_death()
 
-static func describe_events(events: Array) -> String:
+func _receipt_text(item: Dictionary) -> String:
+	var tier: String = item.get("quality", "")
+	return ("[%s] %s" % [session.quality.tier(tier).name, item.name] if session != null and session.quality.has(tier) else str(item.name)) + " x%d" % item.quantity
+
+static func _stat_delta(before: Dictionary, after: Dictionary) -> String:
+	var parts := PackedStringArray()
+	for stat in after:
+		if int(after[stat]) != int(before.get(stat, 0)):
+			parts.append("%s %d→%d" % [{"max_hp": "Max HP", "attack": "ATK", "defense": "DEF"}.get(stat, stat), int(before.get(stat, 0)), int(after[stat])])
+	return "No stat change." if parts.is_empty() else ", ".join(parts) + "."
+
+func describe_events(events: Array) -> String:
 	var parts := PackedStringArray()
 	for event in events:
 		match event.type:
@@ -530,12 +682,20 @@ static func describe_events(events: Array) -> String:
 			"creature_death":
 				var received := PackedStringArray()
 				for item in event.received:
-					received.append("%s x%d" % [item.name, item.quantity])
+					received.append(_receipt_text(item))
 				parts.append("%s dies. Loot: %s." % [event.name, ", ".join(received)])
 			"player_death":
 				parts.append("You have died.")
 			"death_save_failed":
 				parts.append("Could not record the death: " + event.error)
+			"equip":
+				parts.append("Equipped %s%s. %s" % [event.name, "" if event.replaced.is_empty() else " (replacing %s)" % event.replaced, _stat_delta(event.before, event.after)])
+			"unequip":
+				parts.append("Unequipped %s. %s" % [event.name, _stat_delta(event.before, event.after)])
+			"xp":
+				parts.append("+%d XP." % event.amount)
+			"level_up":
+				parts.append("LEVEL UP! %s level %d." % [event.name, event.level])
 			"use":
 				var effects := PackedStringArray()
 				for change in event.changes:
@@ -552,19 +712,19 @@ static func describe_events(events: Array) -> String:
 	return " ".join(parts)
 
 func _interact() -> void:
-	if session == null or _inventory_panel.visible:
+	if session == null or _panel_open():
 		return
 	if session.interact():
 		var received := PackedStringArray()
 		for item in session.last_result.received:
-			received.append("%s x%d" % [item.name, item.quantity])
+			received.append(_receipt_text(item))
 		_after_action(true)
 		_notice.text = ("Received: " + ", ".join(received) + " " + _notice.text).strip_edges()
 	else:
 		_after_action(false)
 
 func move_player(direction: Vector2i) -> bool:
-	if session == null or _menu.visible or _inventory_panel.visible or session.is_dead():
+	if session == null or _menu.visible or _panel_open() or session.is_dead():
 		return false
 	var moved: bool = session.try_move(direction)
 	_after_action(moved)
@@ -573,7 +733,7 @@ func move_player(direction: Vector2i) -> bool:
 func _unhandled_key_input(event: InputEvent) -> void:
 	if session == null or _menu.visible or not event is InputEventKey or not event.pressed or event.echo:
 		return
-	if _inventory_panel.visible:
+	if _panel_open():
 		return
 	if session.is_dead():
 		if event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE:
@@ -598,6 +758,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_wait()
 	elif event.keycode == KEY_R or event.physical_keycode == KEY_R:
 		_rest()
+	elif event.keycode == KEY_C or event.physical_keycode == KEY_C:
+		_toggle_character()
 	else:
 		for action in MOVE_KEYS:
 			if event.is_action_pressed(action):
@@ -607,6 +769,17 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
+	if _character_panel != null and _character_panel.visible and event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode in [KEY_C, KEY_ESCAPE] or event.physical_keycode in [KEY_C, KEY_ESCAPE]:
+			_toggle_character()
+			get_viewport().set_input_as_handled()
+		elif _is_save_shortcut(event):
+			_save_game()
+			get_viewport().set_input_as_handled()
+		elif event.keycode == KEY_U or event.physical_keycode == KEY_U:
+			_unequip_selected()
+			get_viewport().set_input_as_handled()
+		return
 	if _inventory_panel == null or not _inventory_panel.visible or not event is InputEventKey or not event.pressed or event.echo:
 		return
 	if event.keycode in [KEY_I, KEY_ESCAPE] or event.physical_keycode in [KEY_I, KEY_ESCAPE]:
@@ -624,7 +797,10 @@ static func _is_save_shortcut(event: InputEventKey) -> bool:
 	return event.ctrl_pressed and (event.keycode == KEY_S or event.physical_keycode == KEY_S)
 
 func _process(delta: float) -> void:
-	if session == null or _menu.visible or _inventory_panel.visible or session.is_dead():
+	for entry in _rainbow:
+		if is_instance_valid(entry[0]) and entry[1] < entry[0].item_count:
+			entry[0].set_item_custom_fg_color(entry[1], session.quality.color(entry[2], Time.get_ticks_msec() / 1000.0) if session != null else Color.WHITE)
+	if session == null or _menu.visible or _panel_open() or session.is_dead():
 		return
 	_hold_delay -= delta
 	if _hold_delay > 0 or Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT):
@@ -659,6 +835,7 @@ func _return_to_menu() -> void:
 	var world_id: String = session.world.world_id
 	session = null
 	_inventory_panel.hide()
+	_character_panel.hide()
 	_death_panel.hide()
 	map_view.clear_map()
 	map_view.hide()

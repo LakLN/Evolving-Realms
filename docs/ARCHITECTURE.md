@@ -7,7 +7,7 @@ authoring process, not a dependency for movement, saving or combat.
 ## Modules and planned layout
 
 - src/core: weighted LootTable, Inventory, Combat rules, CreatureAI decisions,
-  Survival rules and ItemEffects handlers.
+  Survival rules, ItemEffects handlers, ItemQuality, CharacterStats, Equipment.
 - src/world: implemented terrain_v1, bounded chunk cache, spawn selector,
   TileMapLayer renderer, world_objects v1 layer and code-native placeholder art.
 - src/run: implemented ExplorationSession: cardinal actions/turns, sight,
@@ -161,6 +161,19 @@ mapping an item@version to effects handled in src/core/item_effects.gd, so immut
 v1 items gain uses without edits. Normal mode autosaves when safe; permadeath commits
 every risky action and every 10 safe ones. Both use the existing atomic save. No schema change.
 Details: [SURVIVAL_AND_ITEMS.md](SURVIVAL_AND_ITEMS.md).
+
+## Equipment, quality and progression — Milestone 02 Checkpoint C
+
+Quality tiers (content/quality_tiers.json) are a grade on any item: a definition
+default or a per-instance tier ID in the existing instance metadata. Equipment is
+`payload.equipment` on non-stackable items. `character.equipment` (slot → instance
+record) and `character.progression` (track → xp/level) are extra keys of the existing
+character object. Effective stats are never stored: src/core/character_stats.gd
+derives them from base + growth + gear for combat, survival, healing and UI.
+`loot_extension` definitions (capability `definition.loot_extension`) add
+independently keyed rolls to specific sources, so v1 tables and earlier results stay
+unchanged. No schema change. Details:
+[EQUIPMENT_AND_PROGRESSION.md](EQUIPMENT_AND_PROGRESSION.md).
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

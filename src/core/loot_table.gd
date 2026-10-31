@@ -23,6 +23,13 @@ func validate(table: Variant, registry: RefCounted, world_id: String) -> bool:
 			var definition: Dictionary = registry.load_definition(world_id, entry.content_id, int(entry.version))
 			if definition.is_empty() or definition.get("kind") != "item" or definition.get("status") != "active":
 				return _fail("Loot references a missing or inactive item: " + str(entry.content_id))
+			if entry.has("quality"):
+				# Optional quality weights {tier_id: weight}; tier IDs are checked by the caller.
+				if not entry.quality is Dictionary or entry.quality.is_empty() or definition.payload.get("stackable", false) or int(definition.payload.get("stack_limit", 1)) != 1:
+					return _fail("Loot quality weights need a non-stackable item: " + str(entry.content_id))
+				for tier_id in entry.quality:
+					if not Data.integer(entry.quality[tier_id]) or entry.quality[tier_id] < 1 or entry.quality[tier_id] > 1000000:
+						return _fail("Loot quality weights must be positive integers")
 	if table.get("rolls", 0) == 0 and table.get("guaranteed", []).is_empty():
 		return _fail("Loot table would never produce an item")
 	last_error = ""
@@ -45,8 +52,25 @@ func roll(table: Dictionary, seed_key: String) -> Array:
 	for index in selected.size():
 		var entry: Dictionary = selected[index]
 		var quantity := int(entry.min) + number(seed_key + "/quantity/" + str(index)) % (int(entry.max) - int(entry.min) + 1)
-		awards.append({"content_id": entry.content_id, "version": int(entry.version), "quantity": quantity})
+		var award := {"content_id": entry.content_id, "version": int(entry.version), "quantity": quantity}
+		if entry.has("quality"):
+			award.quality = _pick_quality(entry.quality, seed_key + "/quality/" + str(index))
+		awards.append(award)
 	return awards
+
+static func _pick_quality(weights: Dictionary, key: String) -> String:
+	## Deterministic weighted tier pick; sorted IDs make it independent of JSON order.
+	var ids: Array = weights.keys()
+	ids.sort()
+	var total := 0
+	for id in ids:
+		total += int(weights[id])
+	var ticket := number(key) % total
+	for id in ids:
+		ticket -= int(weights[id])
+		if ticket < 0:
+			return id
+	return ids.back()
 
 func _fail(message: String) -> bool:
 	last_error = message

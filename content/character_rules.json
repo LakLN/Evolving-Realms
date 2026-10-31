@@ -1,0 +1,31 @@
+{
+  "rules_version": 1,
+  "stats": {
+    "max_hp": {"name": "Max HP"},
+    "attack": {"name": "Attack"},
+    "defense": {"name": "Defense"}
+  },
+  "slots": [
+    {"id": "weapon", "name": "Weapon"},
+    {"id": "armor", "name": "Armor"},
+    {"id": "helmet", "name": "Helmet"},
+    {"id": "boots", "name": "Boots"},
+    {"id": "accessory", "name": "Accessory"}
+  ],
+  "tracks": {
+    "adventurer": {
+      "name": "Adventurer",
+      "max_level": 0,
+      "xp_curve": {"base": 25, "growth_percent": 40},
+      "kill_xp": {"max_hp": 1, "attack": 2, "defense": 3},
+      "growth": [
+        {"stat": "max_hp", "amount": 3, "every": 1},
+        {"stat": "attack", "amount": 1, "every": 1},
+        {"stat": "defense", "amount": 1, "every": 2}
+      ]
+    }
+  },
+  "starting_items": [
+    {"content_id": "core:wooden_club", "version": 1, "quality": "pho_thong", "equip": true}
+  ]
+}

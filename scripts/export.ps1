@@ -35,7 +35,8 @@ Saves: %APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite
 (shared with runs started from the Godot editor; never stored in this folder).
 
 Controls: WASD / arrows move (walk into a hostile creature to attack), E gather/open/pick up,
-F attack adjacent target, Tab next target, Space wait, R rest, I inventory (U use item),
+F attack adjacent target, Tab next target, Space wait, R rest, I inventory (U use/equip),
+C character & gear (U unequip),
 Ctrl+S save, Esc close inventory or save & return to menu.
 Watch Hunger/Thirst under the HP bar: eat berries/meat, drink spring water, apply herbs.
 Normal mode: autosaves when safe; death reloads your last save.

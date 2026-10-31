@@ -82,6 +82,24 @@ func _write() -> void:
 	check(hunger > 0 and app.session.run.state.inventory.get("core:berries", {}).get("quantity", 0) == berries - 1 and int(app.session.stats().hunger) < hunger and app._notice.text.contains("Eat"), "U eats one berry from the inventory and lowers hunger")
 	await _capture("standalone-survival.png")
 	await _key(KEY_ESCAPE)
+	# Equipment: unequip the starting club in the gear panel (C, U), re-equip it from the inventory (I, U).
+	var club: Dictionary = app.session.run.state.character.equipment.get("weapon", {})
+	var armed := int(app.session.combat_stats().attack)
+	await _key(KEY_C)
+	app._slot_list.select(0)
+	app._show_slot(0)
+	await _key(KEY_U)
+	check(not club.is_empty() and not app.session.run.state.character.equipment.has("weapon") and int(app.session.combat_stats().attack) < armed and app._notice.text.contains("Unequipped"), "C + U unequips the starting club; ATK drops")
+	await _key(KEY_ESCAPE)
+	await _key(KEY_I)
+	for index in app._inventory_rows.size():
+		if app._inventory_rows[index].instance_id == club.get("instance_id"):
+			app._inventory_list.select(index)
+			app._show_inventory_item(index)
+	await _key(KEY_U)
+	check(app.session.run.state.character.equipment.get("weapon", {}).get("instance_id") == club.get("instance_id") and int(app.session.combat_stats().attack) == armed and app._notice.text.contains("Equipped"), "I + U re-equips the same club instance; ATK restored")
+	await _capture("standalone-gear.png")
+	await _key(KEY_ESCAPE)
 	var rest_turn := int(app.session.run.state.turn)
 	await _key(KEY_R)
 	check((int(app.session.run.state.turn) > rest_turn and app._notice.text.contains("Rested")) or app._notice.text.contains("cannot rest"), "R rests turn by turn (or is refused with danger in sight)")
@@ -229,7 +247,7 @@ func _state(session: RefCounted) -> Dictionary:
 
 func _state_of(run_id: String) -> Dictionary:
 	var loaded: Dictionary = app.store.load_run(run_id)
-	return {} if loaded.is_empty() else {"revision": loaded.revision, "position": loaded.state.character.position, "turn": loaded.state.turn, "inventory": loaded.state.inventory, "mutations": loaded.state.entity_mutations, "explored": loaded.state.explored.size()}
+	return {} if loaded.is_empty() else {"revision": loaded.revision, "position": loaded.state.character.position, "turn": loaded.state.turn, "inventory": loaded.state.inventory, "mutations": loaded.state.entity_mutations, "explored": loaded.state.explored.size(), "equipment": loaded.state.character.get("equipment", {}), "progression": loaded.state.character.get("progression", {})}
 
 func _frame() -> void:
 	await app.get_tree().process_frame

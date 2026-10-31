@@ -93,12 +93,12 @@ func attack(session: RefCounted, target_id: String) -> Dictionary:
 		return _refuse("Target is not on a visible cardinal neighbor — no turn spent")
 	var definition: Dictionary = creature.definition
 	var key := "hit-v1/%d/%d/%s/%d" % [session.world.seed, session.run.seed, creature.instance_id, int(session.run.state.turn)]
-	var result := Combat.resolve(session.stats(), {"hp": creature.hp, "defense": definition.payload.stats.defense}, key)
+	var result := Combat.resolve(session.combat_stats(), {"hp": creature.hp, "defense": definition.payload.stats.defense}, key)
 	var loot: Array = []
 	var award := {}
 	if result.killed:
 		var seed_key := "creature-loot-v1/%d/%d/%d/%s@%d/%s" % [session.world.seed, session.world.generation_version, session.run.seed, creature.content_id, creature.version, creature.instance_id]
-		loot = Loot.new().roll(definition.payload.loot, seed_key)
+		loot = session.loot_for(definition, seed_key) # Base table + loot extensions.
 		var inventory := Inventory.new()
 		award = inventory.award(layer.registry, session.world.world_id, session.run.state.inventory, loot, "run:" + session.run.run_id + "/source/" + creature.instance_id)
 		if award.is_empty():
@@ -127,7 +127,7 @@ func take_turn(session: RefCounted) -> Array:
 			ids.append(creature.instance_id)
 	ids.sort()
 	for id in ids:
-		var player: Dictionary = session.stats()
+		var player: Dictionary = session.combat_stats() # Effective defense from gear/growth.
 		if int(player.hp) <= 0:
 			break
 		var creature: Dictionary = creatures[id]
@@ -149,7 +149,7 @@ func take_turn(session: RefCounted) -> Array:
 			_commit(session, creature)
 		elif decision.type == "attack" and _distance(creature.position, session.position) == 1:
 			var result := Combat.resolve(creature.definition.payload.stats, player, key + "/attack")
-			player.hp = result.hp
+			session.stats().hp = result.hp
 			events.append({"type": "hit", "attacker": id, "name": creature.definition.name, "target": "player", "damage": result.damage, "hp": result.hp, "max_hp": player.max_hp, "position": _point(session.position)})
 	return events
 
