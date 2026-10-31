@@ -84,16 +84,24 @@ func targets(session: RefCounted) -> Array:
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.instance_id < b.instance_id)
 	return result
 
-func attack(session: RefCounted, target_id: String) -> Dictionary:
+func attack(session: RefCounted, target_id: String, options: Dictionary = {}) -> Dictionary:
 	## Player attack. Validates and plans loot before any mutation; {} = refused.
+	## options (skills): range (Manhattan, default 1), line_of_sight, attack_percent,
+	## flat, key (extra draw-key suffix). Talents react to every strike the same way.
 	var creature: Dictionary = creatures.get(target_id, {})
 	if creature.is_empty() or creature.dead:
 		return _refuse("No living creature to attack")
-	if _distance(creature.position, session.position) != 1 or not session.visible.has(creature.position):
-		return _refuse("Target is not on a visible cardinal neighbor — no turn spent")
+	var reach := int(options.get("range", 1))
+	var distance := _distance(creature.position, session.position)
+	if distance < 1 or distance > reach or not session.visible.has(creature.position):
+		return _refuse(("Target is not on a visible cardinal neighbor" if reach == 1 else "Target is out of range (%d) or not visible" % reach) + " — no turn spent")
+	if reach > 1 and options.get("line_of_sight", true) and not session.line_clear(session.position, creature.position):
+		return _refuse("No clear line of sight to the target — no turn spent")
 	var definition: Dictionary = creature.definition
-	var key := "hit-v1/%d/%d/%s/%d" % [session.world.seed, session.run.seed, creature.instance_id, int(session.run.state.turn)]
-	var base := Combat.resolve(session.combat_stats(), {"hp": creature.hp, "defense": definition.payload.stats.defense}, key)
+	var key := "hit-v1/%d/%d/%s/%d%s" % [session.world.seed, session.run.seed, creature.instance_id, int(session.run.state.turn), str(options.get("key", ""))]
+	var attacker: Dictionary = session.combat_stats()
+	attacker.attack = int(attacker.attack) * int(options.get("attack_percent", 100)) / 100 + int(options.get("flat", 0))
+	var base := Combat.resolve(attacker, {"hp": creature.hp, "defense": definition.payload.stats.defense}, key)
 	var strike: Dictionary = session.talent_strike(creature, base) # Planned only; committed by the session.
 	var result: Dictionary = strike.result
 	var loot: Array = []
@@ -133,6 +141,9 @@ func take_turn(session: RefCounted) -> Array:
 		if int(player.hp) <= 0:
 			break
 		var creature: Dictionary = creatures[id]
+		if int(creature.stunned_until) > int(session.run.state.turn):
+			events.append({"type": "stunned", "target": id, "name": creature.definition.name, "position": _point(creature.position)})
+			continue # Stunned (skill): no decision this turn.
 		var key := "ai-v1/%d/%d/%s/%d" % [session.world.seed, session.run.seed, id, int(session.run.state.turn)]
 		var radius := int(creature.definition.payload.ai.detect_radius)
 		var offset: Vector2i = session.position - creature.position
@@ -157,6 +168,18 @@ func take_turn(session: RefCounted) -> Array:
 			events.append_array(guarded.events)
 	return events
 
+func stun(session: RefCounted, target_id: String, turns: int) -> Dictionary:
+	## Creature skips its next `turns` decisions; stored in its Run mutation.
+	var creature: Dictionary = creatures.get(target_id, {})
+	if creature.is_empty() or creature.dead:
+		return _refuse("No living creature to bind")
+	if not _ensure_materialized(creature):
+		return _refuse(last_error)
+	creature.stunned_until = maxi(int(creature.stunned_until), int(session.run.state.turn) + 1 + turns)
+	creature.provoked = true
+	_commit(session, creature)
+	return {"type": "stun", "target": target_id, "name": creature.definition.name, "turns": turns, "position": _point(creature.position)}
+
 func _can_enter(session: RefCounted, creature: Dictionary, tile: Vector2i) -> bool:
 	if tile == session.position or not living_at(tile).is_empty() or _distance(tile, creature.home) > int(creature.definition.payload.movement.leash):
 		return false
@@ -170,7 +193,7 @@ func _runtime(instance: Dictionary) -> Dictionary:
 		return {}
 	var home := Vector2i(int(instance.position.x), int(instance.position.y))
 	var max_hp := int(definition.payload.stats.max_hp)
-	return {"instance_id": instance.instance_id, "content_id": instance.content_id, "version": int(instance.version), "instance": instance, "definition": definition, "home": home, "position": home, "hp": max_hp, "max_hp": max_hp, "dead": false, "provoked": false, "state": "idle", "mutated": false, "loot": [], "received": []}
+	return {"instance_id": instance.instance_id, "content_id": instance.content_id, "version": int(instance.version), "instance": instance, "definition": definition, "home": home, "position": home, "hp": max_hp, "max_hp": max_hp, "dead": false, "provoked": false, "state": "idle", "mutated": false, "loot": [], "received": [], "stunned_until": 0}
 
 func _apply(creature: Dictionary, mutation: Dictionary) -> bool:
 	if not Data.integer(mutation.get("hp")) or mutation.hp < 0 or mutation.hp > creature.max_hp or not Data.position(mutation.get("position")) or not mutation.get("dead") is bool or not mutation.get("provoked", false) is bool:
@@ -182,6 +205,7 @@ func _apply(creature: Dictionary, mutation: Dictionary) -> bool:
 	creature.state = "dead" if creature.dead else str(mutation.get("state", "idle"))
 	creature.loot = mutation.get("loot", [])
 	creature.received = mutation.get("received", [])
+	creature.stunned_until = int(mutation.get("stunned_until", 0)) if Data.integer(mutation.get("stunned_until", 0)) else 0
 	creature.mutated = true
 	return true
 
@@ -191,6 +215,8 @@ func _ensure_materialized(creature: Dictionary) -> bool:
 func _commit(session: RefCounted, creature: Dictionary) -> void:
 	creature.mutated = true
 	session.run.state.entity_mutations[creature.instance_id] = {"creature": 1, "hp": creature.hp, "position": _point(creature.position), "state": creature.state, "provoked": creature.provoked, "dead": creature.dead, "loot": creature.loot.duplicate(true), "received": creature.received.duplicate(true)}
+	if int(creature.stunned_until) > 0:
+		session.run.state.entity_mutations[creature.instance_id].stunned_until = int(creature.stunned_until)
 
 func _point(tile: Vector2i) -> Dictionary:
 	return {"x": tile.x, "y": tile.y}

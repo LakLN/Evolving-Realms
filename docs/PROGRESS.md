@@ -1,6 +1,139 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: Milestone 02 Checkpoint D complete (talent awakening, ranks, talent effects)
+## Current checkpoint: Milestone 02 Checkpoint E complete (skills, skill books, abilities)
+
+Continued from 86f9388 (clean tree) on explicit user approval of Checkpoint E only.
+Read AGENTS and all design/API docs plus source first. Reused rather than duplicated:
+the talent power vocabulary and engine (passive/triggered skills), roster strikes with
+loot/XP/talent reactions, loot extensions (books), inventory award/remove, the turn
+order and the atomic revision-checked save. No SQLite migration (user_version 2, record
+schema 1), no generation change, no edit to existing v1 packs. Not started: skill
+evolution/fusion, talent copying, cultivation, crafting/alchemy/enchanting, pets, AI
+World Creator, NPCs/quests, multiplayer, any later checkpoint.
+Design and data format: [SKILLS.md](SKILLS.md).
+
+### Implemented
+
+- **Skill definitions** (`kind: skill`, capability `definition.skill`): type active /
+  passive / triggered, tags, learn and use conditions (level, effective stat, known
+  skill, talent, item, equipped slot, HP %, need level, any_of), costs (Energy from data,
+  HP, pinned items), cooldown, target (self / creature with range + line of sight +
+  dispositions / straight-line tile), effects (strike, stun, heal, need, timed status,
+  restore, blink), relations (prerequisite, conflicts, follow_up). Passive/triggered
+  skills use the talent `passive`/`abilities` format and run on the same engine.
+  Unknown types, resources or conditions become pending capabilities with named
+  requirements (`skill.resource.qi`…); unknown conditions are never treated as met.
+- **Skill books:** separate items (`payload.skill_book`, pinned skill, data rule
+  `consume_on_learn`) delivered by four new loot extensions (Wayfarer's cache 100%,
+  weathered chests 45%, hidden buried caches 60%, wolves 6%); old loot results unchanged.
+- **Learning:** `learn` action from the inventory (U): all unmet requirements listed,
+  book and turn kept on failure, duplicates refused, one turn and a record with its
+  source on success. A generic `learn(definition, source)` path exists for future
+  teachers, relics, research or inheritance.
+- **Using:** `skill` action in the normal turn order: validate everything, apply effects
+  in data order, then pay and set the cooldown; refusals spend nothing. Strikes reuse
+  the basic attack path (combat formula, loot, XP, talents). Timed statuses are a derived
+  stat source and refresh instead of stacking; stun is stored in the creature mutation;
+  blink reuses the move/streaming path.
+- **Energy:** data resource (20 + 2/level, regen 34 per turn, 100 resting), stored as
+  value + progress; not assumed for future skills.
+- **Combinations:** `skill_modifier` (power %, cost %, range) from talents, passive
+  skills and gear; new Focus ring (ranged +1 range, −25% energy) and B talent Ngộ Tính
+  (+25% power, −25% energy). Skill strikes trigger talents (lifesteal, Beast Hunter,
+  Lucky Star, Fate Reversal growth). Trigger effects run under a re-entrancy guard, so
+  nothing chains or loops.
+- **9 sample skills + 1 pending:** Trọng Kích, Phi Thạch, Hồi Xuân Thuật, Thiết Bích,
+  Định Thân Chú, Lăng Ba Bộ, Luyện Thể (passive), Tiên Phát Chế Nhân (triggered), Huyết Tế
+  (special learn condition); Triệu Hồi Lang pending (`mechanic.summon`).
+- **UI:** `[book]` rows with what they teach, cost, requirements and Learn (U); skills
+  panel (K) with energy, statuses, numbered list, rules, use; keys 1–9; creature
+  targeting (outlined targets, Tab / Enter / F / Esc) and tile targeting (WASD, Enter);
+  blue energy bar in the HUD; messages and floating names.
+- **Found and fixed:**
+  - two capturing lambdas as action handlers leaked the session at exit (caught by the
+    world suite's native-error check); replaced by methods;
+  - a long HUD info line (large coordinates and counters late in a run) pushed the Menu
+    button off-screen, seen in the exported exe's screenshot; the line is now trimmed.
+    Both have regression coverage.
+- **Rule kept:** resources never drop equipment, so the Focus ring is not in the
+  buried-cache table; the old equipment check now tests that rule precisely (no gear
+  from resource sources) instead of "no extension on any resource".
+- Talent suite expectation updated: the pool now has 13 talents (Ngộ Tính).
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Render -Service -Export
+```
+
+All pass (exit 0):
+- B data 96/96; C world 49/49; C gameplay 22/22 headless, 24/24 OpenGL; D interactions
+  66/66; D gameplay 17/17, 20/20; E integration 34/34 (its child acceptance runs include
+  the skill flow); A combat 75/75; A UI 20/20, 23/23; B survival 60/60; B UI 10/10, 12/12;
+  C equipment 68/68; C UI 15/15, 17/17; D talents 126/126; D UI 16/16, 19/19; startup;
+  optional FastAPI health and pip check.
+- **New skill suite 105/105 (talents on):** 9 skills supported, Summon Wolf pending with
+  its requirements; each book a separate item pinning its skill; unknown condition /
+  resource / target pending and unlearnable; unsupported conditions never met; invalid
+  data refused explicitly. Learning: no weapon / ATK 5 refused with both reasons, book and
+  turn kept; with the club learned in one turn, book used up, source recorded; duplicate
+  refused; level gate; Body Tempering's kept book and +5 max HP; Blood Rite's prerequisite
+  and talent-or-level alternative (Berserker); the generic non-book learn path; Blueprint
+  unchanged. Use: Iron Guard +3 DEF for 5 turns, cost, cooldown refusal without cost,
+  expiry; Mend refused at full HP, heals 30%; Swift Step valid tiles only, invalid tile
+  refused, moves; Blood Rite pays HP for energy and is refused at full energy. Targets:
+  the target set equals "in range, visible, in line of sight" for every creature; no
+  stones / out of range refused without cost; Stone Throw damage equals the combat formula
+  (70% ATK +1) and uses one stone and 2 energy; Binding stores the stun, the creature
+  skips two turns without moving, reload keeps it; a Power Strike kill grants loot and XP
+  through the shared path; its weapon use condition blocks without cost. Shared engine:
+  Opening Strike +2 only while HP ≥ 80%; energy regen with stored progress; Focus ring
+  +1 range / −25% energy (melee range and item costs unchanged); Ngộ Tính stacks to −50%.
+  Talent integration: one skill kill fires lifesteal, kill heal and the skill bonus exactly
+  once each; nested triggers are blocked; Beast Hunter adds +2 to a ranged skill. Loot:
+  Wayfarer's cache manual, chest manual rate 168/400, a real chest opened for a manual,
+  no second payout after reload. Persistence: three reloads identical (skills, cooldowns,
+  energy, buffs, stats, books), cooldown not reset by loading, unsaved learn does not
+  leak, Run B independent, D- and B-era saves load with defaults, four corrupt states
+  refused unchanged.
+- **New skill UI suite 21/21 headless, 24/24 OpenGL:** energy bar; HUD fits, including a
+  very long info line (regression); `[book]` detail and Learn; U learns with message;
+  failed learn explained; K panel with numbers, cost, cooldown, energy, paused movement,
+  fit; key 3 Iron Guard; key 2 creature targeting with highlighted target, movement
+  blocked, Esc cancels for free, Enter throws; key 4 tile targeting with WASD + Enter;
+  continue keeps skills, cooldowns and energy. Screenshots inspected:
+  `.tools/m02e-book.png`, `m02e-skills.png`, `m02e-targeting.png` (an overflowing book
+  detail and a skills panel overlapping the bottom bar were found and fixed).
+- **Exported release exe** (rebuilt by `-Export`), temp working dir and DB, OpenGL:
+  write 37/37 — the run's real chest loot gave the Thiết Bích manual, learned with I + U,
+  listed with K, used with key 1; abrupt kill; verify 9/9 (skills, energy and statuses
+  are part of the compared state); default-save refusal. `standalone-skills.png`
+  inspected (the HUD overflow above was found here).
+- **Old saves in the exported exe:** saves written by the acceptance flow of 86f9388
+  (Checkpoint D) and 450db3b (Checkpoint C) from temporary git worktrees, loaded with
+  `--acceptance=legacy`: 7/7 each (inventory and object states kept, talents stable).
+  This ran on the build before the HUD-trim fix; that fix touches only HUD layout.
+
+Automated real-engine input/rendering with inspected screenshots; no human hand
+playthrough is claimed.
+
+### Remaining limits
+
+- Sample content only (9 skills), first-pass balance.
+- No area effects, damage over time, creature debuffs other than stun, projectiles,
+  animations, skill levels, evolution or fusion; quick keys cover the first 9 skills.
+- One resource (Energy); new resources are data, but nothing yet restores or changes
+  them outside the rules file and the restore effect.
+- Trigger effects never chain (by design); hit reactions still cannot kill attackers.
+- The generic learn path has no in-game teacher/relic yet.
+- Earlier limits (fog save cost, one save slot, greedy AI, Windows x64 only, unsigned exe)
+  remain.
+
+### Next step
+
+Stop. The user reviews this build. Any later checkpoint needs explicit approval.
+
+## Milestone 02 Checkpoint D record (historical)
 
 Continued from 450db3b (clean tree) on explicit user approval of Checkpoint D only.
 Read AGENTS and all design/API docs plus source first. Reused: Content Registry (new

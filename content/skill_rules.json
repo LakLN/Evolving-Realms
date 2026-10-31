@@ -1,0 +1,8 @@
+{
+  "rules_version": 1,
+  "_note": "Skill resources. Skills name the resource they spend; future resources (mana, qi, stamina...) are added here, not assumed. regen values accumulate per turn; every 100 restores 1 point.",
+  "resources": {
+    "energy": {"name": "Energy", "short": "EN", "color": "5aa9e6", "base_max": 20, "per_level": 2, "regen_per_turn": 34, "rest_regen_per_turn": 100}
+  },
+  "learning": {"max_known": 0}
+}

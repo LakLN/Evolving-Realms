@@ -36,10 +36,12 @@ Saves: %APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite
 
 Controls: WASD / arrows move (walk into a hostile creature to attack), E gather/open/pick up,
 F attack adjacent target, Tab next target, Space wait, R rest, I inventory (U use/equip),
-C character & gear (U unequip), T talent sheet,
+C character & gear (U unequip), T talent sheet, K skills (1-9 use a skill;
+Tab / WASD choose a target, Enter confirms, Esc cancels),
 Ctrl+S save, Esc close inventory or save & return to menu.
 Each new run awakens one random talent (rank F..SSS), shown at the start; it is saved
-with the run and never rerolled by loading.
+with the run and never rerolled by loading. Manuals and scrolls found in chests teach
+skills: select one in the inventory and press U to learn it. Skills cost Energy (blue bar).
 Watch Hunger/Thirst under the HP bar: eat berries/meat, drink spring water, apply herbs.
 Normal mode: autosaves when safe; death reloads your last save.
 Permadeath: saves every risky action (and every 10 safe ones); death ends the run.

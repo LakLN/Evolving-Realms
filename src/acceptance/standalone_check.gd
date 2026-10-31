@@ -101,6 +101,30 @@ func _write() -> void:
 	check(app.session.run.state.character.equipment.get("weapon", {}).get("instance_id") == club.get("instance_id") and int(app.session.combat_stats().attack) == armed and app._notice.text.contains("Equipped"), "I + U re-equips the same club instance; ATK restored")
 	await _capture("standalone-gear.png")
 	await _key(KEY_ESCAPE)
+	# Skills: find a manual through real chest loot, learn it (I, U), view it (K), use it (1).
+	var manual := await _find_manual()
+	if check(not manual.is_empty(), "Find a skill manual in a chest through real loot"):
+		await _key(KEY_I)
+		for index in app._inventory_rows.size():
+			if app._inventory_rows[index].content_id == manual.content_id:
+				app._inventory_list.select(index)
+				app._show_inventory_item(index)
+		check(app._inventory_detail.text.contains("Teaches:") and app._use_button.text.begins_with("Learn"), "The manual shows what it teaches and a Learn button")
+		await _key(KEY_U)
+		var learned: bool = not app.session.run.state.character.skills.is_empty()
+		check((learned and app._notice.text.contains("Learned")) or (not learned and app._notice.text.contains("Cannot learn") and app.session.run.state.inventory.has(manual.content_id)), "U learns the skill, or explains the unmet requirement and keeps the book")
+		await _key(KEY_ESCAPE)
+		if learned:
+			await _key(KEY_K)
+			check(app._skills_panel.visible and app._skill_list.item_count >= 1 and app._skill_list.get_item_text(0).begins_with("1. "), "K lists the learned skill")
+			await _capture("standalone-skills.png")
+			await _key(KEY_ESCAPE)
+			var skill_turn := int(app.session.run.state.turn)
+			await _key(KEY_1)
+			if not app._targeting.is_empty():
+				await _key(KEY_ENTER)
+			check(int(app.session.run.state.turn) == skill_turn + 1 or (int(app.session.run.state.turn) == skill_turn and app._notice.text.contains("no turn spent")), "Key 1 uses the skill (or explains why not, spending nothing): " + app._notice.text.left(90))
+			app._cancel_targeting()
 	var rest_turn := int(app.session.run.state.turn)
 	await _key(KEY_R)
 	check((int(app.session.run.state.turn) > rest_turn and app._notice.text.contains("Rested")) or app._notice.text.contains("cannot rest"), "R rests turn by turn (or is refused with danger in sight)")
@@ -209,6 +233,27 @@ func _legacy() -> void:
 			check(again.resume(header.run_id) and not after.talents.is_empty() and same(app.store.load_run(header.run_id).state.character.talents, after.talents) and again.awakened_now.is_empty(), "Legacy run %s awakened one talent that stays fixed on reload" % header.run_id.left(8))
 	check(resumed > 0, "At least one legacy run resumes")
 
+func _find_manual() -> Dictionary:
+	## Walk to a reachable chest whose deterministic loot holds a manual and open it with E.
+	for chunk in app.session.objects.chunks.values():
+		for instance in chunk:
+			if app.session.is_consumed(instance.instance_id) or not app.session.perceives(instance) or app.session.objects.definition_for(instance).payload.interaction != "open":
+				continue
+			var manuals: Array = app.session.preview_loot(instance.instance_id).filter(func(drop: Dictionary) -> bool: return app.session.skill_catalog.books.has("%s@%d" % [drop.content_id, int(drop.version)]))
+			if manuals.is_empty():
+				continue
+			var spot := Vector2i(int(instance.position.x), int(instance.position.y))
+			var path := route(app.session, func(tile: Vector2i) -> bool: return absi(tile.x - spot.x) + absi(tile.y - spot.y) <= 1)
+			if (path.is_empty() and absi(app.session.position.x - spot.x) + absi(app.session.position.y - spot.y) > 1) or path.size() > 200 or not await _walk(path):
+				continue
+			for _attempt in 5:
+				if app.session.is_consumed(instance.instance_id):
+					break
+				await _key(KEY_E)
+			if app.session.is_consumed(instance.instance_id):
+				return manuals[0]
+	return {}
+
 func _continue(run_id: String) -> bool:
 	for index in app._runs.item_count:
 		if app._runs.get_item_metadata(index) == run_id:
@@ -263,7 +308,7 @@ func _state(session: RefCounted) -> Dictionary:
 
 func _state_of(run_id: String) -> Dictionary:
 	var loaded: Dictionary = app.store.load_run(run_id)
-	return {} if loaded.is_empty() else {"revision": loaded.revision, "position": loaded.state.character.position, "turn": loaded.state.turn, "inventory": loaded.state.inventory, "mutations": loaded.state.entity_mutations, "explored": loaded.state.explored.size(), "equipment": loaded.state.character.get("equipment", {}), "progression": loaded.state.character.get("progression", {}), "talents": loaded.state.character.get("talents", [])}
+	return {} if loaded.is_empty() else {"revision": loaded.revision, "position": loaded.state.character.position, "turn": loaded.state.turn, "inventory": loaded.state.inventory, "mutations": loaded.state.entity_mutations, "explored": loaded.state.explored.size(), "equipment": loaded.state.character.get("equipment", {}), "progression": loaded.state.character.get("progression", {}), "talents": loaded.state.character.get("talents", []), "skills": loaded.state.character.get("skills", []), "resources": loaded.state.character.get("resources", {}), "statuses": loaded.state.character.get("statuses", [])}
 
 func _frame() -> void:
 	await app.get_tree().process_frame

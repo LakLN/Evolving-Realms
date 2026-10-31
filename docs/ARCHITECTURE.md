@@ -8,7 +8,9 @@ authoring process, not a dependency for movement, saving or combat.
 
 - src/core: weighted LootTable, Inventory, Combat rules, CreatureAI decisions,
   Survival rules, ItemEffects handlers, ItemQuality, CharacterStats, Equipment,
-  Talents (ranks, validation, awakening), TalentRuntime (plan/commit), TalentText.
+  Talents (ranks, validation, awakening), TalentRuntime (plan/commit), TalentText,
+  Skills (resources, skill/book validation, conditions).
+- src/run/skill_actions.gd: learn/use skill actions, targets, costs, statuses.
 - src/world: implemented terrain_v1, bounded chunk cache, spawn selector,
   TileMapLayer renderer, world_objects v1 layer and code-native placeholder art.
 - src/run: implemented ExplorationSession: cardinal actions/turns, sight,
@@ -190,6 +192,18 @@ turn/explore triggers after survival, player strikes and creature hits in the ro
 loot in `preview_loot`/interact, item use. Planning never mutates; counters commit only
 when the action is accepted. Hidden objects (`payload.hidden`) need a perception talent.
 No schema change. Details: [TALENTS.md](TALENTS.md).
+
+## Skills — Milestone 02 Checkpoint E
+
+`kind: skill` definitions (capability `definition.skill`, content/skill_pack.json) and
+resources (content/skill_rules.json). Books are separate items (`payload.skill_book`)
+delivered by loot extensions. `learn` and `skill` actions in `perform_action`: validate
+and plan everything, then apply effects in data order, then pay costs and set the
+cooldown; refusals change nothing. Strikes reuse `session.strike()` (combat, loot, XP,
+talent reactions); blink reuses `relocate()`. Passive/triggered skills are extra sources
+of the talent engine; trigger effects run with a re-entrancy guard (no chains). Timed
+statuses are a derived stat source. `character.skills/resources/statuses` are extra
+keys. No schema change. Details: [SKILLS.md](SKILLS.md).
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

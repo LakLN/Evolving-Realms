@@ -22,7 +22,7 @@ const TRIGGERS := {
 	"on_open": ["yield_bonus", "extra_loot_roll", "grant_item"],
 	"on_use_item": ["use_bonus", "heal", "need"],
 }
-const PASSIVE_EFFECTS := ["stat", "perception"]
+const PASSIVE_EFFECTS := ["stat", "perception", "skill_modifier"]
 ## Condition type -> triggers that provide its context ([] = every trigger).
 const CONDITIONS := {
 	"chance_per_10000": [], "hp_below_percent": [], "hp_at_least_percent": [], "every_turns": [],
@@ -142,6 +142,11 @@ func classify(definition: Dictionary, stats: Array, needs: Array, registry: RefC
 	for note in payload.get("limitations", []):
 		if not note is String:
 			return {"missing": missing, "problem": "Talent limitations are display strings"}
+	return {"missing": missing, "problem": check_powers(definition, payload, stats, needs, registry, world_id, missing)}
+
+func check_powers(definition: Dictionary, payload: Dictionary, stats: Array, needs: Array, registry: RefCounted, world_id: String, missing: Array) -> String:
+	## Shared by talents and skills: `passive` effects and triggered `abilities`.
+	## Returns a data problem ("" when valid); unknown types are appended to missing.
 	var pinned := {}
 	for dependency in definition.get("dependencies", []):
 		pinned["%s@%d" % [dependency.content_id, int(dependency.version)]] = true
@@ -149,36 +154,45 @@ func classify(definition: Dictionary, stats: Array, needs: Array, registry: RefC
 	for effect in payload.get("passive", []):
 		var problem := _check_effect(effect, "passive", context)
 		if not problem.is_empty():
-			return {"missing": missing, "problem": problem}
+			return problem
 	var ability_ids := {}
 	for ability in payload.get("abilities", []):
 		if not ability is Dictionary or not ability.get("id") is String or not Data.identifier("a:" + ability.id) or ability_ids.has(ability.id):
-			return {"missing": missing, "problem": "Talent abilities need unique lowercase ids"}
+			return "Abilities need unique lowercase ids"
 		ability_ids[ability.id] = true
 		var trigger: Variant = ability.get("trigger")
 		if not trigger is String or not ability.get("effects") is Array or ability.effects.is_empty() or ability.effects.size() > 8 or not ability.get("conditions", []) is Array or not ability.get("limits", {}) is Dictionary or not ability.get("quiet", false) is bool:
-			return {"missing": missing, "problem": "Ability %s needs a trigger, 1..8 effects, conditions, limits" % ability.id}
+			return "Ability %s needs a trigger, 1..8 effects, conditions, limits" % ability.id
 		if not TRIGGERS.has(trigger):
 			missing.append("talent.trigger." + trigger)
 			continue
 		for condition in ability.get("conditions", []):
 			var problem := _check_condition(condition, trigger, context)
 			if not problem.is_empty():
-				return {"missing": missing, "problem": "%s: %s" % [ability.id, problem]}
+				return "%s: %s" % [ability.id, problem]
 		var problem := _check_limits(ability.get("limits", {}), trigger)
 		if not problem.is_empty():
-			return {"missing": missing, "problem": "%s: %s" % [ability.id, problem]}
+			return "%s: %s" % [ability.id, problem]
 		var phases := {}
 		for effect in ability.effects:
 			problem = _check_effect(effect, trigger, context)
 			if not problem.is_empty():
-				return {"missing": missing, "problem": "%s: %s" % [ability.id, problem]}
+				return "%s: %s" % [ability.id, problem]
 			for index in HIT_PHASES.size():
 				if effect is Dictionary and effect.get("type") in HIT_PHASES[index]:
 					phases[index] = true
 		if trigger == "on_hit_taken" and phases.size() > 1:
-			return {"missing": missing, "problem": ability.id + ": a hit ability mixes mitigation, survival and recovery effects"}
-	return {"missing": missing, "problem": ""}
+			return ability.id + ": a hit ability mixes mitigation, survival and recovery effects"
+	return ""
+
+static func check_skill_modifier(effect: Dictionary) -> String:
+	## {tags?, skills?, power_percent, cost_percent, range_add}: changes skills that match.
+	for key in ["tags", "skills"]:
+		if not effect.get(key, []) is Array or not effect.get(key, []).all(func(value: Variant) -> bool: return value is String):
+			return "skill_modifier %s must be strings" % key
+	if not _int_in(effect.get("power_percent", 0), -90, 500) or not _int_in(effect.get("cost_percent", 0), -90, 500) or not _int_in(effect.get("range_add", 0), -5, 5):
+		return "skill_modifier needs power_percent/cost_percent -90..500 and range_add -5..5"
+	return "" if effect.get("power_percent", 0) != 0 or effect.get("cost_percent", 0) != 0 or effect.get("range_add", 0) != 0 else "skill_modifier changes nothing"
 
 func _check_condition(condition: Variant, trigger: String, context: Dictionary) -> String:
 	if not condition is Dictionary or not condition.get("type") is String:
@@ -224,6 +238,8 @@ func _check_effect(effect: Variant, trigger: String, context: Dictionary) -> Str
 			if effect.type == "grow_stat":
 				return "" if _int_in(effect.get("amount"), -100, 100) and effect.amount != 0 and _int_in(effect.get("max_stacks"), 1, 1000) else "grow_stat needs non-zero amount and max_stacks 1..1000"
 			return "" if _int_in(effect.get("add", 0), -1000, 1000) and _int_in(effect.get("percent", 0), -90, 500) and (effect.get("add", 0) != 0 or effect.get("percent", 0) != 0) else "stat needs add -1000..1000 or percent -90..500"
+		"skill_modifier":
+			return check_skill_modifier(effect)
 		"perception":
 			return "" if effect.get("hidden", false) is bool and _int_in(effect.get("sense_radius", 0), 0, 20) else "perception needs hidden bool and sense_radius 0..20"
 		"heal":

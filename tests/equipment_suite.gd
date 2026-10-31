@@ -160,11 +160,14 @@ func _test_loot() -> void:
 	store.open(directory + "/loot.sqlite")
 	var session := _session(store, "Loot")
 	check(session.loot_extensions.has("core:wayfarer_cache@1") and session.loot_extensions.has("core:weathered_chest@1") and session.loot_extensions.has("core:wolf@1"), "Loot extensions attach equipment to chosen chests and creatures")
-	var resource_sources := 0
+	var resource_gear := 0
 	for key in session.loot_extensions:
 		var source: Dictionary = store.content.load_definition(session.world.world_id, key.get_slice("@", 0), int(key.get_slice("@", 1)))
-		resource_sources += 1 if source.kind == "resource" else 0
-	check(resource_sources == 0, "Resources never drop equipment (not every source drops everything)")
+		for extension in session.loot_extensions[key]:
+			for entry in extension.payload.table.get("guaranteed", []) + extension.payload.table.get("entries", []):
+				var item: Dictionary = store.content.load_definition(session.world.world_id, entry.content_id, int(entry.version))
+				resource_gear += 1 if source.kind == "resource" and item.payload.has("equipment") else 0
+	check(resource_gear == 0, "Resources never drop equipment (not every source drops everything)")
 	var cache := Acceptance.route_to_object(session, "open", [], "core:wayfarer_cache")
 	var landmark: Dictionary = store.content.load_instance(session.world.world_id, "landmark:wayfarer_cache")
 	var wolf: Dictionary = store.content.load_definition(session.world.world_id, "core:wolf", 1)

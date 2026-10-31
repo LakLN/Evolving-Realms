@@ -6,17 +6,34 @@ extends RefCounted
 ## pinned definitions plus stored counters every time; nothing effective is stored.
 const Loot = preload("res://src/core/loot_table.gd")
 const Talents = preload("res://src/core/talents.gd")
-## [{record (live dictionary inside Run state), definition, active}]
+## The same engine runs learned passive/triggered skills (source "skill").
+## [{record (live dictionary inside Run state), definition, active, source}]
 var held: Array = []
 var seed_key := ""
+## True while the session applies trigger effects: anything those effects cause can
+## not fire triggers again (one level only, so no recursive or endless chains).
+var resolving := false
+var blocked_reentry := 0
 
 func configure(records: Array, definition_for: Callable, is_supported: Callable, key: String) -> void:
 	held = []
+	seed_key = key
+	add(records, definition_for, is_supported, "talent")
+
+func add(records: Array, definition_for: Callable, is_supported: Callable, source: String) -> void:
 	for record in records:
 		var definition: Dictionary = definition_for.call(record.content_id, int(record.version))
-		# Unsupported (pending) talents stay in the save but are dormant: never executed.
-		held.append({"record": record, "definition": definition, "active": is_supported.call(definition)})
-	seed_key = key
+		# Unsupported (pending) definitions stay in the save but are dormant: never executed.
+		held.append({"record": record, "definition": definition, "active": is_supported.call(definition), "source": source})
+
+func skill_modifiers() -> Array:
+	var result: Array = []
+	for talent in held:
+		if talent.active:
+			for effect in talent.definition.payload.get("passive", []):
+				if effect.type == "skill_modifier":
+					result.append(effect)
+	return result
 
 func modifiers() -> Dictionary:
 	## Effective-stat source: passive stat effects plus grow_stat stacks (= uses).
@@ -54,6 +71,9 @@ func fire(trigger: String, context: Dictionary, effect_filter: Array = []) -> Ar
 	## Planned activations [{talent, ability, fired, progress}], in held/ability order.
 	## on_explore entries with fired=false only carry exploration progress to commit.
 	var result: Array = []
+	if resolving:
+		blocked_reentry += 1
+		return result
 	var turn := int(context.get("turn", 0))
 	for talent in held:
 		if not talent.active:

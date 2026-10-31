@@ -1,0 +1,68 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {"content_id":"core:skill/power_strike","version":1,"schema_version":1,"kind":"skill","name":"Trọng Kích","description":"Put your whole body behind one heavy blow with your weapon.","metadata":{"name_en":"Power Strike","school":"martial"},"payload":{"type":"active","tags":["melee","physical"],
+      "learn":{"conditions":[{"type":"equipped","slot":"weapon"},{"type":"stat","stat":"attack","min":6}]},
+      "use":{"conditions":[{"type":"equipped","slot":"weapon"}],"cost":{"energy":4},"cooldown_turns":3,"target":{"kind":"creature","range":1,"line_of_sight":true}},
+      "effects":[{"type":"strike","attack_percent":170}],
+      "relations":[{"type":"follow_up","skill":"core:skill/blood_rite"}]}},
+
+    {"content_id":"core:skill/stone_throw","version":1,"schema_version":1,"kind":"skill","name":"Phi Thạch","description":"Hurl a stone at a creature you can see. Each throw uses up one small stone.","metadata":{"name_en":"Stone Throw","school":"martial"},"dependencies":[{"content_id":"core:stone","version":1}],"payload":{"type":"active","tags":["ranged","physical"],
+      "use":{"cost":{"energy":2,"items":[{"content_id":"core:stone","version":1,"quantity":1}]},"cooldown_turns":1,"target":{"kind":"creature","range":5,"line_of_sight":true}},
+      "effects":[{"type":"strike","attack_percent":70,"flat":1}]}},
+
+    {"content_id":"core:skill/mend","version":1,"schema_version":1,"kind":"skill","name":"Hồi Xuân Thuật","description":"Draw on your inner energy to close your wounds.","metadata":{"name_en":"Mend","school":"restoration"},"payload":{"type":"active","tags":["restoration"],
+      "learn":{"conditions":[{"type":"level","min":2}]},
+      "use":{"cost":{"energy":6},"cooldown_turns":8,"target":{"kind":"self"}},
+      "effects":[{"type":"heal","percent_of_max":30}]}},
+
+    {"content_id":"core:skill/iron_guard","version":1,"schema_version":1,"kind":"skill","name":"Thiết Bích","description":"Brace yourself like an iron wall: Defense +3 for 5 turns.","metadata":{"name_en":"Iron Guard","school":"martial"},"payload":{"type":"active","tags":["defense","buff"],
+      "use":{"cost":{"energy":5},"cooldown_turns":12,"target":{"kind":"self"}},
+      "effects":[{"type":"status","status":"guard","stat":"defense","add":3,"duration":5}]}},
+
+    {"content_id":"core:skill/binding","version":1,"schema_version":1,"kind":"skill","name":"Định Thân Chú","description":"A binding word freezes a creature you can see for 2 turns. It deals no damage.","metadata":{"name_en":"Binding Word","school":"arcane"},"payload":{"type":"active","tags":["ranged","control"],
+      "learn":{"conditions":[{"type":"level","min":2}]},
+      "use":{"cost":{"energy":5},"cooldown_turns":10,"target":{"kind":"creature","range":4,"line_of_sight":true}},
+      "effects":[{"type":"stun","turns":2}]}},
+
+    {"content_id":"core:skill/swift_step","version":1,"schema_version":1,"kind":"skill","name":"Lăng Ba Bộ","description":"Glide up to 3 tiles in a straight line to a free tile you can see.","metadata":{"name_en":"Swift Step","school":"movement"},"payload":{"type":"active","tags":["movement"],
+      "use":{"cost":{"energy":3},"cooldown_turns":5,"target":{"kind":"tile","range":3,"line_of_sight":true}},
+      "effects":[{"type":"blink"}]}},
+
+    {"content_id":"core:skill/body_tempering","version":1,"schema_version":1,"kind":"skill","name":"Luyện Thể","description":"Daily tempering toughens the body for good.","metadata":{"name_en":"Body Tempering","school":"martial"},"payload":{"type":"passive","tags":["body"],
+      "learn":{"conditions":[{"type":"level","min":2}]},
+      "passive":[{"type":"stat","stat":"max_hp","add":5}]}},
+
+    {"content_id":"core:skill/opening_strike","version":1,"schema_version":1,"kind":"skill","name":"Tiên Phát Chế Nhân","description":"Strike first, strike hard: while you are still healthy, your blows land with extra force.","metadata":{"name_en":"Opening Strike","school":"martial"},"payload":{"type":"triggered","tags":["melee"],
+      "abilities":[{"id":"first_blood","trigger":"on_attack","conditions":[{"type":"hp_at_least_percent","value":80}],"effects":[{"type":"bonus_damage","amount":2}]}]}},
+
+    {"content_id":"core:skill/blood_rite","version":1,"schema_version":1,"kind":"skill","name":"Huyết Tế","description":"Spill your own blood to restore energy at once. Only fighters marked by blood, or seasoned ones, can bear it.","metadata":{"name_en":"Blood Rite","school":"forbidden"},"payload":{"type":"active","tags":["forbidden"],
+      "learn":{"conditions":[{"type":"any_of","conditions":[{"type":"talent","values":["core:talent/bloodthirst","core:talent/berserker","core:talent/undying","core:talent/fate_reversal"]},{"type":"level","min":4}]}]},
+      "use":{"conditions":[{"type":"hp_at_least_percent","value":40}],"cost":{"hp":6},"cooldown_turns":15,"target":{"kind":"self"}},
+      "effects":[{"type":"restore","resource":"energy","amount":12}],
+      "relations":[{"type":"prerequisite","skill":"core:skill/power_strike"}]}},
+
+    {"content_id":"core:skill/summon_wolf","version":1,"schema_version":1,"kind":"skill","name":"Triệu Hồi Lang","description":"Call a spirit wolf to fight at your side.","metadata":{"name_en":"Summon Wolf","school":"spirit"},"required_capabilities":["mechanic.summon"],"payload":{"type":"active","tags":["summon"],
+      "use":{"cost":{"energy":10},"cooldown_turns":30,"target":{"kind":"tile","range":1,"line_of_sight":true}},
+      "effects":[{"type":"summon","creature":"core:wolf"}]}},
+
+    {"content_id":"core:book/power_strike","version":1,"schema_version":1,"kind":"item","name":"Manual: Trọng Kích","description":"A worn martial manual describing the Power Strike.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/power_strike","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/power_strike","version":1},"consume_on_learn":true}}},
+    {"content_id":"core:book/stone_throw","version":1,"schema_version":1,"kind":"item","name":"Manual: Phi Thạch","description":"Sketches of a shepherd's stone-throwing technique.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/stone_throw","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/stone_throw","version":1},"consume_on_learn":true}}},
+    {"content_id":"core:book/mend","version":1,"schema_version":1,"kind":"item","name":"Scroll: Hồi Xuân Thuật","description":"A healer's scroll on mending wounds with inner energy.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/mend","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/mend","version":1},"consume_on_learn":true}}},
+    {"content_id":"core:book/iron_guard","version":1,"schema_version":1,"kind":"item","name":"Manual: Thiết Bích","description":"A soldier's guide to the iron stance.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/iron_guard","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/iron_guard","version":1},"consume_on_learn":true}}},
+    {"content_id":"core:book/binding","version":1,"schema_version":1,"kind":"item","name":"Scroll: Định Thân Chú","description":"A talisman scroll inscribed with a binding word.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/binding","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/binding","version":1},"consume_on_learn":true}}},
+    {"content_id":"core:book/swift_step","version":1,"schema_version":1,"kind":"item","name":"Manual: Lăng Ba Bộ","description":"Footwork diagrams for gliding steps.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/swift_step","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/swift_step","version":1},"consume_on_learn":true}}},
+    {"content_id":"core:book/body_tempering","version":1,"schema_version":1,"kind":"item","name":"Manual: Luyện Thể","description":"A body-tempering regimen. Its stone tablet copy is never used up.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/body_tempering","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/body_tempering","version":1},"consume_on_learn":false}}},
+    {"content_id":"core:book/opening_strike","version":1,"schema_version":1,"kind":"item","name":"Manual: Tiên Phát Chế Nhân","description":"A hunter's notes on striking before the prey reacts.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/opening_strike","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/opening_strike","version":1},"consume_on_learn":true}}},
+    {"content_id":"core:book/blood_rite","version":1,"schema_version":1,"kind":"item","name":"Forbidden scroll: Huyết Tế","description":"A blood-stained scroll. Its rite demands Power Strike mastery and a fighter marked by blood or experience.","metadata":{"category":"book"},"dependencies":[{"content_id":"core:skill/blood_rite","version":1}],"payload":{"stackable":true,"stack_limit":5,"skill_book":{"skill":{"content_id":"core:skill/blood_rite","version":1},"consume_on_learn":true}}},
+
+    {"content_id":"core:focus_ring","version":1,"schema_version":1,"kind":"item","name":"Focus ring","description":"A ring of clear stone. Techniques cost less energy and ranged ones reach further.","metadata":{"category":"accessory"},"payload":{"stackable":false,"stack_limit":1,"equipment":{"slot":"accessory","stats":{"max_hp":1},"skill_modifiers":[{"tags":["ranged"],"range_add":1},{"cost_percent":-25}]}}},
+
+    {"content_id":"core:talent/comprehension","version":1,"schema_version":1,"kind":"talent","name":"Ngộ Tính","description":"You grasp techniques quickly: every skill you use is stronger and costs less energy.","metadata":{"name_en":"Comprehension","tags":["skills"]},"payload":{"rank":"B","unique":false,"awakening":{"weight":100},"passive":[{"type":"skill_modifier","power_percent":25,"cost_percent":-25}],"limitations":["Has no effect until you learn skills."]}},
+
+    {"content_id":"core:loot/cache_tome","version":1,"schema_version":1,"kind":"loot_extension","name":"Wayfarer's manual","dependencies":[{"content_id":"core:wayfarer_cache","version":1},{"content_id":"core:book/power_strike","version":1}],"payload":{"source":{"content_id":"core:wayfarer_cache","version":1},"chance_per_10000":10000,"table":{"guaranteed":[{"content_id":"core:book/power_strike","version":1,"min":1,"max":1}]}}},
+    {"content_id":"core:loot/chest_tomes","version":1,"schema_version":1,"kind":"loot_extension","name":"Chest manuals","dependencies":[{"content_id":"core:weathered_chest","version":1},{"content_id":"core:book/power_strike","version":1},{"content_id":"core:book/stone_throw","version":1},{"content_id":"core:book/mend","version":1},{"content_id":"core:book/iron_guard","version":1},{"content_id":"core:book/binding","version":1},{"content_id":"core:book/swift_step","version":1},{"content_id":"core:book/body_tempering","version":1},{"content_id":"core:book/opening_strike","version":1},{"content_id":"core:book/blood_rite","version":1},{"content_id":"core:focus_ring","version":1}],"payload":{"source":{"content_id":"core:weathered_chest","version":1},"chance_per_10000":4500,"table":{"rolls":1,"entries":[{"content_id":"core:book/power_strike","version":1,"min":1,"max":1,"weight":3},{"content_id":"core:book/stone_throw","version":1,"min":1,"max":1,"weight":3},{"content_id":"core:book/mend","version":1,"min":1,"max":1,"weight":2},{"content_id":"core:book/iron_guard","version":1,"min":1,"max":1,"weight":2},{"content_id":"core:book/binding","version":1,"min":1,"max":1,"weight":1},{"content_id":"core:book/swift_step","version":1,"min":1,"max":1,"weight":2},{"content_id":"core:book/body_tempering","version":1,"min":1,"max":1,"weight":2},{"content_id":"core:book/opening_strike","version":1,"min":1,"max":1,"weight":2},{"content_id":"core:book/blood_rite","version":1,"min":1,"max":1,"weight":1},{"content_id":"core:focus_ring","version":1,"min":1,"max":1,"weight":1,"quality":{"pho_thong":60,"uu_tu":30,"hiem_co":10}}]}}},
+    {"content_id":"core:loot/buried_tomes","version":1,"schema_version":1,"kind":"loot_extension","name":"Buried manuals","dependencies":[{"content_id":"core:buried_cache","version":1},{"content_id":"core:book/binding","version":1},{"content_id":"core:book/swift_step","version":1},{"content_id":"core:book/blood_rite","version":1}],"payload":{"source":{"content_id":"core:buried_cache","version":1},"chance_per_10000":6000,"table":{"rolls":1,"entries":[{"content_id":"core:book/binding","version":1,"min":1,"max":1,"weight":2},{"content_id":"core:book/swift_step","version":1,"min":1,"max":1,"weight":2},{"content_id":"core:book/blood_rite","version":1,"min":1,"max":1,"weight":2}]}}},
+    {"content_id":"core:loot/wolf_tome","version":1,"schema_version":1,"kind":"loot_extension","name":"Hunter's notes","dependencies":[{"content_id":"core:wolf","version":1},{"content_id":"core:book/opening_strike","version":1}],"payload":{"source":{"content_id":"core:wolf","version":1},"chance_per_10000":600,"table":{"guaranteed":[{"content_id":"core:book/opening_strike","version":1,"min":1,"max":1}]}}}
+  ]
+}

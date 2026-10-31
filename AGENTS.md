@@ -1,7 +1,7 @@
 # Agent workflow
 
 Read docs/PROJECT_VISION.md, ARCHITECTURE.md, ROADMAP.md and PROGRESS.md before changes.
-Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment) and D (talents) are complete.
+Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment), D (talents) and E (skills) are complete.
 Do not start a later Milestone 02 checkpoint or later milestones without user approval.
 Keep Godot gameplay local and independent of Python, internet, keys and AI providers.
 Use stable content IDs; separate blueprint, definitions, instances and per-run mutations.
@@ -21,6 +21,7 @@ Read docs/CREATURES_AND_COMBAT.md before changing creatures, AI, combat, turns o
 Read docs/SURVIVAL_AND_ITEMS.md before changing needs, item use, rest or autosave.
 Read docs/EQUIPMENT_AND_PROGRESSION.md before changing quality, gear, stats, loot extensions or levels.
 Read docs/TALENTS.md before changing talents, awakening, talent effects or hidden objects.
+Read docs/SKILLS.md before changing skills, books, learning, energy, statuses or targeting.
 Never store effective stats; derive them in src/core/character_stats.gd.
 Talent data never executes code: new effect types need engine handlers, tests and approval.
 Preserve creatures-pack v1 definitions and creature-generation v1 identity.

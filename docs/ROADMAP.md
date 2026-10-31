@@ -45,9 +45,15 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
     plan-then-commit effect handlers (stats, combat, hits taken, gathering, chests,
     item use, exploration, turn triggers), hidden objects with perception, stored
     counters only, awakening screen / talent sheet / panel line. No migration.
+  - E (complete): `skill` definitions (capability `definition.skill`) with active /
+    passive / triggered types, learn and use conditions, costs (Energy, HP, items),
+    cooldowns, creature/tile/self targets; skill books as separate items found through
+    loot extensions; learn/use actions in the turn system; passive/triggered skills on
+    the talent engine; skill modifiers from talents and gear; timed statuses, stun,
+    blink; skills panel, 1-9, targeting, energy bar. No migration.
   - Later checkpoints: not started; require user approval.
-03: skill books, learning requirements and deeper talent mechanics (evolution etc.);
-randomized talent awakening and the effect-handler base were delivered early in 02 D.
+03: deeper talent/skill mechanics (evolution, fusion, cultivation) as approved; talent
+awakening (02 D) and skill books with learning requirements (02 E) were delivered early.
 04: real provider, region content, quests, context, dependencies and persistence.
 05: capabilities, mechanic proposals, isolated development, tests, migrations,
 compatibility and explicit integration approval.

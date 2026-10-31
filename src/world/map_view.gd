@@ -13,6 +13,8 @@ var _player := Node2D.new()
 var _object_layer := Node2D.new()
 ## Objects sensed through fog by a perception talent, drawn above the fog layer.
 var _sense_layer := Node2D.new()
+## Skill targeting: {tiles: [Vector2i], selected: Vector2i} drawn above the fog.
+var skill_marks: Dictionary = {}
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -127,9 +129,16 @@ func _draw_objects() -> void:
 func _draw_sensed() -> void:
 	## Unvisited, unconsumed objects within the talent's sense radius: a faint marker
 	## (hidden ones only with perception). Nothing here reveals terrain or saves fog.
-	if session == null or session.objects == null or int(session.talents.perception().sense_radius) <= 0:
+	## Also valid skill targets while targeting (selected one brighter).
+	if session == null or session.objects == null:
 		return
 	var origin: Vector2i = session.cache.center * Terrain.CHUNK_SIZE
+	for tile in skill_marks.get("tiles", []):
+		var mark := (Vector2(tile - origin) + Vector2(0.5, 0.5)) * Palette.SIZE
+		var chosen: bool = tile == skill_marks.get("selected")
+		_sense_layer.draw_rect(Rect2(mark - Vector2(15, 15), Vector2(30, 30)), Color("7fd4ff") if chosen else Color(0.5, 0.8, 1.0, 0.55), false, 3.0 if chosen else 1.5)
+	if int(session.talents.perception().sense_radius) <= 0:
+		return
 	for objects in session.objects.chunks.values():
 		for instance in objects:
 			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
@@ -174,6 +183,13 @@ func show_events(events: Array) -> void:
 			"regen":
 				text = "+1"
 				color = Color("8be08b")
+			"stun":
+				text = "bound"
+				color = Color("8fd3ff")
+				tile = Vector2i(int(event.position.x), int(event.position.y))
+			"skill":
+				text = str(event.name)
+				color = Color("8fd3ff")
 			"talent":
 				if event.get("quiet", false):
 					continue

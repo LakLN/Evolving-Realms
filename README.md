@@ -1,11 +1,12 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 02, Checkpoint D complete** (Milestone 01 complete).
+Current state: **Milestone 02, Checkpoint E complete** (Milestone 01 complete).
 Create/select a world, explore seeded biomes, gather resources, open chests, meet
 creatures by biome, fight them turn by turn on the map, manage hunger and thirst,
 eat, drink, heal and rest, find equipment in 10 quality tiers, equip it and level up,
-awaken a random talent (rank F to SSS) that changes how each run plays,
+awaken a random talent (rank F to SSS) that changes how each run plays, find skill
+manuals and learn active, passive and triggered skills that cost Energy,
 and face death in normal or permadeath runs, in the editor or as a standalone
 Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
@@ -71,17 +72,28 @@ editor's F5 (Run Project). F5 belongs to the editor; the game saves with **Ctrl+
    **T** shows your talent with its live counters; **C** shows it too. The talent is
    saved with the run: loading never rerolls it. Some talents reveal hidden buried
    caches. Runs saved before talents existed awaken one on their first load.
-9. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
+9. Skills: manuals and scrolls (`[book]`) come from chests, the Wayfarer's cache,
+   hidden buried caches and some wolves. Select one in the inventory: it shows what
+   it teaches and what you need to learn it (level, stats, a weapon, another skill,
+   a talent...). **U** learns it (one turn) when you qualify; otherwise nothing is
+   spent. **K** lists your skills with cost, cooldown and rules. **1-9** use a skill:
+   self skills act at once; for a creature skill the valid targets are outlined
+   (**Tab** next, **Enter** / **F** use, **Esc** cancel); for Swift Step pick a
+   direction with **WASD** and press **Enter**. Skills cost Energy (blue bar under HP,
+   regenerates slowly, faster while resting), sometimes HP or items (Stone Throw uses a
+   small stone), and recharge over turns. Talents and gear (e.g. the Focus ring) can
+   make skills stronger, cheaper or longer-ranged, and skill hits trigger your talents.
+10. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
    return to the menu. **Permadeath:** the death is saved, the run is marked ENDED
    and cannot be continued; start a new run in the same world.
-10. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
+11. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
    Movement pauses while it is open. **I / Esc** closes inventory.
-11. **Ctrl+S** or **Save** saves locally, also while inventory is open.
+12. **Ctrl+S** or **Save** saves locally, also while inventory is open.
    **Esc** / **Menu** saves before leaving the map (Esc closes inventory first).
    Window close also saves. If a save fails, the game stays open and reports the error;
    closing again quits *without* saving (only changes since the last save are lost).
    A crash or forced kill returns to the last manual save or autosave.
-12. Choose a saved run and **Continue selected run**, or create another run in the
+13. Choose a saved run and **Continue selected run**, or create another run in the
    same world. Geography stays consistent; inventory, discovery, object and creature
    state are independent per run. Chests and creatures pay only once per run and reload
    cannot reroll loot or revive killed creatures.
@@ -95,7 +107,8 @@ Creature/combat design, data format and limits: [docs/CREATURES_AND_COMBAT.md](d
 Survival, item use, rest and autosave: [docs/SURVIVAL_AND_ITEMS.md](docs/SURVIVAL_AND_ITEMS.md).
 Equipment, quality tiers, loot progression and levels: [docs/EQUIPMENT_AND_PROGRESSION.md](docs/EQUIPMENT_AND_PROGRESSION.md).
 Talent ranks, awakening, effect vocabulary and sample talents: [docs/TALENTS.md](docs/TALENTS.md).
-No skill books, talent evolution, crafting or equipment enhancement yet.
+Skills, books, learning, energy, targeting and sample skills: [docs/SKILLS.md](docs/SKILLS.md).
+No skill/talent evolution, crafting or equipment enhancement yet.
 
 PowerShell commands from the repository root:
 
@@ -179,7 +192,7 @@ the vendored godot-sqlite v4.9 GDExtension; Python is entirely optional.
 
 ## Handoff
 
-Read [progress](docs/PROGRESS.md), [talents](docs/TALENTS.md), [equipment and progression](docs/EQUIPMENT_AND_PROGRESSION.md), [survival and items](docs/SURVIVAL_AND_ITEMS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
+Read [progress](docs/PROGRESS.md), [skills](docs/SKILLS.md), [talents](docs/TALENTS.md), [equipment and progression](docs/EQUIPMENT_AND_PROGRESSION.md), [survival and items](docs/SURVIVAL_AND_ITEMS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
 [world system](docs/WORLD_SYSTEM.md), [data API](docs/DATA_API.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 Default saves live at `user://realms.sqlite`, outside the repository. Native Windows

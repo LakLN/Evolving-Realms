@@ -39,6 +39,8 @@ try {
     Invoke-EngineCheck -Name 'equipment-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/equipment_gameplay_suite.gd') -Summary 'M02 CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'talents' -EngineArgs @('--headless', '--script', 'res://tests/talent_suite.gd') -Summary 'M02 CHECKPOINT D TALENTS: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'talent-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/talent_gameplay_suite.gd') -Summary 'M02 CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'skills' -EngineArgs @('--headless', '--script', 'res://tests/skill_suite.gd') -Summary 'M02 CHECKPOINT E SKILLS: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'skill-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/skill_gameplay_suite.gd') -Summary 'M02 CHECKPOINT E GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
@@ -47,6 +49,7 @@ try {
         Invoke-EngineCheck -Name 'rendered-survival' -EngineArgs @('--script', 'res://tests/survival_gameplay_suite.gd') -Summary 'M02 CHECKPOINT B GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-equipment' -EngineArgs @('--script', 'res://tests/equipment_gameplay_suite.gd') -Summary 'M02 CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-talents' -EngineArgs @('--script', 'res://tests/talent_gameplay_suite.gd') -Summary 'M02 CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-skills' -EngineArgs @('--script', 'res://tests/skill_gameplay_suite.gd') -Summary 'M02 CHECKPOINT E GAMEPLAY: \d+ checks, 0 failures'
     }
     if ($Export) {
         # Rebuild builds/windows and run the acceptance on the exported release exe.

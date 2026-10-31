@@ -18,6 +18,8 @@ const CharacterStats = preload("res://src/core/character_stats.gd")
 const Equipment = preload("res://src/core/equipment.gd")
 const Talents = preload("res://src/core/talents.gd")
 const TalentRuntime = preload("res://src/core/talent_runtime.gd")
+const Skills = preload("res://src/core/skills.gd")
+const SkillActions = preload("res://src/run/skill_actions.gd")
 const SIGHT_RADIUS := 7
 ## Suites written before Milestone 02 D measure baseline rules with exact numbers, so
 ## they switch this off: their runs then hold no talent. The game always awakens.
@@ -54,6 +56,10 @@ var talents := TalentRuntime.new()
 ## Talent records awakened while this Run was activated; the UI reveals them once.
 var awakened_now: Array = []
 var _new_tiles := 0
+var skill_rules := Skills.new()
+## {definitions, supported, pending, books} for this World (see Skills.catalog).
+var skill_catalog: Dictionary = {"definitions": {}, "supported": {}, "pending": [], "books": {}}
+var skills := SkillActions.new()
 var _effective: Dictionary = {}
 var _definitions: Dictionary = {}
 ## Combat/AI events of the last accepted action, in order (for UI feedback).
@@ -62,7 +68,7 @@ var _action_handlers: Dictionary = {}
 
 func _init(data_store: RefCounted) -> void:
 	store = data_store
-	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action}
+	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action, "learn": _learn_action, "skill": _skill_action}
 
 func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal") -> bool:
 	if not Data.seed_value(run_seed):
@@ -191,6 +197,17 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var talent_error := next_talent_rules.validate_records(loaded.state.character.talents, func(content_id: String, version: int) -> Dictionary: return catalog.definitions.get("%s@%d" % [content_id, version], {}))
 	if not talent_error.is_empty():
 		return _fail(talent_error + "; save was not changed")
+	var next_skill_rules := Skills.new()
+	if not next_skill_rules.load_rules():
+		return _fail(next_skill_rules.last_error)
+	var skill_context := {"stats": next_character_rules.rules.stats.keys(), "needs": rules.rules.needs.keys(), "slots": next_character_rules.slot_ids(), "talents": next_talent_rules}
+	var next_skills := next_skill_rules.catalog(store.content, blueprint.world_id, skill_context)
+	if next_skills.has("error"):
+		return _fail(next_skills.error)
+	loaded.state.character = next_skill_rules.normalize(loaded.state.character, next_character_rules.level(loaded.state.character)) # Older saves: no skills, full energy.
+	var skill_error := next_skill_rules.validate(loaded.state.character, func(content_id: String, version: int) -> Dictionary: return next_skills.definitions.get("%s@%d" % [content_id, version], {}), next_character_rules.rules.stats.keys())
+	if not skill_error.is_empty():
+		return _fail(skill_error + "; save was not changed")
 	var layer := Creatures.new()
 	var next_roster := Roster.new()
 	if not layer.configure(blueprint, generator, store.content) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
@@ -210,6 +227,8 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	loot_extensions = next_extensions
 	talent_rules = next_talent_rules
 	talent_catalog = catalog
+	skill_rules = next_skill_rules
+	skill_catalog = next_skills
 	_definitions = {}
 	reload_talents() # Also derives effective stats.
 	last_save_turn = int(loaded.state.turn)
@@ -231,7 +250,12 @@ func _awaken(rules: RefCounted, catalog: Dictionary, blueprint: Dictionary, load
 func reload_talents() -> void:
 	## Rebuild the talent runtime from the stored records (live dictionaries in Run state).
 	talents.configure(run.state.character.talents, talent_definition, func(definition: Dictionary) -> bool: return talent_catalog.supported.has("%s@%d" % [definition.get("content_id", ""), int(definition.get("version", 0))]), "talent-v1/%d/%d" % [int(world.seed), int(run.seed)])
+	# Learned passive/triggered skills run on the same engine as talents.
+	talents.add(run.state.character.skills, skill_definition, func(definition: Dictionary) -> bool: return skill_catalog.supported.has("%s@%d" % [definition.get("content_id", ""), int(definition.get("version", 0))]), "skill")
 	refresh_stats()
+
+func skill_definition(content_id: String, version: int) -> Dictionary:
+	return skill_catalog.definitions.get("%s@%d" % [content_id, version], {})
 
 func talent_definition(content_id: String, version: int) -> Dictionary:
 	return talent_catalog.definitions.get("%s@%d" % [content_id, version], {})
@@ -257,13 +281,15 @@ func perform_action(action: Dictionary) -> bool:
 	if not _action_handlers[action.type].call(action):
 		return false
 	# Turn order: player action, turn counter, survival (needs, recovery,
-	# starvation), talent turn/exploration triggers, each active creature once,
+	# starvation), timed statuses and skill resources, talent/skill turn and
+	# exploration triggers, each active creature once,
 	# death, then the autosave policy.
 	last_events = last_result.get("events", []).duplicate(true)
 	run.state.turn = int(run.state.turn) + 1
 	dirty = true
 	last_events.append_array(survival.tick(stats(), str(action.type), int(combat_stats().max_hp)))
 	if int(stats().hp) > 0:
+		last_events.append_array(skills.tick(self, str(action.type)))
 		last_events.append_array(_talent_tick())
 		last_events.append_array(roster.take_turn(self))
 	last_error = ""
@@ -290,6 +316,12 @@ func _die() -> void:
 		# and resume refuses dead runs. Normal-mode deaths are never written.
 		if not save():
 			last_events.append({"type": "death_save_failed", "error": last_error})
+
+func _learn_action(action: Dictionary) -> bool:
+	return skills.learn_action(self, action)
+
+func _skill_action(action: Dictionary) -> bool:
+	return skills.use_action(self, action)
 
 func _wait_action(_action: Dictionary) -> bool:
 	last_result = {"type": "wait"}
@@ -454,17 +486,26 @@ func safe_to_autosave() -> bool:
 func _attack_action(action: Dictionary) -> bool:
 	if not action.get("target_id") is String:
 		return _fail("Attack requires a creature ID")
-	var result: Dictionary = roster.attack(self, action.target_id)
+	var result := strike(action.target_id)
 	if result.is_empty():
-		return _fail(roster.last_error)
+		return false
+	last_result = result
+	return true
+
+func strike(target_id: String, options: Dictionary = {}) -> Dictionary:
+	## One player strike (basic attack or a skill): roster resolution with loot, talent
+	## reactions and kill XP together. {} = refused with last_error, nothing changed.
+	var result: Dictionary = roster.attack(self, target_id, options)
+	if result.is_empty():
+		_fail(roster.last_error)
+		return {}
 	var xp_percent := _apply_strike(result)
 	for event in result.events.duplicate():
 		if event.type == "creature_death":
 			# Kill XP belongs to the same action as the kill and its loot.
 			var victim: Dictionary = roster.creatures[event.target]
 			result.events.append_array(gain_xp(character_rules.kill_xp(victim.definition.payload.stats) * (100 + xp_percent) / 100))
-	last_result = result
-	return true
+	return result
 
 func gain_xp(amount: int, track_id: String = "adventurer") -> Array:
 	var max_before := int(combat_stats().max_hp)
@@ -475,10 +516,14 @@ func gain_xp(amount: int, track_id: String = "adventurer") -> Array:
 	return events
 
 func refresh_stats() -> void:
-	## Effective stats are derived, never stored: base + growth + gear + talents (see CharacterStats).
-	_effective = character_rules.effective(stats(), run.state.character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)), [talents.modifiers()])
+	## Effective stats are derived, never stored: base + growth + gear + talents/skills +
+	## timed statuses (see CharacterStats).
+	_effective = character_rules.effective(stats(), run.state.character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)), modifier_sources())
 	if int(stats().hp) > int(_effective.stats.max_hp):
 		stats().hp = int(_effective.stats.max_hp)
+
+func modifier_sources() -> Array:
+	return [talents.modifiers(), skills.status_modifiers(self)]
 
 func effective_stats() -> Dictionary:
 	return _effective
@@ -512,7 +557,7 @@ func compare_equipment(content_id: String, instance_id: String) -> Dictionary:
 		return {}
 	var character: Dictionary = run.state.character.duplicate(true)
 	character.equipment = trial.equipment
-	var after := character_rules.effective(stats(), character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)), [talents.modifiers()])
+	var after := character_rules.effective(stats(), character, func(record: Dictionary) -> Dictionary: return _definition(record.content_id, int(record.version)), modifier_sources())
 	return {"before": _effective.stats, "after": after.stats, "slot": definition.payload.equipment.slot, "replaces": run.state.character.equipment.get(definition.payload.equipment.slot, {})}
 
 func _equip_action(action: Dictionary) -> bool:
@@ -681,6 +726,13 @@ func _move_action(action: Dictionary) -> bool:
 		if roster.aggressive(occupant) and visible.has(target):
 			return _attack_action({"type": "attack", "target_id": occupant.instance_id}) # Bump attack.
 		return _fail("%s blocks the way — press F to attack it (no turn spent)" % occupant.definition.name)
+	if not relocate(target):
+		return false
+	last_result = {"type": "move", "position": run.state.character.position.duplicate(true)}
+	return true
+
+func relocate(target: Vector2i) -> bool:
+	## Move the player to a validated walkable tile (a step or a skill), streaming chunks.
 	cache.follow(target)
 	if not objects.follow(target) or not roster.follow(target, cache.chunks):
 		cache.follow(position)
@@ -689,7 +741,6 @@ func _move_action(action: Dictionary) -> bool:
 	position = target
 	run.state.character.position = {"x": position.x, "y": position.y}
 	_reveal()
-	last_result = {"type": "move", "position": run.state.character.position.duplicate(true)}
 	return true
 
 func is_consumed(instance_id: String) -> bool:
@@ -832,7 +883,7 @@ func _talent_context(key: String) -> Dictionary:
 
 func _talent_event(activation: Dictionary, summary: String) -> Dictionary:
 	var definition: Dictionary = activation.talent.definition
-	return {"type": "talent", "talent": definition.content_id, "name": definition.name, "rank": definition.payload.rank, "ability": activation.ability.id, "summary": summary, "quiet": activation.ability.get("quiet", false)}
+	return {"type": "talent", "talent": definition.content_id, "name": definition.name, "rank": definition.payload.get("rank", "Skill"), "source": activation.talent.get("source", "talent"), "ability": activation.ability.id, "summary": summary, "quiet": activation.ability.get("quiet", false)}
 
 static func _effect_summary(effects: Array) -> String:
 	var parts := PackedStringArray()
@@ -881,6 +932,7 @@ func _talent_tick() -> Array:
 	if _new_tiles > 0:
 		context.new_tiles = _new_tiles
 		activations.append_array(talents.fire("on_explore", context))
+	talents.resolving = true
 	for activation in activations:
 		if not activation.fired:
 			talents.commit([activation], turn) # Exploration progress only.
@@ -913,6 +965,7 @@ func _talent_tick() -> Array:
 		var event := _talent_event(activation, ", ".join(parts))
 		event.received = received
 		events.append(event)
+	talents.resolving = false
 	return events
 
 func _target_of(creature: Dictionary) -> Dictionary:
@@ -947,6 +1000,7 @@ func _apply_strike(result: Dictionary) -> int:
 	talents.commit(strike.attack + strike.kill, turn)
 	refresh_stats() # grow_stat stacks are uses: derived, never stored as stats.
 	stats().hp = mini(int(_effective.stats.max_hp), int(stats().hp) + maxi(0, int(_effective.stats.max_hp) - max_before))
+	talents.resolving = true # Effects below can never fire triggers again.
 	for activation in strike.attack + strike.kill:
 		var parts := PackedStringArray()
 		for effect in activation.ability.effects:
@@ -968,6 +1022,7 @@ func _apply_strike(result: Dictionary) -> int:
 					var stacks := mini(int(TalentRuntime.state(activation.talent.record, activation.ability.id).used), int(effect.max_stacks))
 					parts.append("%s %+d (x%d)" % [character_rules.rules.stats[effect.stat].get("name", effect.stat), int(effect.amount) * stacks, stacks])
 		result.events.append(_talent_event(activation, ", ".join(parts)))
+	talents.resolving = false
 	return xp_percent
 
 func talent_guard(creature: Dictionary, player: Dictionary, result: Dictionary) -> Dictionary:
@@ -985,7 +1040,9 @@ func talent_guard(creature: Dictionary, player: Dictionary, result: Dictionary) 
 		context.hp = hp
 		context.lethal = hp == 0
 		context.target = _target_of(creature)
-		for activation in talents.fire("on_hit_taken", context, phase):
+		var fired: Array = talents.fire("on_hit_taken", context, phase)
+		talents.resolving = true
+		for activation in fired:
 			var parts := PackedStringArray()
 			for effect in activation.ability.effects:
 				match effect.type:
@@ -1009,6 +1066,7 @@ func talent_guard(creature: Dictionary, player: Dictionary, result: Dictionary) 
 						parts.append(_vital_summary(changes) if not changes.is_empty() else "already at full HP")
 			talents.commit([activation], turn)
 			events.append(_talent_event(activation, ", ".join(parts)))
+		talents.resolving = false
 	return {"hp": hp, "damage": damage, "events": events}
 
 func talent_loot(definition: Dictionary, seed_key: String, loot: Array, plan: Array) -> Array:

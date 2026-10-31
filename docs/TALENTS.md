@@ -82,7 +82,7 @@ in data. `talents_per_run` (default 1) is data too.
 | `on_gather` | gather / pick up a resource | `yield_bonus`, `extra_loot_roll`, `grant_item` |
 | `on_open` | open a chest | `yield_bonus`, `extra_loot_roll`, `grant_item` |
 | `on_use_item` | use an item | `use_bonus`, `heal`, `need` |
-| passive | always | `stat` (add / percent), `perception` (hidden objects, sense radius) |
+| passive | always | `stat` (add / percent), `perception` (hidden objects, sense radius), `skill_modifier` (02 E) |
 
 Conditions: `chance_per_10000`, `hp_below_percent`, `hp_at_least_percent`,
 `every_turns`, `biome`, `need_at_least`, `target_category`, `target_disposition`
@@ -209,6 +209,14 @@ only fills tiles that had no object; existing placements keep their tiles.
 - **Feedback:** `[C] Hồi Khí: HP +9.` in the message line and a floating name over the
   player. Frequent silent effects (`quiet: true`) are not announced.
 - **Map:** buried caches drawn only with perception; sensed objects as faint diamonds.
+
+## Shared with skills (Milestone 02 E)
+
+`Talents.check_powers` validates `passive`/`abilities` for talents and for passive or
+triggered skills, and `TalentRuntime` runs both (`source` talent or skill; skill events
+show `[Skill]`). While trigger effects are applied (`resolving`), any nested trigger is
+blocked, so effects never chain. The B talent Ngộ Tính (skill pack) uses
+`skill_modifier`. See [SKILLS.md](SKILLS.md).
 
 ## Found and fixed
 
