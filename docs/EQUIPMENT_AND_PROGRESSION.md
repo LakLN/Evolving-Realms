@@ -190,3 +190,10 @@ starting kit.
 - Monsters do not scale with player level. Balance is first-pass.
 - Effective stats are recomputed when gear or levels change. The UI does not yet
   explain every number's source beyond the breakdown line.
+
+## Checkpoint F extension
+
+Gear can declare effect_modifiers (resistance, outgoing damage/healing and status
+duration/stack changes). Cinder Ring demonstrates fire resistance and stronger burn
+capacity. These are derived from the equipped definition, never saved as totals.
+See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md).

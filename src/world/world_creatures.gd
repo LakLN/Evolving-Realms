@@ -2,6 +2,7 @@ extends RefCounted
 ## Creature layer v1: data-driven species and deterministic home placements.
 ## Placements depend only on World seed, terrain v1 and species data, never on
 ## Run, visit order or time. Per-run hp/position/death live in entity mutations.
+const Effects = preload("res://src/core/effects.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
@@ -53,6 +54,18 @@ func validate(definition: Dictionary) -> bool:
 		return _fail("Creature needs hostile/neutral/passive disposition and string visual: " + id)
 	if not Combat.valid_stats(payload.get("stats")):
 		return _fail("Creature stats need integer max_hp >= 1, attack and defense: " + id)
+	if not payload.get("elements", ["neutral"]) is Array or payload.get("elements", []).any(func(e: Variant) -> bool: return not Effects.rules().elements.has(e)):
+		return _fail("Creature has unsupported elements: " + id)
+	if not payload.get("effect_modifiers", []) is Array or not payload.get("on_hit_effects", []) is Array or payload.get("on_hit_effects", []).size() > 8:
+		return _fail("Creature effects must be bounded arrays: " + id)
+	for modifier in payload.get("effect_modifiers", []):
+		var problem := Effects.check_modifier(modifier)
+		if not problem.is_empty(): return _fail(id + ": " + problem)
+	for effect in payload.get("on_hit_effects", []):
+		if not effect is Dictionary or effect.get("type") != "apply_status": return _fail("Unsupported creature hit effect: " + id)
+		var missing: Array = []
+		var problem := Effects.check_application(effect, definition, registry, world.world_id, missing)
+		if not problem.is_empty() or not missing.is_empty(): return _fail(id + ": " + problem + " missing " + str(missing))
 	var movement: Variant = payload.get("movement")
 	if not movement is Dictionary or not movement.get("biomes") is Array or movement.biomes.is_empty() or not Data.integer(movement.get("leash")) or movement.leash < 1 or movement.leash > 12:
 		return _fail("Creature movement needs biomes and leash 1..12: " + id)

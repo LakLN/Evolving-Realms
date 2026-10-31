@@ -228,7 +228,7 @@ func use_action(session: RefCounted, action: Dictionary) -> bool:
 	var power := 100 + int(modifiers(session, definition).power_percent)
 	var cost := costs(session, definition)
 	var plan := _plan_self(session, definition, power)
-	if kind == "self" and plan.changes.is_empty():
+	if kind == "self" and plan.changes.is_empty() and not definition.payload.effects.any(func(e: Dictionary) -> bool: return e.type == "apply_status" or (e.type == "cleanse" and session.run.state.character.statuses.any(func(s: Dictionary) -> bool: return s.has("remaining") and session.statuses.definition(session, s).payload.get("harmful", true) == e.get("harmful", true)))):
 		return session._fail("%s would have no effect right now (no turn spent)" % definition.name)
 	var inventory: Dictionary = session.run.state.inventory
 	for item in cost.get("items", []):
@@ -236,13 +236,18 @@ func use_action(session: RefCounted, action: Dictionary) -> bool:
 		if removal.is_empty():
 			return session._fail("%s needs its items (no turn spent)" % definition.name)
 		inventory = removal.inventory
+	if kind == "creature" and definition.payload.effects.any(func(e: Dictionary) -> bool: return e.type == "apply_status"):
+		if not session.roster._ensure_materialized(session.roster.creatures[action.target_id]): return session._fail(session.roster.last_error)
 	# Everything is validated: apply the effects in data order, then pay.
 	var events: Array = []
+	var victim := str(action.get("target_id", "player")) if kind == "creature" else "player"
+	if kind in ["self", "creature"]:
+		events.append_array(session.statuses.react(session, victim, definition.payload.get("elements", ["neutral"])))
 	var parts := PackedStringArray()
 	for effect in definition.payload.effects:
 		match effect.type:
 			"strike":
-				var result: Dictionary = session.strike(action.target_id, {"range": reach(session, definition), "line_of_sight": definition.payload.use.target.get("line_of_sight", true), "attack_percent": int(effect.get("attack_percent", 100)) * power / 100, "flat": int(effect.get("flat", 0)), "key": "/skill/" + definition.content_id})
+				var result: Dictionary = session.strike(action.target_id, {"range": reach(session, definition), "line_of_sight": definition.payload.use.target.get("line_of_sight", true), "attack_percent": int(effect.get("attack_percent", 100)) * power / 100, "flat": int(effect.get("flat", 0)), "key": "/skill/" + definition.content_id, "elements": definition.payload.get("elements", ["neutral"])})
 				if result.is_empty():
 					if events.is_empty():
 						return false # Refused before anything changed.
@@ -260,6 +265,11 @@ func use_action(session: RefCounted, action: Dictionary) -> bool:
 	if kind == "self":
 		_apply_self(session, definition, plan)
 		parts.append_array(plan.summary)
+	for effect in definition.payload.effects:
+		if effect.type == "apply_status":
+			events.append_array(session.statuses.apply(session, effect, {"content_id": definition.content_id, "version": int(definition.version), "actor": "player"}, victim, power))
+		elif effect.type == "cleanse":
+			events.append_array(session.statuses.cleanse(session, victim, effect.get("harmful", true)))
 	# Pay only now. Items: taken from the current inventory (loot can only have added).
 	for item in cost.get("items", []):
 		session.run.state.inventory = Inventory.new().remove(session.run.state.inventory, item.content_id, int(item.quantity)).inventory
@@ -331,7 +341,7 @@ func tick(session: RefCounted, action_type: String) -> Array:
 	var turn := int(session.run.state.turn)
 	var statuses: Array = session.run.state.character.statuses
 	for index in range(statuses.size() - 1, -1, -1):
-		if int(statuses[index].until_turn) <= turn:
+		if not statuses[index].has("remaining") and int(statuses[index].until_turn) <= turn:
 			events.append({"type": "status_end", "status": statuses[index].id, "source": statuses[index].source})
 			statuses.remove_at(index)
 	if not events.is_empty():
@@ -358,7 +368,7 @@ func status_modifiers(session: RefCounted) -> Dictionary:
 	var percent := {}
 	var turn := int(session.run.state.turn)
 	for status in session.run.state.character.get("statuses", []):
-		if int(status.until_turn) > turn:
+		if not status.has("remaining") and int(status.until_turn) > turn:
 			flat[status.stat] = int(flat.get(status.stat, 0)) + int(status.get("add", 0))
 			percent[status.stat] = int(percent.get(status.stat, 0)) + int(status.get("percent", 0))
 	return {"flat": flat, "percent": percent}

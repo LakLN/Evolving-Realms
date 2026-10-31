@@ -1,7 +1,7 @@
 # Agent workflow
 
 Read docs/PROJECT_VISION.md, ARCHITECTURE.md, ROADMAP.md and PROGRESS.md before changes.
-Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment), D (talents) and E (skills) are complete.
+Milestone 01 is complete. Milestone 02 Checkpoints A (combat), B (survival), C (equipment), D (talents), E (skills) and F (effects/elements) are complete.
 Do not start a later Milestone 02 checkpoint or later milestones without user approval.
 Keep Godot gameplay local and independent of Python, internet, keys and AI providers.
 Use stable content IDs; separate blueprint, definitions, instances and per-run mutations.
@@ -35,3 +35,5 @@ Preserve starter-pack v1 definitions and object-generation v1 identity; never ov
 Terrain v1 is frozen by golden fixtures; new algorithms need a new generation version.
 scripts/test.ps1 runs the full regression by default; -Only/-Smoke select subsets, -Render adds OpenGL,
 -Service optional Python checks, -Export the standalone exe verification.
+
+Read docs/EFFECTS_AND_ELEMENTS.md before changing status ticks, elements, resistance or effect modifiers.

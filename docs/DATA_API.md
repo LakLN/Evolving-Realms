@@ -244,3 +244,11 @@ timeout) roll back and keep the previous save and revision. The session stays di
 so a retry saves the same pending state once. Other architectures are not verified.
 Explored-tile arrays/full run saves are deliberately simple: 100k tiles take
 ~2.5 s to save. Use chunked fog storage with a migration before very large runs.
+
+## Checkpoint F status records
+
+No SQL migration. `definition.status` is an additional capability. Versioned active
+status records extend character.statuses and creature entity_mutations JSON; they
+contain remaining/stacks/source/target and tick/age counters, plus application inputs.
+Old until_turn statuses load unchanged. No effective stats or Blueprint fields are
+added. See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md#persistence).

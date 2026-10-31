@@ -110,7 +110,7 @@ func _test_catalog_and_pending() -> void:
 	var ranks := {}
 	for definition in pool:
 		ranks[definition.payload.rank] = int(ranks.get(definition.payload.rank, 0)) + 1
-	check(pool.size() == 13 and ranks.keys().size() == 9, "Sample packs: 13 playable talents (12 + Ngộ Tính from the skill pack) across all 9 ranks (%s)" % str(ranks))
+	check(pool.size() == 14 and ranks.keys().size() == 9, "Sample packs: 13 playable talents (12 + Ngộ Tính from the skill pack) across all 9 ranks (%s)" % str(ranks))
 	check(pool.filter(func(definition: Dictionary) -> bool: return definition.payload.get("unique", false)).size() == 3 and pool.any(func(definition: Dictionary) -> bool: return definition.payload.rank == "C" and definition.payload.unique), "Unique is a separate flag (C, SS and SSS examples), not tied to rank")
 	var tamer: Dictionary = store.content.load_definition(session.world.world_id, "core:talent/beast_tamer", 1)
 	var pending: Array = session.talent_catalog.pending

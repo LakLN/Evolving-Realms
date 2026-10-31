@@ -209,3 +209,14 @@ Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions
 may spawn. AI providers return data, never scripts. Future migrations, mechanic
 proposals and integration approval are Milestone 05, not automatic runtime actions.
+
+## Advanced effects ? Milestone 02 Checkpoint F
+
+`Effects` supplies bounded status/element/condition validation and elemental damage
+modifiers. `StatusRuntime` shares player/creature application, tick, dispel and expiry
+across skills, item uses, talent abilities and creature hits. It extends the existing
+turn pipeline and reuses strike/kill/loot/XP; periodic damage suppresses on_attack.
+Player records live in character.statuses, creature records in existing mutations.
+Definitions remain pinned Registry content; no migration or generation change.
+Derived stats stay in CharacterStats; no trigger chains or executable content.
+See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md) for order and contracts.

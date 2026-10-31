@@ -93,6 +93,13 @@ static func condition_text(condition: Dictionary) -> String:
 static func effect_text(effect: Dictionary, stat_names: Dictionary, item_name: Callable) -> String:
 	var stat := str(stat_names.get(effect.get("stat", ""), effect.get("stat", "")))
 	match effect.type:
+		"apply_status":
+			return "apply " + str(effect.content_id)
+		"cleanse":
+			return "cleanse harmful statuses"
+		"effect_modifier":
+			var m: Dictionary = effect.modifier
+			return "%s %s %+d%% %+d %s" % [m.type, str(m.get("element", m.get("status", ""))), int(m.get("percent", 0)), int(m.get("add", 0)), str(m.get("conditions", []))]
 		"stat":
 			var parts := PackedStringArray()
 			if int(effect.get("add", 0)) != 0:

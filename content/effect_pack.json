@@ -1,0 +1,1064 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {
+      "content_id": "core:status/burn",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "status",
+      "name": "Burn",
+      "dependencies": [],
+      "payload": {
+        "element": "fire",
+        "duration": 4,
+        "max_stacks": 3,
+        "refresh": "refresh",
+        "harmful": true,
+        "skip_every": 0,
+        "modifiers": [],
+        "tick": {
+          "type": "damage",
+          "amount": 2
+        }
+      }
+    },
+    {
+      "content_id": "core:status/poison",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "status",
+      "name": "Poison",
+      "dependencies": [],
+      "payload": {
+        "element": "wood",
+        "duration": 5,
+        "max_stacks": 4,
+        "refresh": "refresh",
+        "harmful": true,
+        "skip_every": 0,
+        "modifiers": [],
+        "tick": {
+          "type": "damage",
+          "amount": 1
+        }
+      }
+    },
+    {
+      "content_id": "core:status/bleed",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "status",
+      "name": "Bleed",
+      "dependencies": [],
+      "payload": {
+        "element": "neutral",
+        "duration": 4,
+        "max_stacks": 3,
+        "refresh": "keep",
+        "harmful": true,
+        "skip_every": 0,
+        "modifiers": [],
+        "tick": {
+          "type": "damage",
+          "amount": 2
+        }
+      }
+    },
+    {
+      "content_id": "core:status/regeneration",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "status",
+      "name": "Regeneration",
+      "dependencies": [],
+      "payload": {
+        "element": "wood",
+        "duration": 4,
+        "max_stacks": 1,
+        "refresh": "refresh",
+        "harmful": false,
+        "skip_every": 0,
+        "modifiers": [],
+        "tick": {
+          "type": "heal",
+          "amount": 3
+        }
+      }
+    },
+    {
+      "content_id": "core:status/slow",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "status",
+      "name": "Slow",
+      "dependencies": [],
+      "payload": {
+        "element": "ice",
+        "duration": 4,
+        "max_stacks": 1,
+        "refresh": "refresh",
+        "harmful": true,
+        "skip_every": 2,
+        "modifiers": [
+          {
+            "stat": "attack",
+            "percent": -20
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:status/stun",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "status",
+      "name": "Stun",
+      "dependencies": [],
+      "payload": {
+        "element": "lightning",
+        "duration": 2,
+        "max_stacks": 1,
+        "refresh": "refresh",
+        "harmful": true,
+        "skip_every": 1,
+        "modifiers": []
+      }
+    },
+    {
+      "content_id": "core:status/ward",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "status",
+      "name": "Ward",
+      "dependencies": [],
+      "payload": {
+        "element": "earth",
+        "duration": 5,
+        "max_stacks": 1,
+        "refresh": "refresh",
+        "harmful": false,
+        "skip_every": 0,
+        "modifiers": [
+          {
+            "stat": "defense",
+            "add": 3
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:skill/ember",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Ember",
+      "dependencies": [
+        {
+          "content_id": "core:status/burn",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "fire"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "creature",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "strike",
+            "attack_percent": 50
+          },
+          {
+            "type": "apply_status",
+            "content_id": "core:status/burn",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/ember",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Ember",
+      "dependencies": [
+        {
+          "content_id": "core:skill/ember",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/ember",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:skill/venom",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Venom",
+      "dependencies": [
+        {
+          "content_id": "core:status/poison",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "wood"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "creature",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "content_id": "core:status/poison",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/venom",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Venom",
+      "dependencies": [
+        {
+          "content_id": "core:skill/venom",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/venom",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:skill/lacerate",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Lacerate",
+      "dependencies": [
+        {
+          "content_id": "core:status/bleed",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "metal"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "creature",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "strike",
+            "attack_percent": 70
+          },
+          {
+            "type": "apply_status",
+            "content_id": "core:status/bleed",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/lacerate",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Lacerate",
+      "dependencies": [
+        {
+          "content_id": "core:skill/lacerate",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/lacerate",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:skill/renewal",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Renewal",
+      "dependencies": [
+        {
+          "content_id": "core:status/regeneration",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "wood"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "self",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "content_id": "core:status/regeneration",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/renewal",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Renewal",
+      "dependencies": [
+        {
+          "content_id": "core:skill/renewal",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/renewal",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:skill/purify",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Purify",
+      "dependencies": [],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "light"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "self",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "cleanse",
+            "harmful": true
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/purify",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Purify",
+      "dependencies": [
+        {
+          "content_id": "core:skill/purify",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/purify",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:skill/water_jet",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Water Jet",
+      "dependencies": [],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "water"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "creature",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "strike",
+            "attack_percent": 80
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/water_jet",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Water Jet",
+      "dependencies": [
+        {
+          "content_id": "core:skill/water_jet",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/water_jet",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:skill/frost",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Frost",
+      "dependencies": [
+        {
+          "content_id": "core:status/slow",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "ice"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "creature",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "content_id": "core:status/slow",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/frost",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Frost",
+      "dependencies": [
+        {
+          "content_id": "core:skill/frost",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/frost",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:skill/thunder_bind",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Thunder Bind",
+      "dependencies": [
+        {
+          "content_id": "core:status/stun",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "type": "active",
+        "tags": [
+          "elemental"
+        ],
+        "elements": [
+          "lightning"
+        ],
+        "use": {
+          "cost": {
+            "energy": 3
+          },
+          "cooldown_turns": 2,
+          "target": {
+            "kind": "creature",
+            "range": 4,
+            "line_of_sight": true
+          }
+        },
+        "effects": [
+          {
+            "type": "apply_status",
+            "content_id": "core:status/stun",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:book/thunder_bind",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Thunder Bind",
+      "dependencies": [
+        {
+          "content_id": "core:skill/thunder_bind",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/thunder_bind",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:cinder_ring",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Cinder Ring",
+      "dependencies": [],
+      "payload": {
+        "stackable": false,
+        "stack_limit": 1,
+        "equipment": {
+          "slot": "accessory",
+          "stats": {
+            "max_hp": 1
+          },
+          "effect_modifiers": [
+            {
+              "type": "resistance",
+              "element": "fire",
+              "percent": 50
+            },
+            {
+              "type": "status_duration",
+              "status": "core:status/burn",
+              "add": 2
+            },
+            {
+              "type": "status_stacks",
+              "status": "core:status/burn",
+              "add": 1
+            }
+          ]
+        }
+      },
+      "description": "50% fire resistance. Your burns last 2 turns longer and support 1 extra stack."
+    },
+    {
+      "content_id": "core:skill/searing_wounds",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "skill",
+      "name": "Searing Wounds",
+      "dependencies": [],
+      "payload": {
+        "type": "passive",
+        "passive": [
+          {
+            "type": "effect_modifier",
+            "modifier": {
+              "type": "damage",
+              "element": "fire",
+              "percent": 50,
+              "conditions": [
+                {
+                  "type": "target_status",
+                  "status": "core:status/bleed"
+                }
+              ]
+            }
+          },
+          {
+            "type": "effect_modifier",
+            "modifier": {
+              "type": "healing",
+              "percent": 50,
+              "conditions": [
+                {
+                  "type": "hp_below_percent",
+                  "value": 40
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "description": "Fire damage +50% against bleeding targets. Healing over time +50% while your HP is below 40%."
+    },
+    {
+      "content_id": "core:book/searing_wounds",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Manual: Searing Wounds",
+      "dependencies": [
+        {
+          "content_id": "core:skill/searing_wounds",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 5,
+        "skill_book": {
+          "skill": {
+            "content_id": "core:skill/searing_wounds",
+            "version": 1
+          },
+          "consume_on_learn": true
+        }
+      }
+    },
+    {
+      "content_id": "core:renewal_tonic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Renewal Tonic",
+      "dependencies": [],
+      "payload": {
+        "stackable": true,
+        "stack_limit": 10
+      },
+      "description": "Drink to gain Regeneration: heal 3 HP each turn for 4 turns."
+    },
+    {
+      "content_id": "core:use/renewal_tonic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item_use",
+      "name": "Drink Renewal Tonic",
+      "dependencies": [
+        {
+          "content_id": "core:renewal_tonic",
+          "version": 1
+        },
+        {
+          "content_id": "core:status/regeneration",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "item": {
+          "content_id": "core:renewal_tonic",
+          "version": 1
+        },
+        "verb": "Drink",
+        "consume": 1,
+        "effects": [
+          {
+            "type": "apply_status",
+            "content_id": "core:status/regeneration",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:talent/ember_heart",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "talent",
+      "name": "Ember Heart",
+      "description": "Burning targets take stronger fire damage. Below 40% HP, gain regeneration once per 8 turns.",
+      "dependencies": [
+        {
+          "content_id": "core:status/burn",
+          "version": 1
+        },
+        {
+          "content_id": "core:status/regeneration",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "rank": "B",
+        "unique": false,
+        "awakening": {
+          "weight": 100
+        },
+        "passive": [
+          {
+            "type": "effect_modifier",
+            "modifier": {
+              "type": "damage",
+              "element": "fire",
+              "percent": 50,
+              "conditions": [
+                {
+                  "type": "target_status",
+                  "status": "core:status/burn"
+                }
+              ]
+            }
+          }
+        ],
+        "abilities": [
+          {
+            "id": "rekindle",
+            "trigger": "on_turn",
+            "conditions": [
+              {
+                "type": "hp_below_percent",
+                "value": 40
+              }
+            ],
+            "limits": {
+              "cooldown_turns": 8
+            },
+            "effects": [
+              {
+                "type": "apply_status",
+                "content_id": "core:status/regeneration",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:cinder_draught",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Cinder Draught",
+      "description": "Gain Earthen Ward (+3 defense, 5 turns), but burn for 4 turns. Cinder Ring reduces the fire damage.",
+      "payload": {
+        "stackable": true,
+        "stack_limit": 10
+      }
+    },
+    {
+      "content_id": "core:use/cinder_draught",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item_use",
+      "name": "Drink Cinder Draught",
+      "dependencies": [
+        {
+          "content_id": "core:cinder_draught",
+          "version": 1
+        },
+        {
+          "content_id": "core:status/ward",
+          "version": 1
+        },
+        {
+          "content_id": "core:status/burn",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "item": {
+          "content_id": "core:cinder_draught",
+          "version": 1
+        },
+        "verb": "Drink",
+        "consume": 1,
+        "effects": [
+          {
+            "type": "apply_status",
+            "content_id": "core:status/ward",
+            "version": 1
+          },
+          {
+            "type": "apply_status",
+            "content_id": "core:status/burn",
+            "version": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "core:loot/effect_cache",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "loot_extension",
+      "name": "Elemental field kit",
+      "dependencies": [
+        {
+          "content_id": "core:wayfarer_cache",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/ember",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/venom",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/lacerate",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/renewal",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/purify",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/water_jet",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/frost",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/thunder_bind",
+          "version": 1
+        },
+        {
+          "content_id": "core:book/searing_wounds",
+          "version": 1
+        },
+        {
+          "content_id": "core:cinder_ring",
+          "version": 1
+        },
+        {
+          "content_id": "core:renewal_tonic",
+          "version": 1
+        },
+        {
+          "content_id": "core:cinder_draught",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "source": {
+          "content_id": "core:wayfarer_cache",
+          "version": 1
+        },
+        "chance_per_10000": 10000,
+        "table": {
+          "guaranteed": [
+            {
+              "content_id": "core:book/ember",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/venom",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/lacerate",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/renewal",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/purify",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/water_jet",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/frost",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/thunder_bind",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:book/searing_wounds",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:cinder_ring",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:renewal_tonic",
+              "version": 1,
+              "min": 2,
+              "max": 2
+            },
+            {
+              "content_id": "core:cinder_draught",
+              "version": 1,
+              "min": 2,
+              "max": 2
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

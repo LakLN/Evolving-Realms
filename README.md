@@ -1,12 +1,13 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 02, Checkpoint E complete** (Milestone 01 complete).
+Current state: **Milestone 02, Checkpoint F complete** (Milestone 01 complete).
 Create/select a world, explore seeded biomes, gather resources, open chests, meet
 creatures by biome, fight them turn by turn on the map, manage hunger and thirst,
 eat, drink, heal and rest, find equipment in 10 quality tiers, equip it and level up,
 awaken a random talent (rank F to SSS) that changes how each run plays, find skill
 manuals and learn active, passive and triggered skills that cost Energy,
+use elemental skills, damage/healing over time, cleansing and resistance,
 and face death in normal or permadeath runs, in the editor or as a standalone
 Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
@@ -201,3 +202,13 @@ Default saves live at `user://realms.sqlite`, outside the repository. Native Win
 x64 debug/release SQLite DLLs and their license are committed in `addons/`; see
 [dependency provenance](addons/godot-sqlite/PROVENANCE.md). Release builds and their
 verification are described in [Standalone build](#standalone-build).
+
+## Checkpoint F: effects and elements
+
+Current source adds elemental/status manuals, a Cinder Ring, Renewal Tonics and Cinder Draughts to
+unopened Wayfarer caches. Use a new Run if that cache was already opened. I/U learns
+manuals or equips the ring; K explains skills, 1?9 uses them; Ctrl+S saves. Ember Heart
+can awaken in new Runs. Status durations/stacks appear in the HUD and skill panel.
+See [Effects and elements](docs/EFFECTS_AND_ELEMENTS.md) for rules and limitations.
+The previous standalone build is unchanged; run current source with
+`.\scripts\godot.ps1` or rebuild explicitly when you need an updated executable.

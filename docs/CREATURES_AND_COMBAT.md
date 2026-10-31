@@ -124,3 +124,10 @@ item use (meat cannot be eaten yet). Creatures outside 12 tiles are frozen.
 Touched creatures add mutation rows/materialized placements that grow with play.
 Permadeath relies on the immediate death save: killing the process before a death
 is just loss of unsaved play.
+
+## Checkpoint F extension
+
+Species may declare elements, effect_modifiers and pinned on_hit_effects. Existing
+creature definitions and placement v1 stay unchanged. Advanced statuses live in
+creature mutations; DoT shares the kill/loot/XP path without on_attack triggers.
+See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md) for the extended turn order.

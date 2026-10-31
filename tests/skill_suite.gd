@@ -109,7 +109,7 @@ func _test_catalog() -> void:
 		var book: Dictionary = catalog.books.get(book_id + "@1", {})
 		var item: Dictionary = store.content.load_definition(session.world.world_id, book_id, 1)
 		linked = linked and book.get("skill", {}).get("content_id") == id and item.kind == "item" and item.dependencies.any(func(d: Dictionary) -> bool: return d.content_id == id)
-	check(linked and catalog.books.size() == 9, "Each book is a separate item that pins and teaches exactly its skill")
+	check(linked and SKILLS.all(func(id: String) -> bool: return catalog.books.has("core:book/" + id.get_slice("/", 1) + "@1")), "Each book is a separate item that pins and teaches exactly its skill")
 	check(_skill_def(session, "core:book/power_strike").is_empty() and store.content.load_definition(session.world.world_id, "core:skill/power_strike", 1).kind == "skill", "Skill definitions and books are different entities")
 	check(not session.skill_rules.met({"type": "bloodline", "values": ["dragon"]}, session.skills.character_view(session)) and session.skill_rules.evaluate([{"type": "realm", "min": 1}], session.skills.character_view(session))[0].begins_with("unsupported requirement"), "Unsupported conditions are never treated as met")
 	var world_id: String = session.world.world_id

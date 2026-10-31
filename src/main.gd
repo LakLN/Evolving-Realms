@@ -236,6 +236,10 @@ func _build_hud(parent: Control) -> void:
 	var column := VBoxContainer.new()
 	bottom.add_child(column)
 	_notice = _label(column, "", 17)
+	_notice.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_notice.mouse_filter = Control.MOUSE_FILTER_PASS
+	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
 	_label(column, "WASD: move (into hostile = attack) | E: gather/open | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills", 15)
@@ -538,7 +542,10 @@ func _refresh_skills(selected: int = 0) -> void:
 	for id in session.skill_rules.resource_ids():
 		lines.append("%s %d / %d" % [session.skill_rules.rules.resources[id].name, session.skills.resource(session, id), session.skills.resource_max(session, id)])
 	for status in session.run.state.character.statuses:
-		lines.append("Active: %s %s (%d turns left)" % [str(status.id).capitalize(), _status_text(status), int(status.until_turn) - int(session.run.state.turn)])
+		if status.has("remaining"):
+			lines.append("Active: " + session.statuses.describe(session, [status]))
+		else:
+			lines.append("Active: %s %s (%d turns left)" % [str(status.id).capitalize(), _status_text(status), int(status.until_turn) - int(session.run.state.turn)])
 	_skills_summary.text = "\n".join(lines)
 	_skill_list.clear()
 	var turn := int(session.run.state.turn)
@@ -571,6 +578,7 @@ func skill_lines(definition: Dictionary, record: Dictionary = {}) -> PackedStrin
 	## Rules text generated from the same data the handlers execute.
 	var payload: Dictionary = definition.payload
 	var lines := PackedStringArray([str(definition.description)])
+	lines.append("Elements: " + ", ".join(payload.get("elements", ["neutral"])))
 	lines.append("Type: %s%s" % [payload.type, "  Tags: " + ", ".join(payload.get("tags", [])) if not payload.get("tags", []).is_empty() else ""])
 	if payload.type == "active":
 		var use: Dictionary = payload.use
@@ -604,6 +612,11 @@ func _skill_effect_text(effect: Dictionary) -> String:
 	match effect.type:
 		"strike":
 			return "strike for %d%% ATK%s" % [int(effect.get("attack_percent", 100)), " +%d" % int(effect.flat) if int(effect.get("flat", 0)) > 0 else ""]
+		"apply_status":
+			var def: Dictionary = session._definition(effect.content_id, int(effect.version))
+			return "%s [%s], %dt, max %d stacks" % [def.name, def.payload.element, int(def.payload.duration), int(def.payload.max_stacks)]
+		"cleanse":
+			return "remove harmful statuses"
 		"stun":
 			return "bind for %d turns" % int(effect.turns)
 		"heal":
@@ -866,6 +879,9 @@ func _show_inventory_item(index: int) -> void:
 	var use: Dictionary = session.use_for(item.content_id)
 	var effects := PackedStringArray()
 	for effect in use.get("payload", {}).get("effects", []):
+		if effect.type in ["apply_status", "cleanse"]:
+			effects.append(_skill_effect_text(effect))
+			continue
 		var amount: int = effect.amount if effect.type == "heal" else effect.amount * 100 / int(session.survival.rules.scale)
 		effects.append({"heal": "+%d HP", "sate": "-%d%% hunger", "quench": "-%d%% thirst"}[effect.type] % amount)
 	_inventory_detail.text += "\n" + ("Use (%s): %s. Spends 1 turn." % [use.payload.get("verb", "Use"), ", ".join(effects)] if not use.is_empty() else "No use yet.")
@@ -1011,7 +1027,13 @@ func _update_info() -> void:
 		_target_hint.text = "No creature next to you."
 	else:
 		var count: int = session.roster.targets(session).size()
-		_target_hint.text = "Target: %s (%s, %s)  HP %d/%d  ATK %d DEF %d  |  F: attack%s" % [foe.definition.name, foe.definition.payload.disposition, foe.state, foe.hp, foe.max_hp, foe.definition.payload.stats.attack, foe.definition.payload.stats.defense, "  Tab: next (%d)" % count if count > 1 else ""]
+		var foe_stats: Dictionary = session.roster.creature_stats(session, foe)
+		_target_hint.text = "Target: %s (%s, %s)  HP %d/%d  ATK %d DEF %d  |  F: attack%s" % [foe.definition.name, foe.definition.payload.disposition, foe.state, foe.hp, foe.max_hp, foe_stats.attack, foe_stats.defense, "  Tab: next (%d)" % count if count > 1 else ""]
+	var active_statuses: String = session.statuses.describe(session, session.run.state.character.statuses)
+	_energy_label.tooltip_text = active_statuses
+	if not active_statuses.is_empty(): _target_hint.text += "\nYou: " + active_statuses
+	if not foe.is_empty():
+		_target_hint.text += "\n" + session.statuses.describe(session, foe.get("statuses", []))
 	var target: Dictionary = session.interaction_target()
 	_interaction_hint.text = "E: interact on your tile or a cardinal neighbor.  I: view inventory."
 	if not target.is_empty():
@@ -1118,6 +1140,16 @@ func describe_events(events: Array) -> String:
 				parts.append("Learned %s!%s" % [event.name, " The book is used up." if event.consumed else " The book remains."])
 			"stunned":
 				parts.append("%s is bound and cannot act." % event.name)
+			"status_apply":
+				parts.append("%s: %s x%d (%dt)." % [event.target, event.status, int(event.stacks), int(event.remaining)])
+			"status_dispel":
+				parts.append("%s: %s removed." % [event.target, event.status])
+			"status_tick":
+				parts.append("%s: %s %+d HP." % [event.target, event.status, int(event.amount)])
+			"status_error":
+				parts.append("Status could not resolve: " + str(event.error))
+			"status_blocked":
+				parts.append("Status prevents action; a turn passes.")
 			"status_end":
 				parts.append("%s wears off." % str(event.status).capitalize())
 			"talent":
@@ -1128,8 +1160,9 @@ func describe_events(events: Array) -> String:
 			"use":
 				var effects := PackedStringArray()
 				for change in event.changes:
+					if change.type == "status": continue
 					effects.append("%s %d -> %d" % [{"hp": "HP", "hunger": "hunger", "thirst": "thirst"}[change.stat], change.before, change.after])
-				parts.append("%s: %s (%s)." % [event.verb, event.name, ", ".join(effects)])
+				parts.append(("%s: %s." % [event.verb, event.name]) if effects.is_empty() else ("%s: %s (%s)." % [event.verb, event.name, ", ".join(effects)]))
 			"survival":
 				parts.append({"warning": "You are getting %s.", "danger": "You are badly %s — find food and water!", "depleted": "You are starving and dehydrating: %s now costs HP!"}[event.level] % {"hunger": "hungry", "thirst": "thirsty"}.get(event.need, event.need))
 			"starvation":

@@ -237,3 +237,11 @@ talent suites.
   and approval (Milestone 05 workflow).
 - Legacy Runs awaken on first load with the current pool; adding talents later does not
   change already stored talents.
+
+## Checkpoint F extension
+
+Passive `effect_modifier` uses the shared elemental/status vocabulary. on_turn can
+apply_status/cleanse on self; on_attack can apply_status on its living victim.
+Ember Heart (B) demonstrates conditional fire damage and low-HP regeneration.
+Existing talent definitions and saved awakening results are unchanged. Details:
+[EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md).

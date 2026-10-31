@@ -5,6 +5,7 @@ extends RefCounted
 ## closed vocabulary below. Anything outside it is kept as pending capability: listed,
 ## never awakened, never executed. Effect handlers are trusted engine code in
 ## talent_runtime.gd and exploration_session.gd; content never supplies code.
+const Effects = preload("res://src/core/effects.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const ItemEffects = preload("res://src/core/item_effects.gd")
@@ -13,16 +14,16 @@ const AWAKENING_VERSION := 1
 const STYLES := ["plain", "platinum", "black_gold", "rainbow"]
 ## Supported triggers and the effect types their handlers execute.
 const TRIGGERS := {
-	"on_turn": ["heal", "need"],
+	"on_turn": ["heal", "need", "apply_status", "cleanse"],
 	"on_explore": ["grant_item", "heal", "need"],
-	"on_attack": ["bonus_damage", "lifesteal"],
+	"on_attack": ["bonus_damage", "lifesteal", "apply_status"],
 	"on_kill": ["heal", "xp_bonus", "extra_loot_roll", "grow_stat"],
 	"on_hit_taken": ["negate_hit", "damage_reduction", "survive_lethal", "heal"],
 	"on_gather": ["yield_bonus", "extra_loot_roll", "grant_item"],
 	"on_open": ["yield_bonus", "extra_loot_roll", "grant_item"],
 	"on_use_item": ["use_bonus", "heal", "need"],
 }
-const PASSIVE_EFFECTS := ["stat", "perception", "skill_modifier"]
+const PASSIVE_EFFECTS := ["stat", "perception", "skill_modifier", "effect_modifier"]
 ## Condition type -> triggers that provide its context ([] = every trigger).
 const CONDITIONS := {
 	"chance_per_10000": [], "hp_below_percent": [], "hp_at_least_percent": [], "every_turns": [],
@@ -150,7 +151,7 @@ func check_powers(definition: Dictionary, payload: Dictionary, stats: Array, nee
 	var pinned := {}
 	for dependency in definition.get("dependencies", []):
 		pinned["%s@%d" % [dependency.content_id, int(dependency.version)]] = true
-	var context := {"stats": stats, "needs": needs, "pinned": pinned, "registry": registry, "world_id": world_id, "missing": missing}
+	var context := {"stats": stats, "needs": needs, "pinned": pinned, "registry": registry, "world_id": world_id, "missing": missing, "definition": definition}
 	for effect in payload.get("passive", []):
 		var problem := _check_effect(effect, "passive", context)
 		if not problem.is_empty():
@@ -232,6 +233,23 @@ func _check_effect(effect: Variant, trigger: String, context: Dictionary) -> Str
 		context.missing.append("talent.effect.%s.%s" % [trigger, effect.type])
 		return ""
 	match effect.type:
+		"apply_status":
+			var problem := Effects.check_application(effect, context.definition, context.registry, context.world_id, context.missing)
+			if problem.is_empty() and trigger == "on_attack" and context.registry != null:
+				var def: Dictionary = context.registry.load_definition(context.world_id, effect.content_id, int(effect.version))
+				if def.payload.get("modifiers", []).any(func(m: Dictionary) -> bool: return m.stat == "max_hp"): context.missing.append("effect.creature.max_hp_modifier")
+			return problem
+		"cleanse":
+			return "" if effect.get("harmful", true) is bool else "cleanse needs harmful bool"
+		"effect_modifier":
+			var problem := Effects.check_modifier(effect.get("modifier"))
+			if problem.begins_with("Unknown"):
+				context.missing.append("effect.modifier." + str(effect.get("modifier", {}).get("type", "unknown")))
+				if problem == "Unknown modifier element": context.missing.append("effect.element." + str(effect.modifier.get("element")))
+				for condition in effect.get("modifier", {}).get("conditions", []):
+					if condition.get("type") not in ["target_status", "source_status", "hp_below_percent", "hp_at_least_percent"]: context.missing.append("effect.condition." + str(condition.get("type")))
+				return ""
+			return problem
 		"stat", "grow_stat":
 			if effect.get("stat") not in context.stats:
 				return "Unknown stat: " + str(effect.get("stat"))

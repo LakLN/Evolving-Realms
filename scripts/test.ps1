@@ -51,8 +51,11 @@ try {
     Invoke-EngineCheck -Name 'talent-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/talent_gameplay_suite.gd') -Summary 'M02 CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'skills' -EngineArgs @('--headless', '--script', 'res://tests/skill_suite.gd') -Summary 'M02 CHECKPOINT E SKILLS: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'skill-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/skill_gameplay_suite.gd') -Summary 'M02 CHECKPOINT E GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'effects' -EngineArgs @('--headless', '--script', 'res://tests/effect_suite.gd') -Summary 'M02 CHECKPOINT F EFFECTS: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'effect-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
+        Invoke-EngineCheck -Name 'rendered-effects' -EngineArgs @('--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-interactions' -EngineArgs @('--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-combat' -EngineArgs @('--script', 'res://tests/combat_gameplay_suite.gd') -Summary 'M02 CHECKPOINT A GAMEPLAY: \d+ checks, 0 failures'

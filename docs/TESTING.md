@@ -51,3 +51,14 @@ issues in the backlog below instead.
 - The HUD info line is trimmed with "…" when coordinates/counters get long; a wider or
   two-row HUD would show everything.
 - Rank, quality and talent colors are placeholders.
+- Long combat/status notices use ellipsis with full text on hover; a scrollable event
+  history and less overlap between the skills sheet and bottom HUD remain cosmetic work.
+
+## Checkpoint F suites
+
+`effects` covers status lifecycle, derived buffs, elements/resistance, conditional
+interactions, guarded triggers, actual skill/creature hits, consumables, DoT rewards,
+invalid/pending content and save/restart/Run isolation. `effect-gameplay` exercises
+the real scene/input/menu; `rendered-effects` runs it on the native renderer and
+captures `.tools/effects-gameplay.png`. Use `-Only effects,effect-gameplay -Smoke`
+for a focused verification, or add `rendered-effects -Render` for this UI change.

@@ -130,6 +130,18 @@ func gear_bonus(definition: Dictionary, metadata: Dictionary) -> Dictionary:
 		flat[modifier.stat] = int(flat.get(modifier.stat, 0)) + int(modifier.get("add", 0))
 	return {"flat": flat, "percent": percent, "quality": tier}
 
+static func apply_sources(base: Dictionary, sources: Array) -> Dictionary:
+	## Shared derivation for creature status stats; player growth/gear use effective().
+	var result := {}
+	for key in base:
+		var flat := 0
+		var percent := 0
+		for source in sources:
+			flat += int(source.get("flat", {}).get(key, 0))
+			percent += int(source.get("percent", {}).get(key, 0))
+		result[key] = maxi(1 if key == "max_hp" else 0, (int(base[key]) + flat) * maxi(0, 100 + percent) / 100)
+	return result
+
 func effective(base_stats: Dictionary, character: Dictionary, definition_for: Callable, sources: Array = []) -> Dictionary:
 	## {stats: {stat: total}, breakdown: {stat: {base, growth, gear, talent, percent}}}.
 	## sources: further derived modifiers {flat, percent} (talents). breakdown.talent is

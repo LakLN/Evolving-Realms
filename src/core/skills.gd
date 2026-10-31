@@ -5,11 +5,12 @@ extends RefCounted
 ## from the closed vocabulary below. Passive and triggered skills reuse the talent
 ## power vocabulary (Talents.check_powers) and run on the same TalentRuntime.
 ## Anything unknown is a pending capability: listed, never learnable, never executed.
+const Effects = preload("res://src/core/effects.gd")
 const Data = preload("res://src/data/json_data.gd")
 const PATH := "res://content/skill_rules.json"
 const TYPES := ["active", "passive", "triggered"]
 ## Target kind -> effects its handlers can execute.
-const TARGETS := {"self": ["heal", "need", "status", "restore"], "creature": ["strike", "stun"], "tile": ["blink"]}
+const TARGETS := {"self": ["heal", "need", "status", "restore", "apply_status", "cleanse"], "creature": ["strike", "stun", "apply_status", "cleanse"], "tile": ["blink"]}
 const CONDITIONS := ["level", "stat", "skill_known", "talent", "item", "equipped", "hp_below_percent", "hp_at_least_percent", "need_below", "any_of"]
 const RELATIONS := ["prerequisite", "conflicts", "follow_up"]
 const NEED_LEVELS := ["fine", "warning", "danger", "depleted"]
@@ -74,6 +75,9 @@ func catalog(registry: RefCounted, world_id: String, context: Dictionary) -> Dic
 			var problem: String = "Invalid skill modifier" if not modifier is Dictionary else context.talents.check_skill_modifier(modifier)
 			if not problem.is_empty():
 				return {"error": "%s: %s" % [header.content_id, problem]}
+		for modifier in payload.get("equipment", {}).get("effect_modifiers", []):
+			var problem := Effects.check_modifier(modifier)
+			if not problem.is_empty(): return {"error": "%s: %s" % [header.content_id, problem]}
 		if not payload.has("skill_book"):
 			continue
 		var book: Variant = payload.skill_book
@@ -97,6 +101,10 @@ func classify(definition: Dictionary, context: Dictionary, registry: RefCounted 
 		return {"missing": missing, "problem": "Skill payload needs a type"}
 	if not payload.get("tags", []) is Array or not payload.get("tags", []).all(func(tag: Variant) -> bool: return tag is String):
 		return {"missing": missing, "problem": "Skill tags must be strings"}
+	if not payload.get("elements", ["neutral"]) is Array or payload.get("elements", []).size() > 8:
+		return {"missing": missing, "problem": "Skill elements must be an array of at most 8 IDs"}
+	for element in payload.get("elements", ["neutral"]):
+		if not Effects.rules().elements.has(element): missing.append("effect.element." + str(element))
 	var learn: Variant = payload.get("learn", {})
 	if not learn is Dictionary:
 		return {"missing": missing, "problem": "Skill learn must be an object"}
@@ -159,6 +167,12 @@ func classify(definition: Dictionary, context: Dictionary, registry: RefCounted 
 		problem = _check_effect(effect, target.kind, context, missing)
 		if not problem.is_empty():
 			return {"missing": missing, "problem": problem}
+		if effect.get("type") == "apply_status":
+			problem = Effects.check_application(effect, definition, registry, world_id, missing)
+			if not problem.is_empty(): return {"missing": missing, "problem": problem}
+			if registry != null and target.kind == "creature":
+				var status: Dictionary = registry.load_definition(world_id, effect.content_id, int(effect.version))
+				if status.payload.get("modifiers", []).any(func(m: Dictionary) -> bool: return m.stat == "max_hp"): missing.append("effect.creature.max_hp_modifier")
 	return {"missing": missing, "problem": ""}
 
 func _check_effect(effect: Variant, kind: String, context: Dictionary, missing: Array) -> String:
@@ -168,6 +182,10 @@ func _check_effect(effect: Variant, kind: String, context: Dictionary, missing: 
 		missing.append("skill.effect.%s.%s" % [kind, effect.type])
 		return ""
 	match effect.type:
+		"apply_status":
+			return "" if Data.identifier(effect.get("content_id")) and _int_in(effect.get("version"), 1, 1000000) else "apply_status needs pinned content_id/version"
+		"cleanse":
+			return "" if effect.get("harmful", true) is bool else "cleanse needs harmful bool"
 		"strike":
 			return "" if _int_in(effect.get("attack_percent", 100), 1, 1000) and _int_in(effect.get("flat", 0), 0, 1000) else "strike needs attack_percent 1..1000, flat 0..1000"
 		"stun":
@@ -320,6 +338,9 @@ func validate(character: Dictionary, definition_for: Callable, stats: Array) -> 
 		if not rules.resources.has(id) or not resource is Dictionary or not _int_in(resource.get("value"), 0, 1000000) or not _int_in(resource.get("progress"), 0, 99):
 			return "Invalid skill resource " + str(id)
 	for status in character.statuses:
+		if status is Dictionary and status.has("remaining"):
+			if not Effects.valid_record(status): return "Invalid active status"
+			continue
 		if not status is Dictionary or not status.get("id") is String or not Data.identifier(status.get("source")) or status.get("stat") not in stats or not _int_in(status.get("add", 0), -1000, 1000) or not _int_in(status.get("percent", 0), -90, 500) or not _int_in(status.get("until_turn"), 0, 1000000000):
 			return "Invalid timed status"
 	return ""

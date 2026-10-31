@@ -1,5 +1,67 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
+## Current checkpoint: Milestone 02 Checkpoint F complete (effects and elements)
+
+From `ab3b9df`. Kept A?E, native offline SQLite and all immutable v1 packs. No schema,
+record-version or generation-version change. No later checkpoint started.
+
+Delivered:
+- Shared `Effects` validation/elemental math and `StatusRuntime` for player and
+  creatures: version-pinned status definitions, source/target, stack caps, refresh/
+  keep/extend, DoT/HoT, stat modifiers, slow, stun, dispel and expiration.
+- Data-driven element IDs and water?extinguish/fire?remove-slow reactions. Ordered
+  outgoing/conditional modifiers, resistance/weakness and mixed-element resistance.
+- Skills, item uses, talent/triggered-skill on_turn/on_attack and creature hit effects
+  share the runtime. DoT uses existing kill/loot/XP without on_attack/lifesteal; trigger
+  re-entry remains bounded. Dead actors stop effects. Unsupported mechanics are
+  named pending capabilities or explicit refusal, never executable content.
+- Additive effect pack: 7 statuses, 8 active skills plus Searing Wounds passive,
+  manuals, Ember Heart rank-B talent, Cinder Ring, Renewal Tonic and Cinder Draught.
+  An independent Wayfarer-cache loot extension makes the kit playable. Cinder Draught
+  trades a defense buff for burn, so incoming fire resistance can be observed in game.
+- HUD/skill details show status element, stack/duration, selected creature and effective
+  debuffed stats; messages show apply/tick/dispel/end/errors. Existing controls retained.
+- Exact active-state save/load, source identity, application inputs and tick/age guards;
+  no derived stats persisted. Old E statuses retain their old timing. New Runs remain
+  independent; Blueprint and established procedural placements remain unchanged.
+
+Validation:
+- Development: import + affected skills/talents/effects/gameplay suites only.
+- Final regression command:
+  `.\scripts\test.ps1 -Only world,interactions,interaction-gameplay,combat,combat-gameplay,survival,survival-gameplay,equipment,equipment-gameplay,talents,talent-gameplay,skills,skill-gameplay,effects,effect-gameplay,rendered-effects -Smoke -Render`
+  passed: data 96, world 49, interactions 66 + UI 17, integration 34, combat 75 + UI 20,
+  survival 60 + UI 10, equipment 68 + UI 15, talents 126 + UI 16, skills 105 + UI 21,
+  effects 46, effect UI 8 headless / 9 native-rendered; import/startup clean.
+- Final sample-data/UI adjustment verification:
+  `.\scripts\test.ps1 -Only interactions,effects,effect-gameplay,rendered-effects -Smoke -Render`
+  passed: data 96, interactions 66, integration 34, effects 46, effect UI 9 headless /
+  10 native-rendered; import/startup clean.
+- After extending permadeath risk detection for player DoT damage, ran
+  `.\scripts\test.ps1 -Only effects,survival,combat,effect-gameplay,rendered-effects -Smoke -Render`: data 96, integration 34, combat 75, survival 60, effects 49, effect UI
+  9 headless / 10 native-rendered, import/startup all passed. This includes immediate
+  high-HP DoT autosave and atomic consumption/HP/status checks.
+- Actual scene/input checks learn through inventory, use quick keys, apply HoT/cleanse,
+  save with panel open, resume without ticking, and show selected-creature statuses.
+  Native OpenGL screenshot `.tools/effects-gameplay.png` inspected for readability.
+- Negative cases cover malformed status records, missing dependencies and unknown capabilities.
+  SQLite injected failures/locks in smoke are intentional; committed saves survive.
+
+Bugs caught and fixed during development: tick wrote invalid mutations for untouched, unmaterialized creatures; first status on an untouched creature initially failed to commit;
+repeat finish could age twice; post-tick triggers initially aged a new status early;
+malformed creature status arrays needed validation before duplication; player DoT
+damage now participates in risky-action permadeath autosave. Added regression
+checks for each relevant lifecycle/persistence path. Legacy catalog assertions now
+allow additive books/talent while retaining their original pinned-content checks.
+
+Limits: no AoE/animation/icon overhaul or arbitrary status event graphs; creature
+max-HP status modifiers and creature-to-creature status combat remain unsupported.
+Balance is sample-level. Legacy buffs are not cleansed by the advanced cleanser.
+No export/service/full OpenGL release pipeline: this is Checkpoint F, not a milestone
+release; previous Windows exe is unchanged. Run current source with scripts/godot.ps1.
+See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md) for complete contracts and play steps.
+
+Next: stop after F; wait for the user's gameplay review and explicit next-checkpoint scope.
+
 ## Process update (after Checkpoint E): lightweight testing
 
 From the next checkpoint, testing follows [TESTING.md](TESTING.md): touched suites while
@@ -11,7 +73,7 @@ were removed. `scripts/test.ps1` gained `-Only` and `-Smoke`; the default is sti
 full regression. Verified: `.\scripts\test.ps1 -Only data` ran exactly import, data
 (96/96) and startup. AGENTS.md and README updated.
 
-## Current checkpoint: Milestone 02 Checkpoint E complete (skills, skill books, abilities)
+## Previous checkpoint: Milestone 02 Checkpoint E complete (skills, skill books, abilities)
 
 Continued from 86f9388 (clean tree) on explicit user approval of Checkpoint E only.
 Read AGENTS and all design/API docs plus source first. Reused rather than duplicated:

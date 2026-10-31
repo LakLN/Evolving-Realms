@@ -51,6 +51,9 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
     loot extensions; learn/use actions in the turn system; passive/triggered skills on
     the talent engine; skill modifiers from talents and gear; timed statuses, stun,
     blink; skills panel, 1-9, targeting, energy bar. No migration.
+  - F (complete): shared versioned statuses, DoT/HoT, control and stat debuffs,
+    elements/resistance/weakness/reactions, conditional skill/talent/gear interactions,
+    status UI and exact save/load without migration.
   - Later checkpoints: not started; require user approval.
 03: deeper talent/skill mechanics (evolution, fusion, cultivation) as approved; talent
 awakening (02 D) and skill books with learning requirements (02 E) were delivered early.

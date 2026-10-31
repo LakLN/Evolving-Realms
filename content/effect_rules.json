@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "elements": {
+    "fire": {
+      "name": "Fire"
+    },
+    "water": {
+      "name": "Water"
+    },
+    "wood": {
+      "name": "Wood"
+    },
+    "metal": {
+      "name": "Metal"
+    },
+    "earth": {
+      "name": "Earth"
+    },
+    "wind": {
+      "name": "Wind"
+    },
+    "lightning": {
+      "name": "Lightning"
+    },
+    "ice": {
+      "name": "Ice"
+    },
+    "light": {
+      "name": "Light"
+    },
+    "dark": {
+      "name": "Dark"
+    },
+    "neutral": {
+      "name": "Neutral"
+    }
+  },
+  "reactions": [
+    {
+      "element": "water",
+      "remove_status": "core:status/burn"
+    },
+    {
+      "element": "fire",
+      "remove_status": "core:status/slow"
+    }
+  ]
+}

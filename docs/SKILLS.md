@@ -164,3 +164,11 @@ talent **Ngộ Tính** (skills +25% power, −25% energy), which joins the awake
   regeneration effects outside the rules file are not implemented yet.
 - Trigger effects never chain (one level). Hit reactions still cannot kill attackers.
 - The generic learn path has no in-game source yet (teachers, relics, research).
+
+## Checkpoint F extension
+
+Skills may declare elements and apply pinned status definitions or cleanse advanced
+statuses. The legacy E status/stun records retain their original behavior. The old
+"no damage over time" limitation above describes E only; F adds shared DoT/HoT,
+creature debuffs, resistance and conditional modifiers. See
+[EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md).

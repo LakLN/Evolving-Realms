@@ -18,6 +18,7 @@ const CharacterStats = preload("res://src/core/character_stats.gd")
 const Equipment = preload("res://src/core/equipment.gd")
 const Talents = preload("res://src/core/talents.gd")
 const TalentRuntime = preload("res://src/core/talent_runtime.gd")
+const StatusRuntime = preload("res://src/run/status_runtime.gd")
 const Skills = preload("res://src/core/skills.gd")
 const SkillActions = preload("res://src/run/skill_actions.gd")
 const SIGHT_RADIUS := 7
@@ -60,6 +61,7 @@ var skill_rules := Skills.new()
 ## {definitions, supported, pending, books} for this World (see Skills.catalog).
 var skill_catalog: Dictionary = {"definitions": {}, "supported": {}, "pending": [], "books": {}}
 var skills := SkillActions.new()
+var statuses := StatusRuntime.new()
 var _effective: Dictionary = {}
 var _definitions: Dictionary = {}
 ## Combat/AI events of the last accepted action, in order (for UI feedback).
@@ -231,6 +233,8 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	skill_catalog = next_skills
 	_definitions = {}
 	reload_talents() # Also derives effective stats.
+	var status_error := statuses.validate(self)
+	if not status_error.is_empty(): return _fail(status_error + "; save was not changed")
 	last_save_turn = int(loaded.state.turn)
 	last_result = {}
 	last_events = []
@@ -278,7 +282,9 @@ func perform_action(action: Dictionary) -> bool:
 	if run.is_empty() or not Data.valid(action) or not _action_handlers.has(action.get("type")):
 		return _fail("No active run or unsupported action")
 	_new_tiles = 0
-	if not _action_handlers[action.type].call(action):
+	if statuses.blocked(self, "player") and action.type != "wait":
+		last_result = {"events": [{"type": "status_blocked", "target": "player"}]}
+	elif not _action_handlers[action.type].call(action):
 		return false
 	# Turn order: player action, turn counter, survival (needs, recovery,
 	# starvation), timed statuses and skill resources, talent/skill turn and
@@ -290,8 +296,11 @@ func perform_action(action: Dictionary) -> bool:
 	last_events.append_array(survival.tick(stats(), str(action.type), int(combat_stats().max_hp)))
 	if int(stats().hp) > 0:
 		last_events.append_array(skills.tick(self, str(action.type)))
-		last_events.append_array(_talent_tick())
-		last_events.append_array(roster.take_turn(self))
+		last_events.append_array(statuses.tick(self))
+		if int(stats().hp) > 0:
+			last_events.append_array(_talent_tick())
+			last_events.append_array(roster.take_turn(self))
+	last_events.append_array(statuses.finish_turn(self))
 	last_error = ""
 	if int(stats().hp) <= 0:
 		_die()
@@ -403,10 +412,13 @@ func _use_action(action: Dictionary) -> bool:
 		for bonus in activation.ability.effects:
 			if bonus.type == "use_bonus":
 				for effect in effects:
-					if bonus.get("effect_types", []).is_empty() or effect.type in bonus.effect_types:
+					if effect.has("amount") and (bonus.get("effect_types", []).is_empty() or effect.type in bonus.effect_types):
 						effect.amount = maxi(0, int(effect.amount) * (100 + int(bonus.percent)) / 100)
 	var trial := stats().duplicate(true)
 	var changes := ItemEffects.apply(trial, effects, int(combat_stats().max_hp))
+	for effect in effects:
+		if effect.type == "apply_status" or (effect.type == "cleanse" and run.state.character.statuses.any(func(s: Dictionary) -> bool: return s.has("remaining") and statuses.definition(self, s).payload.get("harmful", true) == effect.get("harmful", true))):
+			changes.append({"type": "status", "stat": "hp", "before": trial.hp, "after": trial.hp})
 	for activation in plan:
 		changes.append_array(_vital_effects(trial, activation.ability.effects))
 	if changes.is_empty():
@@ -420,6 +432,9 @@ func _use_action(action: Dictionary) -> bool:
 		stats()[key] = trial[key]
 	talents.commit(plan, int(run.state.turn))
 	var events: Array = [{"type": "use", "name": name, "verb": str(use.payload.get("verb", "Use")), "changes": changes}]
+	for effect in effects:
+		if effect.type == "apply_status": events.append_array(statuses.apply(self, effect, {"content_id": use.content_id, "version": int(use.version), "actor": "player"}, "player"))
+		elif effect.type == "cleanse": events.append_array(statuses.cleanse(self, "player", effect.get("harmful", true)))
 	for activation in plan:
 		events.append(_talent_event(activation, _effect_summary(activation.ability.effects)))
 	last_result = {"type": "use", "content_id": action.content_id, "events": events}
@@ -450,6 +465,13 @@ func _load_uses(world_id: String) -> Dictionary:
 		if not problem.is_empty():
 			_fail("%s: %s" % [header.content_id, problem])
 			return {}
+		for effect in payload.effects:
+			if effect.type == "apply_status":
+				var missing: Array = []
+				var status_problem := statuses.Effects.check_application(effect, definition, store.content, world_id, missing)
+				if not status_problem.is_empty() or not missing.is_empty():
+					_fail("%s: %s missing %s" % [definition.content_id, status_problem, str(missing)])
+					return {}
 		var key := "%s@%d" % [target.content_id, int(target.version)]
 		if owners.has(key) and owners[key] != header.content_id:
 			_fail("Conflicting item uses for " + key)
@@ -477,7 +499,7 @@ func _autosave() -> void:
 		last_events.append({"type": "autosave_failed", "error": last_error})
 
 func at_risk() -> bool:
-	var hurt := last_events.any(func(event: Dictionary) -> bool: return (event.type == "hit" and event.target == "player") or event.type == "starvation")
+	var hurt := last_events.any(func(event: Dictionary) -> bool: return (event.type == "hit" and event.target == "player") or event.type == "starvation" or (event.type == "status_tick" and event.target == "player" and int(event.amount) < 0))
 	return hurt or threatened() or int(stats().hp) * 100 < int(survival.rules.autosave.permadeath_risk_hp_percent) * int(combat_stats().max_hp) or survival.worst_level(stats()) >= 2
 
 func safe_to_autosave() -> bool:
@@ -523,7 +545,7 @@ func refresh_stats() -> void:
 		stats().hp = int(_effective.stats.max_hp)
 
 func modifier_sources() -> Array:
-	return [talents.modifiers(), skills.status_modifiers(self)]
+	return [talents.modifiers(), skills.status_modifiers(self), statuses.stat_modifiers(self, run.state.character.statuses)]
 
 func effective_stats() -> Dictionary:
 	return _effective
@@ -953,6 +975,11 @@ func _talent_tick() -> Array:
 		for need in survival.rules.needs:
 			levels[need] = survival.level(stats(), need)
 		var changes := _vital_effects(stats(), activation.ability.effects)
+		for effect in activation.ability.effects:
+			if effect.type == "apply_status":
+				events.append_array(statuses.apply(self, effect, {"content_id": activation.talent.definition.content_id, "version": int(activation.talent.definition.version), "actor": "player"}, "player"))
+			elif effect.type == "cleanse":
+				events.append_array(statuses.cleanse(self, "player", effect.get("harmful", true)))
 		for need in levels:
 			if survival.level(stats(), need) > levels[need]:
 				events.append({"type": "survival", "need": need, "level": Survival.LEVELS[survival.level(stats(), need)]})
@@ -971,16 +998,17 @@ func _talent_tick() -> Array:
 func _target_of(creature: Dictionary) -> Dictionary:
 	return {"category": str(creature.definition.get("metadata", {}).get("category", "")), "disposition": str(creature.definition.payload.disposition)}
 
-func talent_strike(creature: Dictionary, result: Dictionary) -> Dictionary:
+func talent_strike(creature: Dictionary, result: Dictionary, periodic: bool = false, options: Dictionary = {}) -> Dictionary:
 	## Planned on_attack / on_kill effects on a resolved player hit (no state change).
 	var context := _talent_context("%s/%d" % [creature.instance_id, int(run.state.turn)])
 	context.target = _target_of(creature)
-	var attack: Array = talents.fire("on_attack", context)
+	var attack: Array = [] if periodic else talents.fire("on_attack", context)
 	var damage := int(result.damage)
 	for activation in attack:
 		for effect in activation.ability.effects:
 			if effect.type == "bonus_damage":
 				damage += int(effect.get("amount", 0)) + int(result.damage) * int(effect.get("percent", 0)) / 100
+	damage = statuses.Effects.damage(damage, options.get("elements", ["neutral"]), statuses.actor(self, str(options.get("source_actor", "player"))), statuses.actor(self, creature.instance_id))
 	var hp := maxi(0, int(creature.hp) - damage)
 	var kill: Array = []
 	if hp == 0:
@@ -1007,6 +1035,8 @@ func _apply_strike(result: Dictionary) -> int:
 			match effect.type:
 				"bonus_damage":
 					parts.append("+%d damage" % (int(effect.get("amount", 0)) + int(strike.base_damage) * int(effect.get("percent", 0)) / 100))
+				"apply_status":
+					result.events.append_array(statuses.apply(self, effect, {"content_id": activation.talent.definition.content_id, "version": int(activation.talent.definition.version), "actor": "player"}, str(result.target)))
 				"lifesteal":
 					var changes := _vital_effects(stats(), [{"type": "heal", "amount": maxi(1, int(strike.dealt) * int(effect.percent) / 100)}])
 					parts.append(_vital_summary(changes) if not changes.is_empty() else "already at full HP")
