@@ -1511,3 +1511,30 @@ Commands from repository root:
 
 Open project.godot in `.tools/godot/Godot_v4.7.2-stable_win64.exe` and press F5
 for the current bootstrap screen. It works without the optional content service.
+
+
+## Parallel chunk performance task - 2026-11-01
+
+Isolated branch `perf/chunk-generation`, worktree `D:/Game/RPG-perf-chunks`,
+based on `ad0b72f`; no integration into master or changes to Agent 1's worktree.
+Only runtime change: defer WorldLocations' pure four-neighbour openness check
+until a location rule passes its deterministic spawn filters. No generator,
+RNG result, terrain, placement, ID, ledger revision or persistence contract changed.
+
+Fixed-seed native OpenGL streaming benchmark (72 crossings): new-region data
+median/p95 211.79/270.07 -> 125.40/186.65 ms; location phase median
+126.94 -> 30.90 ms. Data plus unchanged MapView.refresh median
+235.66 -> 154.98 ms. Rendering remains about 30 ms and is left to Agent 1.
+Shared-machine timings are indicative; stalls remain above a 60 FPS budget.
+
+Verification: 54 complete chunk signatures identical before/after; 78 sampled
+chunks across three seeds match the old placement loop, including reverse visit
+order, negative coordinates and legacy empty location layers. Neighbour probes
+59,253 -> 28. New suite 11/0; data 96/0, world 49/0, interactions 66/0,
+integration 41/0, AI World 41/0, discoveries 40/0; offline provider 8 tests OK;
+import/startup smoke PASS. Existing suites verify old saves, loot consistency,
+Run isolation, encounters and ledger revisions. No Windows export for this task.
+
+See [CHUNK_PERFORMANCE.md](CHUNK_PERFORMANCE.md) for methodology, raw report
+paths, rendering limits and post-Agent-1 cherry-pick/retest instructions.
+Worktree retained; no new gameplay or milestone work started.

@@ -138,12 +138,17 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			var point := origin + Vector2i(x, y)
-			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point) or not _open(point):
+			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point):
 				continue
 			for rule in eligible:
 				var spawn: Dictionary = rule.definition.payload.spawn
 				if Terrain.BIOMES[ground] not in spawn.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
 					continue
+				# Four neighbour probes recompute terrain instead of reading chunk bytes.
+				# Test it only for spawn candidates; all rules share this predicate.
+				# Coordinate hashes are stateless: no random stream/order is consumed.
+				if not _open(point):
+					break
 				var order: int = terrain.coordinate_hash(point.x, point.y, order_stream)
 				if best.is_empty() or order < best.order or (order == best.order and (point.y < best.point.y or (point.y == best.point.y and point.x < best.point.x))):
 					best = {"point": point, "local": Vector2i(x, y), "rule": rule, "order": order}
