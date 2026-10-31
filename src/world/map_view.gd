@@ -148,7 +148,7 @@ func refresh() -> void:
 func _shift_transients(offset: Vector2) -> void:
 	for child in _fx_layer.get_children():
 		child.position += offset
-	_dying = _dying.filter(func(node: Node2D) -> bool: return is_instance_valid(node))
+	_dying = _dying.filter(func(node: Variant) -> bool: return is_instance_valid(node) and node is Node2D)
 	for node in _dying:
 		node.position += offset
 

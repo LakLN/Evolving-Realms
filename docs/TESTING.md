@@ -99,6 +99,12 @@ real scene (X, Space, E) and capture `.tools/discoveries-gameplay.png`. Use
 parses JSON through the CLI, checks saved values and confirms that exporting does
 not change the Run state or revision. Use `.\scripts\test.ps1 -Only telemetry`.
 
+## Run 01 spawn policy
+
+`run01-world` checks the versioned spawn selector, including v2 accessibility,
+bounded exploration room, repeatability, and resuming legacy v1 Runs unchanged.
+Use `.\scripts\test.ps1 -Only run01-world`.
+
 ## Checkpoint H suite
 
 `ai-world` (`tests/ai_world_suite.gd`, after the offline Python tests write the creature

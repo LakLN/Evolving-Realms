@@ -36,6 +36,7 @@ try {
     Invoke-EngineCheck -Name 'import' -EngineArgs @('--headless', '--editor', '--import')
     Invoke-EngineCheck -Name 'data' -EngineArgs @('--headless', '--script', 'res://tests/data_suite.gd') -Summary 'CHECKPOINT B: \d+ checks, 0 failures' -ExpectedErrors @('injected failure', 'table content_definitions already exists')
     Invoke-EngineCheck -Name 'world' -EngineArgs @('--headless', '--script', 'res://tests/world_suite.gd') -Summary 'CHECKPOINT C WORLD: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'run01-world' -EngineArgs @('--headless', '--script', 'res://tests/run01_world_suite.gd') -Summary 'RUN01 WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'gameplay' -EngineArgs @('--headless', '--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'interactions' -EngineArgs @('--headless', '--script', 'res://tests/interaction_suite.gd') -Summary 'CHECKPOINT D INTERACTIONS: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'interaction-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'

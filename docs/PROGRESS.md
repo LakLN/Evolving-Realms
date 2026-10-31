@@ -1,4 +1,34 @@
-# Progress — 2026-11-02 (Asia/Saigon)
+# Progress — 2026-11-01 (Asia/Saigon)
+
+## Run 01 — final integration
+
+- Integrated the three task branches on `master`: world spawn policy
+  (`bfe7c9e`, follow-up `3fdad1a`), AI Content Pack (`1913f00`), and offline
+  telemetry (`26f5f81`). The telemetry/test-runner conflict was resolved by
+  retaining both `run01-content` and `telemetry` suite entries. No World or Run 01
+  playtest save was created; auxiliary worktrees remain untouched.
+- Added the `run01-world` suite to the test runner and `docs/RUN01_SETUP.md` with
+  manual steps to prepare a World, start a randomized new Run, save, and export.
+  The pack is opt-in and its test confirms a separate World has no pack content.
+- Initial rendered standalone verification exposed a typed `Array.filter` error
+  when a freed creature node crossed a chunk shift. The transient-node filter now
+  checks `Variant` validity/type before use; no art/assets or gameplay changed.
+- `.\scripts\test.ps1 -Smoke -Only run01-world,run01-content,world,telemetry,ai-world,interactions,interaction-gameplay,discoveries,discovery-gameplay`:
+  PASS. Counts: data 96, world 49, Run 01 world 20, Run 01 content 68,
+  telemetry 32, AI World 41, interactions 69, interaction gameplay 17,
+  discoveries 40, discovery gameplay 6, integration 41; offline AI provider,
+  import and startup passed.
+- `.\.venv\Scripts\python.exe -I scripts\generate_content.py pack-check`: PASS;
+  all five modules validated as active in the throwaway check.
+- `.\scripts\export.ps1 -Verify -Render`: PASS, Windows x64. Standalone write
+  37 checks, verify 9, features 17, features-verify 5; crash persistence and
+  refusal against the default save passed. Exe 109,127,680 bytes, PCK 2,260,772
+  bytes, SQLite DLL 3,393,024 bytes in `builds/windows`.
+- Limits: actual play duration, combat attempts/wins/losses and player death cause
+  remain unavailable from saved data. Pack creatures/places only reach eligible
+  newly established regions; talents are rolled only for new Runs. No full
+  regression or official seed/World/Run was created.
+- Next: follow [RUN01_SETUP.md](RUN01_SETUP.md) when the playtest operator is ready.
 
 ## Run 01 — offline telemetry (feature/run01-telemetry)
 
