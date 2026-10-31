@@ -54,7 +54,7 @@ Rebuild after changing sources or tables (dev-only Python; the game never needs 
 `MAPPING` in `build_assets.py` (copied into the index):
 
 - Objects: `content_id` → `payload.visual` → `kind`; `opened` gives the consumed sprite
-  (chests). Visual mapped to `""` keeps the code-drawn icon (shells, coins).
+  (chests). A visual mapped to `""` keeps the code-drawn icon (none at the moment).
 - Places: `content_id` → `payload.visual` → `payload.category` → `default`, so
   AI-generated places get a fitting landmark by category.
 - Creatures: `payload.visual` → animated sheet (wolf, boar, rabbit, deer, crab). AI
