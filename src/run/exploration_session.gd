@@ -7,6 +7,9 @@ const Data = preload("res://src/data/json_data.gd")
 const Objects = preload("res://src/world/world_objects.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Inventory = preload("res://src/core/inventory.gd")
+const Creatures = preload("res://src/world/world_creatures.gd")
+const Roster = preload("res://src/run/creature_roster.gd")
+const Combat = preload("res://src/core/combat.gd")
 const SIGHT_RADIUS := 7
 signal action_completed(action: Dictionary, result: Dictionary)
 var store: RefCounted
@@ -21,13 +24,16 @@ var dirty := false
 var last_error := ""
 var objects: RefCounted
 var last_result: Dictionary = {}
+var roster: RefCounted
+## Combat/AI events of the last accepted action, in order (for UI feedback).
+var last_events: Array = []
 var _action_handlers: Dictionary = {}
 
 func _init(data_store: RefCounted) -> void:
 	store = data_store
-	_action_handlers = {"move": _move_action, "interact": _interact_action}
+	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action}
 
-func start_new(world_id: String, run_seed: int, biome: String = "any") -> bool:
+func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal") -> bool:
 	if not Data.seed_value(run_seed):
 		return _fail("Run seed must be a signed 32-bit integer")
 	var blueprint: Dictionary = store.load_world(world_id)
@@ -39,7 +45,7 @@ func start_new(world_id: String, run_seed: int, biome: String = "any") -> bool:
 	var spawn := Spawn.select(generator, run_seed, biome)
 	if spawn.is_empty():
 		return _fail("No accessible spawn found for biome " + biome)
-	var created: Dictionary = store.create_run(world_id, run_seed, spawn)
+	var created: Dictionary = store.create_run(world_id, run_seed, spawn, mode, Combat.player_stats({}))
 	if created.is_empty():
 		return _fail(store.last_error)
 	return _activate(blueprint, created) and save()
@@ -75,6 +81,14 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var next_objects := Objects.new()
 	if not next_objects.configure(blueprint, generator, store.content, next_cache) or not next_objects.follow(tile):
 		return _fail(next_objects.last_error)
+	var saved_stats: Variant = loaded.state.character.stats
+	if not saved_stats is Dictionary or not Combat.valid_stats(Combat.player_stats(saved_stats), true):
+		return _fail("Saved character combat stats are invalid; save was not changed")
+	loaded.state.character.stats = Combat.player_stats(saved_stats) # Milestone 01 saves get defaults.
+	var layer := Creatures.new()
+	var next_roster := Roster.new()
+	if not layer.configure(blueprint, generator, store.content) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
+		return _fail(layer.last_error if not layer.last_error.is_empty() else next_roster.last_error)
 	terrain = generator
 	world = blueprint
 	run = loaded
@@ -82,7 +96,9 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	explored = discovered
 	cache = next_cache
 	objects = next_objects
+	roster = next_roster
 	last_result = {}
+	last_events = []
 	dirty = false
 	_reveal()
 	last_error = ""
@@ -97,14 +113,87 @@ func register_action_handler(action_type: String, handler: Callable) -> void:
 
 func perform_action(action: Dictionary) -> bool:
 	last_result = {}
-	if run.is_empty() or run.state.status != "alive" or not Data.valid(action) or not _action_handlers.has(action.get("type")):
+	last_events = []
+	if is_dead():
+		return _fail("You are dead — no further actions")
+	if run.is_empty() or not Data.valid(action) or not _action_handlers.has(action.get("type")):
 		return _fail("No active run or unsupported action")
 	if not _action_handlers[action.type].call(action):
 		return false
+	# Turn order: player action, turn counter, regeneration, then each active creature once.
+	last_events = last_result.get("events", []).duplicate(true)
 	run.state.turn = int(run.state.turn) + 1
 	dirty = true
+	if Combat.regenerate(stats(), int(run.state.turn)) > 0:
+		last_events.append({"type": "regen", "hp": stats().hp})
+	last_events.append_array(roster.take_turn(self))
 	last_error = ""
+	if int(stats().hp) <= 0:
+		_die()
+	last_result["events"] = last_events.duplicate(true)
 	action_completed.emit(action.duplicate(true), last_result.duplicate(true))
+	return true
+
+func stats() -> Dictionary:
+	## Live player combat stats (hp, max_hp, attack, defense) inside Run state.
+	return run.state.character.stats
+
+func is_dead() -> bool:
+	return not run.is_empty() and run.state.status == "dead"
+
+func _die() -> void:
+	run.state.status = "dead"
+	last_events.append({"type": "player_death", "mode": run.mode})
+	if run.mode == "permadeath":
+		# Permadeath records the ending immediately; GameStore then refuses further saves
+		# and resume refuses dead runs. Normal-mode deaths are never written.
+		if not save():
+			last_events.append({"type": "death_save_failed", "error": last_error})
+
+func _wait_action(_action: Dictionary) -> bool:
+	last_result = {"type": "wait"}
+	return true
+
+func _attack_action(action: Dictionary) -> bool:
+	if not action.get("target_id") is String:
+		return _fail("Attack requires a creature ID")
+	var result: Dictionary = roster.attack(self, action.target_id)
+	if result.is_empty():
+		return _fail(roster.last_error)
+	last_result = result
+	return true
+
+func attack_target(target_id: String = "") -> bool:
+	if target_id.is_empty():
+		var nearby: Array = roster.targets(self)
+		if nearby.is_empty():
+			return _fail("No creature on a cardinal neighbor to attack")
+		target_id = nearby[0].instance_id
+	return perform_action({"type": "attack", "target_id": target_id})
+
+func wait_turn() -> bool:
+	return perform_action({"type": "wait"})
+
+func line_clear(from: Vector2i, target: Vector2i) -> bool:
+	## Integer Bresenham; the first opaque tile is visible, terrain behind is hidden.
+	var current := from
+	var dx := absi(target.x - current.x)
+	var dy := -absi(target.y - current.y)
+	var step_x := 1 if current.x < target.x else -1
+	var step_y := 1 if current.y < target.y else -1
+	var error := dx + dy
+	while current != target:
+		var doubled := 2 * error
+		if doubled >= dy:
+			error += dy
+			current.x += step_x
+		if doubled <= dx:
+			error += dx
+			current.y += step_y
+		if current == target:
+			return true
+		if cache.tile_at(current) in [Terrain.TREE, Terrain.ROCK]:
+			return false
 	return true
 
 func _move_action(action: Dictionary) -> bool:
@@ -117,10 +206,16 @@ func _move_action(action: Dictionary) -> bool:
 	var target := position + direction
 	if cache.tile_at(target) not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW]:
 		return _fail("Blocked — no turn spent")
+	var occupant: Dictionary = roster.living_at(target)
+	if not occupant.is_empty():
+		if roster.aggressive(occupant) and visible.has(target):
+			return _attack_action({"type": "attack", "target_id": occupant.instance_id}) # Bump attack.
+		return _fail("%s blocks the way — press F to attack it (no turn spent)" % occupant.definition.name)
 	cache.follow(target)
-	if not objects.follow(target):
+	if not objects.follow(target) or not roster.follow(target, cache.chunks):
 		cache.follow(position)
-		return _fail(objects.last_error)
+		objects.follow(position)
+		return _fail(objects.last_error if not objects.last_error.is_empty() else roster.last_error)
 	position = target
 	run.state.character.position = {"x": position.x, "y": position.y}
 	_reveal()
@@ -205,30 +300,13 @@ func _reveal() -> void:
 					dirty = true
 
 func _line_visible(target: Vector2i) -> bool:
-	# Integer Bresenham; the first opaque tile is visible, terrain behind is hidden.
-	var current := position
-	var dx := absi(target.x - current.x)
-	var dy := -absi(target.y - current.y)
-	var step_x := 1 if current.x < target.x else -1
-	var step_y := 1 if current.y < target.y else -1
-	var error := dx + dy
-	while current != target:
-		var doubled := 2 * error
-		if doubled >= dy:
-			error += dy
-			current.x += step_x
-		if doubled <= dx:
-			error += dx
-			current.y += step_y
-		if current == target:
-			return true
-		if cache.tile_at(current) in [Terrain.TREE, Terrain.ROCK]:
-			return false
-	return true
+	return line_clear(position, target)
 
 func save() -> bool:
 	if run.is_empty():
 		return _fail("No active run")
+	if run.state.status == "dead" and run.mode != "permadeath":
+		return _fail("Normal-mode death is never saved; load your last save instead")
 	if not dirty:
 		last_error = ""
 		return true

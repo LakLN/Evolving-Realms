@@ -221,7 +221,7 @@ func _test_restart() -> void:
 		var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--script", "res://tests/interaction_restart_probe.gd", "--", phase, directory + "/restart.json"]
 		var code := OS.execute(OS.get_executable_path(), args, output, true)
 		print("Interaction restart ", phase, ": ", output)
-		check(code == 0 and str(output).contains("INTERACTION RESTART PASS"), "Separate-process inventory/consumption persistence " + phase)
+		check(code == 0 and str(output).contains("INTERACTION RESTART PASS") and not str(output).contains("SCRIPT ERROR"), "Separate-process inventory/consumption persistence " + phase)
 
 func _test_legacy() -> void:
 	var store := Store.new()
@@ -242,5 +242,5 @@ func _test_legacy() -> void:
 	var found := Helpers.route_to_object(session, "gather")
 	var worked := not found.is_empty() and Helpers.walk(session, found.route) and session.interact(found.instance.instance_id) and session.save()
 	var loaded: Dictionary = store.load_run(run.run_id)
-	check(worked and Helpers.same(loaded.state.inventory["mock:moonleaf"], run.state.inventory["mock:moonleaf"]) and Helpers.same(loaded.state.character.stats, run.state.character.stats) and loaded.state.character.legacy_character_note == "keep" and Helpers.same(store.load_world(world.world_id), world), "New interaction/save preserves legacy inventory, stats, extra data and Blueprint")
+	check(worked and Helpers.same(loaded.state.inventory["mock:moonleaf"], run.state.inventory["mock:moonleaf"]) and loaded.state.character.stats.custom_stat == 3 and int(loaded.state.character.stats.hp) <= 12 and loaded.state.character.stats.max_hp == 30 and loaded.state.character.legacy_character_note == "keep" and Helpers.same(store.load_world(world.world_id), world), "New interaction/save preserves legacy inventory, custom stats (plus combat defaults), extra data and Blueprint")
 	store.close()

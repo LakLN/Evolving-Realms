@@ -6,11 +6,13 @@ authoring process, not a dependency for movement, saving or combat.
 
 ## Modules and planned layout
 
-- src/core: implemented weighted LootTable and Inventory model; future simulation/effects.
+- src/core: weighted LootTable, Inventory, Combat rules and CreatureAI decisions.
 - src/world: implemented terrain_v1, bounded chunk cache, spawn selector,
   TileMapLayer renderer, world_objects v1 layer and code-native placeholder art.
 - src/run: implemented ExplorationSession: cardinal actions/turns, sight,
-  per-run discovery, extensible action dispatch and save/resume over GameStore.
+  per-run discovery, extensible action dispatch and save/resume over GameStore;
+  CreatureRoster: runtime creatures, creature turns, attacks and loot.
+- src/world/world_creatures.gd: species validation and creature placements v1.
 - src/main.gd: World/Run menu, keyboard input, camera/HUD, inventory and save-on-exit.
   Opt-in launch arguments after `--`: `--database=<path>` and `--acceptance=<phase>`.
 - src/acceptance: opt-in release acceptance driving the real main scene. It ships in
@@ -135,6 +137,18 @@ committed save. A second close request after a failed save is the only path that
 discards unsaved play. Ctrl+S saves; F5 is left to the Godot editor.
 tests/integration_suite.gd covers write locks, stale sessions, failed exits, separate-
 process write/kill/verify, consistency across Blueprint/Run/Registry and fog growth.
+
+## Creatures, combat and death — Milestone 02 Checkpoint A
+
+Creatures are `kind: creature` definitions from content/creatures_pack.json
+(capability `definition.creature`). Home placements are derived per chunk like
+objects (separate hash streams, `crt:v1/...` IDs). Per-run hp/position/death/loot
+are entity mutations referencing a placement materialized on first change. Turn
+order: player action, turn+1, regeneration, then each creature within 12 tiles once
+in ID order. Combat formulas live only in src/core/combat.gd. Normal-mode deaths are
+refused by both the session and GameStore. Permadeath saves the death immediately and
+relies on the existing dead-run read-only rule. No schema or generation version
+changed. Details: [CREATURES_AND_COMBAT.md](CREATURES_AND_COMBAT.md).
 
 Registry validates structure and references before registration. Missing engine
 capabilities preserve the definition as pending; only supported active definitions

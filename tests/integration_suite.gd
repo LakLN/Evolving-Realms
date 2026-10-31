@@ -64,12 +64,12 @@ func _test_locked_save() -> void:
 	check(session.last_error.contains("locked"), "Write failure is reported to the player")
 	var saved: Dictionary = blocker.rows("SELECT state_json, revision FROM runs WHERE run_id=?", [session.run.run_id])[0]
 	check(JSON.parse_string(saved.state_json).inventory.is_empty() and int(saved.revision) == revision, "Failed save leaves the last good save untouched")
-	check(blocker.rows("SELECT COUNT(*) AS n FROM run_entity_states WHERE run_id=?", [session.run.run_id])[0].n == 0, "Failed save writes no partial object mutation")
+	check(blocker.rows("SELECT COUNT(*) AS n FROM run_entity_states WHERE run_id=?", [session.run.run_id])[0].n == 0, "Failed save writes no partial object or creature mutation")
 	blocker.execute("ROLLBACK")
 	blocker.close()
 	check(session.save() and not session.dirty, "Retry after the lock clears saves the pending state")
 	var loaded: Dictionary = store.load_run(session.run.run_id)
-	check(Acceptance.same(loaded.state.inventory, inventory) and loaded.state.entity_mutations.size() == 1, "Retried save contains items exactly once with their consumed object")
+	check(Acceptance.same(loaded.state.inventory, inventory) and loaded.state.entity_mutations.values().filter(func(m: Dictionary) -> bool: return not m.has("creature")).size() == 1, "Retried save contains items exactly once with their consumed object")
 	store.close()
 
 func _test_stale_second_session() -> void:
@@ -128,14 +128,14 @@ func _test_acceptance_processes() -> void:
 		var log := str(output)
 		print("Acceptance ", phase, " exit ", code, ": ", log.right(400))
 		if phase == "crash":
-			check(log.contains("terminating without saving") and not log.contains("FAIL:"), "Process killed with unsaved actions")
+			check(log.contains("terminating without saving") and not log.contains("FAIL:") and not log.contains("SCRIPT ERROR"), "Process killed with unsaved actions")
 		else:
-			check(code == 0 and log.contains("STANDALONE ACCEPTANCE %s:" % phase) and log.contains(" 0 failures"), "Separate-process acceptance " + phase)
+			check(code == 0 and log.contains("STANDALONE ACCEPTANCE %s:" % phase) and log.contains(" 0 failures") and not log.contains("SCRIPT ERROR"), "Separate-process acceptance " + phase)
 	var copy := directory + "/legacy-copy.sqlite"
 	DirAccess.copy_absolute(database, copy)
 	var output: Array = []
 	var code := OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--database=" + copy, "--acceptance=legacy"], output, true)
-	check(code == 0 and str(output).contains(" 0 failures"), "Existing save resumes and saves without losing items")
+	check(code == 0 and str(output).contains(" 0 failures") and not str(output).contains("SCRIPT ERROR"), "Existing save resumes and saves without losing items")
 	var output_refused: Array = []
 	code = OS.execute(OS.get_executable_path(), ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--", "--acceptance=write"], output_refused, true)
 	check(code == 2, "Acceptance refuses to run against the default personal save")
@@ -166,12 +166,15 @@ func _test_exploration_growth() -> void:
 	store.open(directory + "/growth.sqlite")
 	var session := _started(store, "Growth")
 	var steps := 0
-	while steps < 400:
+	for _attempt in 2000: # Bounded: creatures can block a step or end the run.
+		if steps >= 400 or session.is_dead():
+			break
 		var path := Acceptance.route(session, func(tile: Vector2i) -> bool: return not session.explored.has(tile))
 		if path.is_empty():
 			break
 		for tile in path:
 			if not session.try_move(tile - session.position):
+				session.wait_turn() # Blocked by a creature: let it move on.
 				break
 			steps += 1
 	session.save()

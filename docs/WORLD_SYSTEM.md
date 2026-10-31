@@ -109,7 +109,8 @@ Run -> map. Blank seeds use a random seed then persist it; no new World/Run is
 created implicitly on startup. HUD reports position, biome, turns, exploration,
 chunk count and unsaved marker. Hover saved runs for full ID/creation timestamp.
 
-WASD/arrows move; E interacts; I shows inventory. Ctrl+S saves. Esc closes inventory
+WASD/arrows move; E interacts; F attacks; Tab picks a target; Space waits; I shows
+inventory. Ctrl+S saves. Esc closes inventory
 first, otherwise Esc or Save & menu saves before unloading terrain.
 Window close saves before quit. On save failure the map remains open with an error;
 the app never silently discards unsaved changes or chooses a fresh DB as a fallback.

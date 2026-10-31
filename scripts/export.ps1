@@ -34,8 +34,10 @@ No Python, server, internet or account is needed.
 Saves: %APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite
 (shared with runs started from the Godot editor; never stored in this folder).
 
-Controls: WASD / arrows move, E gather/open/pick up, I inventory,
+Controls: WASD / arrows move (walk into a hostile creature to attack), E gather/open/pick up,
+F attack adjacent target, Tab next target, Space wait, I inventory,
 Ctrl+S save, Esc close inventory or save & return to menu.
+Normal mode: death reloads your last save. Permadeath: death ends the run.
 Closing the window saves first. If saving fails, close again to quit without saving.
 '@ | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $build 'README.txt')
 Write-Host "PASS export: $build"

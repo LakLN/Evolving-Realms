@@ -1,7 +1,11 @@
 extends Node2D
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Palette = preload("res://src/world/tile_palette.gd")
+const DISPOSITION_COLORS := {"hostile": Color("e0564b"), "neutral": Color("e0b34b"), "passive": Color("7fd17a")}
+const BODY_COLORS := {"wolf": Color("9aa2a8"), "boar": Color("8a5a3c"), "rabbit": Color("e6dccb"), "deer": Color("c08a52"), "crab": Color("e2713f")}
 var session: RefCounted
+## Selected combat target, highlighted on the map.
+var target_id := ""
 var chunk_nodes: Dictionary = {}
 var _tiles: TileSet
 var camera: Camera2D
@@ -102,6 +106,68 @@ func _draw_objects() -> void:
 			_draw_object_icon(point, definition.payload.get("visual", "resource"), consumed)
 			if not target.is_empty() and target.instance_id == instance.instance_id:
 				_object_layer.draw_rect(Rect2(point - Vector2(14, 14), Vector2(28, 28)), Color("f8df8b"), false, 1.5)
+	if session.roster == null:
+		return
+	for creature in session.roster.creatures.values():
+		# Creatures move, so only those in current sight are shown; dead ones vanish.
+		if creature.dead or not session.visible.has(creature.position):
+			continue
+		var point := (Vector2(creature.position - origin) + Vector2(0.5, 0.5)) * Palette.SIZE
+		_draw_creature(point, creature)
+		if creature.instance_id == target_id:
+			_object_layer.draw_rect(Rect2(point - Vector2(15, 15), Vector2(30, 30)), Color("fff2b0"), false, 2.0)
+
+func _draw_creature(point: Vector2, creature: Dictionary) -> void:
+	var payload: Dictionary = creature.definition.payload
+	var ring: Color = DISPOSITION_COLORS.get(payload.disposition, Color.WHITE)
+	_object_layer.draw_circle(point + Vector2(1, 6), 11, Color(0, 0, 0, 0.3))
+	_object_layer.draw_circle(point, 10, BODY_COLORS.get(payload.get("visual", ""), Color("b9a6d6")))
+	_object_layer.draw_arc(point, 12, 0, TAU, 24, ring, 2.5, true)
+	var glyph := str(creature.definition.name).split(" ")[-1].left(1).to_upper() # "Grey wolf" -> W
+	_object_layer.draw_string(ThemeDB.fallback_font, point + Vector2(-5, 5), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("1d1b19"))
+	if creature.hp < creature.max_hp:
+		var width := 24.0
+		_object_layer.draw_rect(Rect2(point + Vector2(-12, -18), Vector2(width, 4)), Color(0, 0, 0, 0.7))
+		_object_layer.draw_rect(Rect2(point + Vector2(-12, -18), Vector2(width * creature.hp / creature.max_hp, 4)), ring)
+
+func show_events(events: Array) -> void:
+	## Floating damage/death/regeneration numbers above the affected tile.
+	if session == null:
+		return
+	var origin: Vector2i = session.cache.center * Terrain.CHUNK_SIZE
+	for event in events:
+		var text := ""
+		var color := Color.WHITE
+		var tile: Vector2i = session.position
+		match event.type:
+			"hit":
+				text = "-%d" % event.damage
+				color = Color("ff7a6b") if event.target == "player" else Color("ffe08a")
+				tile = Vector2i(int(event.position.x), int(event.position.y))
+			"creature_death":
+				text = "defeated"
+				color = Color("d8d8d8")
+				tile = Vector2i(int(event.position.x), int(event.position.y))
+			"regen":
+				text = "+1"
+				color = Color("8be08b")
+			_:
+				continue
+		var popup := Label.new()
+		popup.text = text
+		popup.z_index = 30
+		popup.add_theme_font_size_override("font_size", 18)
+		popup.add_theme_color_override("font_color", color)
+		popup.add_theme_color_override("font_outline_color", Color.BLACK)
+		popup.add_theme_constant_override("outline_size", 4)
+		# Player numbers rise on the left, creature numbers on the right: no overlap.
+		var side := -0.35 if event.get("target", "") == "player" or event.type == "regen" else 0.55
+		popup.position = (Vector2(tile - origin) + Vector2(side, -0.55)) * Palette.SIZE
+		add_child(popup)
+		var tween := popup.create_tween()
+		tween.tween_property(popup, "position:y", popup.position.y - 22, 0.8)
+		tween.parallel().tween_property(popup, "modulate:a", 0.0, 0.8)
+		tween.tween_callback(popup.queue_free)
 
 func _draw_object_icon(point: Vector2, visual: String, consumed: bool) -> void:
 	_object_layer.draw_circle(point + Vector2(1, 7), 10, Color(0, 0, 0, 0.25))

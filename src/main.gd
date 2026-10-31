@@ -21,6 +21,7 @@ var _name_entry: LineEdit
 var _world_seed: LineEdit
 var _run_seed: LineEdit
 var _biome: OptionButton
+var _mode: OptionButton
 var _create_world: Button
 var _new_run: Button
 var _resume: Button
@@ -28,6 +29,13 @@ var _status: Label
 var _info: Label
 var _notice: Label
 var _interaction_hint: Label
+var _target_hint: Label
+var _hp_bar: ProgressBar
+var _hp_label: Label
+var _death_panel: PanelContainer
+var _death_text: Label
+var _death_reload: Button
+var _target_id := ""
 var _inventory_panel: PanelContainer
 var _inventory_list: ItemList
 var _inventory_detail: Label
@@ -61,6 +69,7 @@ func _ready() -> void:
 	_build_menu(frame)
 	_build_hud(frame)
 	_build_inventory(frame)
+	_build_death_screen(frame)
 	var options := launch_options()
 	database_path = options.get("database", database_path)
 	if options.has("acceptance") and ProjectSettings.globalize_path(database_path) == ProjectSettings.globalize_path(DEFAULT_DATABASE):
@@ -119,6 +128,11 @@ func _build_menu(parent: Control) -> void:
 		_biome.add_item("Starting biome: " + biome)
 		_biome.set_item_metadata(_biome.item_count - 1, biome)
 	left.add_child(_biome)
+	_mode = OptionButton.new()
+	for mode in ["normal", "permadeath"]:
+		_mode.add_item("Mode: " + mode + (" (death reloads last save)" if mode == "normal" else " (death ends the run)"))
+		_mode.set_item_metadata(_mode.item_count - 1, mode)
+	left.add_child(_mode)
 	_run_seed = _entry(left, "Run seed (blank = random)", "")
 	_new_run = _button(left, "Begin a new run", _on_new_run)
 	var right := VBoxContainer.new()
@@ -127,7 +141,7 @@ func _build_menu(parent: Control) -> void:
 	body.add_child(right)
 	_label(right, "SAVED RUNS", 20)
 	_runs = ItemList.new()
-	_runs.custom_minimum_size = Vector2(450, 285)
+	_runs.custom_minimum_size = Vector2(450, 330)
 	_runs.item_selected.connect(func(_index: int) -> void: _resume.disabled = false)
 	_runs.item_activated.connect(func(_index: int) -> void: _on_resume())
 	right.add_child(_runs)
@@ -136,7 +150,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD / Arrows: move    E: interact    I: inventory    Ctrl+S: save    Esc: save & menu", 16)
+	_label(column, "WASD/Arrows: move    E: interact    F: attack    Tab: next target    Space: wait    I: inventory    Ctrl+S: save    Esc: save & menu", 15)
 
 func _build_hud(parent: Control) -> void:
 	_hud = Control.new()
@@ -152,9 +166,22 @@ func _build_hud(parent: Control) -> void:
 	top.add_child(row)
 	_info = _label(row, "", 17)
 	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var health := VBoxContainer.new()
+	health.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(health)
+	_hp_label = _label(health, "HP", 15)
+	_hp_bar = ProgressBar.new()
+	_hp_bar.custom_minimum_size = Vector2(130, 14)
+	_hp_bar.show_percentage = false
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color("c9483f")
+	_hp_bar.add_theme_stylebox_override("fill", fill)
+	health.add_child(_hp_bar)
 	_button(row, "Inventory [I]", _toggle_inventory).focus_mode = Control.FOCUS_NONE
 	_button(row, "Save [Ctrl+S]", _save_game).focus_mode = Control.FOCUS_NONE
-	_button(row, "Save & menu [Esc]", _return_to_menu).focus_mode = Control.FOCUS_NONE
+	var menu_button := _button(row, "Menu [Esc]", _return_to_menu)
+	menu_button.focus_mode = Control.FOCUS_NONE
+	menu_button.tooltip_text = "Save and return to the menu"
 	var bottom := PanelContainer.new()
 	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	bottom.offset_top = -100
@@ -164,8 +191,9 @@ func _build_hud(parent: Control) -> void:
 	bottom.add_child(column)
 	_notice = _label(column, "", 17)
 	_interaction_hint = _label(column, "", 17)
-	_label(column, "WASD / Arrows: move  |  E: gather / open / pick up  |  I: inventory  |  Objects do not block movement", 15)
-	_label(column, "Black: unexplored  /  Dim: remembered  /  Bright: visible. Blocked steps cost no turns.", 15)
+	_target_hint = _label(column, "", 17)
+	_label(column, "WASD/Arrows: move (walk into a hostile = attack)  |  E: gather/open  |  F: attack  |  Tab: next target  |  Space: wait  |  I: inventory", 15)
+	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
 
 func _build_inventory(parent: Control) -> void:
@@ -194,8 +222,51 @@ func _build_inventory(parent: Control) -> void:
 	_button(column, "Close [I / Esc]", _toggle_inventory)
 	_inventory_panel.hide()
 
+func _build_death_screen(parent: Control) -> void:
+	_death_panel = PanelContainer.new()
+	_death_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_death_panel.custom_minimum_size = Vector2(520, 0)
+	_death_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_death_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var backdrop := StyleBoxFlat.new()
+	backdrop.bg_color = Color(0.07, 0.06, 0.07, 0.96)
+	backdrop.border_color = Color("8d3b33")
+	backdrop.set_border_width_all(2)
+	backdrop.set_content_margin_all(22)
+	_death_panel.add_theme_stylebox_override("panel", backdrop)
+	parent.add_child(_death_panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 12)
+	_death_panel.add_child(column)
+	var title := _label(column, "YOU DIED", 34)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.modulate = Color("f09283")
+	_death_text = _label(column, "", 17)
+	_death_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_death_reload = _button(column, "Load last save", _reload_after_death)
+	_button(column, "Return to menu", _return_to_menu)
+	_death_panel.hide()
+
+func _show_death() -> void:
+	_inventory_panel.hide()
+	var permadeath: bool = session.run.mode == "permadeath"
+	_death_text.text = ("Permadeath: this run has ended and cannot be continued. The world remains; begin a new run from the menu." if permadeath else "Normal mode: the death was not saved. Load your last save to continue from it.") + "\nTurn %d." % int(session.run.state.turn)
+	_death_reload.visible = not permadeath
+	_death_panel.show()
+
+func _reload_after_death() -> void:
+	if session == null:
+		return
+	var next := Session.new(store)
+	if not next.resume(session.run.run_id):
+		_notice.text = next.last_error
+		return
+	_death_panel.hide()
+	_enter_map(next)
+	_notice.text = "Loaded your last save."
+
 func _toggle_inventory() -> void:
-	if session == null or _menu.visible:
+	if session == null or _menu.visible or session.is_dead():
 		return
 	_inventory_panel.visible = not _inventory_panel.visible
 	_hold_delay = 0.2
@@ -267,7 +338,7 @@ func _refresh_runs() -> void:
 	if _new_run.disabled:
 		return
 	for run in store.list_runs(_selected_world()):
-		_runs.add_item("%s  |  seed %d  |  %s" % [str(run.run_id).left(8), run.seed, run.mode])
+		_runs.add_item("%s  |  seed %d  |  %s%s" % [str(run.run_id).left(8), run.seed, run.mode, "  |  ENDED" if run.status == "dead" else ""])
 		_runs.set_item_metadata(_runs.item_count - 1, run.run_id)
 		_runs.set_item_tooltip(_runs.item_count - 1, "%s\nCreated: %s" % [run.run_id, run.created_at])
 	if _runs.item_count > 0:
@@ -303,7 +374,7 @@ func _on_new_run() -> void:
 	if seed_value == null or _selected_world().is_empty():
 		return
 	var next := Session.new(store)
-	if not next.start_new(_selected_world(), seed_value, _biome.get_item_metadata(_biome.selected)):
+	if not next.start_new(_selected_world(), seed_value, _biome.get_item_metadata(_biome.selected), _mode.get_item_metadata(_mode.selected)):
 		_message(next.last_error, true)
 		_refresh_runs()
 		return
@@ -321,6 +392,8 @@ func _on_resume() -> void:
 
 func _enter_map(active_session: RefCounted) -> void:
 	session = active_session
+	_target_id = ""
+	_death_panel.hide()
 	_menu.hide()
 	_hud.show()
 	map_view.show()
@@ -332,12 +405,91 @@ func _enter_map(active_session: RefCounted) -> void:
 	get_viewport().gui_release_focus()
 
 func _update_info() -> void:
-	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d)  |  %s  |  Turn %d  |  Explored %d  |  Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s | Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	var stats: Dictionary = session.stats()
+	_hp_label.text = "HP %d / %d  ATK %d DEF %d" % [stats.hp, stats.max_hp, stats.attack, stats.defense]
+	_hp_bar.max_value = int(stats.max_hp)
+	_hp_bar.value = int(stats.hp)
+	var foe := current_target()
+	map_view.target_id = "" if foe.is_empty() else foe.instance_id
+	if foe.is_empty():
+		_target_hint.text = "No creature next to you."
+	else:
+		var count: int = session.roster.targets(session).size()
+		_target_hint.text = "Target: %s (%s, %s)  HP %d/%d  ATK %d DEF %d  |  F: attack%s" % [foe.definition.name, foe.definition.payload.disposition, foe.state, foe.hp, foe.max_hp, foe.definition.payload.stats.attack, foe.definition.payload.stats.defense, "  Tab: next (%d)" % count if count > 1 else ""]
 	var target: Dictionary = session.interaction_target()
 	_interaction_hint.text = "E: interact on your tile or a cardinal neighbor.  I: view inventory."
 	if not target.is_empty():
 		var definition: Dictionary = session.objects.definition_for(target)
 		_interaction_hint.text = "E: %s %s  /  (%d, %d)" % [str(definition.payload.interaction).capitalize(), definition.name, target.position.x, target.position.y]
+
+func current_target() -> Dictionary:
+	## Selected adjacent creature; falls back to the first valid one (ID order).
+	if session == null:
+		return {}
+	var nearby: Array = session.roster.targets(session)
+	for creature in nearby:
+		if creature.instance_id == _target_id:
+			return creature
+	return {} if nearby.is_empty() else nearby[0]
+
+func _cycle_target() -> void:
+	var nearby: Array = session.roster.targets(session)
+	if nearby.is_empty():
+		_notice.text = "No creature next to you to target."
+		return
+	var index := 0
+	for i in nearby.size():
+		if nearby[i].instance_id == current_target().instance_id:
+			index = (i + 1) % nearby.size()
+	_target_id = nearby[index].instance_id
+	_update_info()
+
+func _attack() -> void:
+	var foe := current_target()
+	if foe.is_empty():
+		_notice.text = "Nothing to attack — stand next to a creature (no turn spent)."
+		_update_info()
+		return
+	_target_id = foe.instance_id
+	_after_action(session.attack_target(foe.instance_id))
+
+func _wait() -> void:
+	_after_action(session.wait_turn(), "You wait a turn.")
+
+func _after_action(accepted: bool, quiet: String = "") -> void:
+	## Shared feedback for every turn-spending action.
+	if not accepted:
+		_notice.text = session.last_error
+		_update_info()
+		return
+	map_view.refresh()
+	map_view.show_events(session.last_events)
+	var text := describe_events(session.last_events)
+	_notice.text = text if not text.is_empty() else quiet
+	_update_info()
+	if session.is_dead():
+		_show_death()
+
+static func describe_events(events: Array) -> String:
+	var parts := PackedStringArray()
+	for event in events:
+		match event.type:
+			"hit":
+				if event.attacker == "player":
+					parts.append("You hit %s for %d (%d/%d)." % [event.name, event.damage, event.hp, event.max_hp])
+				else:
+					parts.append("%s hits you for %d!" % [event.name, event.damage])
+			"creature_death":
+				var received := PackedStringArray()
+				for item in event.received:
+					received.append("%s x%d" % [item.name, item.quantity])
+				parts.append("%s dies. Loot: %s." % [event.name, ", ".join(received)])
+			"player_death":
+				parts.append("You have died.")
+			"death_save_failed":
+				parts.append("Could not record the death: " + event.error)
+	return " ".join(parts)
 
 func _interact() -> void:
 	if session == null or _inventory_panel.visible:
@@ -346,28 +498,27 @@ func _interact() -> void:
 		var received := PackedStringArray()
 		for item in session.last_result.received:
 			received.append("%s x%d" % [item.name, item.quantity])
-		_notice.text = "Received: " + ", ".join(received)
-		map_view.refresh()
+		_after_action(true)
+		_notice.text = ("Received: " + ", ".join(received) + " " + _notice.text).strip_edges()
 	else:
-		_notice.text = session.last_error
-	_update_info()
+		_after_action(false)
 
 func move_player(direction: Vector2i) -> bool:
-	if session == null or _menu.visible or _inventory_panel.visible:
+	if session == null or _menu.visible or _inventory_panel.visible or session.is_dead():
 		return false
 	var moved: bool = session.try_move(direction)
-	if moved:
-		map_view.refresh()
-		_notice.text = "" if session.dirty else "Saved."
-	else:
-		_notice.text = session.last_error
-	_update_info()
+	_after_action(moved)
 	return moved
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if session == null or _menu.visible or not event is InputEventKey or not event.pressed or event.echo:
 		return
 	if _inventory_panel.visible:
+		return
+	if session.is_dead():
+		if event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE:
+			_return_to_menu()
+		get_viewport().set_input_as_handled()
 		return
 	if _is_save_shortcut(event):
 		_save_game()
@@ -379,6 +530,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_interact()
 	elif event.keycode == KEY_I or event.physical_keycode == KEY_I:
 		_toggle_inventory()
+	elif event.keycode == KEY_F or event.physical_keycode == KEY_F:
+		_attack()
+	elif event.keycode == KEY_TAB or event.physical_keycode == KEY_TAB:
+		_cycle_target()
+	elif event.keycode == KEY_SPACE or event.physical_keycode == KEY_SPACE:
+		_wait()
 	else:
 		for action in MOVE_KEYS:
 			if event.is_action_pressed(action):
@@ -402,7 +559,7 @@ static func _is_save_shortcut(event: InputEventKey) -> bool:
 	return event.ctrl_pressed and (event.keycode == KEY_S or event.physical_keycode == KEY_S)
 
 func _process(delta: float) -> void:
-	if session == null or _menu.visible or _inventory_panel.visible:
+	if session == null or _menu.visible or _inventory_panel.visible or session.is_dead():
 		return
 	_hold_delay -= delta
 	if _hold_delay > 0 or Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT):
@@ -426,12 +583,18 @@ func _save_game() -> void:
 func _return_to_menu() -> void:
 	if session == null:
 		return
-	if not session.save():
+	if session.is_dead():
+		# Normal: the death is discarded and the last save stays. Permadeath: retry
+		# recording the ending if the immediate death save failed.
+		if session.run.mode == "permadeath":
+			session.save()
+	elif not session.save():
 		_notice.text = "Save failed; staying in game: " + session.last_error
 		return
 	var world_id: String = session.world.world_id
 	session = null
 	_inventory_panel.hide()
+	_death_panel.hide()
 	map_view.clear_map()
 	map_view.hide()
 	_hud.hide()
@@ -444,6 +607,11 @@ func _message(text: String, error: bool = false) -> void:
 	_status.modulate = Color("f09283") if error else Color("d4c899")
 
 func _request_exit() -> void:
+	if session != null and session.is_dead():
+		if session.run.mode == "permadeath":
+			session.save()
+		get_tree().quit()
+		return
 	if session != null and not _discard_on_exit and not session.save():
 		# Never trap the player: a second close request explicitly discards unsaved play.
 		_discard_on_exit = true

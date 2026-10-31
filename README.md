@@ -1,9 +1,10 @@
 # Evolving Realms
 
 AI-Evolving Sandbox RPG — Godot / GDScript, Windows first.
-Current state: **Milestone 01 complete (Checkpoint E)**. Create/select a world,
-explore seeded biomes, gather resources, open chests and inspect inventory in
-independent saved runs — in the editor or as a standalone Windows x64 build.
+Current state: **Milestone 02, Checkpoint A complete** (Milestone 01 complete).
+Create/select a world, explore seeded biomes, gather resources, open chests, meet
+creatures by biome, fight them turn by turn on the map, collect their loot and face
+death in normal or permadeath runs, in the editor or as a standalone Windows x64 build.
 Gameplay and SQLite persistence run completely offline inside Godot.
 
 ## Play the standalone Windows build
@@ -22,30 +23,44 @@ editor's F5 (Run Project). F5 belongs to the editor; the game saves with **Ctrl+
 
 1. Enter a world name and optional signed 32-bit seed, then click **Create world**.
    Existing worlds are available in the dropdown.
-2. Choose **Starting biome** (any/forest/beach/meadow), optionally enter a run seed,
-   then click **Begin a new run**. Blank seeds are randomized and persisted.
+2. Choose **Starting biome** (any/forest/beach/meadow) and **Mode** (normal: death
+   reloads your last save; permadeath: death ends the run), optionally enter a run
+   seed, then click **Begin a new run**. Blank seeds are randomized and persisted.
 3. Move with **WASD / arrow keys**. Each valid cardinal step spends one turn;
    water, trees and rocks block movement without spending a turn.
 4. Find a highlighted object on your tile or a cardinal neighbor. **E** gathers
    resources, opens chests or picks up loose items; successful interactions spend
    one turn. Depleted resources do not respawn in the same run.
-5. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
+5. Creatures: forest has Grey wolves (hostile, red ring) and Wild boars (neutral,
+   amber: fight back when attacked); meadow has rabbits and deer (passive, green: they
+   flee); beaches have Shore crabs (neutral). Stand on a cardinal neighbor and press
+   **F** to attack the target shown in the bottom panel (**Tab** picks the next
+   adjacent creature). Walking into a hostile creature also attacks. **Space** waits a
+   turn. Every accepted action spends one turn, then nearby creatures act once.
+   Refused actions (no target, blocked) spend nothing. Kills drop loot straight into the
+   inventory, once. HP (top bar) regenerates 1 point every 10 turns.
+6. At 0 HP you die. **Normal:** the death is not saved; choose **Load last save** or
+   return to the menu. **Permadeath:** the death is saved, the run is marked ENDED
+   and cannot be continued; start a new run in the same world.
+7. **I** / **Inventory** shows names, descriptions, type, quantities and stack rules.
    Movement pauses while it is open. **I / Esc** closes inventory.
-6. **Ctrl+S** or **Save** saves locally, also while inventory is open.
-   **Esc** / **Save & menu** saves before leaving the map (Esc closes inventory first).
+8. **Ctrl+S** or **Save** saves locally, also while inventory is open.
+   **Esc** / **Menu** saves before leaving the map (Esc closes inventory first).
    Window close also saves. If a save fails, the game stays open and reports the error;
    closing again quits *without* saving (only changes since the last save are lost).
    There is no autosave: a crash or forced kill returns to the last save.
-7. Choose a saved run and **Continue selected run**, or create another run in the
-   same world. Geography stays consistent; inventory, discovery and object state
-   are independent per run. Chests pay only once per run and reload cannot reroll loot.
+9. Choose a saved run and **Continue selected run**, or create another run in the
+   same world. Geography stays consistent; inventory, discovery, object and creature
+   state are independent per run. Chests and creatures pay only once per run and reload
+   cannot reroll loot or revive killed creatures.
 
 Black tiles are undiscovered, dim tiles are remembered, bright tiles are visible.
 The HUD shows tile, biome, turns, chunk count and interaction target. Resources and
 chests are non-blocking; terrain collision is unchanged. New UI-created Worlds
 also establish a seeded fixed Wayfarer's cache in their Blueprint. Existing Worlds
 keep their Blueprint and receive procedural resources/chests through the data pack.
-No combat, creatures, crafting, equipment or item-use effects are implemented.
+Creature/combat design, data format and limits: [docs/CREATURES_AND_COMBAT.md](docs/CREATURES_AND_COMBAT.md).
+No talents, item quality, skills, equipment, crafting or item-use effects yet.
 
 PowerShell commands from the repository root:
 
@@ -129,7 +144,7 @@ the vendored godot-sqlite v4.9 GDExtension; Python is entirely optional.
 
 ## Handoff
 
-Read [progress](docs/PROGRESS.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
+Read [progress](docs/PROGRESS.md), [creatures and combat](docs/CREATURES_AND_COMBAT.md), [objects and inventory](docs/OBJECTS_AND_INVENTORY.md),
 [world system](docs/WORLD_SYSTEM.md), [data API](docs/DATA_API.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 Default saves live at `user://realms.sqlite`, outside the repository. Native Windows

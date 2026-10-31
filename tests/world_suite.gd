@@ -247,4 +247,4 @@ func _test_restart() -> void:
 		var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--script", "res://tests/world_restart_probe.gd", "--", phase, directory + "/restart.json"]
 		var code := OS.execute(OS.get_executable_path(), args, output, true)
 		print("World restart ", phase, ": ", output)
-		check(code == 0 and str(output).contains("WORLD RESTART PASS"), "Restarted application terrain/fog/position " + phase)
+		check(code == 0 and str(output).contains("WORLD RESTART PASS") and not str(output).contains("SCRIPT ERROR"), "Restarted application terrain/fog/position " + phase)

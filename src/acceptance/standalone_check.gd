@@ -64,11 +64,17 @@ func _write() -> void:
 	check(not chest.is_empty(), "Open a chest with E")
 	if chest.is_empty():
 		return
+	var prey := await _hunt()
+	check(not prey.is_empty(), "Hunt a creature with movement keys and F; loot reported")
+	if prey.is_empty():
+		return
+	await _capture("standalone-combat.png")
 	var inventory: Dictionary = app.session.run.state.inventory.duplicate(true)
 	var turn := int(app.session.run.state.turn)
 	for _attempt in 3:
 		app.session.interact(chest.instance_id)
-	check(same(app.session.run.state.inventory, inventory) and int(app.session.run.state.turn) == turn, "Repeated interaction on an opened chest pays nothing and spends no turn")
+		app.session.attack_target(prey.instance_id)
+	check(same(app.session.run.state.inventory, inventory) and int(app.session.run.state.turn) == turn, "Repeated chest interaction or attack on the dead creature pays nothing and spends no turn")
 	# Stand on a chunk edge, then save with the inventory panel open.
 	var edge := route(app.session, func(tile: Vector2i) -> bool: return Terrain.local_of(tile).x in [0, 31] or Terrain.local_of(tile).y in [0, 31])
 	check(not edge.is_empty() and await _walk(edge), "Reach a chunk-edge tile")
@@ -96,7 +102,7 @@ func _write() -> void:
 	await _key(KEY_ESCAPE)
 	check(same(_state_of(run_id), snapshot), "Run 2 left Run 1 untouched")
 	var file := FileAccess.open(_expected_path, FileAccess.WRITE)
-	file.store_string(JSON.stringify({"world_id": app._selected_world(), "blueprint": app.store.load_world(app._selected_world()).blueprint, "run_1": run_id, "run_2": run2_id, "chest": chest.instance_id, "state_1": snapshot, "state_2": _state_of(run2_id)}))
+	file.store_string(JSON.stringify({"world_id": app._selected_world(), "blueprint": app.store.load_world(app._selected_world()).blueprint, "run_1": run_id, "run_2": run2_id, "chest": chest.instance_id, "creature": prey.instance_id, "state_1": snapshot, "state_2": _state_of(run2_id)}))
 	file.close()
 
 func _crash() -> void:
@@ -121,6 +127,8 @@ func _verify() -> void:
 	check(same(_state(app.session), expected.state_1), "Run 1 matches last save after restart; unsaved actions neither duplicated nor partially applied")
 	var inventory: Dictionary = app.session.run.state.inventory.duplicate(true)
 	check(not app.session.interact(expected.chest) and same(app.session.run.state.inventory, inventory), "Reloaded opened chest cannot pay again")
+	var corpse: Dictionary = app.session.roster.creatures.get(expected.creature, {})
+	check(not corpse.is_empty() and corpse.dead and not app.session.attack_target(expected.creature) and same(app.session.run.state.inventory, inventory), "Killed creature is still dead after restart; its loot cannot be taken again")
 	var database: RefCounted = app.store._db
 	var integrity: Array = database.rows("PRAGMA integrity_check")
 	check(not integrity.is_empty() and integrity[0].integrity_check == "ok" and database.rows("PRAGMA foreign_key_check").is_empty(), "SQLite integrity and foreign keys are clean")
@@ -143,7 +151,12 @@ func _legacy() -> void:
 					break
 			check(session.save(), "Legacy run saves after a move: " + session.last_error)
 			var after: Dictionary = _state_of(header.run_id)
-			check(same(after.inventory, before.inventory) and same(after.mutations, before.mutations), "Legacy run %s keeps inventory and object states" % header.run_id.left(8))
+			# A move lets creatures act, so only object states must be identical; kills stay kills.
+			var kept := true
+			for id in before.mutations:
+				var old: Dictionary = before.mutations[id]
+				kept = kept and after.mutations.has(id) and (same(after.mutations[id], old) if not old.has("creature") else (not old.dead or after.mutations[id].dead))
+			check(same(after.inventory, before.inventory) and kept, "Legacy run %s keeps inventory, object states and dead creatures" % header.run_id.left(8))
 	check(resumed > 0, "At least one legacy run resumes")
 
 func _continue(run_id: String) -> bool:
@@ -153,6 +166,29 @@ func _continue(run_id: String) -> bool:
 			app._resume.pressed.emit()
 			await _frame()
 	return check(app.session != null and app.session.run.run_id == run_id, "Continue saved Run from menu")
+
+func _hunt() -> Dictionary:
+	## Chase the nearest creature with real movement keys (Space when blocked), then F.
+	var prey := nearest_creature(app.session, ["neutral"])
+	if prey.is_empty():
+		prey = nearest_creature(app.session, ["neutral", "passive", "hostile"])
+	for _round in 300:
+		if prey.is_empty() or app.session.is_dead():
+			return {}
+		var creature: Dictionary = app.session.roster.creatures[prey.instance_id]
+		if creature.dead:
+			return creature if app._notice.text.contains("dies. Loot:") else {}
+		var direction := step_toward_creature(app.session, creature)
+		if direction == Vector2i.ZERO and absi(creature.position.x - app.session.position.x) + absi(creature.position.y - app.session.position.y) == 1:
+			app._target_id = creature.instance_id
+			await _key(KEY_F)
+		elif direction == Vector2i.ZERO or not app.move_player(direction):
+			await _key(KEY_SPACE)
+		else:
+			await _frame()
+	var last: Dictionary = app.session.roster.creatures.get(prey.get("instance_id", ""), {})
+	print("Hunt gave up: prey=%s disp=%s pos=%s player=%s hp=%s dead=%s notice=%s" % [prey.get("instance_id"), prey.get("definition", {}).get("payload", {}).get("disposition"), last.get("position"), app.session.position, last.get("hp"), last.get("dead"), app._notice.text])
+	return {}
 
 func _use_nearest(interaction: String) -> Dictionary:
 	var found := route_to_object(app.session, interaction)
@@ -241,6 +277,24 @@ static func route(session: RefCounted, goal: Callable) -> Array:
 				parents[next] = current
 				queue.append(next)
 	return []
+
+static func step_toward_creature(session: RefCounted, creature: Dictionary) -> Vector2i:
+	## First step of a shortest walkable path to a free tile next to the creature;
+	## ZERO when already adjacent or unreachable (callers then wait a turn).
+	if absi(creature.position.x - session.position.x) + absi(creature.position.y - session.position.y) == 1:
+		return Vector2i.ZERO
+	var path := route(session, func(tile: Vector2i) -> bool: return absi(tile.x - creature.position.x) + absi(tile.y - creature.position.y) == 1 and session.roster.living_at(tile).is_empty())
+	return Vector2i.ZERO if path.is_empty() else path[0] - session.position
+
+static func nearest_creature(session: RefCounted, dispositions: Array) -> Dictionary:
+	var best := {}
+	var best_distance := 1 << 30
+	for creature in session.roster.creatures.values():
+		var distance: int = absi(creature.position.x - session.position.x) + absi(creature.position.y - session.position.y)
+		if not creature.dead and creature.definition.payload.disposition in dispositions and (distance < best_distance or (distance == best_distance and creature.instance_id < best.instance_id)):
+			best = creature
+			best_distance = distance
+	return best
 
 static func route_to_object(session: RefCounted, interaction: String, excluded: Array = []) -> Dictionary:
 	## Route to a tile where an unconsumed object with this interaction is in E range.

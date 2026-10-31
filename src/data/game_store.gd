@@ -93,7 +93,7 @@ func load_run(run_id: String) -> Dictionary:
 	return run
 
 func list_runs(world_id: String) -> Array:
-	return _db.rows("SELECT run_id,world_id,seed,schema_version,mode,revision,created_at FROM runs WHERE world_id=? ORDER BY created_at,run_id", [world_id])
+	return _db.rows("SELECT run_id,world_id,seed,schema_version,mode,revision,created_at,json_extract(state_json,'$.status') AS status FROM runs WHERE world_id=? ORDER BY created_at,run_id", [world_id])
 
 func save_run(run_id: String, expected_revision: int, state: Dictionary) -> bool:
 	if not _db.execute("BEGIN IMMEDIATE"):
@@ -105,6 +105,8 @@ func save_run(run_id: String, expected_revision: int, state: Dictionary) -> bool
 		return _db.rollback("Stale run revision; reload before saving")
 	if run.mode == "permadeath" and run.state.status == "dead":
 		return _db.rollback("A dead permadeath run is read-only")
+	if run.mode == "normal" and state.get("status") == "dead":
+		return _db.rollback("Normal-mode death is never saved; the last living save stays authoritative")
 	if not _validate_state(run.world_id, state):
 		return _db.rollback(last_error)
 	var body := state.duplicate(true)

@@ -272,4 +272,4 @@ func _test_restart() -> void:
 		var args := ["--headless", "--path", ProjectSettings.globalize_path("res://"), "--script", "res://tests/restart_probe.gd", "--", phase, manifest]
 		var code := OS.execute(OS.get_executable_path(), args, output, true)
 		print("Restart child ", phase, ": ", output)
-		check(code == 0 and str(output).contains("RESTART PASS"), "Separate application process " + phase)
+		check(code == 0 and str(output).contains("RESTART PASS") and not str(output).contains("SCRIPT ERROR"), "Separate application process " + phase)

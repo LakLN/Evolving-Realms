@@ -31,10 +31,13 @@ try {
     Invoke-EngineCheck -Name 'interaction-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
     # Three injected write locks (save, window close, Save & menu) are expected.
     Invoke-EngineCheck -Name 'integration' -EngineArgs @('--headless', '--script', 'res://tests/integration_suite.gd') -Summary 'CHECKPOINT E INTEGRATION: \d+ checks, 0 failures' -ExpectedErrors @('database is locked', 'database is locked', 'database is locked')
+    Invoke-EngineCheck -Name 'combat' -EngineArgs @('--headless', '--script', 'res://tests/combat_suite.gd') -Summary 'M02 CHECKPOINT A COMBAT: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'combat-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/combat_gameplay_suite.gd') -Summary 'M02 CHECKPOINT A GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-interactions' -EngineArgs @('--script', 'res://tests/interaction_gameplay_suite.gd') -Summary 'CHECKPOINT D GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-combat' -EngineArgs @('--script', 'res://tests/combat_gameplay_suite.gd') -Summary 'M02 CHECKPOINT A GAMEPLAY: \d+ checks, 0 failures'
     }
     if ($Export) {
         # Rebuild builds/windows and run the acceptance on the exported release exe.

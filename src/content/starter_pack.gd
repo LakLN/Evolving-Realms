@@ -2,10 +2,12 @@ extends RefCounted
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
 const PATH := "res://content/starter_pack.json"
+const CREATURES_PATH := "res://content/creatures_pack.json"
 var last_error := ""
 
-func install(registry: RefCounted, world_id: String) -> bool:
-	var pack: Variant = JSON.parse_string(FileAccess.get_file_as_string(PATH))
+func install(registry: RefCounted, world_id: String, path: String = PATH) -> bool:
+	# Packs are append-only data; each version-1 definition is registered once per world.
+	var pack: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not pack is Dictionary or pack.get("pack_version") != 1 or not pack.get("definitions") is Array:
 		last_error = "Starter content pack is missing or unsupported"
 		return false

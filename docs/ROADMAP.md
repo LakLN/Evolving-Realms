@@ -19,8 +19,7 @@
   x64 release export and verification of the exported exe. No migration; schema and
   generation versions unchanged.
 
-Milestone 01 is complete. Next step: the user reviews the first build before any
-Milestone 02 scope is approved.
+Milestone 01 is complete.
 
 Acceptance: create seeded world, explore and gather/open chests in run 1, save,
 restart, resume unchanged, create independent run 2 with reset resources and the
@@ -30,6 +29,10 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
 ## Later milestones (require scope approval)
 
 02: turn combat, creatures, HP, loot, death/permadeath and save management.
+  - A (complete): data-driven creatures by biome (hostile/neutral/passive), on-map
+    turn-based combat, deterministic AI, HP/regeneration, creature loot, normal and
+    permadeath death rules, per-run creature persistence. No migration.
+  - B and later: not started; require user approval.
 03: randomized talents, effect handlers, skill books and learning requirements.
 04: real provider, region content, quests, context, dependencies and persistence.
 05: capabilities, mechanic proposals, isolated development, tests, migrations,

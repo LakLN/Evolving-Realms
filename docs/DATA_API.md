@@ -91,6 +91,12 @@ entire mutation map; omitting an entry resets it for that run only. Game rules f
 object mutation payloads and inventory slots are now implemented by Checkpoint D;
 stats/item effects still belong to later gameplay checkpoints.
 
+`list_runs` headers also include `status` (alive/dead) from the run body.
+A normal-mode run can never be saved with status `dead` (Milestone 02 A): the last
+living save stays authoritative. Creature state is an entity mutation with
+`"creature": 1` (see [CREATURES_AND_COMBAT.md](CREATURES_AND_COMBAT.md)). Player combat stats
+(hp, max_hp, attack, defense) live in `character.stats` with no schema change.
+
 `load_run` reads body/revision/mutations in a single SQLite statement. Save takes
 an IMMEDIATE transaction, checks revision, validates references, updates body and
 replaces mutations together. A stale revision fails; caller must reload and resolve
@@ -134,7 +140,7 @@ definitions form a directed acyclic graph; forward references are intentionally
 not accepted. Register dependencies first. No batch proposal graph resolver yet.
 
 Data-layer capabilities: `definition.item`, `definition.resource`,
-`definition.chest`. These mean the definition can be registered, not that gameplay
+`definition.chest`, `definition.creature` (Milestone 02 A). These mean the definition can be registered, not that gameplay
 effects exist. Unknown capabilities or unknown kinds are retained as
 `pending_capability` with missing requirements. An inactive dependency also makes
 an otherwise active proposal pending. Explicit `draft`, `hidden` and

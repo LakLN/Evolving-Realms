@@ -1,6 +1,115 @@
 # Progress — 2026-10-31 (Asia/Saigon)
 
-## Current checkpoint: E complete — Milestone 01 complete
+## Current checkpoint: Milestone 02 Checkpoint A complete (creatures, combat, death)
+
+Continued from 0eeeb4f (Milestone 01 complete, clean tree), on explicit user approval
+of Milestone 02 Checkpoint A only. Read AGENTS and all design/API docs plus source
+first. Reused: `perform_action` turn dispatch, coordinate-hash/SHA256 determinism,
+Content Registry, run `entity_mutations`, LootTable and Inventory. No SQLite
+migration (user_version 2, record schema 1), no terrain/object generation version
+change, no starter-pack edit. Not started: talents, item quality, skill books,
+equipment, crafting, magic, pets, AI World Creator, multiplayer, Checkpoint B.
+
+### Implemented
+
+- `content/creatures_pack.json` (pack v1, append-only install): 4 loot items and 5
+  species: Grey wolf (forest, hostile), Wild boar (forest, neutral), Meadow rabbit
+  and Red deer (meadow, passive), Shore crab (beach, neutral). Registry capability
+  `definition.creature`. Species are pure data: disposition, stats, movement
+  (biomes, leash, speed), AI radii/chances, spawn rule, loot table.
+- `src/world/world_creatures.gd`: validation and deterministic home placements
+  `crt:v1/<cx>/<cy>/<x>_<y>` (walkable spawn-biome tiles, ≤ 6 per chunk, no spawn
+  within 6 tiles of a Run's spawn).
+- `src/run/creature_roster.gd`: runtime creatures (derived home + Run mutation),
+  bounded 9-chunk generation, touched creatures always kept, active radius 12,
+  ID-ordered turns, attacks, loot planning before mutation.
+- `src/core/combat.gd` (player defaults HP 30 / ATK 5 / DEF 1 in `character.stats`,
+  damage `max(1, atk + variance - def)`, regen 1 HP every 10th turn) and
+  `src/core/creature_ai.gd` (idle, wander, detect with LOS, chase, attack, flee,
+  return home; one decision per creature per turn; deterministic).
+- Session: `wait` and `attack` actions, bump attack on hostile/provoked creatures,
+  creatures block movement, player death. Normal deaths are refused by session
+  *and* GameStore; permadeath saves the death immediately and is then read-only
+  (existing rule). `list_runs` adds `status`.
+- UI: mode selector, HP bar, target panel (name/disposition/state/HP/ATK/DEF),
+  F attack, Tab next target, Space wait, disposition-colored creature markers with
+  HP bars, floating damage/death/regen numbers, combat messages, death screen
+  (Load last save / Return to menu), ENDED runs in the list. Top HUD buttons
+  shortened to fit with the HP bar ("Menu [Esc]").
+- Gameplay fix found by the acceptance hunt: same-speed fleeing creatures could never
+  be caught. Added data field `movement.move_per_10000` (rabbit 60%, deer 70%,
+  crab 50%, boar 80%, wolf 100%).
+- Test hardening: child-process restart checks in B/C/D/E suites now also reject
+  `SCRIPT ERROR` (they previously passed if the probe failed to compile). The E
+  exploration loop is bounded (creatures can block a step).
+- Docs: new docs/CREATURES_AND_COMBAT.md; README controls, AGENTS, ROADMAP,
+  ARCHITECTURE, DATA_API, WORLD_SYSTEM updated.
+
+### Verification (actual commands)
+
+```powershell
+.\scripts\test.ps1 -Render -Service -Export
+```
+
+All pass (exit 0):
+- B data 96/96; C world 49/49; C gameplay 22/22 headless, 24/24 OpenGL; D interactions
+  66/66; D gameplay 17/17 headless, 20/20 OpenGL; E integration 34/34; startup; optional
+  service health and pip check.
+- **New combat suite 76/76:**
+  - damage formula, minimum damage, regeneration, stat validation;
+  - AI rules: attack/chase/no chase without LOS or beyond radius, neutral only when
+    provoked, passive flee, blocked waits, return home, wander, speed;
+  - spawns by biome on walkable tiles with unique IDs, density cap, all three
+    dispositions, reversed chunk order identical, bad species rejected, no creature
+    in the safe radius of 18 Run spawns;
+  - turns: wait = 1 turn, invalid attacks = 0 turns;
+  - hunt and kill a boar with real moves; loot equals the table draw exactly once;
+    a dead creature cannot be re-attacked, never acts and no longer blocks;
+  - mid-combat save/reload keeps creature HP, position and provocation;
+  - chunk unload/reload keeps every creature; Run B gets the creature back alive;
+  - Blueprint unchanged; ≤ 1 tile per creature per turn; legal positions; identical
+    results with different chunk load order;
+  - normal and permadeath death rules, including direct GameStore refusals.
+- **New combat UI suite 20/20 headless, 23/23 OpenGL:** real keys for Space/F/movement/
+  Ctrl+S/Esc; HUD fits, HP bar, target panel, damage/death/loot messages, continue
+  keeps the kill, normal death screen and reload, permadeath death screen, ENDED
+  run cannot be continued. Screenshots inspected: `.tools/m02a-target.png`,
+  `m02a-combat.png`, `m02a-death.png`.
+- **Exported release exe** (`builds/windows/EvolvingRealms.exe`, rebuilt by `-Export`),
+  run from a temp working dir with a temp DB, OpenGL:
+  - write 19/19: menu, chunk crossing, gather, chest, hunt and kill a creature with
+    movement keys + F, Ctrl+S with inventory open, continue, independent Run 2;
+  - abrupt kill with unsaved actions;
+  - verify 9/9: last save exact, chest and creature cannot pay again, creature still
+    dead, SQLite integrity/FKs clean;
+  - refusal of the default save.
+  The `standalone-combat.png` screenshot was inspected.
+- **Old saves in the exported exe** (`legacy` phase on copies). Saves were created by
+  the code of a34096a (B), 61afbe9 (C), d3c9675 (D) and 0eeeb4f (final Milestone 01,
+  through its own acceptance flow). Every run resumed, moved and saved: 5/5, 3/3, 3/3,
+  5/5. Inventory, object states and custom stats were kept, the HP 30/30 defaults were
+  added, and species were installed additively.
+
+Automated real-engine input/rendering with inspected screenshots; no human
+hand playthrough is claimed.
+
+### Remaining limits
+
+- No timed respawn, creature regeneration, ranged/diagonal attacks, smart pathfinding
+  (greedy steps can stall behind obstacles), corpses, or eating/using meat.
+- Creatures beyond 12 tiles are frozen; touched creatures add materialized placements
+  and mutation rows that grow with play (with fog, the main save-size growth).
+- Balance is first-pass (wolves can kill a careless player; HP regen is slow).
+- Permadeath records death immediately, but there is no per-turn autosave: quitting
+  without saving before dying still discards unsaved play (normal save-scumming risk).
+- JSON numbers round-trip as numeric (a legacy integer stat may come back as 3.0).
+- Milestone 01 limits (fog growth, no autosave, Windows x64 only, unsigned exe) remain.
+
+### Next step
+
+Stop. The user reviews this build. Checkpoint B of Milestone 02 needs explicit approval.
+
+## Milestone 01 Checkpoint E record (historical)
 
 Continued from commit d3c9675 with a clean tree. Read AGENTS, all design/API docs
 and the source first. Ran the full baseline before changing anything: B 96, C 49/20

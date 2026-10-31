@@ -1,7 +1,7 @@
 extends RefCounted
 ## World-scoped, immutable and version-pinned content. No generated code execution.
 const Data = preload("res://src/data/json_data.gd")
-const SUPPORTED_CAPABILITIES := ["definition.item", "definition.resource", "definition.chest"]
+const SUPPORTED_CAPABILITIES := ["definition.item", "definition.resource", "definition.chest", "definition.creature"]
 var _db: RefCounted
 var last_error: String:
 	get:
