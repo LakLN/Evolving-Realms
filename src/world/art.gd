@@ -21,6 +21,9 @@ const DERIVED_PROPS := {"pine": "tree", "basalt": "rock"}
 const SnowArt = preload("res://src/world/snow_art.gd")
 const SNOW_GROUND_SOURCE := 13
 const SNOW_OVERLAY_SOURCE := 14 # + index into SnowArt.EDGES
+const SNOW_S1_GROUND_SOURCE := 18
+const SNOW_S1_PROP_SOURCE := 19
+const SNOW_S1_INDEX := "res://assets/game/snow/snow_s1_index.json"
 static var _shared: RefCounted
 
 var index: Dictionary = {}
@@ -35,6 +38,8 @@ var prop_sources: Dictionary = {} # derived prop kind -> TileSet source id
 var overlay_specs: Array = []
 ## Ground kinds painted as placeholders (not final art); reported by tests and docs.
 var placeholder_kinds: Array = []
+## Loaded Batch S1 index ({} when absent): approved Snow Mountain art.
+var snow_s1: Dictionary = {}
 var _textures: Dictionary = {}
 var _frames: Dictionary = {}
 
@@ -125,15 +130,65 @@ func _paint_snow(built: TileSet) -> void:
 		groups.append(ground[kind])
 		row += 1
 	_add_atlas(built, image, px, SNOW_GROUND_SOURCE, groups)
+	var approved := _load_snow_s1(built)
 	for i in SnowArt.EDGES.size():
 		var upper: String = SnowArt.EDGES[i][0]
-		var atlas := SnowArt.overlay_atlas(SnowArt.edge_pieces(SnowArt.paint(upper, 0, px), px, 500 + i), px)
+		var upper_image: Image = approved.get(upper, SnowArt.paint(upper, 0, px))
+		var atlas := SnowArt.overlay_atlas(SnowArt.edge_pieces(upper_image, px, 500 + i), px)
 		var source := TileSetAtlasSource.new()
 		source.texture = ImageTexture.create_from_image(atlas)
 		source.texture_region_size = Vector2i(px, px)
 		built.add_source(source, SNOW_OVERLAY_SOURCE + i)
 		for mask in range(1, 256): source.create_tile(Vector2i(mask % 16, mask / 16))
 		overlay_specs.append([SnowArt.EDGES[i][1], [upper], SNOW_OVERLAY_SOURCE + i])
+
+func _load_snow_s1(built: TileSet) -> Dictionary:
+	## Approved Batch S1 art (tools/art/build_snow_s1.py) replaces placeholder kinds,
+	## pines and snow-land rocks, and adds snow objects, places and the snow wolf.
+	## Returns kind -> base tile image (upper textures for the edge overlays).
+	var file := FileAccess.open(SNOW_S1_INDEX, FileAccess.READ)
+	var parsed: Variant = JSON.parse_string(file.get_as_text()) if file != null else null
+	if not parsed is Dictionary or int(parsed.get("version", 0)) != 1 or int(parsed.get("tile_px", 0)) != px:
+		return {}
+	snow_s1 = parsed
+	var bases := {}
+	var ground_image := _image(parsed.ground.atlas)
+	if ground_image != null:
+		var groups: Array = []
+		for kind in parsed.ground.kinds:
+			ground[kind] = []
+			for entry in parsed.ground.kinds[kind]:
+				ground[kind].append([Vector2i(int(entry[0]), int(entry[1])), int(entry[2])])
+			ground_sources[kind] = SNOW_S1_GROUND_SOURCE
+			placeholder_kinds.erase(kind)
+			groups.append(ground[kind])
+			var first: Array = parsed.ground.kinds[kind][0]
+			bases[kind] = ground_image.get_region(Rect2i(Vector2i(int(first[0]), int(first[1])) * px, Vector2i(px, px)))
+		_add_atlas(built, ground_image, px, SNOW_S1_GROUND_SOURCE, groups)
+	var source := _atlas(parsed.props.atlas, int(parsed.props.cell))
+	if source.texture != null:
+		built.add_source(source, SNOW_S1_PROP_SOURCE)
+		for kind in parsed.props:
+			if not parsed.props[kind] is Array: continue
+			props[kind] = []
+			for entry in parsed.props[kind]:
+				var coords := Vector2i(int(entry[0]), 0)
+				if not source.has_tile(coords): source.create_tile(coords)
+				props[kind].append([coords, int(entry[1])])
+			prop_sources[kind] = SNOW_S1_PROP_SOURCE
+	for group in ["objects", "places", "characters"]:
+		if not index.has(group): index[group] = {}
+		index[group].merge(parsed.get(group, {}), true)
+	var mapping: Dictionary = index.get("mapping", {})
+	for group in parsed.get("mapping", {}):
+		if not mapping.has(group): mapping[group] = {}
+		for table in parsed.mapping[group]:
+			var extra: Variant = parsed.mapping[group][table]
+			if extra is Dictionary and mapping[group].get(table) is Dictionary:
+				mapping[group][table].merge(extra, true)
+			elif extra is String and mapping[group] is Dictionary:
+				mapping[group][table] = extra
+	return bases
 
 func ground_source(kind: String) -> int:
 	return ground_sources.get(kind, GROUND_SOURCE)

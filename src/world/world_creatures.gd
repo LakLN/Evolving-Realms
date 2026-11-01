@@ -48,7 +48,8 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 		definitions[_key(definition.content_id, 1)] = definition
 		# The frozen v1 layer never admits AI species; they spawn through encounters.
 		if definition.payload.has("spawn") and definition.get("provenance", {}).get("origin") != "ai":
-			rules.append({"definition": definition, "stream": Loot.number("creatures-v1/" + definition.content_id), "priority": int(definition.payload.spawn.get("priority", 20))})
+			# ecology_only (M05 land packages): only where a land's ecology adapts it, never natively.
+			rules.append({"definition": definition, "stream": Loot.number("creatures-v1/" + definition.content_id), "priority": int(definition.payload.spawn.get("priority", 20)), "ecology_only": definition.payload.spawn.get("ecology_only", false) == true})
 	rules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.priority < b.priority or (a.priority == b.priority and a.definition.content_id < b.definition.content_id))
 	if not encounters.configure(registry, world.world_id, self):
 		return _fail(encounters.last_error)
@@ -128,7 +129,7 @@ func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray())
 			var point := origin + Vector2i(x, y)
 			for rule in rules:
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000):
+				if not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000):
 					continue
 				result.append({"instance_id": "crt:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"creature_generation_version": 1}})
 				break

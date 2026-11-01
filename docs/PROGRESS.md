@@ -1,5 +1,51 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Milestone 05 — Snow Mountain Stage D: S1 art, native life, two chains (2026-11-01)
+
+Same branch/worktree, on explicit user request for Stage D. No merge, no export, no
+personal DB; charted only in disposable test Worlds. Details, gaps and next steps:
+[lands/SNOW_MOUNTAIN_STAGE_D.md](lands/SNOW_MOUNTAIN_STAGE_D.md).
+
+Implemented:
+- Batch S1 sources copied unchanged from `D:\Game\RPG\assets\sources\EvolvingRealms_Batch_S1`
+  (SHA-256: wolf 8e4b1fda…, props 1befd076…, style proof d904e422…, shelter f61ede2d…,
+  terrain 7baac551…). `tools/art/build_snow_s1.py` → `assets/game/snow/**` +
+  `snow_s1_index.json`; `art.gd` loads it over the placeholders (only frozen ground
+  stays code-painted); `map_view.gd` rock props use their own source.
+- `content/land_packages/snow_mountain/content_pack.json` (`snow:` IDs: 3 creatures,
+  3 resources, 6 items + 1 use, 8 events, 5 places); engine rules `spawn.ecology_only`
+  (objects/creatures) and `metadata.site_only` (places); pack installed per World by
+  `WorldAtlas.propose_layout_land`/`open`.
+- Layout v2 (geometry unchanged): native ecology per area, native supplies for start
+  certification, five fixed sites placed by `layout_designer.gd`.
+- Carrier's Debt (complete) and The Bell That Remembers (restoration; salvage recorded as
+  `pending_capability`).
+- UI fix: notices wrap to 3 lines and a fresh place message holds 9 s against routine
+  real-time notices (the ledger clue was overwritten by "Autosaved." within a second).
+- Manifest: art ground/transitions/props/landmarks/wildlife `in_progress` with evidence,
+  icons/weather `blocked`, relay/bell mechanics and content `in_progress`, new
+  `snow:mechanic/encounter_salvage` `pending_capability`. CLI: valid=true, ready=false,
+  28 blockers.
+
+Verification (native Godot 4.7.2, disposable DBs):
+- `.\scripts\test.ps1 -Smoke -Render -Only land-package,world,m04-world,m04-gameplay,snow-mountain,snow-content,snow-gameplay,rendered-snow-gameplay,rendered-m04-gameplay,map,discoveries,discovery-gameplay,interactions,interaction-gameplay,creatures,combat,combat-gameplay,equipment,survival,realtime,realtime-gameplay,gameplay,m03-integration,m03-world,ai-world`:
+  all passed — data 96, m03-world 45, world 49, gameplay 22, interactions 69,
+  interaction-gameplay 17, integration 41, combat 75, combat-gameplay 20, survival 60,
+  equipment 68, offline AI provider tests, ai-world 41, discoveries 40,
+  discovery-gameplay 6, map 22, realtime 58, realtime-gameplay 16, m03-integration 28,
+  land-package 18, m04-world 86, m04-gameplay 23, snow-mountain 65, snow-content 47,
+  snow-gameplay 28, rendered-snow-gameplay 43, rendered-m04-gameplay 31, import, startup.
+- After the final manifest edit: `-Only land-package` 18/0 and the package CLI (exit 0).
+- Screenshots reviewed: `.tools/snow-arrival.png`, `snow-lee-shelter.png`,
+  `snow-relay-ledger.png`, `snow-fallen-pine.png`, `snow-relay-return.png`,
+  `snow-scree-wolf.png`, `snow-silent-bell.png`, `snow-map-landmarks.png`.
+- Not run: full regression, `-Service`, `-Export`, old-save exe checks (no persistence
+  schema change; new content lives in new IDs and one World's registry).
+
+Gaps/next: frozen-ground, bell, cairn, cleft, icons and weather art; wolf has single
+side/back poses; hare/sentinel without art; bell salvage pending; numbers untuned; no
+human playtest; World Map legend overdraw (pre-existing, logged); no World binding.
+
 ## Milestone 05 — Snow Mountain Stage C1/C2: geography and visual foundation (2026-11-01)
 
 Same branch/worktree (`feature/m05-snow-mountain`, base `f8582e8`), on explicit user

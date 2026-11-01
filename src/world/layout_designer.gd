@@ -146,7 +146,43 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 	plan.gates.append({"gate_id": "%s/gate/%s" % [land_id, gate.side], "side": gate.side, "position": _xy(edge), "kind": "pass", "faces": str(gate.get("faces", "")),
 		"mirrors": str(gate.get("mirrors", "")), "region": region, "inner": _xy(inner)})
 	plan.hooks = ["Rumours speak of an abandoned relay outpost where the pines meet the pass road.", "Travellers tell of a lee shelter in the basin below the escarpment."]
+	plan.content_packs = layout.get("content_packs", []).duplicate()
+	if not _place_sites(designer, plan, layout, to_tile):
+		return {}
 	return plan
+
+func _place_sites(designer: RefCounted, plan: Dictionary, layout: Dictionary, to_tile: Callable) -> bool:
+	## Fixed chain and landmark sites (layout v2): inside a shelter or at a layout point,
+	## snapped to an accessible tile of this land's own terrain. Positions are part of
+	## the stored plan, so every Run of the World finds them in the same place.
+	var terrain := TerrainAtlas.new()
+	if not terrain.configure_atlas(designer._hash.world_seed, [plan]):
+		last_error = terrain.last_error
+		return false
+	var slot := Vector2i(int(plan.slot.x), int(plan.slot.y))
+	var taken := {}
+	for site in layout.get("sites", []):
+		var target := Vector2i.ZERO
+		if site.has("shelter"):
+			for shelter in plan.geography.shelters:
+				if str(shelter.shelter_id).ends_with("/" + str(site.shelter)):
+					target = Vector2i(int(shelter.rect.x) + int(shelter.rect.w) / 2, int(shelter.rect.y) + int(shelter.rect.h) / 2)
+		else:
+			target = to_tile.call(site.at)
+		var tile: Vector2i = designer._snap(terrain, target, slot, taken)
+		if tile == Vector2i(2147483647, 0) or terrain.tile_at(tile) == Surfaces.TRAIL and not site.has("shelter"):
+			last_error = "No accessible tile for site " + str(site.id)
+			return false
+		taken[tile] = true
+		var region: Dictionary = plan.regions[0]
+		for candidate in plan.regions:
+			if candidate.kind == site.area: region = candidate
+		var title: String = str(site.content_id).get_slice("/", 1).replace("_", " ").capitalize()
+		plan.sites.append({"instance_id": "loc:atlas/%d_%d/site/%s" % [slot.x, slot.y, site.id], "content_id": site.content_id, "version": 1,
+			"position": _xy(tile), "origin": "procedural",
+			"metadata": {"atlas_version": 1, "land_id": plan.land_id, "region_id": region.region_id, "region_name": region.name, "role": "landmark",
+				"site_name": title, "title": "%s (%s)" % [title, region.name], "reason": site.reason}})
+	return true
 
 func _error(message: String) -> Dictionary:
 	last_error = message

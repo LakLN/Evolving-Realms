@@ -53,6 +53,10 @@ var _chart_snow: Button
 const SNOW_LAYOUT := "landpkg:snow_mountain/layout"
 const CHART_SNOW := "Chart Snow Mountain (dev)"
 const SNOW_RUN := "New Run in Snow Mountain (dev)"
+## Real-time notices that may not replace a fresh place message (see _hold_notice).
+const ROUTINE_EVENTS := ["autosave", "survival", "status_tick", "skill_resource", "regen"]
+const NOTICE_HOLD_MS := 9000
+var _notice_hold_until := 0
 var _atlas_line: Label
 var _pending_land: Dictionary = {}
 var _status: Label
@@ -305,6 +309,9 @@ func _build_hud(parent: Control) -> void:
 	bottom.add_child(column)
 	_notice = _label(column, "", 17)
 	_notice.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	# Place messages carry clues (M05 chains): wrap up to three lines instead of cutting.
+	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_notice.max_lines_visible = 3
 	_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_notice.mouse_filter = Control.MOUSE_FILTER_PASS
 	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
@@ -1281,6 +1288,11 @@ func _bearing(target: Dictionary) -> String:
 		return "here"
 	return DIRECTIONS_8[posmod(roundi(delta.angle() / (PI / 4.0)), 8)]
 
+func _hold_notice(events: Array) -> void:
+	## Keep a place/discovery message readable: routine real-time notices wait for it.
+	if events.any(func(e: Dictionary) -> bool: return str(e.get("type", "")) in ["location", "discovery", "land_entered"]):
+		_notice_hold_until = Time.get_ticks_msec() + NOTICE_HOLD_MS
+
 func weather_text(status: Dictionary) -> String:
 	## "Blizzard: EXPOSED −1 HP in 3s (wind-scoured)" / "Blizzard: sheltered (roof)".
 	var unit := "s" if session.realtime else " turns"
@@ -1444,6 +1456,7 @@ func _after_action(accepted: bool, quiet: String = "") -> void:
 	map_view.show_events(session.last_events)
 	var text := describe_events(session.last_events)
 	_notice.text = text if not text.is_empty() else quiet
+	_hold_notice(session.last_events)
 	_update_info()
 	if session.is_dead():
 		_show_death()
@@ -1764,8 +1777,9 @@ func _realtime_frame(delta: float) -> void:
 	_after_exploration_events(events)
 	map_view.show_events(events)
 	var text := describe_events(events)
-	if not text.is_empty():
+	if not text.is_empty() and (Time.get_ticks_msec() >= _notice_hold_until or not events.all(func(e: Dictionary) -> bool: return str(e.get("type", "")) in ROUTINE_EVENTS)):
 		_notice.text = text
+		_hold_notice(events)
 	_update_info()
 	if session.is_dead():
 		_show_death()

@@ -81,6 +81,8 @@ func reload() -> bool:
 			if record.is_empty():
 				return _fail("Missing land record " + land_id)
 			lands[land_id] = record.metadata.plan
+			if not _install_packs(record.metadata.plan.get("content_packs", [])): # Idempotent.
+				return false
 		for route_id in revisions[index].routes:
 			var record: Dictionary = registry.load_instance(world.world_id, record_id(route_id))
 			if record.is_empty():
@@ -188,6 +190,10 @@ func propose_layout_land(layout_id: String) -> Dictionary:
 	var layout := LayoutDesigner.load_layout(layout_id)
 	if layout.is_empty():
 		return _error("Unknown or unsupported land layout " + layout_id)
+	# The land's own content (natives, chain places) must be active in THIS World before
+	# its sites validate; ecology_only spawns keep it out of every other land.
+	if not _install_packs(layout.get("content_packs", [])):
+		return {}
 	var frontiers := frontier_slots()
 	var slots: Array = frontiers.keys().filter(func(s: Vector2i) -> bool: return designer.eligible(layout.archetype, s) and frontiers[s].size() == 1 and frontiers[s][0].kind in Designer.TRAVERSABLE)
 	slots.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return designer.h(a.x, a.y, 7801) < designer.h(b.x, b.y, 7801))
@@ -398,6 +404,13 @@ func _layout_start(generator: RefCounted, run_seed: int, candidate: Dictionary, 
 		return {"position": start.position.duplicate(), "biome": generator.biome_at(tile), "selection_version": LAYOUT_SELECTION_VERSION, "world_atlas_version": ATLAS_VERSION,
 			"land_id": candidate.land.land_id, "region_id": candidate.region.region_id, "atlas_revision": revision(), "start_id": start.start_id}
 	return {}
+
+func _install_packs(paths: Array) -> bool:
+	var packs := Pack.new()
+	for path in paths:
+		if not str(path).begins_with("res://content/land_packages/") or not packs.install(registry, world.world_id, str(path)):
+			return _fail("Land content pack %s: %s" % [str(path), packs.last_error])
+	return true
 
 func _fail(message: String) -> bool:
 	last_error = message

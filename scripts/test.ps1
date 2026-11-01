@@ -80,6 +80,7 @@ try {
     Invoke-EngineCheck -Name 'm04-world' -EngineArgs @('--headless', '--script', 'res://tests/m04_world_suite.gd') -Summary 'M04 WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'm04-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/m04_gameplay_suite.gd') -Summary 'M04 GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-mountain' -EngineArgs @('--headless', '--script', 'res://tests/snow_mountain_suite.gd') -Summary 'M05 SNOW MOUNTAIN: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'snow-content' -EngineArgs @('--headless', '--script', 'res://tests/snow_content_suite.gd') -Summary 'M05 SNOW CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/snow_mountain_gameplay_suite.gd') -Summary 'M05 SNOW GAMEPLAY: \d+ checks, 0 failures'
     # Keep smoke startup away from the player's database, including opt-in World tests.
     $startupDatabase = 'user://startup-tests/' + [guid]::NewGuid().ToString() + '.sqlite'

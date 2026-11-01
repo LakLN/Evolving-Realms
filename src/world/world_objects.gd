@@ -45,7 +45,8 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 			return false
 		definitions[_key(definition.content_id, 1)] = definition
 		if definition.payload.has("spawn"):
-			rules.append({"definition": definition, "stream": Loot.number("objects-v1/" + definition.content_id), "priority": int(definition.payload.spawn.get("priority", 20))})
+			# ecology_only (M05 land packages): only where a land's ecology adapts it, never natively.
+			rules.append({"definition": definition, "stream": Loot.number("objects-v1/" + definition.content_id), "priority": int(definition.payload.spawn.get("priority", 20)), "ecology_only": definition.payload.spawn.get("ecology_only", false) == true})
 	rules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.priority < b.priority or (a.priority == b.priority and a.definition.content_id < b.definition.content_id))
 	for location in world.blueprint.fixed_locations:
 		if not location is Dictionary or not location.has("content_id"):
@@ -170,7 +171,7 @@ func generate_chunk(chunk: Vector2i) -> Array:
 				var spawn: Dictionary = rule.definition.payload.spawn
 				var chance := int(spawn.per_10000)
 				if regions != null and rule.definition.content_id.begins_with("m03:resource/"): chance = chance * regional_percent / 100
-				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance:
+				if not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance:
 					continue
 				result.append({"instance_id": "proc:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"object_generation_version": 1}})
 				break

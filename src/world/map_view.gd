@@ -311,7 +311,8 @@ func _add_chunk(chunk: Vector2i) -> void:
 				if not art.props.get(prop, []).is_empty():
 					props.set_cell(local, art.prop_source(prop), Art.pick(art.props[prop], Art.tile_roll(global_tile, 2)))
 			elif value == Terrain.ROCK:
-				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.get("rock_" + kind, art.props.rock), Art.tile_roll(global_tile, 2)))
+				var rock_kind: String = "rock_" + kind if art.props.has("rock_" + kind) else "rock"
+				props.set_cell(local, art.prop_source(rock_kind), Art.pick(art.props[rock_kind], Art.tile_roll(global_tile, 2)))
 			elif art.decor.has(kind) and Art.tile_roll(global_tile, 3) % 100 < 7:
 				# Flat flowers/shells/mushrooms: dressing only, never on blockers.
 				decor.set_cell(local, Art.DECOR_SOURCE, Art.pick(art.decor[kind], Art.tile_roll(global_tile, 4)))

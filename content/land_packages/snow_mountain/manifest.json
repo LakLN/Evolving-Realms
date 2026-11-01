@@ -13,46 +13,51 @@
       "id": "snow:art/ground",
       "kind": "asset",
       "version": 1,
-      "status": "blocked",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Stage C: no art exists. Code-painted PLACEHOLDER snow/ice/frozen/trail/cliff/floor/timber in src/world/snow_art.gd (not final); taiga is still an M04 recolour. Request: Batch S1 (style proof) then S2 in docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
+      "notes": "Batch S1 (assets/sources/EvolvingRealms_Batch_S1, presentation boards) built by tools/art/build_snow_s1.py into assets/game/snow/: snow x4, ice x3, taiga x3, trail x2, cliff x2, cliff face x2, shelter floor x2, timber wall; tiles made seamless in the script. Missing: frozen ground/scree (code placeholder), production S2 atlas with verified seams.",
+      "evidence": "2026-11-01 Stage D: rendered in .tools/snow-arrival.png, snow-scree-wolf.png, snow-escarpment.png; snow-gameplay checks S1 sources are active and only 'frozen' remains placeholder."
     },
     {
       "id": "snow:art/transitions",
       "kind": "asset",
       "version": 1,
-      "status": "blocked",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Placeholder ragged 8-neighbour overlays (snow onto ice/frozen/trail/taiga/floor, frozen onto ice/trail) and cliff top/face are generated in code; final cliff faces/corners requested in Batch S2 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
+      "notes": "Edge overlays are generated in code from the S1 snow base (snow onto ice/frozen/trail/taiga/floor); S1 has only two sample transition tiles. Cliff corners/orientations missing (S2).",
+      "evidence": "2026-11-01 Stage D: visible in .tools/snow-trough.png and snow-scree-wolf.png."
     },
     {
       "id": "snow:art/props",
       "kind": "asset",
       "version": 1,
-      "status": "blocked",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Pines are the M04 recoloured tree; rocks reuse mossy grassland rocks (look wrong on snow). Batch S3 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
+      "notes": "Batch S1 (assets/sources/EvolvingRealms_Batch_S1, presentation boards) built by tools/art/build_snow_s1.py into assets/game/snow/: snowy pine (all pine tiles), windbreak rock (snow/taiga/frozen rocks), snow stump (resin seam), frozen shrub (ration shrub), barrel (water cache). Missing: 2 more pine/rock variants, fallen trunk intact/searched pair.",
+      "evidence": "2026-11-01 Stage D: rendered in .tools/snow-scree-wolf.png, snow-arrival.png."
     },
     {
       "id": "snow:art/landmarks",
       "kind": "asset",
       "version": 1,
-      "status": "blocked",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Shelters exist as terrain (timber walls + plank floor tiles); no landmark sprites. Batch S1 (lee shelter) and S3 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
+      "notes": "Batch S1 (assets/sources/EvolvingRealms_Batch_S1, presentation boards) built by tools/art/build_snow_s1.py into assets/game/snow/: lean-to (lee shelter), crate & barrel (carriers' locker), firewood stack (fallen relay pine), snow hut (stand-in for the silent bell house). Missing: bell, bell cairn (uses the windbreak rock), sealed cleft.",
+      "evidence": "2026-11-01 Stage D: .tools/snow-lee-shelter.png, snow-relay-ledger.png, snow-fallen-pine.png, snow-silent-bell.png."
     },
     {
       "id": "snow:art/wildlife",
       "kind": "asset",
       "version": 1,
-      "status": "blocked",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "No native creatures yet (Stage D); basin/forest use existing rabbit/wolf adapted by area ecology. Batch S4 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
+      "notes": "Scree wolf uses the S1 snow wolf: front idle x4, walk x4, attack x3 (left, mirrored right); left/right/up idle and walk are single poses, death is derived (squashed side pose). Rime hare uses the existing rabbit; bellback sentinel uses the token fallback. Need S4 directional sheets.",
+      "evidence": "2026-11-01 Stage D: .tools/snow-scree-wolf.png; snow-gameplay checks the wolf is drawn from snow_wolf frames."
     },
     {
       "id": "snow:art/icons",
@@ -61,7 +66,7 @@
       "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Stage D items not created; Batch S4 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
+      "notes": "No snow item icons yet; inventory uses keyword fallbacks. Batch S4/S5."
     },
     {
       "id": "snow:art/weather",
@@ -70,7 +75,7 @@
       "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Code-drawn PLACEHOLDER: wind streaks, light veil, red exposed / blue sheltered ring (map_view.gd). Final sprites: Batch S4 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
+      "notes": "Still code-drawn streaks/rings (Stage C). Batch S3/S4."
     },
     {
       "id": "snow:mechanic/terrain_v2",
@@ -110,59 +115,65 @@
       "id": "snow:mechanic/relay_exchange",
       "kind": "mechanic",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Existing WorldEvents item costs can be reused; add only branch/keep semantics and verify atomic reward + receipt. No generic crafting subsystem."
+      "notes": "Implemented without a new engine path: exclusive place interactions (return the clasp = item cost -> stores; force = fewer stores + 3 damage) plus an item (relay clasp) that links two fixed sites. Keep = never return it and equip the clasp. Atomic cost/award/receipt reuses LocationRuntime. Awaiting approval and playtest.",
+      "evidence": "2026-11-01 Stage D: tests/snow_content_suite.gd refusal without clasp changes nothing, once-only, exclusivity, save/load, per-Run independence."
     },
     {
       "id": "snow:mechanic/bell_sequence",
       "kind": "mechanic",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:mechanic/relay_exchange"
       ],
-      "notes": "Run-local two-stage event state with reload-safe outcomes"
+      "notes": "Implemented as two stages: Run-keyed 40% shard at the bell cairn (fixed per Run, never rerolled) or from the bellback sentinel's loot, then the silent bell (examine -> restore, shard cost -> rime mantle). Restoration is terminal. Salvage branch not shipped: see snow:mechanic/encounter_salvage.",
+      "evidence": "2026-11-01 Stage D: snow-content suite: some Runs find the shard and others do not, no reroll, ordering, terminal state, reload."
     },
     {
       "id": "snow:content/ecology",
       "kind": "content",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:art/wildlife",
         "snow:mechanic/terrain_v2"
       ],
-      "notes": "Native definitions, encounters, food/water budget and independent IDs"
+      "notes": "content/land_packages/snow_mountain/content_pack.json: rime hare, scree wolf, bellback sentinel, ration shrub, sealed water cache, resin seam, resin, bark ration (+use), bronze scrap. spawn.ecology_only keeps them to Snow Mountain areas; installed only into the World that charts the land. Not yet active in a bound player World.",
+      "evidence": "2026-11-01 Stage D: snow-content census (basin: rations/water/hares, no wolves; reach: wolves and resin; sentinel only on the Crown Shelf); 0 leaks in other lands; starts certified on native supplies."
     },
     {
       "id": "snow:content/relay",
       "kind": "content",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:mechanic/relay_exchange",
         "snow:art/landmarks",
         "snow:art/icons"
       ],
-      "notes": "Recover clasp from fallen trunk; choose supply exchange or keep equipment"
+      "notes": "Carrier's Debt complete in play: fallen relay pine (clasp, resin, wood) -> carriers' locker (ledger clue; return or force). Lee shelter marks point toward the relay.",
+      "evidence": "2026-11-01 Stage D: snow-content and rendered snow-gameplay (real E key presses) checks; screenshots snow-relay-ledger/fallen-pine/relay-return."
     },
     {
       "id": "snow:content/bell",
       "kind": "content",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:mechanic/bell_sequence",
         "snow:art/landmarks",
-        "snow:art/wildlife"
+        "snow:art/wildlife",
+        "snow:mechanic/encounter_salvage"
       ],
-      "notes": "Optional rare bell shard chain; calm restoration or dangerous salvage"
+      "notes": "The Bell That Remembers, restoration branch: bell cairn -> silent bell -> rime mantle. Salvage pending.",
+      "evidence": "2026-11-01 Stage D: snow-content suite and snow-silent-bell.png."
     },
     {
       "id": "snow:check/connectivity",
@@ -193,24 +204,26 @@
       "id": "snow:check/save_receipts",
       "kind": "check",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:content/relay",
         "snow:content/bell"
       ],
-      "notes": "Record exact command/report or human observations, date and limitations"
+      "notes": "Automated save/load and receipt checks pass; needs human playtest confirmation.",
+      "evidence": "2026-11-01 Stage D: snow-content suite (mid-chain save, reload, exclusive and terminal states persist, fresh Run unresolved)."
     },
     {
       "id": "snow:check/fog_spoilers",
       "kind": "check",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:content/bell"
       ],
-      "notes": "Record exact command/report or human observations, date and limitations"
+      "notes": "Automated: undiscovered sites are not targetable, not in leads, not on the map; ledger/marks hint without coordinates. Needs human review of hint wording.",
+      "evidence": "2026-11-01 Stage D: snow-content suite spoiler checks; World Map shows only discovered landmarks."
     },
     {
       "id": "snow:check/render_assets",
@@ -244,7 +257,16 @@
         "snow:check/render_assets"
       ],
       "notes": "Record exact command/report or human observations, date and limitations"
+    },
+    {
+      "id": "snow:mechanic/encounter_salvage",
+      "kind": "mechanic",
+      "version": 1,
+      "status": "pending_capability",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "Bell salvage (valuable supplies guarded by a spawned sentinel) needs transactional encounter spawning from a place event; not shipped. Restoration ships alone, as the design bible allows."
     }
   ],
-  "notes": "Stage C (2026-11-01): geography, terrain v2, safe starts and weather/shelter implemented on feature/m05-snow-mountain; reference plan charted only in disposable seed-4242 test Worlds. Binding stays empty until a player World is chosen explicitly. Not published."
+  "notes": "Stage C geography + Stage D native content and both optional chains on feature/m05-snow-mountain; charted only in disposable test Worlds. Binding empty until a player World is chosen. Not published."
 }

@@ -1,0 +1,1134 @@
+{
+ "pack_version": 1,
+ "notes": "Snow Mountain native content (M05 Stage D). Installed only into the one World where the layout land is charted. Creatures and resources use spawn.ecology_only: they appear only where a Snow Mountain area's ecology lists them, never natively in other lands of that World.",
+ "definitions": [
+  {
+   "content_id": "snow:resin",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Pine resin",
+   "description": "Black, fragrant resin from the pitchpines. Burns hot; carriers sealed their caches with it.",
+   "metadata": {
+    "category": "material"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:bark_ration",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Bark ration",
+   "description": "Dried inner bark and frozen berries pressed into a cake. Plain, filling.",
+   "metadata": {
+    "category": "food"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:use/bark_ration",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item_use",
+   "name": "Eat bark ration",
+   "dependencies": [
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "item": {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    },
+    "verb": "Eat",
+    "consume": 1,
+    "effects": [
+     {
+      "type": "sate",
+      "amount": 160
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:bronze_scrap",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Bronze scrap",
+   "description": "Green-black bronze from the old relay bells. Valuable to any smith.",
+   "metadata": {
+    "category": "material"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:relay_clasp",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Relay clasp",
+   "description": "A carrier's corroded bronze clasp, stamped with a bell. It still holds a cloak tight against the wind.",
+   "metadata": {
+    "category": "accessory"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "accessory",
+     "stats": {
+      "defense": 1,
+      "max_hp": 3
+     }
+    }
+   }
+  },
+  {
+   "content_id": "snow:bell_shard",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Bell shard",
+   "description": "A curved piece of bronze bell lip, cold even in the hand. Something on the mountain is missing it.",
+   "metadata": {
+    "category": "relic"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1
+   }
+  },
+  {
+   "content_id": "snow:rime_mantle",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Rime mantle",
+   "description": "A carrier's mantle, frost-stiff and warm inside. Given by the bell's keepers to those who restore her voice.",
+   "metadata": {
+    "category": "armor"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "armor",
+     "stats": {
+      "defense": 3,
+      "max_hp": 8
+     }
+    }
+   }
+  },
+  {
+   "content_id": "snow:ration_shrub",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "resource",
+   "name": "Ration shrub",
+   "description": "A frozen shrub with edible inner bark and a few dark berries.",
+   "dependencies": [
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "interaction": "gather",
+    "visual": "ration_shrub",
+    "spawn": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "per_10000": 50,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "loot": {
+     "rolls": 1,
+     "entries": [
+      {
+       "content_id": "snow:bark_ration",
+       "version": 1,
+       "min": 1,
+       "max": 3,
+       "weight": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:water_cache",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "resource",
+   "name": "Sealed water cache",
+   "description": "A resin-sealed carrier barrel of meltwater, left for travellers.",
+   "dependencies": [
+    {
+     "content_id": "core:fresh_water",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "interaction": "gather",
+    "visual": "water_cache",
+    "spawn": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "per_10000": 40,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "loot": {
+     "rolls": 1,
+     "entries": [
+      {
+       "content_id": "core:fresh_water",
+       "version": 1,
+       "min": 2,
+       "max": 3,
+       "weight": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:resin_seam",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "resource",
+   "name": "Resin seam",
+   "description": "A split pitchpine stump weeping black resin.",
+   "dependencies": [
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "interaction": "gather",
+    "visual": "resin_seam",
+    "spawn": {
+     "biomes": [
+      "taiga",
+      "snowfield"
+     ],
+     "per_10000": 40,
+     "priority": 25,
+     "ecology_only": true
+    },
+    "loot": {
+     "rolls": 1,
+     "entries": [
+      {
+       "content_id": "snow:resin",
+       "version": 1,
+       "min": 1,
+       "max": 3,
+       "weight": 3
+      },
+      {
+       "content_id": "core:wood",
+       "version": 1,
+       "min": 1,
+       "max": 2,
+       "weight": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:rime_hare",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Rime hare",
+   "description": "A white hare that freezes still, then bolts. Easy meat for the patient.",
+   "metadata": {
+    "category": "herbivore"
+   },
+   "dependencies": [
+    {
+     "content_id": "core:raw_meat",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "visual": "rabbit",
+    "disposition": "passive",
+    "stats": {
+     "max_hp": 5,
+     "attack": 1,
+     "defense": 0
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 8,
+     "move_per_10000": 6500
+    },
+    "ai": {
+     "detect_radius": 5,
+     "wander_per_10000": 4000,
+     "flee_radius": 3,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "per_10000": 14,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "core:raw_meat",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ],
+     "rolls": 1,
+     "entries": [
+      {
+       "content_id": "core:hide",
+       "version": 1,
+       "min": 1,
+       "max": 1,
+       "weight": 1
+      },
+      {
+       "content_id": "core:raw_meat",
+       "version": 1,
+       "min": 1,
+       "max": 1,
+       "weight": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:scree_wolf",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Scree wolf",
+   "description": "A pale, heavy-coated wolf of the outer pines and the scree. Hunts alone, and is seen late.",
+   "metadata": {
+    "category": "beast"
+   },
+   "dependencies": [
+    {
+     "content_id": "core:fang",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    },
+    {
+     "content_id": "core:raw_meat",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "visual": "snow_wolf",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 16,
+     "attack": 5,
+     "defense": 1
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 10000
+    },
+    "ai": {
+     "detect_radius": 6,
+     "wander_per_10000": 3000,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "per_10000": 6,
+     "priority": 10,
+     "ecology_only": true
+    },
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "core:fang",
+       "version": 1,
+       "min": 1,
+       "max": 2
+      }
+     ],
+     "rolls": 1,
+     "entries": [
+      {
+       "content_id": "core:hide",
+       "version": 1,
+       "min": 1,
+       "max": 2,
+       "weight": 2
+      },
+      {
+       "content_id": "core:raw_meat",
+       "version": 1,
+       "min": 1,
+       "max": 2,
+       "weight": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:bellback_sentinel",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Bellback sentinel",
+   "description": "A hulking ram-beast whose horns ring like cracked bells. It guards the crown and does not leave it.",
+   "metadata": {
+    "category": "guardian"
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bell_shard",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "visual": "bellback_sentinel",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 38,
+     "attack": 8,
+     "defense": 3
+    },
+    "movement": {
+     "biomes": [
+      "snowfield"
+     ],
+     "leash": 5,
+     "move_per_10000": 5000
+    },
+    "ai": {
+     "detect_radius": 4,
+     "wander_per_10000": 1500,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 5,
+     "priority": 5,
+     "ecology_only": true
+    },
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 2,
+       "max": 4
+      }
+     ],
+     "rolls": 1,
+     "entries": [
+      {
+       "content_id": "snow:bell_shard",
+       "version": 1,
+       "min": 1,
+       "max": 1,
+       "weight": 1
+      },
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 1,
+       "max": 2,
+       "weight": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:event/lee_marks",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Carriers' marks",
+   "description": "Knife marks on the shelter posts.",
+   "metadata": {
+    "category": "lore"
+   },
+   "payload": {
+    "tone": "neutral",
+    "message": "Carriers' marks on the posts: 'When the wind rises, get under a roof or into the pines.' One mark points up the trail through the pines: RELAY.",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 3
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/fallen_pine",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The carrier's fall",
+   "description": "A relay pine that came down across the old trail.",
+   "metadata": {
+    "category": "reward"
+   },
+   "dependencies": [
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:relay_clasp",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "tone": "boon",
+    "message": "Under the split bark, caught in the roots, a carrier's bronze clasp. Old scratches on the trunk point along the trail toward the relay.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:wood",
+        "version": 1,
+        "quantity": 3
+       },
+       {
+        "content_id": "snow:resin",
+        "version": 1,
+        "quantity": 2
+       },
+       {
+        "content_id": "snow:relay_clasp",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 8
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/relay_ledger",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The carrier's ledger",
+   "description": "A frost-bound ledger chained to the locker.",
+   "metadata": {
+    "category": "lore"
+   },
+   "payload": {
+    "tone": "neutral",
+    "message": "Last entry: 'Carrier Ysolde's clasp lost where the old pine fell in the reach. Return it and the locker is hers to give.' Scratched beneath, later: 'The bell on the crown is silent. They say her shard was buried at the choir cairn.'",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 5
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/relay_return",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Carrier's debt repaid",
+   "description": "The clasp unlocks the carriers' locker.",
+   "metadata": {
+    "category": "exchange"
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:relay_clasp",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    },
+    {
+     "content_id": "core:fresh_water",
+     "version": 1
+    },
+    {
+     "content_id": "core:herb",
+     "version": 1
+    },
+    {
+     "content_id": "core:coin",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "tone": "boon",
+    "message": "The clasp fits the bell-stamped lock. Inside: rations, sealed water and a carrier's purse, kept dry for whoever brought the clasp home.",
+    "cost": {
+     "items": [
+      {
+       "content_id": "snow:relay_clasp",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:bark_ration",
+        "version": 1,
+        "quantity": 4
+       },
+       {
+        "content_id": "core:fresh_water",
+        "version": 1,
+        "quantity": 3
+       },
+       {
+        "content_id": "core:herb",
+        "version": 1,
+        "quantity": 3
+       },
+       {
+        "content_id": "core:coin",
+        "version": 1,
+        "quantity": 18
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 25
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/relay_force",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Forced locker",
+   "description": "The lock gives, and so does a frozen hinge.",
+   "metadata": {
+    "category": "risk"
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    },
+    {
+     "content_id": "core:coin",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "tone": "bane",
+    "message": "You wrench the locker open. The frozen hinge snaps across your knuckles; half the stores are spoiled.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:bark_ration",
+        "version": 1,
+        "quantity": 1
+       },
+       {
+        "content_id": "core:coin",
+        "version": 1,
+        "quantity": 6
+       }
+      ]
+     },
+     {
+      "type": "damage",
+      "amount": 3
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/cairn_dig",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Under the cairn",
+   "description": "Stones stacked by the bell carriers.",
+   "metadata": {
+    "category": "discovery"
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:bell_shard",
+     "version": 1
+    },
+    {
+     "content_id": "core:stone",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "tone": "neutral",
+    "message": "Wind-worn letters on the base stone: 'Her voice sleeps on the crown. Bring back what was broken.'",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 6
+     },
+     {
+      "type": "chance",
+      "chance_per_10000": 4000,
+      "outcomes": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "snow:bell_shard",
+          "version": 1,
+          "quantity": 1
+         }
+        ]
+       }
+      ],
+      "otherwise": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "core:stone",
+          "version": 1,
+          "quantity": 3
+         }
+        ]
+       }
+      ],
+      "message": "Beneath the lowest stone, wrapped in rotten oilcloth: a curved shard of bronze bell.",
+      "otherwise_message": "Only frozen stones. If anything was buried here, it was taken long ago."
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/bell_inspect",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The silent bell",
+   "description": "A bronze bell on the crown.",
+   "metadata": {
+    "category": "lore"
+   },
+   "payload": {
+    "tone": "neutral",
+    "message": "A bronze bell hangs in a cracked frame. A shard is missing from its lip; struck as it is, it only clacks. Those who rang it kept watch from this shelf.",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 4
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/bell_restore",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The bell remembers",
+   "description": "The shard fits its place in the lip.",
+   "metadata": {
+    "category": "blessing"
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:bell_shard",
+     "version": 1
+    },
+    {
+     "content_id": "snow:rime_mantle",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/regeneration",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "tone": "boon",
+    "message": "You set the shard and strike. The bell's note rolls down every slope of the valley. In the keepers' chest beneath the frame, a frost-stiff mantle has waited for this.",
+    "cost": {
+     "items": [
+      {
+       "content_id": "snow:bell_shard",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:rime_mantle",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "heal",
+      "amount": 20
+     },
+     {
+      "type": "apply_status",
+      "content_id": "core:status/regeneration",
+      "version": 1
+     },
+     {
+      "type": "xp",
+      "amount": 40
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/lee_shelter",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Lee shelter",
+   "description": "A carriers' lean-to inside a timber windbreak. Under its roof no storm can reach you.",
+   "metadata": {
+    "category": "shelter",
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/lee_marks",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "category": "shelter",
+    "visual": "lee_shelter",
+    "discovery": {
+     "mode": "visible"
+    },
+    "interactions": [
+     {
+      "id": "marks",
+      "verb": "Read the carriers' marks",
+      "trigger": "interact",
+      "event": {
+       "content_id": "snow:event/lee_marks",
+       "version": 1
+      }
+     }
+    ],
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1,
+     "priority": 90,
+     "conditions": []
+    }
+   }
+  },
+  {
+   "content_id": "snow:place/fallen_relay_pine",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Fallen relay pine",
+   "description": "A great pitchpine that came down across the old carriers' trail, split and weeping resin.",
+   "metadata": {
+    "category": "resource_site",
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/fallen_pine",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "category": "resource_site",
+    "visual": "fallen_pine",
+    "discovery": {
+     "mode": "visible"
+    },
+    "interactions": [
+     {
+      "id": "search",
+      "verb": "Search the fallen pine",
+      "trigger": "interact",
+      "event": {
+       "content_id": "snow:event/fallen_pine",
+       "version": 1
+      }
+     }
+    ],
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1,
+     "priority": 90,
+     "conditions": []
+    }
+   }
+  },
+  {
+   "content_id": "snow:place/relay_locker",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Carriers' locker",
+   "description": "A bell-stamped locker in the broken relay. Its ledger is chained to the lid.",
+   "metadata": {
+    "category": "ruin",
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/relay_ledger",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/relay_return",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/relay_force",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "category": "ruin",
+    "visual": "relay_locker",
+    "discovery": {
+     "mode": "visible"
+    },
+    "interactions": [
+     {
+      "id": "ledger",
+      "verb": "Read the carrier's ledger",
+      "trigger": "interact",
+      "event": {
+       "content_id": "snow:event/relay_ledger",
+       "version": 1
+      }
+     },
+     {
+      "id": "return",
+      "verb": "Return the carrier's clasp",
+      "trigger": "interact",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/relay_return",
+       "version": 1
+      }
+     },
+     {
+      "id": "force",
+      "verb": "Force the locker open",
+      "trigger": "interact",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/relay_force",
+       "version": 1
+      }
+     }
+    ],
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1,
+     "priority": 90,
+     "conditions": []
+    }
+   }
+  },
+  {
+   "content_id": "snow:place/bell_cairn",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Bell cairn",
+   "description": "A carriers' cairn in the bowl of the White Choir, half buried by drifts.",
+   "metadata": {
+    "category": "shrine",
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/cairn_dig",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "category": "shrine",
+    "visual": "cairn",
+    "discovery": {
+     "mode": "visible"
+    },
+    "interactions": [
+     {
+      "id": "dig",
+      "verb": "Dig among the cairn stones",
+      "trigger": "interact",
+      "event": {
+       "content_id": "snow:event/cairn_dig",
+       "version": 1
+      }
+     }
+    ],
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1,
+     "priority": 90,
+     "conditions": []
+    }
+   }
+  },
+  {
+   "content_id": "snow:place/summit_bell",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Silent bell",
+   "description": "The relay's great bell on the Crown Shelf, cracked and voiceless.",
+   "metadata": {
+    "category": "shrine",
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/bell_inspect",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/bell_restore",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "category": "shrine",
+    "visual": "bell",
+    "discovery": {
+     "mode": "visible"
+    },
+    "interactions": [
+     {
+      "id": "inspect",
+      "verb": "Examine the silent bell",
+      "trigger": "interact",
+      "event": {
+       "content_id": "snow:event/bell_inspect",
+       "version": 1
+      }
+     },
+     {
+      "id": "restore",
+      "verb": "Set the shard and ring the bell",
+      "trigger": "interact",
+      "after": "inspect",
+      "event": {
+       "content_id": "snow:event/bell_restore",
+       "version": 1
+      }
+     }
+    ],
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1,
+     "priority": 90,
+     "conditions": []
+    }
+   }
+  }
+ ]
+}

@@ -107,6 +107,8 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 			definitions[_key(event.content_id, int(event.version))] = event
 		definitions[_key(definition.content_id, int(definition.version))] = definition
 		if (regions != null or atlas_sites != null) and definition.content_id.begins_with("m03:place/"): continue
+		# Land-package places (M05) exist only where a land plan pins them as sites.
+		if definition.get("metadata", {}).get("site_only", false) == true: continue
 		rules.append({"definition": definition, "revision": revision_of(definition), "stream": Loot.number("locations-v1/" + definition.content_id)})
 	last_error = ""
 	return true

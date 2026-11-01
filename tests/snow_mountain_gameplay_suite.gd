@@ -68,7 +68,9 @@ func _run() -> void:
 	s.run.state.turn = calm
 	await _settle()
 	var kinds := _drawn_kinds()
-	check(kinds.has("snow") and not kinds.has("meadow") and app.map_view.art.placeholder_kinds.has("snow"), "Basin draws snow ground (code placeholder art, tracked): %s" % str(kinds.keys()))
+	var art: RefCounted = app.map_view.art
+	check(kinds.has("snow") and not kinds.has("meadow") and art.ground_source("snow") == art.SNOW_S1_GROUND_SOURCE and art.placeholder_kinds == ["frozen"], "Basin draws approved Batch S1 snow; only frozen ground is still a placeholder: %s" % str(kinds.keys()))
+	check(art.prop_source("pine") == art.SNOW_S1_PROP_SOURCE and art.prop_source("rock_snow") == art.SNOW_S1_PROP_SOURCE and art.frames("snow_wolf") != null, "S1 pine, windbreak rock and snow wolf frames are loaded")
 	await _capture("snow-arrival.png")
 	# Escarpment: a cliff face seen from the south of its rim.
 	var esc := Vector2i(int(plan.geography.escarpment.center.x), int(plan.geography.escarpment.center.y))
@@ -175,7 +177,86 @@ func _run() -> void:
 	if app.session != null:
 		await _settle()
 		await _capture("snow-resumed.png")
+		await _content_tour(app.session, plan)
 	_finish()
+
+func _site(plan: Dictionary, id: String) -> Dictionary:
+	for site in plan.sites:
+		if str(site.instance_id).ends_with("/site/" + id): return site
+	return {}
+
+func _near_site(s: RefCounted, site: Dictionary) -> void:
+	var tile := Vector2i(int(site.position.x), int(site.position.y))
+	for offset in [Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP]:
+		if s.terrain.walkable(tile + offset):
+			_teleport(s, tile + offset)
+			break
+	app._world_map.refresh(s.places.tick(s)) # As in play: discovery events reach the map.
+	app.map_view.refresh()
+	app._update_info()
+
+func _content_tour(s: RefCounted, plan: Dictionary) -> void:
+	## Stage D: native life, S1 landmarks and both chains in the real scene.
+	s.run.state.turn = _calm_turn(s, int(s.run.state.turn) + 200)
+	var lee := _site(plan, "lee_shelter")
+	_near_site(s, lee)
+	await _settle()
+	var lee_def: Dictionary = s.locations.definition_for(s.locations.find(lee.instance_id))
+	check(s.places.discovered(s, lee.instance_id) and app.map_view.art.place_sprite(lee_def) == app.map_view.art.texture("snow/places/lean_to.png"), "Lee shelter is discovered and drawn with the S1 lean-to")
+	await _capture("snow-lee-shelter.png")
+	# Carrier's Debt through real input: E on the locker, then the fallen pine, then E again.
+	var locker := _site(plan, "relay_locker")
+	_near_site(s, locker)
+	await _settle()
+	await _key(KEY_E)
+	check(app._notice.text.contains("Last entry") and s.run.state.entity_mutations.get(locker.instance_id, {}).get("resolved", {}).has("ledger"), "E on the carriers' locker reads the ledger: " + app._notice.text.left(90))
+	await _capture("snow-relay-ledger.png")
+	var pine := _site(plan, "fallen_relay_pine")
+	_near_site(s, pine)
+	await _settle()
+	await _key(KEY_E)
+	check(s.run.state.inventory.has("snow:relay_clasp"), "E on the fallen relay pine finds the relay clasp: " + app._notice.text.left(90))
+	await _capture("snow-fallen-pine.png")
+	_near_site(s, locker)
+	await _settle()
+	await _key(KEY_E)
+	check(not s.run.state.inventory.has("snow:relay_clasp") and s.run.state.inventory.has("snow:bark_ration"), "E again returns the clasp for the carriers' stores: " + app._notice.text.left(90))
+	await _capture("snow-relay-return.png")
+	# Native predator drawn with the S1 snow wolf.
+	var wolf := _wolf_home(s, plan)
+	if check(wolf.x != 2147483647, "A scree wolf home exists in the Pitchpine Reach"):
+		_teleport(s, wolf + Vector2i(0, 2) if s.terrain.walkable(wolf + Vector2i(0, 2)) else wolf + Vector2i(2, 0))
+		s.roster.center = Vector2i(2147483647, 2147483647) # Reload the homes the teleport cleared.
+		s.roster.chunks = {}
+		s.roster.follow(s.position, s.cache.chunks)
+		s._reveal()
+		app.map_view.refresh()
+		await _settle()
+		var drawn: bool = app.map_view._creatures.values().any(func(e: Dictionary) -> bool: return e.sprite != null and app.map_view.art.creature_sheet(e.creature.definition) == "snow_wolf")
+		check(drawn, "The scree wolf is drawn with the S1 snow wolf sheet")
+		await _capture("snow-scree-wolf.png")
+		s.roster.creatures.clear()
+	var bell := _site(plan, "summit_bell")
+	_near_site(s, bell)
+	await _settle()
+	await _key(KEY_E)
+	check(s.run.state.entity_mutations.get(bell.instance_id, {}).get("resolved", {}).has("inspect"), "E on the silent bell examines it: " + app._notice.text.left(90))
+	await _capture("snow-silent-bell.png")
+	await _key(KEY_M)
+	await _settle()
+	var markers: Array = app._world_map._all_markers()
+	check(markers.size() >= 4, "World Map shows the discovered Snow Mountain landmarks (%d markers)" % markers.size())
+	await _capture("snow-map-landmarks.png")
+	await _key(KEY_M)
+
+func _wolf_home(s: RefCounted, plan: Dictionary) -> Vector2i:
+	var first := Vector2i(int(plan.slot.x), int(plan.slot.y)) * 16
+	for cy in 16:
+		for cx in 16:
+			for home in s.roster.layer.generate_chunk(first + Vector2i(cx, cy)):
+				if home.content_id == "snow:scree_wolf" and int(s.terrain.region_at(Vector2i(int(home.position.x), int(home.position.y))).index) == 1:
+					return Vector2i(int(home.position.x), int(home.position.y))
+	return Vector2i(2147483647, 0)
 
 func _calm_turn(s: RefCounted, from: int) -> int:
 	var turn := from
