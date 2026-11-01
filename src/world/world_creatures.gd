@@ -4,6 +4,7 @@ extends RefCounted
 ## Run, visit order or time. Per-run hp/position/death live in entity mutations.
 const Effects = preload("res://src/core/effects.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
 const Loot = preload("res://src/core/loot_table.gd")
@@ -81,7 +82,7 @@ func validate(definition: Dictionary) -> bool:
 	if not Data.integer(movement.get("move_per_10000", 10000)) or movement.get("move_per_10000", 10000) < 1 or movement.get("move_per_10000", 10000) > 10000:
 		return _fail("Creature move_per_10000 must be 1..10000: " + id)
 	for biome in movement.biomes:
-		if biome not in Terrain.BIOMES:
+		if biome not in Surfaces.HABITATS:
 			return _fail("Unsupported creature movement biome: " + id)
 	var ai: Variant = payload.get("ai")
 	if not ai is Dictionary:
@@ -117,15 +118,17 @@ func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray())
 		bytes = terrain.generate_chunk(chunk)
 	var origin := chunk * Terrain.CHUNK_SIZE
 	var result: Array = []
+	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
-			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW]:
+			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
+			if habitat.is_empty():
 				continue
 			var point := origin + Vector2i(x, y)
 			for rule in rules:
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if Terrain.BIOMES[ground] not in spawn.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000):
+				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000):
 					continue
 				result.append({"instance_id": "crt:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"creature_generation_version": 1}})
 				break

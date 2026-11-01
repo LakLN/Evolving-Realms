@@ -3,6 +3,7 @@ extends RefCounted
 const Structured = preload("res://src/world/structured_world.gd")
 const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
 const Loot = preload("res://src/core/loot_table.gd")
@@ -77,7 +78,7 @@ func _valid_definition(definition: Dictionary) -> bool:
 		if not spawn is Dictionary or not spawn.get("biomes") is Array or spawn.biomes.is_empty() or not Data.integer(spawn.get("per_10000")) or spawn.per_10000 < 0 or spawn.per_10000 > 10000 or not Data.integer(spawn.get("priority", 20)):
 			return _fail("Invalid object distribution: " + str(definition.content_id))
 		for biome in spawn.biomes:
-			if biome not in Terrain.BIOMES:
+			if biome not in Surfaces.HABITATS:
 				return _fail("Unsupported object spawn biome")
 	return true
 
@@ -131,6 +132,8 @@ func generate_chunk(chunk: Vector2i) -> Array:
 	if regions != null:
 		regional_percent = int(regions.describe(Regions.cell_of(origin)).resource_percent)
 		for destination in regions.placements(chunk): reserved[Vector2i(int(destination.position.x), int(destination.position.y))] = true
+	elif terrain.has_method("placements"): # Atlas land sites keep their tiles free too.
+		for destination in terrain.placements(chunk): reserved[Vector2i(int(destination.position.x), int(destination.position.y))] = true
 	var occupied := {}
 	for instance in persisted:
 		var key := _key(instance.content_id, int(instance.version))
@@ -155,17 +158,19 @@ func generate_chunk(chunk: Vector2i) -> Array:
 	var bytes: PackedByteArray = terrain_cache.chunks.get(chunk, PackedByteArray())
 	if bytes.is_empty():
 		bytes = terrain.generate_chunk(chunk)
+	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var point := origin + Vector2i(x, y)
 			var ground: int = bytes[y * 32 + x]
-			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point) or reserved.has(point):
+			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
+			if habitat.is_empty() or occupied.has(point) or reserved.has(point):
 				continue
 			for rule in rules:
 				var spawn: Dictionary = rule.definition.payload.spawn
 				var chance := int(spawn.per_10000)
 				if regions != null and rule.definition.content_id.begins_with("m03:resource/"): chance = chance * regional_percent / 100
-				if Terrain.BIOMES[ground] not in spawn.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance:
+				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance:
 					continue
 				result.append({"instance_id": "proc:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"object_generation_version": 1}})
 				break

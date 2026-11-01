@@ -12,6 +12,7 @@ const Art = preload("res://src/world/art.gd")
 const WorldMap = preload("res://src/ui/world_map.gd")
 const Realtime = preload("res://src/run/realtime_controller.gd")
 const Structured = preload("res://src/world/structured_world.gd")
+const Atlas = preload("res://src/world/world_atlas.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
 const CONTROLS_TURN := "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills | M: map | N: minimap"
 const CONTROLS_REALTIME := "Hold WASD: move | F: attack | \"!\": step away to dodge | E | X | R: rest | 1-9 | I C T K | M: map | N: minimap"
@@ -44,6 +45,11 @@ var _realtime: RefCounted
 var _create_world: Button
 var _new_run: Button
 var _resume: Button
+## Milestone 04: the persistent World (atlas) entry points on the main menu.
+var _adventure: Button
+var _chart: Button
+var _atlas_line: Label
+var _pending_land: Dictionary = {}
 var _status: Label
 var _info: Label
 var _notice: Label
@@ -181,7 +187,7 @@ func _build_menu(parent: Control) -> void:
 	_name_entry = _entry(left, "New world name", "")
 	_world_seed = _entry(left, "World seed (blank = random)", "")
 	_world_layout = OptionButton.new()
-	for layout in [["structured", "Layout: structured regions (M03)"], ["legacy", "Layout: legacy (Run 01 style)"]]:
+	for layout in [["structured", "Layout: structured regions (M03)"], ["legacy", "Layout: legacy (Run 01 style)"], ["atlas", "Layout: persistent atlas lands (M04)"]]:
 		_world_layout.add_item(layout[1])
 		_world_layout.set_item_metadata(_world_layout.item_count - 1, layout[0])
 	# M03 integration: structured Worlds are the default; `-- --layout=legacy` preselects legacy.
@@ -216,12 +222,22 @@ func _build_menu(parent: Control) -> void:
 	body.add_child(right)
 	_label(right, "SAVED RUNS", 20)
 	_runs = ItemList.new()
-	_runs.custom_minimum_size = Vector2(450, 280)
+	_runs.custom_minimum_size = Vector2(450, 190)
 	_runs.item_selected.connect(func(_index: int) -> void: _resume.disabled = false)
 	_runs.item_activated.connect(func(_index: int) -> void: _on_resume())
 	right.add_child(_runs)
 	_resume = _button(right, "Continue selected run", _on_resume)
 	_button(right, "Exit", _request_exit)
+	right.add_child(HSeparator.new())
+	_label(right, "THE EVOLVING REALM", 20)
+	_atlas_line = _label(right, "", 14)
+	_atlas_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	right.add_child(actions)
+	_adventure = _button(actions, "New Adventure", _on_new_adventure)
+	_chart = _button(actions, "Chart a new land (dev)", _on_chart_land)
+	for button in [_adventure, _chart]: button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -989,13 +1005,97 @@ func _refresh_worlds(selected: String = "") -> void:
 	_worlds.clear()
 	if _data_ready:
 		for world in store.list_worlds():
-			var structured := Structured.enabled(store.load_world(world.world_id))
-			_worlds.add_item("%s  /  seed %d%s" % [str(world.name).left(32), world.seed, "  [structured]" if structured else ""])
+			var loaded: Dictionary = store.load_world(world.world_id)
+			var tag := "  [atlas]" if Atlas.enabled(loaded) else ("  [structured]" if Structured.enabled(loaded) else "")
+			_worlds.add_item("%s  /  seed %d%s" % [str(world.name).left(32), world.seed, tag])
 			var index := _worlds.item_count - 1
 			_worlds.set_item_metadata(index, world.world_id)
 			if world.world_id == selected:
 				_worlds.select(index)
+	_refresh_atlas_line()
 	_refresh_runs()
+
+func _persistent_world() -> Dictionary:
+	## The persistent World is the first atlas World of this save (created on demand).
+	if not _data_ready:
+		return {}
+	for header in store.list_worlds():
+		var loaded: Dictionary = store.load_world(header.world_id)
+		if Atlas.enabled(loaded):
+			return loaded
+	return {}
+
+func _refresh_atlas_line() -> void:
+	if _atlas_line == null:
+		return
+	var world := _persistent_world()
+	_chart.disabled = world.is_empty()
+	if world.is_empty():
+		_atlas_line.text = "No persistent world yet: New Adventure charts one (a few seconds, once)."
+		return
+	var atlas := Atlas.new()
+	if not atlas.open(store.content, world):
+		_atlas_line.text = atlas.last_error
+		return
+	var names: Array = atlas.lands.values().map(func(plan: Dictionary) -> String: return str(plan.name))
+	_atlas_line.text = "%s: %d lands, revision %d. Each adventure starts in a random land." % [world.name, atlas.lands.size(), atlas.revision()]
+	_atlas_line.tooltip_text = ", ".join(names)
+
+func _on_new_adventure() -> void:
+	## Normal play: the persistent World, a random eligible land, a fresh character.
+	var world := _persistent_world()
+	if world.is_empty():
+		_message("Charting the persistent world for the first time...")
+		_adventure.disabled = true
+		await get_tree().process_frame
+		await get_tree().process_frame
+		world = Atlas.create_world(store, "The Evolving Realm", int(randi() & 0x7fffffff))
+		_adventure.disabled = false
+		if world.is_empty():
+			_message(store.last_error, true)
+			return
+	var next := Session.new(store)
+	if not next.start_new(world.world_id, int(randi() & 0x7fffffff), "any", _mode.get_item_metadata(_mode.selected), _time_model.get_item_metadata(_time_model.selected)):
+		_message(next.last_error, true)
+		_refresh_worlds(world.world_id)
+		return
+	_refresh_worlds(world.world_id)
+	var arrival := describe_events(next.last_events)
+	_enter_map(next)
+	_notice.text = (arrival + " " + _notice.text).strip_edges()
+
+func _on_chart_land() -> void:
+	## Development: propose -> validate -> (click again to approve) -> activate.
+	var world := _persistent_world()
+	if world.is_empty():
+		return
+	var atlas := Atlas.new()
+	if not atlas.open(store.content, world):
+		_message(atlas.last_error, true)
+		return
+	if _pending_land.get("world_id", "") != world.world_id or int(_pending_land.get("revision", -1)) != atlas.revision():
+		_message("Designing a land beyond a frontier gate...")
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var proposal: Dictionary = atlas.propose_expansion()
+		if proposal.is_empty():
+			_message(atlas.last_error, true)
+			return
+		var problem: String = atlas.validate(proposal)
+		if not problem.is_empty():
+			_message("Proposal rejected by validation: " + problem, true)
+			return
+		_pending_land = {"world_id": world.world_id, "revision": atlas.revision(), "proposal": proposal}
+		_chart.text = "Approve: %s" % proposal.land.name
+		_message("PROPOSED (validated, not active): %s. %s. Click Approve to add it to the World." % [proposal.summary, str(proposal.land.history)])
+		return
+	if not atlas.activate(_pending_land.proposal, {"by": "developer (main menu)"}):
+		_message(atlas.last_error, true)
+		return
+	_message("Revision %d: %s joins the World. Established lands are unchanged; new adventures may begin there." % [atlas.revision(), _pending_land.proposal.land.name])
+	_pending_land = {}
+	_chart.text = "Chart a new land (dev)"
+	_refresh_worlds(world.world_id)
 
 func _refresh_runs() -> void:
 	_runs.clear()
@@ -1029,6 +1129,17 @@ func use_legacy_defaults() -> void:
 func _on_create_world() -> void:
 	var seed_value: Variant = _parse_seed(_world_seed)
 	if seed_value == null:
+		return
+	if _world_layout.get_item_metadata(_world_layout.selected) == "atlas":
+		_message("Charting the atlas World...")
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var atlas_world := Atlas.create_world(store, _name_entry.text, seed_value)
+		if atlas_world.is_empty():
+			_message(store.last_error, true)
+			return
+		_refresh_worlds(atlas_world.world_id)
+		_message("Atlas World created with its first lands. Begin a run (a random land) or New Adventure.")
 		return
 	if _world_layout.get_item_metadata(_world_layout.selected) == "structured":
 		var structured := Structured.create(store, _name_entry.text, seed_value)
@@ -1107,6 +1218,7 @@ func _enter_map(active_session: RefCounted) -> void:
 		show_talent(true) # Reveal once; the record is already part of the Run state.
 		session.awakened_now = []
 
+const ROUTE_NAMES := {"pass": "mountain pass", "causeway": "causeway", "harbor": "harbour"}
 const DIRECTIONS_8 := ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"]
 
 func _refresh_exploration() -> void:
@@ -1116,6 +1228,9 @@ func _refresh_exploration() -> void:
 	_frontiers = session.exploration_frontiers()
 	var markers: Array = []
 	var journal: Array = []
+	var routes: Array = [] # Atlas lands and routes lead the journal; clues follow.
+	for land in session.known_lands():
+		routes.append({"state": "discovered", "title": "◆ %s (%s)" % [land.name, land.title], "detail": "%s — %d/%d regions walked" % [land.epithet, land.regions.size(), int(land.region_count)]})
 	for lead in _leads:
 		var title := str(lead.metadata.get("title", lead.role))
 		if lead.knowledge == "lead": # Not seen yet: discovered ones are already map landmarks.
@@ -1123,15 +1238,20 @@ func _refresh_exploration() -> void:
 		var state := "resolved" if lead.resolved else ("discovered" if lead.knowledge == "discovered" else "lead")
 		journal.append({"state": state, "title": "%s %s" % [{"lead": "?", "discovered": "•", "resolved": "✓"}[state], _short_title(title)], "detail": "%s — %s" % [{"lead": "lead, not seen yet", "discovered": "found", "resolved": "done"}[state], str(lead.reason)]})
 	for frontier in _frontiers:
+		if frontier.has("gate_id"): # Atlas route/gate (M04): only what this Run has seen or read.
+			var state: String = {"open": "open", "locked": "locked", "veil": "into the Veil"}.get(frontier.state, frontier.state)
+			markers.append({"id": "frontier:" + str(frontier.gate_id), "position": frontier.position.duplicate(), "label": "→ %s (%s)" % [frontier.name, state], "kind": "frontier"})
+			routes.append({"state": "frontier", "title": "→ %s, %s" % [frontier.name, frontier.direction], "detail": str(frontier.opportunity)})
+			continue
 		var bounds: Dictionary = frontier.bounds
 		var center := {"x": int(bounds.x) + int(bounds.size) / 2, "y": int(bounds.y) + int(bounds.size) / 2}
 		markers.append({"id": "frontier:" + str(frontier.region_id), "position": center, "label": "→ %s (%s, unsurveyed)" % [frontier.name, frontier.direction], "kind": "frontier"})
 		journal.append({"state": "frontier", "title": "→ %s (%s)" % [frontier.name, frontier.direction], "detail": "unsurveyed — %s" % frontier.opportunity})
 	_world_map.set_markers(markers)
-	_world_map.set_journal(journal)
+	_world_map.set_journal(routes + journal)
 
 func _after_exploration_events(events: Array) -> void:
-	if events.any(func(e: Dictionary) -> bool: return e.get("type") in ["discovery", "location"]):
+	if events.any(func(e: Dictionary) -> bool: return e.get("type") in ["discovery", "location", "land_entered", "region_entered", "route_sighted", "route_learned"]):
 		_refresh_exploration()
 
 func _bearing(target: Dictionary) -> String:
@@ -1146,6 +1266,13 @@ func region_text() -> String:
 	if region.is_empty():
 		return ""
 	var text := "Region: %s (danger %d, %s)" % [region.name, int(region.danger), region.opportunity]
+	if region.has("land_name"): # Atlas World: land > region, then the weather where you stand.
+		text = "%s › %s (danger %d, %s)" % [region.land_name, region.name, int(region.danger), region.opportunity]
+		var status: Dictionary = session.environment_status()
+		if not str(status.get("weather", "")).is_empty():
+			text += "  |  %s%s" % [status.weather, ": EXPOSED" if status.exposed else (": sheltered" if status.sheltered else "")]
+		if not str(status.get("hazard", "")).is_empty():
+			text += "  |  ⚠ " + status.hazard
 	var best: Dictionary = {}
 	var best_distance := 2147483647
 	for lead in _leads:
@@ -1380,6 +1507,18 @@ func describe_events(events: Array) -> String:
 				if event.found.is_empty(): parts.append("You search the area but find nothing new.")
 			"location_error":
 				parts.append("Place could not be recorded: " + str(event.error))
+			"land_entered":
+				parts.append("LAND: %s, %s (%s, %s)." % [event.name, event.epithet, event.title, event.climate])
+			"region_entered":
+				parts.append("Region: %s (danger %d)." % [event.name, int(event.danger)])
+			"route_sighted":
+				parts.append("You sight a %s to the %s." % [ROUTE_NAMES.get(event.kind, "route"), event.side])
+			"route_learned":
+				parts.append("Road-marks tell of a %s to the %s." % [ROUTE_NAMES.get(event.kind, "route"), event.side])
+			"weather":
+				parts.append(("%s! Sight drops to %d." % [event.name, int(event.sight)]) if event.state == "start" else "The %s passes." % str(event.name).to_lower())
+			"environment":
+				parts.append("%s: %d HP%s" % [event.name, int(event.amount), " — shelter beside trees or rocks!" if event.kind == "exposure" else " — get off the scorching ground!"])
 			"autosave":
 				parts.append("Autosaved.")
 			"autosave_failed":

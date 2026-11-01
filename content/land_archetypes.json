@@ -1,0 +1,107 @@
+{
+  "archetypes_version": 1,
+  "syllables": {
+    "start": ["Ar", "Bel", "Cor", "Dun", "El", "Fen", "Gal", "Hal", "Is", "Kar", "Lor", "Mor", "Nor", "Os", "Ral", "Sil", "Tor", "Ul", "Var", "Wyn", "Ser", "Ath", "Bryn", "Cael"],
+    "middle": ["a", "e", "i", "o", "u", "ae", "y", "", "", ""],
+    "end": ["dan", "mir", "wen", "rath", "gard", "mond", "ric", "vel", "thas", "brook", "dell", "har", "nis", "ost", "um", "ven"]
+  },
+  "archetypes": [
+    {
+      "id": "temperate_woodland",
+      "title": "Woodland",
+      "climate": {"label": "temperate", "min_lat": -1, "max_lat": 2},
+      "rim": "sea",
+      "gate_kinds": ["causeway", "causeway", "harbor"],
+      "radius": [160, 185],
+      "shore": "beach",
+      "region_count": [5, 7],
+      "names": ["{root}wood", "The {root} Weald", "{root} Vale"],
+      "adjectives": ["Elder", "Green", "Bright", "Hollow", "Mossy", "Silver", "Dawn"],
+      "epithets": ["old forests around quiet lakes", "a green country of glades and still water"],
+      "histories": ["Wardens once tended the {land}; their waystones still mark the old roads.", "The {land} was the first country settled after the Long Mist withdrew."],
+      "regions": {
+        "old_forest": {"names": ["{adj} Thicket", "{adj} Oldwood"], "ground": "forest", "patch": {"surface": "meadow", "scale": 40, "above": 760}, "blocker": {"tile": "tree", "percent": 14, "on": ["forest"]}, "rocks": {"tile": "rock", "percent": 2}, "pools": {"surface": "water", "scale": 60, "below": 150}, "danger": [1, 2], "sites": ["core:place/buried_shrine"], "opportunity": "game, herbs and old shrines"},
+        "glade_meadow": {"names": ["{adj} Glades", "{adj} Meadows"], "ground": "meadow", "patch": {"surface": "forest", "scale": 48, "above": 700}, "blocker": {"tile": "tree", "percent": 10, "on": ["forest"]}, "rocks": {"tile": "rock", "percent": 2}, "pools": {"surface": "water", "scale": 60, "below": 120}, "danger": [0, 1], "start": true, "sites": ["core:place/clear_spring"], "opportunity": "berries, springs and safe roads"},
+        "lake_shore": {"names": ["{adj} Mere", "{adj} Lakeshore"], "ground": "meadow", "pools": {"surface": "water", "scale": 72, "below": 330, "edge": "beach", "edge_width": 45}, "blocker": {"tile": "tree", "percent": 5, "on": ["meadow"]}, "rocks": {"tile": "rock", "percent": 2}, "danger": [0, 1], "start": true, "sites": ["core:place/ancient_ruin"], "opportunity": "reeds, fish-rich shallows and ruins"},
+        "stone_hills": {"names": ["{adj} Tors", "{adj} Hills"], "ground": "meadow", "ridges": {"tile": "rock", "scale": 56, "low": 480, "high": 520}, "blocker": {"tile": "tree", "percent": 4, "on": ["meadow"]}, "rocks": {"tile": "rock", "percent": 6}, "danger": [1, 2], "sites": ["core:place/spirit_vein"], "opportunity": "stone, ore veins and lookout points"}
+      },
+      "weather": [{"id": "mist", "name": "Low mist", "cycle": 200, "duration": 40, "chance": 45, "sight": 5}],
+      "hazards": [],
+      "ecology": {}
+    },
+    {
+      "id": "coastal_downs",
+      "title": "Coast",
+      "climate": {"label": "mild maritime", "min_lat": -1, "max_lat": 3},
+      "rim": "sea",
+      "gate_kinds": ["causeway", "harbor", "harbor"],
+      "radius": [155, 182],
+      "shore": "beach",
+      "region_count": [5, 6],
+      "names": ["The {root} Shores", "{root} Downs", "The {root} Coast"],
+      "adjectives": ["Salt", "Gull", "White", "Windward", "Drift", "Amber"],
+      "epithets": ["wind-swept downs above long beaches", "a coast of dunes, marsh and wrecks"],
+      "histories": ["Ships of the {land} once traded far beyond the mist; their wrecks still dot the strand.", "Shepherds of the {land} built cairns on the downs to guide travellers inland."],
+      "regions": {
+        "dune_coast": {"names": ["{adj} Dunes", "{adj} Strand"], "ground": "beach", "patch": {"surface": "meadow", "scale": 44, "above": 640}, "rocks": {"tile": "rock", "percent": 2}, "danger": [0, 1], "start": true, "sites": ["core:place/clear_spring"], "opportunity": "shells, crabs and driftwood"},
+        "downs": {"names": ["{adj} Downs", "{adj} Heath"], "ground": "meadow", "patch": {"surface": "forest", "scale": 52, "above": 760}, "blocker": {"tile": "tree", "percent": 10, "on": ["forest"]}, "rocks": {"tile": "rock", "percent": 3}, "danger": [0, 1], "start": true, "sites": ["core:place/ancient_ruin"], "opportunity": "open grazing land and cairns"},
+        "salt_marsh": {"names": ["{adj} Marsh", "{adj} Fens"], "ground": "meadow", "pools": {"surface": "water", "scale": 40, "below": 300, "edge": "beach", "edge_width": 35}, "danger": [1, 2], "sites": ["core:place/miasma_vent"], "opportunity": "reeds, herbs and foul vents"},
+        "wreck_strand": {"names": ["{adj} Wrecks", "{adj} Reef"], "ground": "beach", "pools": {"surface": "water", "scale": 36, "below": 180}, "rocks": {"tile": "rock", "percent": 5}, "danger": [1, 2], "sites": ["core:place/buried_shrine"], "opportunity": "salvage from old wrecks"}
+      },
+      "weather": [{"id": "sea_gale", "name": "Sea gale", "cycle": 180, "duration": 40, "chance": 50, "sight": 5}],
+      "hazards": [],
+      "ecology": {}
+    },
+    {
+      "id": "frost_highlands",
+      "title": "Highlands",
+      "climate": {"label": "arctic", "min_lat": -6, "max_lat": -1},
+      "rim": "ridge",
+      "gate_kinds": ["pass", "pass", "pass"],
+      "radius": [165, 186],
+      "region_count": [5, 7],
+      "names": ["The {root} Highlands", "{root}frost Reach", "The {root} Peaks"],
+      "adjectives": ["White", "Rime", "Grey", "Howling", "Pale", "Frost", "Winter"],
+      "epithets": ["snow-bound highlands of pine and ice", "a frozen upland where blizzards come without warning"],
+      "histories": ["The hunters of the {land} sheltered behind standing stones when the blizzards came.", "An old watch kept the passes of the {land}; only their cairns remain."],
+      "regions": {
+        "pine_taiga": {"names": ["{adj}pine Taiga", "{adj} Pinewood"], "ground": "taiga", "patch": {"surface": "snowfield", "scale": 44, "above": 680}, "blocker": {"tile": "pine", "percent": 15, "on": ["taiga"]}, "rocks": {"tile": "rock", "percent": 2}, "pools": {"surface": "ice", "scale": 60, "below": 140}, "danger": [0, 1], "start": true, "sites": ["core:place/ancient_ruin"], "opportunity": "firewood, shelter among the pines"},
+        "snowfield": {"names": ["{adj} Snowfield", "{adj} Drifts"], "ground": "snowfield", "patch": {"surface": "taiga", "scale": 50, "above": 760}, "blocker": {"tile": "pine", "percent": 8, "on": ["taiga"]}, "rocks": {"tile": "rock", "percent": 3}, "pools": {"surface": "ice", "scale": 70, "below": 220}, "danger": [1, 2], "sites": ["core:place/spirit_vein"], "opportunity": "buried caches under open snow"},
+        "glacier_ridge": {"names": ["{adj} Glacier", "{adj} Crags"], "ground": "snowfield", "ridges": {"tile": "rock", "scale": 48, "low": 470, "high": 530}, "rocks": {"tile": "rock", "percent": 8}, "pools": {"surface": "ice", "scale": 64, "below": 300}, "danger": [2, 3], "sites": ["core:place/buried_shrine"], "opportunity": "stone, ice caves and old shrines"},
+        "frozen_lake": {"names": ["{adj} Icemere", "{adj} Frozen Lake"], "ground": "snowfield", "pools": {"surface": "ice", "scale": 80, "below": 520}, "blocker": {"tile": "pine", "percent": 4, "on": ["snowfield"]}, "danger": [1, 1], "sites": [], "opportunity": "a vast frozen lake, easy to cross and hard to hide on"}
+      },
+      "weather": [{"id": "blizzard", "name": "Blizzard", "cycle": 150, "duration": 50, "chance": 60, "sight": 3,
+        "exposure": {"surfaces": ["snowfield", "taiga", "ice"], "every": 5, "damage": 1, "shelter": ["pine", "rock", "tree", "basalt"]}}],
+      "hazards": [],
+      "ecology": {
+        "taiga": ["core:wolf", "core:fallen_branches", "core:herb_patch", "core:lost_coin", "core:weathered_chest", "core:buried_cache", "core:place/ancient_ruin", "core:place/buried_shrine"],
+        "snowfield": ["core:wolf", "core:loose_stones", "core:lost_coin", "core:weathered_chest", "core:buried_cache", "core:place/spirit_vein"]
+      }
+    },
+    {
+      "id": "ashen_caldera",
+      "title": "Caldera",
+      "climate": {"label": "volcanic", "min_lat": -2, "max_lat": 2, "off_meridian": true},
+      "rim": "sea",
+      "gate_kinds": ["causeway", "causeway", "harbor"],
+      "radius": [150, 180],
+      "shore": "ashland",
+      "region_count": [5, 6],
+      "names": ["The {root} Caldera", "{root}ash Wastes", "The Burning {root}"],
+      "adjectives": ["Ember", "Black", "Sulfur", "Smoke", "Cinder", "Scorched", "Red"],
+      "epithets": ["ash plains around a smouldering caldera", "a scorched land of basalt spires and rivers of fire"],
+      "histories": ["The forges of the {land} were buried when the mountain woke; their vaults still hold metal.", "Pilgrims crossed the {land} to read omens in its vents, and few returned."],
+      "regions": {
+        "ash_plain": {"names": ["{adj} Ashfields", "{adj} Barrens"], "ground": "ashland", "rocks": {"tile": "basalt", "percent": 4}, "pools": {"surface": "lava", "scale": 64, "below": 110, "edge": "cinder", "edge_width": 50}, "danger": [1, 1], "start": true, "sites": ["core:place/ancient_ruin"], "opportunity": "buried forge-metal and stone"},
+        "lava_field": {"names": ["{adj} Flows", "{adj} Lavafield"], "ground": "ashland", "pools": {"surface": "lava", "scale": 56, "below": 330, "edge": "cinder", "edge_width": 70}, "rocks": {"tile": "basalt", "percent": 6}, "danger": [2, 3], "sites": ["core:place/spirit_vein"], "opportunity": "rare veins between rivers of fire"},
+        "basalt_spires": {"names": ["{adj} Spires", "{adj} Columns"], "ground": "ashland", "ridges": {"tile": "basalt", "scale": 52, "low": 470, "high": 525}, "rocks": {"tile": "basalt", "percent": 10}, "danger": [1, 2], "sites": ["core:place/buried_shrine"], "opportunity": "sheltered paths through stone columns"},
+        "cinder_vents": {"names": ["{adj} Vents", "{adj} Fumaroles"], "ground": "ashland", "patch": {"surface": "cinder", "scale": 36, "above": 700}, "pools": {"surface": "lava", "scale": 48, "below": 90}, "rocks": {"tile": "basalt", "percent": 3}, "danger": [2, 3], "sites": ["core:place/miasma_vent"], "opportunity": "omens and poison from the vents"}
+      },
+      "weather": [{"id": "ashfall", "name": "Ash fall", "cycle": 120, "duration": 40, "chance": 55, "sight": 4}],
+      "hazards": [{"surface": "cinder", "name": "Scorching ground", "every": 2, "damage": 1}],
+      "ecology": {
+        "ashland": ["core:wolf", "core:loose_stones", "core:lost_coin", "core:weathered_chest", "core:buried_cache", "core:place/miasma_vent", "core:place/ancient_ruin", "core:place/spirit_vein"]
+      }
+    }
+  ]
+}

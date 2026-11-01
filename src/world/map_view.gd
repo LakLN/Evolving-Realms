@@ -6,6 +6,9 @@ extends Node2D
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Palette = preload("res://src/world/tile_palette.gd")
 const Art = preload("res://src/world/art.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
+## Fallback palette (no art index): atlas surfaces drawn as their nearest v1 cell.
+const PALETTE_OF := {Surfaces.SNOW: 2, Surfaces.TAIGA: 0, Surfaces.PINE: 4, Surfaces.ICE: 3, Surfaces.ASH: 1, Surfaces.CINDER: 1, Surfaces.LAVA: 3, Surfaces.BASALT: 5, Surfaces.VEIL: 6, Surfaces.ROAD: 1}
 const DISPOSITION_COLORS := {"hostile": Color("e0564b"), "neutral": Color("e0b34b"), "passive": Color("7fd17a")}
 const BODY_COLORS := {"wolf": Color("9aa2a8"), "boar": Color("8a5a3c"), "rabbit": Color("e6dccb"), "deer": Color("c08a52"), "crab": Color("e2713f")}
 const KINDS := {Terrain.FOREST: "forest", Terrain.BEACH: "beach", Terrain.MEADOW: "meadow", Terrain.WATER: "ocean", Terrain.TREE: "forest"}
@@ -180,7 +183,12 @@ func face(direction: Vector2i) -> void:
 # ------------------------------------------------------------------ terrain
 
 func _kind(tile: Vector2i) -> String:
-	var value: int = session.cache.tile_at(tile)
+	return _kind_of(session.cache.tile_at(tile), tile)
+
+func _kind_of(value: int, tile: Vector2i) -> String:
+	## Art ground kind of a tile: blockers draw on their land/biome ground.
+	if session.terrain.has_method("art_kind_at"): # Atlas lands (M04).
+		return session.terrain.art_kind_at(tile) if Surfaces.opaque(value) else Surfaces.ART_KIND.get(value, "veil")
 	if value == Terrain.ROCK:
 		return session.terrain.biome_at(tile)
 	return KINDS.get(value, "meadow")
@@ -197,7 +205,8 @@ func _add_chunk(chunk: Vector2i) -> void:
 	if not art.ready():
 		for y in Terrain.CHUNK_SIZE:
 			for x in Terrain.CHUNK_SIZE:
-				ground.set_cell(Vector2i(x, y), 0, Vector2i(bytes[y * Terrain.CHUNK_SIZE + x], 0))
+				var raw: int = bytes[y * Terrain.CHUNK_SIZE + x]
+				ground.set_cell(Vector2i(x, y), 0, Vector2i(PALETTE_OF.get(raw, raw), 0))
 		return
 	var overlays: Array = []
 	for i in Art.OVERLAYS.size():
@@ -223,14 +232,15 @@ func _add_chunk(chunk: Vector2i) -> void:
 			var global_tile := base + Vector2i(x - 1, y - 1)
 			var inside := x > 0 and y > 0 and x <= Terrain.CHUNK_SIZE and y <= Terrain.CHUNK_SIZE
 			var value: int = bytes[(y - 1) * Terrain.CHUNK_SIZE + x - 1] if inside else -1
-			kinds[y * side + x] = (session.terrain.biome_at(global_tile) if value == Terrain.ROCK else KINDS[value]) if inside else _kind(global_tile)
+			kinds[y * side + x] = _kind_of(value, global_tile) if inside else _kind(global_tile)
 	var offsets := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(-1, -1)]
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var local := Vector2i(x, y)
 			var global_tile := base + local
 			var kind: String = kinds[(y + 1) * side + x + 1]
-			ground.set_cell(local, Art.GROUND_SOURCE, Art.pick(art.ground[kind], Art.tile_roll(global_tile, 1)))
+			if not art.ground.has(kind): kind = "meadow"
+			ground.set_cell(local, art.ground_source(kind), Art.pick(art.ground[kind], Art.tile_roll(global_tile, 1)))
 			for i in Art.OVERLAYS.size():
 				if not kind in Art.OVERLAYS[i][1]:
 					continue
@@ -244,6 +254,10 @@ func _add_chunk(chunk: Vector2i) -> void:
 			var value: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			if value == Terrain.TREE:
 				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.tree, Art.tile_roll(global_tile, 2)))
+			elif value in [Surfaces.PINE, Surfaces.BASALT]:
+				var prop: String = "pine" if value == Surfaces.PINE else "basalt"
+				if not art.props.get(prop, []).is_empty():
+					props.set_cell(local, art.prop_source(prop), Art.pick(art.props[prop], Art.tile_roll(global_tile, 2)))
 			elif value == Terrain.ROCK:
 				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.get("rock_" + kind, art.props.rock), Art.tile_roll(global_tile, 2)))
 			elif art.decor.has(kind) and Art.tile_roll(global_tile, 3) % 100 < 7:

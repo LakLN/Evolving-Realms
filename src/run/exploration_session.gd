@@ -3,6 +3,10 @@ extends RefCounted
 const Structured = preload("res://src/world/structured_world.gd")
 const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Atlas = preload("res://src/world/world_atlas.gd")
+const EnvironmentRuntime = preload("res://src/run/environment_runtime.gd")
+const AtlasKnowledge = preload("res://src/run/atlas_knowledge.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const Chunks = preload("res://src/world/chunk_cache.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
 const Data = preload("res://src/data/json_data.gd")
@@ -38,7 +42,11 @@ const DIAGONALS := [Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-
 static var auto_awaken := true
 signal action_completed(action: Dictionary, result: Dictionary)
 var store: RefCounted
-var terrain := Terrain.new()
+var terrain := Terrain.new() # Terrain v1, or atlas terrain (a typed subclass) for atlas Worlds.
+## Atlas Worlds (Milestone 04): the World atlas, its environment and this Run's knowledge.
+var atlas: RefCounted
+var environment := EnvironmentRuntime.new()
+var atlas_knowledge := AtlasKnowledge.new()
 var cache: RefCounted
 var world: Dictionary = {}
 var run: Dictionary = {}
@@ -107,10 +115,15 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var blueprint: Dictionary = store.load_world(world_id)
 	if blueprint.is_empty():
 		return _fail(store.last_error)
-	var generator := Terrain.new()
-	if not generator.configure(int(blueprint.seed), int(blueprint.generation_version)):
-		return _fail(generator.last_error)
-	var spawn: Dictionary = Regions.new(generator).spawn(run_seed, biome) if Structured.enabled(blueprint) else Spawn.select(generator, run_seed, biome, Spawn.RUN_SELECTION_VERSION)
+	var generator: Terrain = _terrain_for(blueprint)
+	if generator == null:
+		return false
+	var spawn: Dictionary
+	if Atlas.enabled(blueprint):
+		# New adventure in the persistent World: `biome` may name a land ID ("any" = random).
+		spawn = _next_atlas.select_start(generator, run_seed, "" if biome == "any" else biome)
+	else:
+		spawn = Regions.new(generator).spawn(run_seed, biome) if Structured.enabled(blueprint) else Spawn.select(generator, run_seed, biome, Spawn.RUN_SELECTION_VERSION)
 	if spawn.is_empty():
 		return _fail("No accessible spawn found for biome " + biome)
 	if time_model != "turn":
@@ -121,7 +134,7 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	if created.is_empty():
 		return _fail(store.last_error)
 	if not _activate(blueprint, created): return false
-	if Structured.enabled(blueprint): last_events.append_array(places.reveal_start(self))
+	if Structured.enabled(blueprint) or Atlas.enabled(blueprint): last_events.append_array(places.reveal_start(self))
 	return _grant_starting_items() and save()
 
 func _grant_starting_items() -> bool:
@@ -166,9 +179,9 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var model: Variant = loaded.get("spawn", {}).get("time_model", "turn")
 	if model not in TIME_MODELS:
 		return _fail("Unsupported time model %s; save was not changed" % str(model))
-	var generator := Terrain.new()
-	if not generator.configure(int(blueprint.seed), int(blueprint.generation_version)):
-		return _fail(generator.last_error)
+	var generator: Terrain = _terrain_for(blueprint)
+	if generator == null:
+		return false
 	var saved_position: Dictionary = loaded.state.character.position
 	if not _within_limits(saved_position):
 		return _fail("Saved position is outside the playable world; save was not changed")
@@ -192,7 +205,7 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 		# Idempotent append-only install; survival resources must exist before objects load.
 		if not packs.install(store.content, blueprint.world_id, path):
 			return _fail(packs.last_error)
-	if Structured.enabled(blueprint) and not packs.install(store.content, blueprint.world_id, Structured.PACK):
+	if (Structured.enabled(blueprint) or Atlas.enabled(blueprint)) and not packs.install(store.content, blueprint.world_id, Structured.PACK):
 		return _fail(packs.last_error)
 	var next_uses := _load_uses(blueprint.world_id)
 	if not last_error.is_empty():
@@ -253,7 +266,8 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	# World-scoped established regions: pre-ledger exploration is sealed at revision 0
 	# once, then every newly loaded chunk pins the current encounter revision.
 	var ledger := Ledger.new()
-	if not ledger.configure(store.content, blueprint.world_id, Structured.layers(blueprint)) or not ledger.seal_baseline(store):
+	var layers: Array = ["locations-v1", "atlas-world-v1"] if Atlas.enabled(blueprint) else Structured.layers(blueprint)
+	if not ledger.configure(store.content, blueprint.world_id, layers) or not ledger.seal_baseline(store):
 		return _fail(ledger.last_error)
 	var next_locations := Locations.new()
 	if not next_locations.configure(blueprint, generator, store.content, ledger, next_objects, skill_context, next_skill_rules) or not next_locations.follow(tile, next_cache.chunks):
@@ -263,6 +277,8 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	if not layer.configure(blueprint, generator, store.content, ledger) or not next_roster.configure(layer, loaded) or not next_roster.follow(tile, next_cache.chunks):
 		return _fail(layer.last_error if not layer.last_error.is_empty() else next_roster.last_error)
 	terrain = generator
+	atlas = _next_atlas
+	environment.reset()
 	world = blueprint
 	run = loaded
 	realtime = model != "turn"
@@ -299,8 +315,30 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	awakened_now = awakened
 	dirty = not awakened.is_empty()
 	_reveal()
+	last_events.append_array(atlas_knowledge.update(self))
 	last_error = ""
 	return true
+
+var _next_atlas: RefCounted # Atlas being activated (start_new/_activate share one load).
+
+func _terrain_for(blueprint: Dictionary) -> Terrain:
+	## Terrain v1 for generation 1 Worlds; atlas terrain from the stored lands for 2.
+	_next_atlas = null
+	if Atlas.enabled(blueprint):
+		var next := Atlas.new()
+		if not next.open(store.content, blueprint):
+			_fail(next.last_error)
+			return null
+		var generator: Terrain = next.terrain()
+		if generator == null:
+			_fail(next.last_error)
+		_next_atlas = next
+		return generator
+	var legacy := Terrain.new()
+	if not legacy.configure(int(blueprint.seed), int(blueprint.generation_version)):
+		_fail(legacy.last_error)
+		return null
+	return legacy
 
 func _awaken(rules: RefCounted, catalog: Dictionary, blueprint: Dictionary, loaded: Dictionary) -> Array:
 	var key := "talent-awakening-v%d/%d/%d/%d" % [Talents.AWAKENING_VERSION, int(blueprint.seed), int(blueprint.generation_version), int(loaded.seed)]
@@ -354,12 +392,14 @@ func perform_action(action: Dictionary) -> bool:
 	run.state.turn = int(run.state.turn) + 1
 	dirty = true
 	last_events.append_array(survival.tick(stats(), str(action.type), int(combat_stats().max_hp)))
+	last_events.append_array(environment.tick(self)) # Weather exposure, surface hazards.
 	if int(stats().hp) > 0:
 		last_events.append_array(skills.tick(self, str(action.type)))
 		last_events.append_array(statuses.tick(self))
 		if int(stats().hp) > 0:
 			last_events.append_array(_talent_tick())
 			last_events.append_array(places.tick(self)) # Discoveries and "enter" events.
+			last_events.append_array(atlas_knowledge.update(self, last_events))
 			if int(stats().hp) > 0:
 				last_events.append_array(roster.take_turn(self))
 	last_events.append_array(statuses.finish_turn(self))
@@ -394,6 +434,7 @@ func _realtime_action(action: Dictionary) -> bool:
 	last_events = last_result.get("events", []).duplicate(true)
 	if int(stats().hp) > 0:
 		last_events.append_array(places.tick(self)) # Discoveries in sight, "enter" events.
+		last_events.append_array(atlas_knowledge.update(self, last_events))
 	dirty = true
 	last_error = ""
 	if int(stats().hp) <= 0:
@@ -413,6 +454,7 @@ func pulse() -> Array:
 	run.state.turn = int(run.state.turn) + 1
 	dirty = true
 	last_events.append_array(survival.tick(stats(), activity, int(combat_stats().max_hp)))
+	last_events.append_array(environment.tick(self)) # Weather exposure, surface hazards.
 	if int(stats().hp) > 0:
 		last_events.append_array(skills.tick(self, activity))
 		last_events.append_array(statuses.tick(self))
@@ -895,7 +937,7 @@ func line_clear(from: Vector2i, target: Vector2i) -> bool:
 			current.y += step_y
 		if current == target:
 			return true
-		if cache.tile_at(current) in [Terrain.TREE, Terrain.ROCK]:
+		if Surfaces.opaque(cache.tile_at(current)):
 			return false
 	return true
 
@@ -907,12 +949,12 @@ func _move_action(action: Dictionary) -> bool:
 	if direction not in Spawn.DIRECTIONS and not (realtime and direction in DIAGONALS):
 		return _fail("Choose one cardinal direction")
 	var target := position + direction
-	if cache.tile_at(target) not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW]:
+	if not Surfaces.walkable(cache.tile_at(target)):
 		return _fail("Blocked — no turn spent")
 	if direction in DIAGONALS:
 		# No corner cutting: both orthogonal neighbours must be open and unoccupied.
 		for side in [position + Vector2i(direction.x, 0), position + Vector2i(0, direction.y)]:
-			if cache.tile_at(side) not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or not roster.living_at(side).is_empty():
+			if not Surfaces.walkable(cache.tile_at(side)) or not roster.living_at(side).is_empty():
 				return _fail("Blocked")
 	var occupant: Dictionary = roster.living_at(target)
 	if not occupant.is_empty():
@@ -1039,10 +1081,11 @@ func inventory_rows() -> Array:
 
 func _reveal() -> void:
 	visible.clear()
-	for y in range(-SIGHT_RADIUS, SIGHT_RADIUS + 1):
-		for x in range(-SIGHT_RADIUS, SIGHT_RADIUS + 1):
+	var radius := sight_radius()
+	for y in range(-radius, radius + 1):
+		for x in range(-radius, radius + 1):
 			var target := position + Vector2i(x, y)
-			if x * x + y * y <= SIGHT_RADIUS * SIGHT_RADIUS and Terrain.in_bounds(target) and _line_visible(target):
+			if x * x + y * y <= radius * radius and Terrain.in_bounds(target) and _line_visible(target):
 				visible[target] = true
 				if not explored.has(target):
 					explored[target] = true
@@ -1335,7 +1378,25 @@ func talent_loot(definition: Dictionary, seed_key: String, loot: Array, plan: Ar
 
 func world_region() -> Dictionary:
 	## Read-only map/AI contract: does not reveal fog, generate POIs or establish chunks.
+	if atlas != null:
+		var land: Dictionary = terrain.land_at(position)
+		var region: Dictionary = terrain.region_at(position)
+		if land.is_empty(): return {}
+		return {"atlas_version": Atlas.ATLAS_VERSION, "land_id": land.land_id, "land_name": land.name, "land_title": land.archetype_title, "climate": land.climate,
+			"region_id": region.region_id, "name": region.name, "kind": region.kind, "danger": int(region.danger), "opportunity": region.opportunity,
+			"weather": environment.weather(self).get("name", "")}
 	return objects.regions.describe(Regions.cell_of(position)) if objects != null and objects.regions != null else {}
+
+func sight_radius() -> int:
+	return environment.sight_radius(self, SIGHT_RADIUS) if atlas != null else SIGHT_RADIUS
+
+func known_lands() -> Array:
+	## Lands this Run has entered (World lore + the regions it walked). Hidden lands stay hidden.
+	return atlas_knowledge.known_lands(self) if atlas != null else []
+
+func environment_status() -> Dictionary:
+	## Current weather and whether the player is exposed/sheltered or on a hazard.
+	return environment.exposure(self) if atlas != null else {}
 
 func exploration_leads() -> Array:
 	## Only clues acquired through this Run's discoveries, not every World destination.
@@ -1343,4 +1404,7 @@ func exploration_leads() -> Array:
 
 func exploration_frontiers() -> Array:
 	## Region bearings learned by surveying a relic, not a promised walking route.
+	## Atlas Worlds: the gates/routes this Run has seen or read about.
+	if atlas != null:
+		return atlas_knowledge.known_routes(self, atlas.routes)
 	return locations.known_frontiers(run.state.entity_mutations) if locations != null else []

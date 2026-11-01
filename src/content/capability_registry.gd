@@ -6,7 +6,7 @@ const Effects = preload("res://src/core/effects.gd")
 const Encounters = preload("res://src/world/world_encounters.gd")
 const Locations = preload("res://src/world/world_locations.gd")
 const Events = preload("res://src/core/world_events.gd")
-const DEFINITIONS := ["definition.item", "definition.resource", "definition.chest", "definition.creature", "definition.item_use", "definition.loot_extension", "definition.talent", "definition.skill", "definition.status", "definition.generation_proposal", "definition.encounter", "definition.region", "definition.location", "definition.world_event"]
+const DEFINITIONS := ["definition.item", "definition.resource", "definition.chest", "definition.creature", "definition.item_use", "definition.loot_extension", "definition.talent", "definition.skill", "definition.status", "definition.generation_proposal", "definition.encounter", "definition.region", "definition.location", "definition.world_event", "definition.land", "definition.land_region", "definition.land_route", "definition.atlas_revision"]
 
 static func all_supported() -> Array:
 	var result: Array = DEFINITIONS.duplicate()

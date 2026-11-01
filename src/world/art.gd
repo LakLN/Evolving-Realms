@@ -10,6 +10,12 @@ const GROUND_SOURCE := 0
 const PROP_SOURCE := 1
 const OVERLAY_SOURCE := 2 # + overlay index
 const DECOR_SOURCE := 10
+## Milestone 04 atlas lands: ground/prop kinds without source art yet are recoloured
+## from an existing kind at load (presentation only; placeholder until an art batch).
+const DERIVED_GROUND_SOURCE := 11
+const DERIVED_PROP_SOURCE := 12
+const DERIVED_GROUND := {"snow": "meadow", "taiga": "forest", "ice": "ocean", "ash": "meadow", "cinder": "beach", "lava": "ocean", "veil": "ocean", "road": "beach"}
+const DERIVED_PROPS := {"pine": "tree", "basalt": "rock"}
 static var _shared: RefCounted
 
 var index: Dictionary = {}
@@ -18,6 +24,8 @@ var tileset: TileSet
 var ground: Dictionary = {} # biome -> [[Vector2i atlas coords, weight], ...]
 var props: Dictionary = {} # "tree", "rock", "rock_<biome>" -> [[Vector2i, weight], ...]
 var decor: Dictionary = {} # biome -> [[Vector2i, weight], ...]
+var ground_sources: Dictionary = {} # derived ground kind -> TileSet source id
+var prop_sources: Dictionary = {} # derived prop kind -> TileSet source id
 var _textures: Dictionary = {}
 var _frames: Dictionary = {}
 
@@ -87,7 +95,92 @@ func _build_tileset() -> void:
 				var coords := Vector2i(int(entry[0]), 0)
 				decor_source.create_tile(coords)
 				decor[biome].append([coords, int(entry[1])])
+	_derive(built)
 	tileset = built
+
+func ground_source(kind: String) -> int:
+	return ground_sources.get(kind, GROUND_SOURCE)
+
+func prop_source(kind: String) -> int:
+	return prop_sources.get(kind, PROP_SOURCE)
+
+func _derive(built: TileSet) -> void:
+	var ground_image := _image(index.ground.atlas)
+	var columns := 1
+	for kind in DERIVED_GROUND: columns = maxi(columns, ground.get(DERIVED_GROUND[kind], []).size())
+	if ground_image != null:
+		var image := Image.create(px * columns, px * DERIVED_GROUND.size(), false, Image.FORMAT_RGBA8)
+		var row := 0
+		for kind in DERIVED_GROUND:
+			ground[kind] = []
+			for column in ground[DERIVED_GROUND[kind]].size():
+				var entry: Array = ground[DERIVED_GROUND[kind]][column]
+				_recolor(ground_image, Rect2i(entry[0] * px, Vector2i(px, px)), image, Vector2i(column, row) * px, kind)
+				ground[kind].append([Vector2i(column, row), entry[1]])
+			ground_sources[kind] = DERIVED_GROUND_SOURCE
+			row += 1
+		_add_atlas(built, image, px, DERIVED_GROUND_SOURCE, ground.keys().filter(func(k: String) -> bool: return ground_sources.has(k)).map(func(k: String) -> Array: return ground[k]))
+	else:
+		for kind in DERIVED_GROUND: ground[kind] = ground[DERIVED_GROUND[kind]]
+	var cell := int(index.props.cell)
+	var prop_image := _image(index.props.atlas)
+	if prop_image != null:
+		var count := 0
+		for kind in DERIVED_PROPS: count += props.get(DERIVED_PROPS[kind], []).size()
+		var image := Image.create(cell * maxi(1, count), cell, false, Image.FORMAT_RGBA8)
+		var column := 0
+		for kind in DERIVED_PROPS:
+			props[kind] = []
+			for entry in props.get(DERIVED_PROPS[kind], []):
+				_recolor(prop_image, Rect2i(Vector2i(entry[0].x * cell, 0), Vector2i(cell, cell)), image, Vector2i(column * cell, 0), kind)
+				props[kind].append([Vector2i(column, 0), entry[1]])
+				column += 1
+			prop_sources[kind] = DERIVED_PROP_SOURCE
+		_add_atlas(built, image, cell, DERIVED_PROP_SOURCE, DERIVED_PROPS.keys().map(func(k: String) -> Array: return props[k]))
+	else:
+		for kind in DERIVED_PROPS: props[kind] = props.get(DERIVED_PROPS[kind], [])
+
+func _image(relative: String) -> Image:
+	var source := texture(relative)
+	var image: Image = source.get_image() if source != null else null
+	if image == null or image.is_empty():
+		return null
+	if image.is_compressed(): image.decompress()
+	image.convert(Image.FORMAT_RGBA8)
+	return image
+
+static func _add_atlas(built: TileSet, image: Image, region: int, id: int, groups: Array) -> void:
+	var source := TileSetAtlasSource.new()
+	source.texture = ImageTexture.create_from_image(image)
+	source.texture_region_size = Vector2i(region, region)
+	built.add_source(source, id)
+	for group in groups:
+		for entry in group:
+			if not source.has_tile(entry[0]): source.create_tile(entry[0])
+
+static func _recolor(from: Image, rect: Rect2i, into: Image, at: Vector2i, kind: String) -> void:
+	for y in rect.size.y:
+		for x in rect.size.x:
+			into.set_pixel(at.x + x, at.y + y, tint(kind, from.get_pixel(rect.position.x + x, rect.position.y + y)))
+
+static func tint(kind: String, c: Color) -> Color:
+	var l := c.get_luminance()
+	match kind:
+		"snow": return Color(0.80 + 0.2 * l, 0.84 + 0.16 * l, 0.90 + 0.1 * l, c.a)
+		"taiga": return c.lerp(Color(0.86, 0.9, 0.95, c.a), 0.5)
+		"ice": return Color(0.55 + 0.35 * l, 0.76 + 0.2 * l, 0.86 + 0.14 * l, c.a)
+		"ash": return Color(0.17 + 0.3 * l, 0.16 + 0.28 * l, 0.16 + 0.27 * l, c.a)
+		"cinder": return Color(0.32 + 0.5 * l, 0.12 + 0.2 * l, 0.07 + 0.08 * l, c.a)
+		"lava": return Color(0.95, 0.22 + 0.6 * l, 0.04 + 0.16 * l, c.a)
+		"veil": return Color(0.58 + 0.16 * l, 0.61 + 0.16 * l, 0.69 + 0.16 * l, c.a)
+		"road": return Color(0.33 + 0.22 * l, 0.28 + 0.18 * l, 0.21 + 0.14 * l, c.a)
+		"basalt": return Color(0.11 + 0.25 * l, 0.10 + 0.22 * l, 0.12 + 0.25 * l, c.a)
+		"pine":
+			if c.g > c.r + 0.03: # Foliage: dark blue-green with snow on lit needles.
+				var needle := Color(0.10 + 0.25 * l, 0.24 + 0.3 * l, 0.25 + 0.3 * l, c.a)
+				return needle.lerp(Color(0.93, 0.95, 0.98, c.a), 0.65) if l > 0.5 else needle
+			return c
+	return c
 
 static func pick(choices: Array, roll: int) -> Vector2i:
 	## Weighted choice from a stable per-tile roll (presentation only).

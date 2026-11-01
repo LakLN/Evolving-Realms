@@ -24,6 +24,8 @@ func create_world(name: String, seed_value: int, generation_version: int = 1, bl
 		return _error("World needs a name, signed 32-bit seed and supported generation version 1")
 	if not Data.valid(blueprint) or not blueprint.get("fixed_locations") is Array or not blueprint.get("metadata") is Dictionary:
 		return _error("Blueprint needs finite JSON, fixed_locations array and metadata object")
+	if not _supported_atlas(blueprint):
+		return _error("Unsupported world atlas version or atlas blueprint with fixed locations")
 	if blueprint.metadata.has("structured_world_version") and (not Data.integer(blueprint.metadata.structured_world_version) or blueprint.metadata.structured_world_version != 1):
 		return _error("Unsupported structured World Core version; existing save was not changed")
 	var world_id := Data.uuid()
@@ -43,6 +45,8 @@ func load_world(world_id: String) -> Dictionary:
 	var blueprint: Variant = JSON.parse_string(world.blueprint_json)
 	if not blueprint is Dictionary or not blueprint.get("fixed_locations") is Array or not blueprint.get("metadata") is Dictionary:
 		return _error("Corrupt world blueprint")
+	if not _supported_atlas(blueprint):
+		return _error("Unsupported world atlas version; existing save was not changed")
 	if blueprint.metadata.has("structured_world_version") and (not Data.integer(blueprint.metadata.structured_world_version) or blueprint.metadata.structured_world_version != 1):
 		return _error("Unsupported structured World Core version; existing save was not changed")
 	world.erase("blueprint_json")
@@ -170,6 +174,15 @@ func _validate_state(world_id: String, state: Dictionary) -> bool:
 		if int(found[0].known) != ids.size():
 			return _db.fail("Content instance not found")
 	return true
+
+static func _supported_atlas(blueprint: Dictionary) -> bool:
+	## Milestone 04 atlas Worlds: the row keeps generation_version 1 (schema CHECK); the
+	## blueprint declares world_atlas_version 1 and each land plan pins its terrain version.
+	## Unknown atlas versions are refused; atlas blueprints carry no fixed landmarks.
+	if not blueprint.metadata.has("world_atlas_version"):
+		return true
+	var atlas: Variant = blueprint.metadata.world_atlas_version
+	return Data.integer(atlas) and int(atlas) == 1 and blueprint.fixed_locations.is_empty() and not blueprint.metadata.has("structured_world_version")
 
 func _error(message: String) -> Dictionary:
 	_db.fail(message)

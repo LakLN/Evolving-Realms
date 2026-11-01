@@ -12,8 +12,12 @@ const TERRAIN_COLORS := {
 	Terrain.WATER: Color("345d79"),
 	Terrain.TREE: Color("294c31"),
 	Terrain.ROCK: Color("77766d"),
+	# Atlas surfaces (Milestone 04, src/world/surfaces.gd values).
+	8: Color("dfe6ec"), 9: Color("a9bdb9"), 10: Color("38564f"), 11: Color("a7d3e3"), 12: Color("4a4544"),
+	13: Color("8a3b22"), 14: Color("e0571d"), 15: Color("26232a"), 16: Color("8d93a3"), 17: Color("9b8160"),
 }
 const ZOOM_MIN := 3.0
+const EDGE_LABELS := 1
 const ZOOM_MAX := 24.0
 const ZOOM_START := 8.0
 const MINIMAP_TILE := 7.0
@@ -288,11 +292,21 @@ func _draw_marker(point: Vector2, marker: Dictionary, radius: float) -> void:
 				draw_line(point + Vector2(-radius * 0.1, radius * 0.45), point + Vector2(radius * 0.6, -radius * 0.5), Color("1c2418"), 2.0)
 
 func _draw_map_markers() -> void:
+	# Off-screen leads/bearings: every one gets an edge arrow, only the nearest few a
+	# label, so many clues never pile up into unreadable text.
+	var off_screen: Array = []
+	for marker in _all_markers():
+		var tile := Vector2i(int(marker.position.x), int(marker.position.y))
+		if not _map_rect.has_point(_map_point(tile, _map_rect, _zoom)) and _state(marker) in ["lead", "frontier"]:
+			off_screen.append([Vector2(tile).distance_squared_to(_camera_center), marker])
+	off_screen.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var labelled := {}
+	for index in mini(EDGE_LABELS, off_screen.size()): labelled[off_screen[index][1].id] = true
 	for marker in _all_markers():
 		var tile := Vector2i(int(marker.position.x), int(marker.position.y))
 		var point := _map_point(tile, _map_rect, _zoom)
 		if not _map_rect.has_point(point) and _state(marker) in ["lead", "frontier"]:
-			_draw_edge_indicator(Vector2(tile) + Vector2(0.5, 0.5), _map_rect, MARKER_COLORS[_state(marker)], str(marker.label), _zoom)
+			_draw_edge_indicator(Vector2(tile) + Vector2(0.5, 0.5), _map_rect, MARKER_COLORS[_state(marker)], str(marker.label) if labelled.has(marker.id) else "", _zoom)
 		if _map_rect.has_point(point):
 			_draw_marker(point, marker, clampf(_zoom * 0.27, 3.0, 6.0))
 			if _zoom >= 8.0:

@@ -1846,3 +1846,40 @@ the preview logs. Personal `realms.sqlite` SHA-256 and mtime unchanged.
 `test.ps1 -Smoke -Only m03-world,map,realtime,realtime-gameplay,m03-integration`: all
 passed (m03-world 45, map 22, realtime 58, realtime-gameplay 16, m03-integration 28).
 Not run: full `-Render -Service -Export` regression (no gameplay change).
+
+## Milestone 04 — World System redesign (vertical slice, 2026-11-01)
+
+Branch `feature/m04-world-redesign` (worktree `D:\Game\RPG-m04-world`, from
+`feature/m03-integration` d5c0187). Requested by the user as a major architecture
+correction: a persistent World of distinct, evolving lands instead of repeated
+128×128 structured squares. Design and exact implemented/planned lists:
+[M04_WORLD_ARCHITECTURE.md](M04_WORLD_ARCHITECTURE.md),
+[M04_WORLD_GENERATION.md](M04_WORLD_GENERATION.md),
+[M04_WORLD_EVOLUTION.md](M04_WORLD_EVOLUTION.md).
+
+Implemented: World atlas (append-only land/region/route/revision content instances, no
+schema migration; atlas Worlds declare `world_atlas_version 1`), reusable land
+archetypes (`content/land_archetypes.json`: woodland, coast, frost highlands, ash
+caldera), land designer, atlas terrain v1 (typed subclass of the terrain v1 interface;
+v1 itself and its golden fixtures unchanged), shared surface vocabulary, land ecology
+for existing content, routes (causeway/pass walkable, harbour locked), Veil, growth by
+propose → validate → approve → activate, Run start in a random eligible land, per-Run
+atlas knowledge (entity mutations), weather/hazard slice (blizzard exposure + shelter,
+sight-limiting weather, cinder ground), HUD/World Map/journal integration, New
+Adventure and "Chart a new land (dev)" on the main menu, recoloured placeholder art for
+the new surfaces.
+
+Verification: `.\scripts	est.ps1 -Render -Service` all passed (log `.tools/m04-full-regression.log`):
+every M01–M03 suite 0 failures (data 96, world 49 incl. frozen v1 golden chunks,
+integration 41, m03-world 45, m03-integration 28/31 rendered, map 22, realtime 58,
+realtime-gameplay 16/18, ai-content 35, ai-world 41, discoveries 40, run01-content 68,
+telemetry 32, …) plus new `m04-world` 86/0 and `m04-gameplay` 23/0 headless,
+31/0 rendered (screenshots `.tools/m04-*.png`). Performance (same process): atlas
+chunks 0.66–0.96× terrain v1; worst rendered frame walking 24 tiles toward a border
+28–30 ms; World creation with 4 lands takes a few seconds once.
+
+Gaps / next steps: harbour/sea travel, portals, caves and event-gated routes are data
+or not started; no visual atlas view of lands yet (journal only); new-surface art is a
+runtime recolour without transition overlays; new habitats borrow existing creatures
+and resources (no native snow/ash species yet); AI World Creator integration is a
+documented contract only; `-Export` and old-save exe checks not run on this branch.

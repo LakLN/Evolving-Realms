@@ -5,6 +5,7 @@ extends RefCounted
 ## results depend on Run state and player position — never on chunk load order.
 const Effects = preload("res://src/core/effects.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 const AI = preload("res://src/core/creature_ai.gd")
 const Combat = preload("res://src/core/combat.gd")
@@ -216,7 +217,7 @@ func _can_enter(session: RefCounted, creature: Dictionary, tile: Vector2i) -> bo
 	if tile == session.position or not living_at(tile).is_empty() or _distance(tile, creature.home) > int(creature.definition.payload.movement.leash):
 		return false
 	var ground: int = session.cache.tile_at(tile)
-	return ground in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] and Terrain.BIOMES[ground] in creature.definition.payload.movement.biomes
+	return Surfaces.hosts(session.terrain, ground, tile, str(creature.definition.content_id), creature.definition.payload.movement.biomes)
 
 func _runtime(instance: Dictionary) -> Dictionary:
 	var definition: Dictionary = layer.definition_for(instance)

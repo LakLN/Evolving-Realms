@@ -158,6 +158,17 @@ func list_instances(world_id: String) -> Array:
 		result.append(JSON.parse_string(row.instance_json))
 	return result
 
+func list_instances_of(world_id: String, content_id: String) -> Array:
+	## Every instance of one definition (e.g. World atlas records), by instance ID.
+	var result: Array = []
+	for row in _db.rows("SELECT instance_json FROM content_instances WHERE world_id=? AND content_id=? ORDER BY instance_id", [world_id, content_id]):
+		var instance: Variant = JSON.parse_string(row.instance_json)
+		if not instance is Dictionary:
+			_db.fail("Corrupt content instance")
+			return []
+		result.append(instance)
+	return result
+
 func list_instances_in_bounds(world_id: String, min_x: int, min_y: int, max_x: int, max_y: int) -> Array:
 	# Inclusive integer bounds. Keep gameplay SQL behind the existing registry API.
 	var result: Array = []

@@ -8,6 +8,7 @@ extends RefCounted
 const Inventory = preload("res://src/core/inventory.gd")
 const Skills = preload("res://src/core/skills.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const DIRECTIONS := [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
 
 func known(session: RefCounted) -> Array:
@@ -192,7 +193,7 @@ func targets(session: RefCounted, definition: Dictionary) -> Array:
 			var best := Vector2i.ZERO
 			for step in range(1, distance_limit + 1):
 				var tile: Vector2i = session.position + direction * step
-				if session.cache.tile_at(tile) not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or not session.roster.living_at(tile).is_empty() or not session.visible.has(tile):
+				if not Surfaces.walkable(session.cache.tile_at(tile)) or not session.roster.living_at(tile).is_empty() or not session.visible.has(tile):
 					break # A straight, clear and visible line only.
 				best = tile
 			if best != Vector2i.ZERO:
