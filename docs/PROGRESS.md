@@ -1690,3 +1690,36 @@ are not ledger-versioned; arbitrary new object rules can affect unmaterialized
 placements after reload. No automatic reset/World upgrade, terrain overlay or
 retroactive region evolution is implemented. See [RUN01_WORLD.md](RUN01_WORLD.md)
 for measured distribution, compatibility policy, limits and integration commands.
+
+## Run 01 retrospective - read-only analysis (2026-11-01)
+
+Branch `analysis/run01-retrospective`, isolated from gameplay work, based on
+`9a28f64`. Added three sanitized reports under `docs/playtests/`: SUMMARY,
+IMPROVEMENTS and TELEMETRY_GAPS. No Milestone 03 implementation, gameplay change,
+export, migration, merge or player World/Run creation.
+
+Closed the standalone game normally before capture. Opened the personal source
+through SQLite URI mode=ro + query_only; schema 2, quick_check ok. Backup destination
+is ignored local analysis storage; existing export-telemetry.ps1 ran only on that
+snapshot because GameStore does not promise a read-only connection. Full IDs,
+seeds, exact coordinates, private paths, hashes and raw reports remain local,
+not committed. Source SHA-256 was verified unchanged after analysis.
+
+Retained save: turn 3297, level 10, XP remainder 121, explored 26576 tiles / 77 fog
+chunks, 44 distinct dead creature records and five discovered place records.
+Pure existing stat functions derive HP36/69, EN38/38, ATK23, DEF8; these are not the
+stored base maximum/attack/defense. Player-reported Normal death/Bleed and talent
+activation are explicitly separate from database evidence. Snapshot is not a
+lifetime event history; no unsupported win-rate/difficulty/fun conclusions.
+
+Validation: existing offline telemetry export succeeded on snapshot; custom local
+read-only cross-checks matched SQL, telemetry and fog counts, pinned definitions,
+unique held/equipped item IDs and effective stats. Manual source/rules review for
+proc, DoT, Normal rollback and progression semantics. No fixture-creating tests or
+full regression were run for this analysis-only task. Markdown links, sensitive
+identifier exclusion and git diff --check verified before commit.
+
+Recommended next step: keep Run 01 for mid-game observation; add a separately
+approved lightweight event journal before a controlled Run 02 early-game study.
+The proposal records death/rollback/checkpoints and effects without per-step or
+per-frame logging. No journal code was implemented.
