@@ -1,5 +1,57 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Milestone 05 — Snow Mountain Stage C1/C2: geography and visual foundation (2026-11-01)
+
+Same branch/worktree (`feature/m05-snow-mountain`, base `f8582e8`), on explicit user
+request for Stage C1/C2. No merge, no official export, no personal DB access; Snow
+Mountain was charted only in disposable seed-4242 test Worlds. Report, deviations,
+placeholders and the Stage D order: [lands/SNOW_MOUNTAIN_STAGE_C.md](lands/SNOW_MOUNTAIN_STAGE_C.md).
+
+Implemented:
+- Authored layout v1 (`content/land_layouts/snow_mountain.json`) → `layout_designer.gd`
+  → self-contained plan with `terrain_version 2`; `terrain_layout.gd` materializes it
+  (escarpment, lake, ragged ridges, windbreaks, clearings, timber shelters, trails, pass
+  corridor). `terrain_atlas.gd` dispatches per plan; v1 plans run the unchanged code.
+- Surfaces cliff 18, frozen 19, trail 20, floor 21, timber 22; per-area ecology/exposure.
+- `WorldAtlas.propose_layout_land()` (one mirrored mountain-pass gate, rotation to face
+  it) and validation on actual terrain (`land_survey.gd`); dev menu button
+  "Chart Snow Mountain (dev)" → Approve → "New Run in Snow Mountain (dev)".
+- Start selection v5 with `start_certifier.gd` (exits, room, shelter, food ≤ 20 / water
+  ≤ 30 walking steps on real placements, no hostile home within 12).
+- Environment: lee/open/exposed areas, roofed floors, forecast warning, HUD timers
+  (weather status now leads the HUD line so it is never truncated), weather streaks and
+  exposure/shelter ring (placeholder visuals).
+- Code-painted placeholder ground/edge overlays (`snow_art.gd`); image request
+  `docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md` (Batch S1 style proof first).
+- Manifest: stage `implementation`; terrain_v2/safe_spawn/shelter and connectivity/
+  weather checks `in_progress` with evidence (await approval + human playtest); all
+  seven art entries `blocked`. CLI check: valid=true, ready=false, 27 blockers.
+
+Verification (native Godot 4.7.2, disposable DBs):
+- `.\scripts\test.ps1 -Smoke -Only land-package,world,m04-world,m04-gameplay,snow-mountain,snow-gameplay,map,realtime,realtime-gameplay,gameplay,m03-integration,m03-world`:
+  all passed — data 96, m03-world 45, world 49 (frozen v1 fixtures), gameplay 22,
+  integration 41, map 22, realtime 58, realtime-gameplay 16, m03-integration 28,
+  land-package 18, m04-world 86, m04-gameplay 23, snow-mountain 65, snow-gameplay 19,
+  import and startup.
+- After the HUD order change: `.\scripts\test.ps1 -Render -Only snow-gameplay,m04-gameplay,rendered-snow-gameplay,rendered-m04-gameplay`:
+  all passed (19, 23, rendered 27, rendered 31); m03-integration 28/0 in the run before.
+  One earlier m04-gameplay run failed "Belrath Vale draws its own ground: [ocean, road]":
+  pre-existing flake (random World seed puts a woodland lakeshore start among water/road
+  only); passed on rerun, test left unchanged.
+- Screenshots reviewed: `.tools/snow-*.png`, terrain overview `.tools/snow-overview.png`
+  (`tools/snow_mountain_preview.gd`).
+- Numbers: 92 of 109,889 walkable tiles unreachable; 4/5 starts certified; exposure hits
+  per 30 turns 3/6/10 (lee/open/exposed); chunk cost 1.2× terrain v1; border-crossing
+  frame 268–741 ms for Snow Mountain vs 262–749 ms for an M04 highland in the same runs.
+- Not run: full regression, `-Service`, `-Export`, old-save exe checks (no persistence
+  schema change; spawn adds optional `start_id`/selection 5 only for new layout Runs).
+
+Gaps/next: all final art missing (placeholders listed in the Stage C doc); no native
+species/items/landmarks or chains (Stage D); no World binding; untuned exposure; the
+synchronous chunk-streaming hitch on border crossing is pre-existing in all atlas lands;
+no human playtest. Awaiting user approval of the S1 style proof and the Stage C mechanics
+before Stage D.
+
 ## Milestone 05 ? Snow Mountain Stage A / minimal Stage B (2026-11-01)
 
 Isolated `feature/m05-snow-mountain` at `D:/Game/RPG-m05-snow`, based on

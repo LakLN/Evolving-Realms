@@ -4,6 +4,9 @@ extends RefCounted
 ## are World-scoped content instances, written once and never rewritten (append-only).
 ## Growth: propose -> validate -> (approve) -> activate -> new revision. Runs only read.
 const Designer = preload("res://src/world/land_designer.gd")
+const LayoutDesigner = preload("res://src/world/layout_designer.gd")
+const Survey = preload("res://src/world/land_survey.gd")
+const Certifier = preload("res://src/world/start_certifier.gd")
 const TerrainAtlas = preload("res://src/world/terrain_atlas.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
@@ -14,6 +17,11 @@ const STRUCTURED_PACK := "res://content/structured_world_pack.json" # Waystone p
 const INITIAL_LANDS := 4
 const RECORDS := {"land": "core:atlas/land", "region": "core:atlas/region", "route": "core:atlas/route", "revision": "core:atlas/revision"}
 const SELECTION_VERSION := 4
+## Authored-layout lands (terrain v2): randomized certified starts instead of a waystone.
+const LAYOUT_SELECTION_VERSION := 5
+## Layout lands may place areas nearer the coast than generated regions (0.7).
+const LAYOUT_REGION_REACH := 0.95
+const LAYOUT_MIN_AREA_TILES := 400
 var registry: RefCounted
 var world: Dictionary = {}
 var designer := Designer.new()
@@ -174,6 +182,30 @@ func propose_expansion(salt: int = 0) -> Dictionary:
 	return {"proposal_version": 1, "type": "land", "land": plan, "routes": new_routes,
 		"summary": "%s (%s, %s) beyond %d gate(s)" % [plan.name, plan.archetype_title, plan.climate, new_routes.size()]}
 
+func propose_layout_land(layout_id: String) -> Dictionary:
+	## A land from an authored layout (e.g. Snow Mountain) beyond exactly one walkable
+	## frontier gate of the existing World; the layout's pass opens onto that gate.
+	var layout := LayoutDesigner.load_layout(layout_id)
+	if layout.is_empty():
+		return _error("Unknown or unsupported land layout " + layout_id)
+	var frontiers := frontier_slots()
+	var slots: Array = frontiers.keys().filter(func(s: Vector2i) -> bool: return designer.eligible(layout.archetype, s) and frontiers[s].size() == 1 and frontiers[s][0].kind in Designer.TRAVERSABLE)
+	slots.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return designer.h(a.x, a.y, 7801) < designer.h(b.x, b.y, 7801))
+	var layouts := LayoutDesigner.new()
+	for slot in slots:
+		var theirs: Dictionary = frontiers[slot][0]
+		var owner_id: String = theirs.gate_id.get_slice("/gate/", 0)
+		var side: String = Designer.OPPOSITE[theirs.side]
+		var edge: Vector2i = Vector2i(int(theirs.position.x), int(theirs.position.y)) - Designer.SIDES[side]
+		var provenance := {"designer": LayoutDesigner.DESIGNER, "source": "land-package", "layout": layout_id, "layout_version": int(layout.version), "atlas_revision": revision() + 1}
+		var plan := layouts.design(designer, layout, slot, {"side": side, "position": {"x": edge.x, "y": edge.y}, "faces": owner_id, "mirrors": theirs.gate_id}, provenance)
+		if plan.is_empty():
+			return _error(layouts.last_error)
+		var route := route_between(lands[owner_id], theirs, plan, plan.gates[0])
+		return {"proposal_version": 1, "type": "land", "land": plan, "routes": [route],
+			"summary": "%s (%s layout, %s) beyond the %s" % [plan.name, layout_id, plan.climate, route.name]}
+	return _error("No frontier slot with exactly one walkable gate fits layout " + layout_id)
+
 static func route_between(plan_a: Dictionary, gate_a: Dictionary, plan_b: Dictionary, gate_b: Dictionary) -> Dictionary:
 	var ids := [plan_a.land_id, plan_b.land_id]
 	ids.sort()
@@ -204,7 +236,7 @@ func validate(proposal: Dictionary) -> String:
 	if plan.regions.size() < 3: return "A land needs at least three regions"
 	for region in plan.regions:
 		if not plan.kinds.has(region.kind): return "Region kind rules missing: " + str(region.kind)
-		if Vector2(int(region.seed.x), int(region.seed.y)).distance_to(center) > float(plan.radius) * 0.7: return "Region %s lies outside the land mass" % region.name
+		if Vector2(int(region.seed.x), int(region.seed.y)).distance_to(center) > float(plan.radius) * (LAYOUT_REGION_REACH if plan.has("geography") else 0.7): return "Region %s lies outside the land mass" % region.name
 	var generator := TerrainAtlas.new()
 	if not generator.configure_atlas(int(world.seed), [plan]): return generator.last_error
 	for site in plan.sites:
@@ -217,7 +249,7 @@ func validate(proposal: Dictionary) -> String:
 		if TerrainAtlas.slot_of(edge) != slot or not (edge.x in [origin.x, origin.x + TerrainAtlas.SLOT - 1] or edge.y in [origin.y, origin.y + TerrainAtlas.SLOT - 1]):
 			return "Gate %s is not on its slot edge" % gate.gate_id
 		if gate.kind in Designer.TRAVERSABLE and not generator.walkable(edge): return "Traversable gate %s is blocked" % gate.gate_id
-	var problem := _road_problem(plan)
+	var problem := _layout_problem(generator, plan) if plan.has("geography") else _road_problem(plan)
 	if not problem.is_empty(): return problem
 	var linked := linked_gates()
 	var claimed := {}
@@ -266,6 +298,26 @@ func _road_problem(plan: Dictionary) -> String:
 		elif find.call(key) != root: return "Road network is disconnected at " + key
 	return ""
 
+func _layout_problem(generator: RefCounted, plan: Dictionary) -> String:
+	## Layout lands are checked on the actual terrain, not on the road graph: the whole
+	## land is one connected valley reaching every area, gate, start and shelter door.
+	if plan.get("starts", []).size() < 2: return "A layout land needs several certified start sites"
+	var first := Vector2i(int(plan.starts[0].position.x), int(plan.starts[0].position.y))
+	var report := Survey.survey(generator, plan, first)
+	for gate_id in report.gates:
+		if not report.gates[gate_id]: return "Gate %s is not reachable on foot" % gate_id
+	for start_id in report.starts:
+		if not report.starts[start_id]: return "Start %s is cut off from the land" % start_id
+	for shelter_id in report.shelters:
+		if not report.shelters[shelter_id]: return "Shelter %s cannot be entered" % shelter_id
+	for region in plan.regions:
+		if int(report.by_region.get(int(region.index), 0)) < LAYOUT_MIN_AREA_TILES: return "Area %s is not reachable" % region.name
+	for start in plan.starts:
+		var tile := Vector2i(int(start.position.x), int(start.position.y))
+		var check := Certifier.certify(generator, plan, tile)
+		if not check.ok: return "Start %s fails: %s" % [start.start_id, ", ".join(check.reasons)]
+	return ""
+
 func activate(proposal: Dictionary, approval: Dictionary) -> bool:
 	## Append-only: land, regions, routes, then the revision record that makes them real.
 	var problem := validate(proposal)
@@ -309,9 +361,11 @@ func start_candidates() -> Array:
 			if region.get("start", false): result.append({"land": lands[land_id], "region": region})
 	return result
 
-func select_start(generator: RefCounted, run_seed: int, requested_land: String = "") -> Dictionary:
+func select_start(generator: RefCounted, run_seed: int, requested_land: String = "", certify: Callable = Callable()) -> Dictionary:
 	## A random valid start: an eligible land's start region, on its waystone, checked
 	## for exits and exploration room. Keyed by the run seed only (no global RNG).
+	## Layout lands (selection v5) pick one of their certified start sites instead;
+	## `certify(plan, tile) -> report` adds the food/water/predator checks of the World.
 	var candidates := start_candidates()
 	if not requested_land.is_empty():
 		candidates = candidates.filter(func(c: Dictionary) -> bool: return c.land.land_id == requested_land)
@@ -320,12 +374,29 @@ func select_start(generator: RefCounted, run_seed: int, requested_land: String =
 	var first: int = generator.coordinate_hash(run_seed, revision(), 9101) % candidates.size()
 	for offset in candidates.size():
 		var candidate: Dictionary = candidates[(first + offset) % candidates.size()]
+		if not candidate.land.get("starts", []).is_empty():
+			var chosen := _layout_start(generator, run_seed, candidate, certify)
+			if not chosen.is_empty(): return chosen
+			continue
 		for site in candidate.land.sites:
 			if site.metadata.role != "waystone" or site.metadata.region_id != candidate.region.region_id: continue
 			var tile := Vector2i(int(site.position.x), int(site.position.y))
 			if Spawn.accessible(generator, tile) and Spawn.has_exploration_room(generator, tile):
 				return {"position": site.position.duplicate(), "biome": generator.biome_at(tile), "selection_version": SELECTION_VERSION, "world_atlas_version": ATLAS_VERSION,
 					"land_id": candidate.land.land_id, "region_id": candidate.region.region_id, "atlas_revision": revision()}
+	return {}
+
+func _layout_start(generator: RefCounted, run_seed: int, candidate: Dictionary, certify: Callable) -> Dictionary:
+	var starts: Array = candidate.land.starts
+	var first: int = generator.coordinate_hash(run_seed, revision(), 9102) % starts.size()
+	for offset in starts.size():
+		var start: Dictionary = starts[(first + offset) % starts.size()]
+		var tile := Vector2i(int(start.position.x), int(start.position.y))
+		var report: Dictionary = certify.call(candidate.land, tile) if certify.is_valid() else Certifier.certify(generator, candidate.land, tile)
+		if not report.ok:
+			continue
+		return {"position": start.position.duplicate(), "biome": generator.biome_at(tile), "selection_version": LAYOUT_SELECTION_VERSION, "world_atlas_version": ATLAS_VERSION,
+			"land_id": candidate.land.land_id, "region_id": candidate.region.region_id, "atlas_revision": revision(), "start_id": start.start_id}
 	return {}
 
 func _fail(message: String) -> bool:

@@ -48,6 +48,11 @@ var _resume: Button
 ## Milestone 04: the persistent World (atlas) entry points on the main menu.
 var _adventure: Button
 var _chart: Button
+## M05 development: chart the Snow Mountain layout land (land package, not published).
+var _chart_snow: Button
+const SNOW_LAYOUT := "landpkg:snow_mountain/layout"
+const CHART_SNOW := "Chart Snow Mountain (dev)"
+const SNOW_RUN := "New Run in Snow Mountain (dev)"
 var _atlas_line: Label
 var _pending_land: Dictionary = {}
 var _status: Label
@@ -237,7 +242,8 @@ func _build_menu(parent: Control) -> void:
 	right.add_child(actions)
 	_adventure = _button(actions, "New Adventure", _on_new_adventure)
 	_chart = _button(actions, "Chart a new land (dev)", _on_chart_land)
-	for button in [_adventure, _chart]: button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_chart_snow = _button(actions, CHART_SNOW, func() -> void: _on_chart_land(SNOW_LAYOUT))
+	for button in [_adventure, _chart, _chart_snow]: button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -1030,6 +1036,7 @@ func _refresh_atlas_line() -> void:
 		return
 	var world := _persistent_world()
 	_chart.disabled = world.is_empty()
+	_chart_snow.disabled = world.is_empty()
 	if world.is_empty():
 		_atlas_line.text = "No persistent world yet: New Adventure charts one (a few seconds, once)."
 		return
@@ -1038,6 +1045,8 @@ func _refresh_atlas_line() -> void:
 		_atlas_line.text = atlas.last_error
 		return
 	var names: Array = atlas.lands.values().map(func(plan: Dictionary) -> String: return str(plan.name))
+	if _pending_land.is_empty():
+		_chart_snow.text = SNOW_RUN if atlas.lands.values().any(func(p: Dictionary) -> bool: return p.get("layout", {}).get("id", "") == SNOW_LAYOUT) else CHART_SNOW
 	_atlas_line.text = "%s: %d lands, revision %d. Each adventure starts in a random land." % [world.name, atlas.lands.size(), atlas.revision()]
 	_atlas_line.tooltip_text = ", ".join(names)
 
@@ -1054,8 +1063,11 @@ func _on_new_adventure() -> void:
 		if world.is_empty():
 			_message(store.last_error, true)
 			return
+	_start_adventure(world, "any")
+
+func _start_adventure(world: Dictionary, land_id: String) -> void:
 	var next := Session.new(store)
-	if not next.start_new(world.world_id, int(randi() & 0x7fffffff), "any", _mode.get_item_metadata(_mode.selected), _time_model.get_item_metadata(_time_model.selected)):
+	if not next.start_new(world.world_id, int(randi() & 0x7fffffff), land_id, _mode.get_item_metadata(_mode.selected), _time_model.get_item_metadata(_time_model.selected)):
 		_message(next.last_error, true)
 		_refresh_worlds(world.world_id)
 		return
@@ -1064,7 +1076,7 @@ func _on_new_adventure() -> void:
 	_enter_map(next)
 	_notice.text = (arrival + " " + _notice.text).strip_edges()
 
-func _on_chart_land() -> void:
+func _on_chart_land(layout_id: String = "") -> void:
 	## Development: propose -> validate -> (click again to approve) -> activate.
 	var world := _persistent_world()
 	if world.is_empty():
@@ -1073,11 +1085,19 @@ func _on_chart_land() -> void:
 	if not atlas.open(store.content, world):
 		_message(atlas.last_error, true)
 		return
-	if _pending_land.get("world_id", "") != world.world_id or int(_pending_land.get("revision", -1)) != atlas.revision():
-		_message("Designing a land beyond a frontier gate...")
+	var button: Button = _chart_snow if not layout_id.is_empty() else _chart
+	if not layout_id.is_empty():
+		for plan in atlas.lands.values():
+			if plan.get("layout", {}).get("id", "") == layout_id:
+				_start_adventure(world, plan.land_id) # Charted already: a new Run there.
+				return
+	if _pending_land.get("world_id", "") != world.world_id or int(_pending_land.get("revision", -1)) != atlas.revision() or _pending_land.get("layout", "") != layout_id:
+		_chart.text = "Chart a new land (dev)"
+		_chart_snow.text = CHART_SNOW
+		_message("Designing a land beyond a frontier gate%s..." % (" (validating the whole land on foot, a few seconds)" if not layout_id.is_empty() else ""))
 		await get_tree().process_frame
 		await get_tree().process_frame
-		var proposal: Dictionary = atlas.propose_expansion()
+		var proposal: Dictionary = atlas.propose_layout_land(layout_id) if not layout_id.is_empty() else atlas.propose_expansion()
 		if proposal.is_empty():
 			_message(atlas.last_error, true)
 			return
@@ -1085,8 +1105,8 @@ func _on_chart_land() -> void:
 		if not problem.is_empty():
 			_message("Proposal rejected by validation: " + problem, true)
 			return
-		_pending_land = {"world_id": world.world_id, "revision": atlas.revision(), "proposal": proposal}
-		_chart.text = "Approve: %s" % proposal.land.name
+		_pending_land = {"world_id": world.world_id, "revision": atlas.revision(), "proposal": proposal, "layout": layout_id}
+		button.text = "Approve: %s" % proposal.land.name
 		_message("PROPOSED (validated, not active): %s. %s. Click Approve to add it to the World." % [proposal.summary, str(proposal.land.history)])
 		return
 	if not atlas.activate(_pending_land.proposal, {"by": "developer (main menu)"}):
@@ -1095,6 +1115,7 @@ func _on_chart_land() -> void:
 	_message("Revision %d: %s joins the World. Established lands are unchanged; new adventures may begin there." % [atlas.revision(), _pending_land.proposal.land.name])
 	_pending_land = {}
 	_chart.text = "Chart a new land (dev)"
+	_chart_snow.text = CHART_SNOW
 	_refresh_worlds(world.world_id)
 
 func _refresh_runs() -> void:
@@ -1260,19 +1281,32 @@ func _bearing(target: Dictionary) -> String:
 		return "here"
 	return DIRECTIONS_8[posmod(roundi(delta.angle() / (PI / 4.0)), 8)]
 
+func weather_text(status: Dictionary) -> String:
+	## "Blizzard: EXPOSED −1 HP in 3s (wind-scoured)" / "Blizzard: sheltered (roof)".
+	var unit := "s" if session.realtime else " turns"
+	var text := str(status.weather)
+	if status.exposed:
+		text += ": EXPOSED −1 HP in %d%s" % [int(status.next_damage_in), unit]
+		text += {"lee": " (lee slope: slower)", "exposed": " (wind-scoured: faster)"}.get(str(status.get("area", "")), "")
+	elif status.sheltered:
+		text += ": sheltered (%s)" % ("under a roof" if status.shelter == "roof" else "beside cover")
+	return text + " · %d%s left" % [int(status.remaining), unit]
+
 func region_text() -> String:
 	## HUD line: current region, then the nearest unfinished lead or a region bearing.
 	var region: Dictionary = session.world_region()
 	if region.is_empty():
 		return ""
 	var text := "Region: %s (danger %d, %s)" % [region.name, int(region.danger), region.opportunity]
-	if region.has("land_name"): # Atlas World: land > region, then the weather where you stand.
+	if region.has("land_name"): # Atlas World: weather where you stand first, then land > region.
 		text = "%s › %s (danger %d, %s)" % [region.land_name, region.name, int(region.danger), region.opportunity]
 		var status: Dictionary = session.environment_status()
 		if not str(status.get("weather", "")).is_empty():
-			text += "  |  %s%s" % [status.weather, ": EXPOSED" if status.exposed else (": sheltered" if status.sheltered else "")]
+			text = weather_text(status) + "  |  " + text # First: it must never be cut off.
+		elif not str(status.get("incoming", "")).is_empty():
+			text = "⚠ %s coming in %d%s — find cover  |  %s" % [status.incoming, int(status.incoming_in), "s" if session.realtime else " turns", text]
 		if not str(status.get("hazard", "")).is_empty():
-			text += "  |  ⚠ " + status.hazard
+			text = "⚠ " + status.hazard + "  |  " + text
 	var best: Dictionary = {}
 	var best_distance := 2147483647
 	for lead in _leads:
@@ -1516,9 +1550,12 @@ func describe_events(events: Array) -> String:
 			"route_learned":
 				parts.append("Road-marks tell of a %s to the %s." % [ROUTE_NAMES.get(event.kind, "route"), event.side])
 			"weather":
-				parts.append(("%s! Sight drops to %d." % [event.name, int(event.sight)]) if event.state == "start" else "The %s passes." % str(event.name).to_lower())
+				match str(event.state):
+					"start": parts.append("%s! Sight drops to %d." % [event.name, int(event.sight)])
+					"warning": parts.append("⚠ The wind rises: %s in %d%s. Head for pines, rocks or a roof." % [str(event.name).to_lower(), int(event.get("in", 0)), "s" if session != null and session.realtime else " turns"])
+					_: parts.append("The %s passes." % str(event.name).to_lower())
 			"environment":
-				parts.append("%s: %d HP%s" % [event.name, int(event.amount), " — shelter beside trees or rocks!" if event.kind == "exposure" else " — get off the scorching ground!"])
+				parts.append("%s: %d HP%s" % [event.name, int(event.amount), " — shelter beside pines or rocks, or under a roof!" if event.kind == "exposure" else " — get off the scorching ground!"])
 			"autosave":
 				parts.append("Autosaved.")
 			"autosave_failed":

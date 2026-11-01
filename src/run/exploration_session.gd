@@ -9,6 +9,7 @@ const AtlasKnowledge = preload("res://src/run/atlas_knowledge.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
 const Chunks = preload("res://src/world/chunk_cache.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
+const Certifier = preload("res://src/world/start_certifier.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Objects = preload("res://src/world/world_objects.gd")
 const Loot = preload("res://src/core/loot_table.gd")
@@ -121,7 +122,7 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var spawn: Dictionary
 	if Atlas.enabled(blueprint):
 		# New adventure in the persistent World: `biome` may name a land ID ("any" = random).
-		spawn = _next_atlas.select_start(generator, run_seed, "" if biome == "any" else biome)
+		spawn = _next_atlas.select_start(generator, run_seed, "" if biome == "any" else biome, _start_certifier(blueprint, generator))
 	else:
 		spawn = Regions.new(generator).spawn(run_seed, biome) if Structured.enabled(blueprint) else Spawn.select(generator, run_seed, biome, Spawn.RUN_SELECTION_VERSION)
 	if spawn.is_empty():
@@ -320,6 +321,15 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	return true
 
 var _next_atlas: RefCounted # Atlas being activated (start_new/_activate share one load).
+
+func _start_certifier(blueprint: Dictionary, generator: RefCounted) -> Callable:
+	## Layout-land starts (selection v5) also need food/water and no predator nearby,
+	## judged with this World's own object and creature layers (read-only probes).
+	var probe_objects := Objects.new()
+	var probe_creatures := Creatures.new()
+	if not probe_objects.configure(blueprint, generator, store.content, Chunks.new(generator)) or not probe_creatures.configure(blueprint, generator, store.content):
+		return Callable()
+	return func(plan: Dictionary, tile: Vector2i) -> Dictionary: return Certifier.certify(generator, plan, tile, probe_objects, probe_creatures)
 
 func _terrain_for(blueprint: Dictionary) -> Terrain:
 	## Terrain v1 for generation 1 Worlds; atlas terrain from the stored lands for 2.

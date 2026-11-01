@@ -16,6 +16,11 @@ const DERIVED_GROUND_SOURCE := 11
 const DERIVED_PROP_SOURCE := 12
 const DERIVED_GROUND := {"snow": "meadow", "taiga": "forest", "ice": "ocean", "ash": "meadow", "cinder": "beach", "lava": "ocean", "veil": "ocean", "road": "beach"}
 const DERIVED_PROPS := {"pine": "tree", "basalt": "rock"}
+## Milestone 05 Snow Mountain: code-painted PLACEHOLDER ground and edge overlays
+## (src/world/snow_art.gd) until the requested art batch is approved and built.
+const SnowArt = preload("res://src/world/snow_art.gd")
+const SNOW_GROUND_SOURCE := 13
+const SNOW_OVERLAY_SOURCE := 14 # + index into SnowArt.EDGES
 static var _shared: RefCounted
 
 var index: Dictionary = {}
@@ -26,6 +31,10 @@ var props: Dictionary = {} # "tree", "rock", "rock_<biome>" -> [[Vector2i, weigh
 var decor: Dictionary = {} # biome -> [[Vector2i, weight], ...]
 var ground_sources: Dictionary = {} # derived ground kind -> TileSet source id
 var prop_sources: Dictionary = {} # derived prop kind -> TileSet source id
+## Every transition overlay in draw order: [lower kinds, upper kinds, TileSet source id].
+var overlay_specs: Array = []
+## Ground kinds painted as placeholders (not final art); reported by tests and docs.
+var placeholder_kinds: Array = []
 var _textures: Dictionary = {}
 var _frames: Dictionary = {}
 
@@ -96,7 +105,35 @@ func _build_tileset() -> void:
 				decor_source.create_tile(coords)
 				decor[biome].append([coords, int(entry[1])])
 	_derive(built)
+	for i in OVERLAYS.size(): overlay_specs.append([OVERLAYS[i][1], OVERLAYS[i][2], OVERLAY_SOURCE + i])
+	_paint_snow(built)
 	tileset = built
+
+func _paint_snow(built: TileSet) -> void:
+	var columns := 0
+	for kind in SnowArt.VARIANTS: columns = maxi(columns, int(SnowArt.VARIANTS[kind]))
+	var image := Image.create(px * columns, px * SnowArt.VARIANTS.size(), false, Image.FORMAT_RGBA8)
+	var groups: Array = []
+	var row := 0
+	for kind in SnowArt.VARIANTS:
+		ground[kind] = []
+		for variant in int(SnowArt.VARIANTS[kind]):
+			image.blit_rect(SnowArt.paint(kind, variant, px), Rect2i(0, 0, px, px), Vector2i(variant, row) * px)
+			ground[kind].append([Vector2i(variant, row), 6 if variant == 0 else 2])
+		ground_sources[kind] = SNOW_GROUND_SOURCE
+		placeholder_kinds.append(kind)
+		groups.append(ground[kind])
+		row += 1
+	_add_atlas(built, image, px, SNOW_GROUND_SOURCE, groups)
+	for i in SnowArt.EDGES.size():
+		var upper: String = SnowArt.EDGES[i][0]
+		var atlas := SnowArt.overlay_atlas(SnowArt.edge_pieces(SnowArt.paint(upper, 0, px), px, 500 + i), px)
+		var source := TileSetAtlasSource.new()
+		source.texture = ImageTexture.create_from_image(atlas)
+		source.texture_region_size = Vector2i(px, px)
+		built.add_source(source, SNOW_OVERLAY_SOURCE + i)
+		for mask in range(1, 256): source.create_tile(Vector2i(mask % 16, mask / 16))
+		overlay_specs.append([SnowArt.EDGES[i][1], [upper], SNOW_OVERLAY_SOURCE + i])
 
 func ground_source(kind: String) -> int:
 	return ground_sources.get(kind, GROUND_SOURCE)

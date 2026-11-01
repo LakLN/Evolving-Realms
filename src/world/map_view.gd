@@ -8,7 +8,8 @@ const Palette = preload("res://src/world/tile_palette.gd")
 const Art = preload("res://src/world/art.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
 ## Fallback palette (no art index): atlas surfaces drawn as their nearest v1 cell.
-const PALETTE_OF := {Surfaces.SNOW: 2, Surfaces.TAIGA: 0, Surfaces.PINE: 4, Surfaces.ICE: 3, Surfaces.ASH: 1, Surfaces.CINDER: 1, Surfaces.LAVA: 3, Surfaces.BASALT: 5, Surfaces.VEIL: 6, Surfaces.ROAD: 1}
+const PALETTE_OF := {Surfaces.SNOW: 2, Surfaces.TAIGA: 0, Surfaces.PINE: 4, Surfaces.ICE: 3, Surfaces.ASH: 1, Surfaces.CINDER: 1, Surfaces.LAVA: 3, Surfaces.BASALT: 5, Surfaces.VEIL: 6, Surfaces.ROAD: 1,
+	Surfaces.CLIFF: 5, Surfaces.FROZEN: 2, Surfaces.TRAIL: 1, Surfaces.FLOOR: 1, Surfaces.TIMBER: 4}
 const DISPOSITION_COLORS := {"hostile": Color("e0564b"), "neutral": Color("e0b34b"), "passive": Color("7fd17a")}
 const BODY_COLORS := {"wolf": Color("9aa2a8"), "boar": Color("8a5a3c"), "rabbit": Color("e6dccb"), "deer": Color("c08a52"), "crab": Color("e2713f")}
 const KINDS := {Terrain.FOREST: "forest", Terrain.BEACH: "beach", Terrain.MEADOW: "meadow", Terrain.WATER: "ocean", Terrain.TREE: "forest"}
@@ -54,6 +55,13 @@ var _stack := 0 # Centred popups of one turn stack upward instead of overlapping
 var _fx_layer := Node2D.new()
 var _dying: Array = [] # Creature nodes playing their death; shifted like effects.
 var _has_origin := false
+## M05 weather readability (presentation only, PLACEHOLDER for snow:art/weather): thin
+## wind-blown streaks while a blizzard blows (sparser when one is coming) and a ring at
+## the hero's feet: pulsing red when exposed, steady ice-blue when sheltered.
+var _weather_layer := Node2D.new()
+var _weather_time := 0.0
+var _weather_poll := 0.0
+var weather_status: Dictionary = {}
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -73,6 +81,9 @@ func _ready() -> void:
 	_fog_texture = ImageTexture.create_from_image(_fog_image)
 	_fog.texture = _fog_texture
 	add_child(_fog)
+	_weather_layer.z_index = 5
+	_weather_layer.draw.connect(_draw_weather)
+	add_child(_weather_layer)
 	_mark_layer.z_index = 5
 	_mark_layer.draw.connect(_draw_marks)
 	add_child(_mark_layer)
@@ -98,6 +109,43 @@ func _ready() -> void:
 	_player.add_child(camera)
 	camera.enabled = true
 
+func _process(delta: float) -> void:
+	if session == null or not session.has_method("environment_status"):
+		return
+	_weather_time += delta
+	_weather_poll -= delta
+	var was := _weather_drawn()
+	if _weather_poll <= 0.0:
+		_weather_poll = 0.25
+		weather_status = session.environment_status() if not session.run.is_empty() else {}
+	if was or _weather_drawn():
+		_weather_layer.queue_redraw()
+
+func _weather_drawn() -> bool:
+	return not weather_status.is_empty() and (not str(weather_status.get("weather", "")).is_empty() or not str(weather_status.get("incoming", "")).is_empty())
+
+func _draw_weather() -> void:
+	if session == null or not _weather_drawn():
+		return
+	var active := not str(weather_status.get("weather", "")).is_empty()
+	var view := get_viewport_rect().size / (camera.zoom if camera != null else Vector2.ONE) + Vector2(80, 80)
+	var center: Vector2 = _player.position
+	if active:
+		_weather_layer.draw_rect(Rect2(center - view / 2.0, view), Color(0.86, 0.91, 1.0, 0.1))
+	var count := 170 if active else 45
+	for i in count:
+		var speed := 0.75 + float(Art.tile_roll(Vector2i(i, 3), 41) % 100) / 200.0
+		var base := Vector2(Art.tile_roll(Vector2i(i, 1), 41) % int(view.x), Art.tile_roll(Vector2i(i, 2), 41) % int(view.y))
+		var drift := Vector2(-260.0, 140.0) * _weather_time * speed
+		var at := Vector2(fposmod(base.x + drift.x, view.x), fposmod(base.y + drift.y, view.y)) - view / 2.0 + center
+		_weather_layer.draw_line(at, at + Vector2(-11.0, 6.0) * speed, Color(1, 1, 1, 0.6 if active else 0.35), 1.5)
+	var feet := center + Vector2(0, px * 0.32)
+	if weather_status.get("exposed", false):
+		var pulse := 0.5 + 0.5 * sin(_weather_time * 6.0)
+		_weather_layer.draw_arc(feet, px * 0.55, 0, TAU, 28, Color(0.96, 0.33, 0.28, 0.45 + 0.45 * pulse), 3.0)
+	elif weather_status.get("sheltered", false):
+		_weather_layer.draw_arc(feet, px * 0.55, 0, TAU, 28, Color(0.58, 0.86, 1.0, 0.8), 2.0)
+
 func attach(active_session: RefCounted) -> void:
 	clear_map()
 	session = active_session
@@ -119,6 +167,8 @@ func clear_map() -> void:
 	_dying.clear()
 	_has_origin = false
 	session = null
+	weather_status = {}
+	_weather_layer.queue_redraw()
 	_object_layer.queue_redraw()
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
@@ -209,7 +259,7 @@ func _add_chunk(chunk: Vector2i) -> void:
 				ground.set_cell(Vector2i(x, y), 0, Vector2i(PALETTE_OF.get(raw, raw), 0))
 		return
 	var overlays: Array = []
-	for i in Art.OVERLAYS.size():
+	for i in art.overlay_specs.size():
 		var layer := TileMapLayer.new()
 		layer.tile_set = _tiles
 		root.add_child(layer)
@@ -240,17 +290,19 @@ func _add_chunk(chunk: Vector2i) -> void:
 			var global_tile := base + local
 			var kind: String = kinds[(y + 1) * side + x + 1]
 			if not art.ground.has(kind): kind = "meadow"
-			ground.set_cell(local, art.ground_source(kind), Art.pick(art.ground[kind], Art.tile_roll(global_tile, 1)))
-			for i in Art.OVERLAYS.size():
-				if not kind in Art.OVERLAYS[i][1]:
+			var drawn := kind
+			if kind == "cliff" and kinds[(y + 2) * side + x + 1] != "cliff": drawn = "cliff_face" # Wall face toward the viewer.
+			ground.set_cell(local, art.ground_source(drawn), Art.pick(art.ground[drawn], Art.tile_roll(global_tile, 1)))
+			for i in art.overlay_specs.size():
+				if not kind in art.overlay_specs[i][0]:
 					continue
 				var mask := 0
 				for bit in 8:
 					var near: Vector2i = local + offsets[bit] + Vector2i.ONE
-					if kinds[near.y * side + near.x] in Art.OVERLAYS[i][2]:
+					if kinds[near.y * side + near.x] in art.overlay_specs[i][1]:
 						mask |= 1 << bit
 				if mask != 0:
-					overlays[i].set_cell(local, Art.OVERLAY_SOURCE + i, Vector2i(mask % 16, mask / 16))
+					overlays[i].set_cell(local, art.overlay_specs[i][2], Vector2i(mask % 16, mask / 16))
 			var value: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			if value == Terrain.TREE:
 				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.tree, Art.tile_roll(global_tile, 2)))

@@ -1,6 +1,7 @@
 # Snow Mountain — developer design bible (spoilers)
 
 Status: Stage A design and Stage B tooling, 2026-11-01. No land is published.
+Stage C geography/terrain v2/starts/weather: [SNOW_MOUNTAIN_STAGE_C.md](SNOW_MOUNTAIN_STAGE_C.md).
 Working epithet: **The Hushed Crown**. Preserve the selected World's generated land
 name; the epithet is local folklore, not permission to rename an established record.
 

@@ -3,7 +3,7 @@
   "workflow_version": 1,
   "package_id": "landpkg:snow_mountain",
   "version": 1,
-  "stage": "dependencies",
+  "stage": "implementation",
   "target_archetype": "frost_highlands",
   "source": "human-assisted-design-v1",
   "binding": {},
@@ -13,95 +13,98 @@
       "id": "snow:art/ground",
       "kind": "asset",
       "version": 1,
-      "status": "planned",
+      "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "40px seamless snow x4, compact snow x2, taiga x3, ice x3; no recoloured grass"
+      "notes": "Stage C: no art exists. Code-painted PLACEHOLDER snow/ice/frozen/trail/cliff/floor/timber in src/world/snow_art.gd (not final); taiga is still an M04 recolour. Request: Batch S1 (style proof) then S2 in docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
     },
     {
       "id": "snow:art/transitions",
       "kind": "asset",
       "version": 1,
-      "status": "planned",
+      "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Snow/taiga, snow/ice, snow/road: eight-neighbour masks; cliffs with readable blocked edges"
+      "notes": "Placeholder ragged 8-neighbour overlays (snow onto ice/frozen/trail/taiga/floor, frozen onto ice/trail) and cliff top/face are generated in code; final cliff faces/corners requested in Batch S2 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
     },
     {
       "id": "snow:art/props",
       "kind": "asset",
       "version": 1,
-      "status": "planned",
+      "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Snow pines 60px x3, rocks 40px x3, fallen trunk intact/open, resource stones distinct from blockers"
+      "notes": "Pines are the M04 recoloured tree; rocks reuse mossy grassland rocks (look wrong on snow). Batch S3 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
     },
     {
       "id": "snow:art/landmarks",
       "kind": "asset",
       "version": 1,
-      "status": "planned",
+      "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "96px: lee shelter, ruined relay, bell cairn, sealed cleft; stable feet anchors"
+      "notes": "Shelters exist as terrain (timber walls + plank floor tiles); no landmark sprites. Batch S1 (lee shelter) and S3 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
     },
     {
       "id": "snow:art/wildlife",
       "kind": "asset",
       "version": 1,
-      "status": "planned",
+      "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Rime hare 32px; scree wolf 48px; bellback sentinel 52px. Four directions, idle1/walk4/attack3/hit1/death2; hare attack omitted if noncombatant"
+      "notes": "No native creatures yet (Stage D); basin/forest use existing rabbit/wolf adapted by area ecology. Batch S4 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
     },
     {
       "id": "snow:art/icons",
       "kind": "asset",
       "version": 1,
-      "status": "planned",
+      "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "32px resin, bark ration, relay clasp, bell shard, rime mantle; inventory readability"
+      "notes": "Stage D items not created; Batch S4 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
     },
     {
       "id": "snow:art/weather",
       "kind": "asset",
       "version": 1,
-      "status": "planned",
+      "status": "blocked",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Snow flake, wind streak, exposure/sheltered feedback; particles never conceal attacks"
+      "notes": "Code-drawn PLACEHOLDER: wind streaks, light veil, red exposed / blue sheltered ring (map_view.gd). Final sprites: Batch S4 of docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md."
     },
     {
       "id": "snow:mechanic/terrain_v2",
       "kind": "mechanic",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Designed corridors, cliff barriers, lake perimeter; keep atlas terrain v1 intact"
+      "notes": "Implemented: atlas terrain v2 for authored layout plans (content/land_layouts/snow_mountain.json -> src/world/layout_designer.gd -> src/world/terrain_layout.gd); new surfaces cliff/frozen/trail/floor/timber; v1 plans untouched. Awaiting user approval of the mechanic and a human playtest.",
+      "evidence": "2026-11-01 tests/snow_mountain_suite.gd (snow-mountain): seven areas connected and identified on actual terrain in all four rotations, reverse-order chunks identical, seam check, M04 land bytes unchanged; tests/snow_mountain_gameplay_suite.gd headless + native renderer."
     },
     {
       "id": "snow:mechanic/safe_spawn",
       "kind": "mechanic",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:mechanic/terrain_v2"
       ],
-      "notes": "Versioned randomized safe sites; current M04 always uses region waystone"
+      "notes": "Implemented: selection v5 picks among five authored arrival clearings by Run seed, certified at start time (exits, 256 tiles to radius 24, sheltered, food <= 20 / water <= 30 walking steps on real placements, no hostile home within 12). Waystone selection v4 unchanged for M04 lands. Awaiting approval.",
+      "evidence": "2026-11-01 snow-mountain suite: 4/5 sites certified in seed 4242 (reach_edge_glade lacks food within 20 steps and is skipped), 24 Run seeds -> >= 3 distinct sheltered starts, deterministic per seed."
     },
     {
       "id": "snow:mechanic/shelter",
       "kind": "mechanic",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:mechanic/terrain_v2"
       ],
-      "notes": "Structures grant existing shelter counterplay; no healing immunity"
+      "notes": "Implemented: roofed floor = full blizzard protection; area exposure lee/open/exposed (x2 interval +1 sight / base / every-2 -1 sight); 12-second forecast warning; HUD seconds-to-next-hit; cliffs/timber count as cover. Awaiting approval and playtest of the numbers.",
+      "evidence": "2026-11-01 snow-mountain suite: 3/6/10 exposure hits per 30 turns (lee/open/exposed), 0 inside the relay outpost, warning once per storm, identical after save/resume."
     },
     {
       "id": "snow:mechanic/relay_exchange",
@@ -165,25 +168,26 @@
       "id": "snow:check/connectivity",
       "kind": "check",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:mechanic/terrain_v2",
         "snow:mechanic/safe_spawn"
       ],
-      "notes": "Record exact command/report or human observations, date and limitations"
+      "notes": "Automated part done (see evidence); still needs a human traversal of the real map before completion.",
+      "evidence": "2026-11-01 land survey on seed 4242: 92 of 109,889 walkable tiles unreachable; gate, 5 starts and 3 shelter doors reachable; per-area reachable tiles 4,325-28,575."
     },
     {
       "id": "snow:check/weather",
       "kind": "check",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:mechanic/shelter",
         "snow:art/weather"
       ],
-      "notes": "Record exact command/report or human observations, date and limitations"
+      "notes": "Automated rules and rendered HUD/weather layer checked with placeholder visuals; blocked on snow:art/weather for completion and needs a human playtest of readability."
     },
     {
       "id": "snow:check/save_receipts",
@@ -241,5 +245,6 @@
       ],
       "notes": "Record exact command/report or human observations, date and limitations"
     }
-  ]
+  ],
+  "notes": "Stage C (2026-11-01): geography, terrain v2, safe starts and weather/shelter implemented on feature/m05-snow-mountain; reference plan charted only in disposable seed-4242 test Worlds. Binding stays empty until a player World is chosen explicitly. Not published."
 }

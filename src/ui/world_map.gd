@@ -15,6 +15,8 @@ const TERRAIN_COLORS := {
 	# Atlas surfaces (Milestone 04, src/world/surfaces.gd values).
 	8: Color("dfe6ec"), 9: Color("a9bdb9"), 10: Color("38564f"), 11: Color("a7d3e3"), 12: Color("4a4544"),
 	13: Color("8a3b22"), 14: Color("e0571d"), 15: Color("26232a"), 16: Color("8d93a3"), 17: Color("9b8160"),
+	# Snow Mountain layout surfaces (M05): cliff, frozen ground, trail, shelter floor, timber.
+	18: Color("4d5868"), 19: Color("b3b8bd"), 20: Color("cdbf9f"), 21: Color("9a7048"), 22: Color("3f2a1c"),
 }
 const ZOOM_MIN := 3.0
 const EDGE_LABELS := 1

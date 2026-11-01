@@ -8,9 +8,15 @@ extends "res://src/world/terrain_v1.gd"
 ## of the chunk and bilinearly interpolated: part of the v1 algorithm, not a cache.
 ## Extends terrain v1 only for its typed interface and integer noise/hash helpers; the
 ## frozen v1 generator itself (ground_at/tile_at of the parent) is never used here.
+## Milestone 05: plans with terrain_version 2 (authored layouts such as Snow Mountain)
+## are materialized by terrain_layout.gd; every terrain_version 1 plan keeps this file's
+## v1 algorithm unchanged, so both versions coexist in one World.
 const TerrainV1 = preload("res://src/world/terrain_v1.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
+const Layout = preload("res://src/world/terrain_layout.gd")
 const TERRAIN_VERSION := 1
+const LAYOUT_TERRAIN_VERSION := 2
+const TERRAIN_VERSIONS := [TERRAIN_VERSION, LAYOUT_TERRAIN_VERSION]
 const SLOT := 512 # Multiple of CHUNK_SIZE: a chunk always belongs to exactly one slot.
 const CACHE_LIMIT := 128
 const WARP := 28.0
@@ -23,6 +29,8 @@ var _sites: Dictionary = {} # Vector2i chunk -> [site instances]
 var _bytes: Dictionary = {} # chunk -> tiles
 var _zones: Dictionary = {} # chunk -> region index per tile (RIM outside the mass)
 var _order: Array = []
+var _zone_chunk := Vector2i(2147483647, 0) # Layout ecology: zones of the last chunk asked.
+var _zone_bytes := PackedByteArray()
 
 func configure_atlas(seed_value: int, plans: Array) -> bool:
 	if seed_value < -2147483648 or seed_value > 2147483647:
@@ -36,14 +44,14 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 	_zones.clear()
 	_order.clear()
 	for plan in plans:
-		if int(plan.get("terrain_version", 0)) != TERRAIN_VERSION:
+		if not int(plan.get("terrain_version", 0)) in TERRAIN_VERSIONS or (int(plan.terrain_version) == LAYOUT_TERRAIN_VERSION) != plan.has("geography"):
 			last_error = "Unsupported atlas terrain version in %s; World was not changed" % str(plan.get("land_id", "?"))
 			return false
 		var slot := Vector2i(int(plan.slot.x), int(plan.slot.y))
 		if _lands.has(slot):
 			last_error = "Two lands claim slot %s" % str(slot)
 			return false
-		_lands[slot] = _compile(plan)
+		_lands[slot] = Layout.compile(plan, compile_kind) if int(plan.terrain_version) == LAYOUT_TERRAIN_VERSION else _compile(plan)
 		_plans[plan.land_id] = plan
 		for site in plan.get("sites", []):
 			var chunk := TerrainV1.chunk_of(Vector2i(int(site.position.x), int(site.position.y)))
@@ -85,7 +93,21 @@ func chunk_danger(chunk: Vector2i) -> int:
 
 func ecology_hosts(value: int, point: Vector2i, content_id: String) -> bool:
 	var land: Variant = _lands.get(slot_of(point))
-	return land != null and land.ecology.get(Surfaces.HABITAT_OF.get(value, ""), {}).has(content_id)
+	if land == null:
+		return false
+	var habitat: String = Surfaces.HABITAT_OF.get(value, "")
+	if not land.ecology.get(habitat, {}).has(content_id):
+		return false
+	if land.has("version"): # Layout lands: each area lists its own adapted ecology.
+		var chunk := TerrainV1.chunk_of(point)
+		if chunk != _zone_chunk or not _zones.has(chunk):
+			_chunk_bytes(chunk)
+			_zone_chunk = chunk
+			_zone_bytes = _zones[chunk]
+		var local := TerrainV1.local_of(point)
+		var zone: int = _zone_bytes[local.y * CHUNK_SIZE + local.x]
+		return zone != RIM and land.kinds[zone].ecology.get(habitat, {}).has(content_id)
+	return true
 
 func placements(chunk: Vector2i) -> Array:
 	## Atlas sites (waystones, landmarks) pinned by land plans, as location instances.
@@ -109,17 +131,22 @@ func opaque(tile: Vector2i) -> bool:
 
 func biome_at(tile: Vector2i) -> String:
 	var value := tile_at(tile)
-	if Surfaces.opaque(value):
+	if Surfaces.opaque(value) and not value in Surfaces.WALLS:
 		return Surfaces.NAME_OF[_ground(tile)]
 	return Surfaces.NAME_OF.get(value, "veil")
 
 func art_kind_at(tile: Vector2i) -> String:
 	## Presentation: blockers draw on the ground of their region.
 	var value := tile_at(tile)
-	return Surfaces.ART_KIND[_ground(tile)] if Surfaces.opaque(value) else Surfaces.ART_KIND.get(value, "veil")
+	return Surfaces.ART_KIND[_ground(tile)] if Surfaces.opaque(value) and not value in Surfaces.WALLS else Surfaces.ART_KIND.get(value, "veil")
 
 func generate_chunk(chunk: Vector2i) -> PackedByteArray:
 	return _chunk_bytes(chunk).duplicate()
+
+func chunk_zones(chunk: Vector2i) -> PackedByteArray:
+	## Region index per tile of a chunk (RIM outside the land mass); surveys and tests.
+	_chunk_bytes(chunk)
+	return _zones[chunk].duplicate()
 
 func _zone(tile: Vector2i) -> int:
 	var chunk := TerrainV1.chunk_of(tile)
@@ -147,6 +174,8 @@ func _chunk_bytes(chunk: Vector2i) -> PackedByteArray:
 	var land: Variant = _lands.get(slot_of(origin))
 	if land == null or not TerrainV1.in_bounds(origin):
 		tiles.fill(Surfaces.VEIL)
+	elif land.has("version"):
+		Layout.build(self, land, origin, tiles, zones)
 	else:
 		_build(land, origin, tiles, zones)
 	_bytes[chunk] = tiles

@@ -1,0 +1,153 @@
+extends RefCounted
+## Authored land layouts (Milestone 05, Snow Mountain): a layout file (land-local,
+## normalized, north = the mountain-pass side) + a slot + the neighbour gate it opens
+## onto -> one self-contained land plan with terrain_version 2. Pure and deterministic;
+## nothing is stored here. The plan copies every rule and absolute geometry it needs, so
+## later layout edits never alter an established land (bump the layout version instead).
+const TerrainAtlas = preload("res://src/world/terrain_atlas.gd")
+const Designer = preload("res://src/world/land_designer.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
+const LAYOUTS := {"landpkg:snow_mountain/layout": "res://content/land_layouts/snow_mountain.json"}
+const LAYOUT_VERSION := 1
+const TERRAIN_VERSION := 2
+const DESIGNER := "layout-v1"
+## Clockwise side order; rotation r maps layout north to SIDES_CW[r].
+const SIDES_CW := ["north", "east", "south", "west"]
+const TRAIL_WIDTH := 9 # Tenths of a tile (>= 0.75 keeps diagonal trails 4-connected).
+const CORRIDOR_WIDTH := 12
+const CORRIDOR_DEPTH := 56
+var last_error := ""
+
+static func load_layout(layout_id: String) -> Dictionary:
+	if not LAYOUTS.has(layout_id):
+		return {}
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAYOUTS[layout_id]))
+	if not data is Dictionary or int(data.get("layout_version", 0)) != LAYOUT_VERSION or data.get("id") != layout_id:
+		return {}
+	return data
+
+static func rotation_for(side: String) -> int:
+	return SIDES_CW.find(side)
+
+static func rotate(v: Vector2, r: int) -> Vector2:
+	match r:
+		1: return Vector2(-v.y, v.x)
+		2: return Vector2(-v.x, -v.y)
+		3: return Vector2(v.y, -v.x)
+	return v
+
+static func _xy(v: Vector2i) -> Dictionary:
+	return {"x": v.x, "y": v.y}
+
+func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dictionary, provenance: Dictionary) -> Dictionary:
+	## gate: {side (our side), position (our edge tile), faces, mirrors} — the one walkable
+	## pass. The layout is rotated so its pass faces that side.
+	last_error = ""
+	if layout.is_empty():
+		return _error("Unknown or unsupported land layout")
+	var archetype: Dictionary = designer.archetypes.get(layout.archetype, {})
+	if archetype.is_empty() or not designer.eligible(layout.archetype, slot):
+		return _error("Layout archetype %s does not fit slot %s" % [layout.archetype, str(slot)])
+	var r := rotation_for(str(gate.get("side", "")))
+	if r < 0:
+		return _error("Layout gate needs a side")
+	var land_id := "land:%d_%d" % [slot.x, slot.y]
+	var origin := TerrainAtlas.slot_origin(slot)
+	var half := TerrainAtlas.SLOT / 2
+	var center := origin + Vector2i(half - 12 + designer.h(slot.x, slot.y, 7101) % 25, half - 12 + designer.h(slot.x, slot.y, 7102) % 25)
+	var radius := int(layout.radius)
+	var to_tile := func(p: Array) -> Vector2i:
+		return center + Vector2i((rotate(Vector2(float(p[0]), float(p[1])), r) * radius).round())
+	var root: String = designer._root(slot)
+	var name := str(archetype.names[designer.h(slot.x, slot.y, 7104) % archetype.names.size()]).replace("{root}", root)
+	var plan := {"land_id": land_id, "atlas_version": 1, "terrain_version": TERRAIN_VERSION,
+		"layout": {"id": layout.id, "version": int(layout.version), "rotation": r}, "archetype": layout.archetype, "archetype_title": archetype.title,
+		"name": name, "epithet": "the Hushed Crown, a winter relay valley around a silent ice escarpment",
+		"history": "Carriers once rang bronze bells across %s to guide travellers through the whiteouts. The relay fell silent; the pines took it back." % name,
+		"climate": archetype.climate.label, "slot": _xy(slot), "center": _xy(center), "radius": radius, "rim": "cliff", "shore": "",
+		"stream": 100000 + designer.h(slot.x, slot.y, 7107) % 800000,
+		"environment": {"weather": layout.weather.duplicate(true), "hazards": layout.hazards.duplicate(true)},
+		"ecology": {}, "kinds": {}, "regions": [], "roads": [], "gates": [], "sites": [], "starts": [], "hooks": [],
+		"supplies": layout.supplies.duplicate(true), "provenance": provenance.duplicate(true)}
+	var odd := r % 2 == 1
+	var geo := {"coast": {"min": roundi(float(layout.coast.min) * 1000), "max": roundi(float(layout.coast.max) * 1000), "scale": int(layout.coast.scale)}, "warp": int(layout.warp)}
+	var esc: Dictionary = layout.escarpment
+	var esc_radius := Vector2(float(esc.radius[0]), float(esc.radius[1])) * radius
+	if odd: esc_radius = Vector2(esc_radius.y, esc_radius.x)
+	geo.escarpment = {"name": esc.name, "center": _xy(to_tile.call(esc.center)), "radius": _xy(Vector2i(esc_radius.round())), "jitter": roundi(float(esc.jitter) * 1000), "scale": int(esc.scale)}
+	geo.lakes = []
+	for lake in layout.lakes:
+		var size := Vector2(float(lake.radius[0]), float(lake.radius[1])) * radius
+		if odd: size = Vector2(size.y, size.x)
+		geo.lakes.append({"lake_id": lake.id, "center": _xy(to_tile.call(lake.center)), "radius": _xy(Vector2i(size.round())), "jitter": roundi(float(lake.jitter) * 1000), "scale": int(lake.scale), "shore": int(lake.shore)})
+	geo.barriers = []
+	for barrier in layout.barriers:
+		geo.barriers.append({"barrier_id": barrier.id, "a": _xy(to_tile.call(barrier.a)), "b": _xy(to_tile.call(barrier.b)), "width": roundi(float(barrier.width) * radius * 10)})
+	geo.windbreaks = []
+	for line in layout.windbreaks:
+		geo.windbreaks.append({"a": _xy(to_tile.call(line.a)), "b": _xy(to_tile.call(line.b)), "width": maxi(6, roundi(float(line.width) * radius * 10)), "tile": line.tile})
+	geo.shelters = []
+	geo.clearings = []
+	for shelter in layout.shelters:
+		var size := Vector2i(int(shelter.size[0]), int(shelter.size[1]))
+		if odd: size = Vector2i(size.y, size.x)
+		var at: Vector2i = to_tile.call(shelter.at)
+		var rect := Rect2i(at - size / 2, size)
+		var doors: Array = []
+		for side in shelter.doors:
+			var turned: String = SIDES_CW[(SIDES_CW.find(side) + r) % 4]
+			var door: Vector2i = {"north": Vector2i(rect.position.x + size.x / 2, rect.position.y), "south": Vector2i(rect.position.x + size.x / 2, rect.end.y - 1),
+				"west": Vector2i(rect.position.x, rect.position.y + size.y / 2), "east": Vector2i(rect.end.x - 1, rect.position.y + size.y / 2)}[turned]
+			doors.append(_xy(door))
+		geo.shelters.append({"shelter_id": "%s/shelter/%s" % [land_id, shelter.id], "name": shelter.name, "rect": {"x": rect.position.x, "y": rect.position.y, "w": size.x, "h": size.y}, "doors": doors})
+		geo.clearings.append({"x": at.x, "y": at.y, "r": maxi(size.x, size.y) / 2 + 3})
+	plan.geography = geo
+	# Areas become the land's regions; the first is the arrival basin.
+	var seeds: Array = []
+	for index in layout.areas.size():
+		var area: Dictionary = layout.areas[index]
+		var rules := {"ground": area.ground}
+		for key in ["patch", "blocker", "rocks"]:
+			if area.has(key): rules[key] = area[key].duplicate(true)
+		rules.ecology = area.ecology.duplicate(true)
+		rules.exposure = area.exposure
+		plan.kinds[area.id] = rules
+		var seed: Vector2i = to_tile.call(area.seed)
+		seeds.append(seed)
+		plan.regions.append({"region_id": "%s/r%d" % [land_id, index], "index": index, "name": area.name, "kind": area.id, "seed": _xy(seed),
+			"danger": int(area.danger), "start": bool(area.get("start", false)), "opportunity": area.opportunity, "exposure": area.exposure})
+		for habitat in area.ecology:
+			if not plan.ecology.has(habitat): plan.ecology[habitat] = []
+			for content_id in area.ecology[habitat]:
+				if not content_id in plan.ecology[habitat]: plan.ecology[habitat].append(content_id)
+	for trail in layout.trails:
+		for i in trail.points.size() - 1:
+			plan.roads.append({"a": _xy(to_tile.call(trail.points[i])), "b": _xy(to_tile.call(trail.points[i + 1])), "width": TRAIL_WIDTH, "trail": trail.id})
+	# Arrival clearings with a windbreak of pines on their layout-north side.
+	var north := Vector2i(rotate(Vector2(0, -1), r))
+	var across := Vector2i(rotate(Vector2(1, 0), r))
+	for start in layout.starts:
+		var at: Vector2i = to_tile.call(start.at)
+		geo.clearings.append({"x": at.x, "y": at.y, "r": int(layout.clearing_radius)})
+		geo.windbreaks.append({"a": _xy(at + north - across * 2), "b": _xy(at + north + across * 2), "width": 6, "tile": "pine"})
+		plan.starts.append({"start_id": "%s/start/%s" % [land_id, start.id], "position": _xy(at), "region": 0})
+	# The single walkable gate: a corridor through the rim cliffs to the pass head.
+	var edge := Vector2i(int(gate.position.x), int(gate.position.y))
+	var inward: Vector2i = -Designer.SIDES[gate.side]
+	var inner := edge + inward * CORRIDOR_DEPTH
+	var head: Vector2i = to_tile.call(layout.pass.head)
+	var middle := Vector2i(((Vector2(inner) + Vector2(head)) / 2.0 + (Vector2(center) - (Vector2(inner) + Vector2(head)) / 2.0).normalized() * Vector2(head - inner).length() * 0.08).round())
+	plan.roads.append({"a": _xy(edge), "b": _xy(inner), "width": CORRIDOR_WIDTH, "trail": "pass_corridor"})
+	plan.roads.append({"a": _xy(inner), "b": _xy(middle), "width": TRAIL_WIDTH, "trail": "pass_approach"})
+	plan.roads.append({"a": _xy(middle), "b": _xy(head), "width": TRAIL_WIDTH, "trail": "pass_approach"})
+	var region := 0
+	for index in seeds.size():
+		if Vector2(seeds[index]).distance_to(Vector2(head)) < Vector2(seeds[region]).distance_to(Vector2(head)): region = index
+	plan.gates.append({"gate_id": "%s/gate/%s" % [land_id, gate.side], "side": gate.side, "position": _xy(edge), "kind": "pass", "faces": str(gate.get("faces", "")),
+		"mirrors": str(gate.get("mirrors", "")), "region": region, "inner": _xy(inner)})
+	plan.hooks = ["Rumours speak of an abandoned relay outpost where the pines meet the pass road.", "Travellers tell of a lee shelter in the basin below the escarpment."]
+	return plan
+
+func _error(message: String) -> Dictionary:
+	last_error = message
+	return {}

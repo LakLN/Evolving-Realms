@@ -155,6 +155,10 @@ Screenshots: `.tools/m04-land-*.png`, `m04-blizzard.png`, `m04-map.png`, `m04-me
 
 - Terrain v1 and its golden fixtures are unchanged; generation 1 Worlds (legacy and
   M03 structured) still play exactly as before.
+- Milestone 05 adds atlas terrain v2 for authored-layout plans only (`terrain_version 2`
+  + `geography`, e.g. Snow Mountain) and start selection v5 for those lands; every
+  terrain_version 1 plan still runs the unchanged v1 code path. See
+  [lands/SNOW_MOUNTAIN_STAGE_C.md](lands/SNOW_MOUNTAIN_STAGE_C.md).
 - Atlas terrain v1, the plan format (`atlas_version 1`) and spawn selection v4 are new
   versions. Any algorithm change must bump `terrain_version` (new lands only) and keep
   the old code path for existing plans.
