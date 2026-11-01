@@ -13,6 +13,7 @@ var _expected_path := ""
 
 func run(main: Control, phase: String) -> void:
 	app = main
+	app.use_legacy_defaults() # Release acceptance and old-save checks use the pre-M03 baseline.
 	_expected_path = ProjectSettings.globalize_path(app.database_path) + ".expected.json"
 	await _frame()
 	if not app._data_ready:

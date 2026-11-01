@@ -1,5 +1,9 @@
 # Milestone 03 / Task A: Structured World & Meaningful Exploration
 
+> **Integration update (M03 integration branch):** the main menu now creates structured
+> Worlds by default (legacy layout selectable), and the HUD/World Map expose region, leads,
+> resolved places and region bearings. See [M03_INTEGRATION_REPORT.md](M03_INTEGRATION_REPORT.md).
+
 ## Scope and motivation
 
 Run 01 retained 26,576 revealed tiles in 77 fog chunks but only five discovered

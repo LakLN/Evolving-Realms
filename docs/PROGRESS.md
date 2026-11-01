@@ -1798,3 +1798,21 @@ Gaps / next steps: playtest tuning of `content/realtime_rules.json`; grid-locked
 free) movement; ranged skills still Manhattan/instant; skills/target panels still speak
 in turns; per-weapon/species attack speed; decide whether real time becomes the default
 before any integration with Tasks A/C.
+
+## Milestone 03 integration (A + B + C)
+
+Branch `feature/m03-integration` (worktree `D:/Game/RPG-m03-integration`, base `9a28f64`):
+cherry-picked Structured World `c7409ad`, World Map `e6c909b`, Real-time `073420a` (three
+"both sides added" conflicts in main.gd, test.ps1, PROGRESS.md; all functionality kept).
+Integration work: structured layout is the default for new Worlds (legacy selectable),
+real-time the default for new Runs (turn selectable); HUD region/lead line; World Map lead,
+resolved and region-bearing markers plus a KNOWN LEADS sidebar from
+`exploration_leads()`/`exploration_frontiers()`; real-time frames refresh the map/minimap;
+readability fixes from rendered screenshots. Baseline menu suites and release acceptance
+call `use_legacy_defaults()`. New `m03-integration` scene playthrough.
+
+Verification: `.\scripts\test.ps1 -Render` all passed (m03-integration 28/0, rendered
+31/0; every M02/M03 suite 0 failures). Old save from `9a28f64` (`--acceptance=write`
+30/0) opened by this build: legacy 7/0, verify 8/0. No export, merge or personal save
+change. Report, known issues, playtest launch and export recommendation:
+[M03_INTEGRATION_REPORT.md](M03_INTEGRATION_REPORT.md).

@@ -25,6 +25,7 @@ func run_test() -> void:
 	database_path = ProjectSettings.globalize_path("user://m03-map-" + Data.uuid() + ".sqlite")
 	app.database_path = database_path
 	root.add_child(app)
+	app.use_legacy_defaults() # Pre-M03 baseline: legacy World layout, turn model (see main.gd).
 	await process_frame
 	app._name_entry.text = "Map field test"
 	app._world_seed.text = "1847"

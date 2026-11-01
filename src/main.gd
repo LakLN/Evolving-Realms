@@ -11,9 +11,10 @@ const FantasyTheme = preload("res://src/ui/fantasy_theme.gd")
 const Art = preload("res://src/world/art.gd")
 const WorldMap = preload("res://src/ui/world_map.gd")
 const Realtime = preload("res://src/run/realtime_controller.gd")
+const Structured = preload("res://src/world/structured_world.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
 const CONTROLS_TURN := "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills | M: map | N: minimap"
-const CONTROLS_REALTIME := "Hold WASD: move, diagonals ok | F: attack (cooldown) | Tab: target | \"!\" = step away to dodge | R: rest on/off | M: map | N: minimap | E X 1-9 I C T K | panels pause"
+const CONTROLS_REALTIME := "Hold WASD: move | F: attack | \"!\": step away to dodge | E | X | R: rest | 1-9 | I C T K | M: map | N: minimap"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
 var database_path := DEFAULT_DATABASE
@@ -31,6 +32,12 @@ var _run_seed: LineEdit
 var _biome: OptionButton
 var _mode: OptionButton
 var _time_model: OptionButton
+var _world_layout: OptionButton
+var _region_hint: Label
+## Known structured-World leads/bearings, refreshed on discoveries and resolutions only
+## (each read loads discovered site records); distances are recomputed from this cache.
+var _leads: Array = []
+var _frontiers: Array = []
 var _controls_hint: Label
 ## M03 B prototype: gameplay clock of a real-time Run (null for turn Runs).
 var _realtime: RefCounted
@@ -173,6 +180,13 @@ func _build_menu(parent: Control) -> void:
 	left.add_child(_worlds)
 	_name_entry = _entry(left, "New world name", "")
 	_world_seed = _entry(left, "World seed (blank = random)", "")
+	_world_layout = OptionButton.new()
+	for layout in [["structured", "Layout: structured regions (M03)"], ["legacy", "Layout: legacy (Run 01 style)"]]:
+		_world_layout.add_item(layout[1])
+		_world_layout.set_item_metadata(_world_layout.item_count - 1, layout[0])
+	# M03 integration: structured Worlds are the default; `-- --layout=legacy` preselects legacy.
+	_world_layout.select(1 if launch_options().get("layout", "") == "legacy" else 0)
+	left.add_child(_world_layout)
 	_create_world = _button(left, "Create world", _on_create_world)
 	left.add_child(HSeparator.new())
 	_label(left, "NEW RUN", 20)
@@ -190,8 +204,9 @@ func _build_menu(parent: Control) -> void:
 	for model in [["turn", "Time: turn-based (one action = one turn)"], ["realtime-v1", "Time: real-time (M03 prototype)"]]:
 		_time_model.add_item(model[1])
 		_time_model.set_item_metadata(_time_model.item_count - 1, model[0])
-	# Turn-based stays the default; `-- --time=realtime` preselects the prototype.
-	_time_model.select(1 if launch_options().get("time", "") == "realtime" else 0)
+	# M03 integration: real time is the default for new Runs; `-- --time=turn` preselects turns.
+	# Existing Runs keep the model stored in their spawn.
+	_time_model.select(0 if launch_options().get("time", "") == "turn" else 1)
 	left.add_child(_time_model)
 	_run_seed = _entry(left, "Run seed (blank = random)", "")
 	_new_run = _button(left, "Begin a new run", _on_new_run)
@@ -273,6 +288,10 @@ func _build_hud(parent: Control) -> void:
 	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
+	_region_hint = _label(column, "", 16) # Structured World: region and leads (empty otherwise).
+	_region_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_region_hint.mouse_filter = Control.MOUSE_FILTER_PASS
+	_region_hint.add_theme_color_override("font_color", Color("cfe3b0"))
 	_controls_hint = _label(column, CONTROLS_TURN, 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
@@ -970,7 +989,8 @@ func _refresh_worlds(selected: String = "") -> void:
 	_worlds.clear()
 	if _data_ready:
 		for world in store.list_worlds():
-			_worlds.add_item("%s  /  seed %d" % [str(world.name).left(32), world.seed])
+			var structured := Structured.enabled(store.load_world(world.world_id))
+			_worlds.add_item("%s  /  seed %d%s" % [str(world.name).left(32), world.seed, "  [structured]" if structured else ""])
 			var index := _worlds.item_count - 1
 			_worlds.set_item_metadata(index, world.world_id)
 			if world.world_id == selected:
@@ -1000,9 +1020,23 @@ func _parse_seed(entry: LineEdit) -> Variant:
 		return null
 	return text.to_int()
 
+func use_legacy_defaults() -> void:
+	## Baseline suites and release acceptance select the pre-M03 layout and turn model
+	## explicitly (like Session.auto_awaken = false); players get the M03 defaults.
+	_world_layout.select(1)
+	_time_model.select(0)
+
 func _on_create_world() -> void:
 	var seed_value: Variant = _parse_seed(_world_seed)
 	if seed_value == null:
+		return
+	if _world_layout.get_item_metadata(_world_layout.selected) == "structured":
+		var structured := Structured.create(store, _name_entry.text, seed_value)
+		if structured.is_empty():
+			_message(store.last_error, true)
+			return
+		_refresh_worlds(structured.world_id)
+		_message("Structured World created: named regions with a waystone, supplies and a relic site each. Begin a run.")
 		return
 	var blueprint := StarterPack.blueprint(seed_value)
 	if blueprint.is_empty():
@@ -1057,12 +1091,13 @@ func _enter_map(active_session: RefCounted) -> void:
 	map_view.show()
 	map_view.attach(session)
 	_world_map.attach(session)
+	_refresh_exploration()
 	_hold_delay = 0.2
 	_discard_on_exit = false
 	_update_info()
 	_notice.text = "Explore freely. Save with Ctrl+S; Esc saves and returns to the menu."
 	if _realtime != null:
-		_notice.text = "REAL TIME: hold WASD to move (diagonals too), F attacks on a cooldown, R rests. Watch for \"!\" — step away to dodge. Menus pause the world."
+		_notice.text = "REAL TIME: hold WASD to move, F to attack. \"!\" = a blow is coming: step away. Panels and the map pause."
 	get_viewport().gui_release_focus()
 	_talent_panel.hide()
 	_skills_panel.hide()
@@ -1072,8 +1107,66 @@ func _enter_map(active_session: RefCounted) -> void:
 		show_talent(true) # Reveal once; the record is already part of the Run state.
 		session.awakened_now = []
 
+const DIRECTIONS_8 := ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"]
+
+func _refresh_exploration() -> void:
+	## Structured Worlds: known leads, places and region bearings -> map markers, journal
+	## and the HUD region line. Only acquired knowledge (Task A contract) is shown.
+	_leads = session.exploration_leads()
+	_frontiers = session.exploration_frontiers()
+	var markers: Array = []
+	var journal: Array = []
+	for lead in _leads:
+		var title := str(lead.metadata.get("title", lead.role))
+		if lead.knowledge == "lead": # Not seen yet: discovered ones are already map landmarks.
+			markers.append({"id": "lead:" + str(lead.instance_id), "position": lead.position.duplicate(), "label": "? " + title, "kind": "lead"})
+		var state := "resolved" if lead.resolved else ("discovered" if lead.knowledge == "discovered" else "lead")
+		journal.append({"state": state, "title": "%s %s" % [{"lead": "?", "discovered": "•", "resolved": "✓"}[state], _short_title(title)], "detail": "%s — %s" % [{"lead": "lead, not seen yet", "discovered": "found", "resolved": "done"}[state], str(lead.reason)]})
+	for frontier in _frontiers:
+		var bounds: Dictionary = frontier.bounds
+		var center := {"x": int(bounds.x) + int(bounds.size) / 2, "y": int(bounds.y) + int(bounds.size) / 2}
+		markers.append({"id": "frontier:" + str(frontier.region_id), "position": center, "label": "→ %s (%s, unsurveyed)" % [frontier.name, frontier.direction], "kind": "frontier"})
+		journal.append({"state": "frontier", "title": "→ %s (%s)" % [frontier.name, frontier.direction], "detail": "unsurveyed — %s" % frontier.opportunity})
+	_world_map.set_markers(markers)
+	_world_map.set_journal(journal)
+
+func _after_exploration_events(events: Array) -> void:
+	if events.any(func(e: Dictionary) -> bool: return e.get("type") in ["discovery", "location"]):
+		_refresh_exploration()
+
+func _bearing(target: Dictionary) -> String:
+	var delta := Vector2(int(target.x) - session.position.x, int(target.y) - session.position.y)
+	if delta.length() < 1.0:
+		return "here"
+	return DIRECTIONS_8[posmod(roundi(delta.angle() / (PI / 4.0)), 8)]
+
+func region_text() -> String:
+	## HUD line: current region, then the nearest unfinished lead or a region bearing.
+	var region: Dictionary = session.world_region()
+	if region.is_empty():
+		return ""
+	var text := "Region: %s (danger %d, %s)" % [region.name, int(region.danger), region.opportunity]
+	var best: Dictionary = {}
+	var best_distance := 2147483647
+	for lead in _leads:
+		var distance := absi(int(lead.position.x) - session.position.x) + absi(int(lead.position.y) - session.position.y)
+		if not lead.resolved and distance < best_distance:
+			best = lead
+			best_distance = distance
+	if not best.is_empty():
+		text += "  |  Lead: %s, %d tiles %s%s" % [_short_title(str(best.metadata.get("title", best.role))), best_distance, _bearing(best.position), "" if best.knowledge == "lead" else " (found)"]
+	elif not _frontiers.is_empty():
+		text += "  |  Onward: %s to the %s" % [_frontiers[0].name, _frontiers[0].direction]
+	return text
+
+static func _short_title(title: String) -> String:
+	## "Silver Hunting wood - Healing grove" -> "Healing grove" (the region is shown already).
+	return title.get_slice(" - ", 1) if title.contains(" - ") else title
+
 func _update_info() -> void:
 	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s | Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	_region_hint.text = region_text()
+	_region_hint.tooltip_text = _region_hint.text
 	if _realtime != null: # Real time: `turn` counts world seconds.
 		_info.text = _info.text.replace("Turn %d" % session.run.state.turn, "Time %d s%s" % [session.run.state.turn, " | resting" if session.resting else ""])
 	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
@@ -1186,6 +1279,7 @@ func _after_action(accepted: bool, quiet: String = "") -> void:
 		return
 	map_view.refresh()
 	_world_map.refresh(session.last_events)
+	_after_exploration_events(session.last_events)
 	map_view.show_events(session.last_events)
 	var text := describe_events(session.last_events)
 	_notice.text = text if not text.is_empty() else quiet
@@ -1490,6 +1584,8 @@ func _realtime_frame(delta: float) -> void:
 		map_view.sync_actors()
 	if events.is_empty() and not _realtime.moved:
 		return
+	_world_map.refresh(events) # Minimap/fog/landmarks follow real-time steps too.
+	_after_exploration_events(events)
 	map_view.show_events(events)
 	var text := describe_events(events)
 	if not text.is_empty():

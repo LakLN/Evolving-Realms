@@ -120,3 +120,11 @@ telegraphed hits, cooldowns, dodge, statuses and skill cooldowns in gameplay sec
 pause, death and save isolation of the time model. `realtime-gameplay` (and
 `rendered-realtime` with `-Render`, screenshots `.tools/m03-realtime-*.png`) plays the real
 scene at 60 FPS. Use `.\scripts\test.ps1 -Smoke -Only realtime,realtime-gameplay,combat,effects,skills`.
+
+## Milestone 03 integration suite
+
+`m03-integration` (`tests/m03_integration_suite.gd`; `rendered-m03-integration` with
+`-Render`, screenshots `.tools/m03-int-*.png`) plays the player defaults — structured World
+and real-time Run — through the real menu and keys: waystone → supply → relic → bearings,
+World Map pause, waypoint, save/continue, telegraphed wolf bite, death and reload. Baseline
+menu suites call `app.use_legacy_defaults()` to keep testing the pre-M03 layout/turn model.

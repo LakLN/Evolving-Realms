@@ -1,5 +1,9 @@
 # Milestone 03 / Task B — Real-time movement and combat prototype
 
+> **Integration update (M03 integration branch):** real time is now the default for new
+> Runs (turn-based remains selectable; `--time=turn`). Existing Runs keep their stored model.
+> See [M03_INTEGRATION_REPORT.md](M03_INTEGRATION_REPORT.md).
+
 Branch `feature/m03-realtime`, worktree `D:/Game/RPG-m03-realtime`, base master `9a28f64`.
 Experimental vertical slice. Not merged; no Windows export; the turn model stays the
 default and keeps every existing Run (including Run 01) exactly as it was.

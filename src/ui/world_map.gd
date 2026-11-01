@@ -33,6 +33,13 @@ var _chunk_masks: Dictionary = {}
 var _landmarks: Dictionary = {}
 var _landmarks_loaded := false
 var _extra_markers: Array = []
+## M03 integration: known leads/bearings as text lines (structured Worlds), drawn as a
+## persistent list on the world map. Set by main; never derived from undiscovered data.
+var _journal: Array = []
+## Marker colours by kind/state: discovered and resolved places differ; leads are rings
+## (location known from a clue, not seen); frontiers are unsurveyed region bearings.
+const JOURNAL_WIDTH := 300.0
+const MARKER_COLORS := {"discovered": Color("e0b65f"), "resolved": Color("7fa37a"), "lead": Color("f0a64a"), "frontier": Color("b79cf0")}
 var _dragging := false
 var _drag_moved := false
 var _drag_start := Vector2.ZERO
@@ -95,7 +102,8 @@ func refresh(events: Array = []) -> void:
 		_load_discovered_landmarks()
 	else:
 		for event in events:
-			if event is Dictionary and event.get("type") == "discovery":
+			if event is Dictionary and event.get("type") in ["discovery", "location"]:
+				_landmarks.erase(str(event.get("target", ""))) # Re-read: discovered -> resolved.
 				_add_landmark(str(event.get("target", "")))
 	queue_redraw()
 
@@ -107,6 +115,10 @@ func set_markers(markers: Array) -> void:
 			push_error("World map marker needs an ID, integer position, label and kind")
 			continue
 		_extra_markers.append(marker.duplicate(true))
+	queue_redraw()
+
+func set_journal(lines: Array) -> void:
+	_journal = lines.duplicate()
 	queue_redraw()
 
 func zoom_at(screen_position: Vector2, factor: float) -> void:
@@ -184,8 +196,9 @@ func _add_landmark(id: String) -> void:
 	_landmarks[id] = {
 		"id": id,
 		"position": instance.position.duplicate(true),
-		"label": str(definition.get("name", instance.content_id)),
+		"label": str(instance.get("metadata", {}).get("title", definition.get("name", instance.content_id))),
 		"kind": str(definition.get("payload", {}).get("category", "landmark")),
+		"state": "resolved" if not mutation.get("resolved", {}).is_empty() else "discovered",
 	}
 
 func _gui_input(event: InputEvent) -> void:
@@ -230,7 +243,9 @@ func _draw() -> void:
 func _draw_world_map() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("15130f"))
 	draw_rect(Rect2(Vector2(12, 12), size - Vector2(24, 24)), Color("251f17"), false, 3.0)
-	_map_rect = Rect2(Vector2(30, 82), Vector2(size.x - 60, size.y - 142))
+	# With known leads the map leaves a sidebar for them instead of covering markers.
+	var sidebar := JOURNAL_WIDTH + 14.0 if not _journal.is_empty() else 0.0
+	_map_rect = Rect2(Vector2(30, 82), Vector2(size.x - 60 - sidebar, size.y - 142))
 	draw_rect(_map_rect, Color("090d10"))
 	draw_rect(_map_rect, Color("94784b"), false, 2.0)
 	_draw_chunk_textures(_map_rect)
@@ -239,7 +254,8 @@ func _draw_world_map() -> void:
 	_draw_waypoint()
 	_draw_text(Vector2(34, 48), "WORLD MAP", 25, Color("e6c47b"))
 	_draw_text(Vector2(240, 46), "Tile (%d, %d)  |  Zoom %.1fx" % [session.position.x, session.position.y, _zoom], 16, Color("d7c9a9"))
-	_draw_text(Vector2(34, size.y - 43), "Explored terrain only     Gold: discovered landmark     Blue: you     Amber: waypoint", 15, Color("d7c9a9"))
+	_draw_text(Vector2(34, size.y - 43), "Explored only  ·  Gold: found  ·  Green ✓: done  ·  Orange ring: lead  ·  Violet: region bearing  ·  Blue: you  ·  Amber: waypoint", 14, Color("d7c9a9"))
+	_draw_journal()
 	_draw_text(Vector2(34, size.y - 20), "Drag: pan   Wheel: zoom   Click: set waypoint   Right-click: clear   M / Esc: close", 14, Color("c2b28f"))
 
 func _draw_chunk_textures(viewport: Rect2) -> void:
@@ -252,13 +268,33 @@ func _draw_chunk_textures(viewport: Rect2) -> void:
 		if destination.intersects(viewport):
 			draw_texture_rect(_chunk_textures[chunk], destination, false)
 
+static func _state(marker: Dictionary) -> String:
+	return "frontier" if marker.kind == "frontier" else ("lead" if marker.kind == "lead" else str(marker.get("state", "discovered")))
+
+func _draw_marker(point: Vector2, marker: Dictionary, radius: float) -> void:
+	var state := _state(marker)
+	var color: Color = MARKER_COLORS.get(state, MARKER_COLORS.discovered)
+	match state:
+		"lead": # Known from a clue: hollow ring, nothing about its surroundings is drawn.
+			draw_arc(point, radius, 0.0, TAU, 20, color, 2.0)
+			draw_circle(point, radius * 0.3, color)
+		"frontier":
+			draw_rect(Rect2(point - Vector2(radius, radius), Vector2(radius, radius) * 2.0), color, false, 2.0)
+		_:
+			draw_circle(point, radius * 1.5, Color("2c2113"))
+			draw_circle(point, radius, color)
+			if state == "resolved": # Done: a small dark tick.
+				draw_line(point + Vector2(-radius * 0.5, 0), point + Vector2(-radius * 0.1, radius * 0.45), Color("1c2418"), 2.0)
+				draw_line(point + Vector2(-radius * 0.1, radius * 0.45), point + Vector2(radius * 0.6, -radius * 0.5), Color("1c2418"), 2.0)
+
 func _draw_map_markers() -> void:
 	for marker in _all_markers():
 		var tile := Vector2i(int(marker.position.x), int(marker.position.y))
 		var point := _map_point(tile, _map_rect, _zoom)
+		if not _map_rect.has_point(point) and _state(marker) in ["lead", "frontier"]:
+			_draw_edge_indicator(Vector2(tile) + Vector2(0.5, 0.5), _map_rect, MARKER_COLORS[_state(marker)], str(marker.label), _zoom)
 		if _map_rect.has_point(point):
-			draw_circle(point, clampf(_zoom * 0.42, 4.0, 9.0), Color("2c2113"))
-			draw_circle(point, clampf(_zoom * 0.27, 3.0, 6.0), Color("e0b65f"))
+			_draw_marker(point, marker, clampf(_zoom * 0.27, 3.0, 6.0))
 			if _zoom >= 8.0:
 				var label := str(marker.label)
 				var width := ThemeDB.fallback_font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
@@ -301,8 +337,8 @@ func _draw_minimap() -> void:
 	for marker in _all_markers():
 		var marker_tile := Vector2i(int(marker.position.x), int(marker.position.y))
 		var point := _map_point(marker_tile, viewport, MINIMAP_TILE)
-		if viewport.has_point(point):
-			draw_circle(point, 3.5, Color("e0b65f"))
+		if viewport.has_point(point) and _state(marker) != "frontier":
+			_draw_marker(point, marker, 3.0)
 	var target: Variant = waypoint()
 	if target is Dictionary and not target.is_empty():
 		var waypoint_tile := Vector2i(int(target.x), int(target.y))
@@ -336,6 +372,23 @@ func _draw_minimap_chunks(viewport: Rect2) -> void:
 			var source := Rect2(Vector2(from - origin), Vector2(to - from + Vector2i.ONE))
 			var destination := Rect2(_map_point(from, viewport, MINIMAP_TILE), source.size * MINIMAP_TILE)
 			draw_texture_rect_region(_chunk_textures[chunk], destination, source)
+
+func _draw_journal() -> void:
+	## Persistent sidebar of what this Run knows: leads, places and region bearings.
+	if _journal.is_empty():
+		return
+	var box := Rect2(Vector2(_map_rect.end.x + 14, _map_rect.position.y), Vector2(JOURNAL_WIDTH, _map_rect.size.y))
+	draw_rect(box, Color("120f0b"))
+	draw_rect(box, Color("94784b"), false, 2.0)
+	_draw_text(box.position + Vector2(12, 24), "KNOWN LEADS", 16, Color("e6c47b"))
+	var y := box.position.y + 52
+	for line in _journal:
+		if y > box.end.y - 30:
+			break
+		var color: Color = MARKER_COLORS.get(str(line.state), Color("d7c9a9"))
+		draw_string(ThemeDB.fallback_font, Vector2(box.position.x + 12, y), str(line.title), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 24, 14, color)
+		draw_string(ThemeDB.fallback_font, Vector2(box.position.x + 24, y + 18), str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13, Color("bfb091"))
+		y += 44
 
 func _all_markers() -> Array:
 	var result: Array = _landmarks.values()
