@@ -1,5 +1,32 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Milestone 03 C — World map, minimap and waypoints (feature/m03-map-ui)
+
+- Implemented the M-key world map and N-key HUD minimap using the active Run's
+  explored masks. The map displays the player, discovered landmarks and a
+  Run-local waypoint; left-click sets it, right-click removes it, drag pans, and
+  the mouse wheel zooms.
+- Terrain textures are cached per explored 32x32 chunk and updated only when that
+  chunk's mask changes. Rendering samples explored tile coordinates without
+  filling the chunk cache or establishing Region Ledger records. The minimap is
+  positioned below the top HUD so it does not cover gameplay hints or controls.
+- Added `map_waypoint` to the Run body. The loader normalizes legacy six-field
+  states to the new field; no SQLite migration, terrain generation, gameplay or
+  discovery rules changed. See [M03_MAP_SYSTEM.md](M03_MAP_SYSTEM.md) and
+  [DATA_API.md](DATA_API.md).
+- `.\scripts\test.ps1 -Only map -Smoke`: PASS; import, data (96), integration
+  (41), map UI (22), and startup passed.
+- `.\scripts\godot.ps1 --script 'res://tests/map_gameplay_suite.gd'`: PASS;
+  rendered map suite (24 checks, 0 failures) on Windows OpenGL 3.3. Captures:
+  `.tools/m03-map-ui.png` and `.tools/m03-minimap.png`.
+- Coverage includes M open/close, mouse zoom/pan, waypoint add/remove and
+  save/load, old Run normalization, discovered landmark markers, hidden tiles,
+  negative coordinates, 26,001 explored tiles, and unchanged loaded chunks /
+  region records after map refresh.
+- Limits: no automatic pathfinding, fast travel, hidden-location reveal, or
+  region-name generation. No full regression or Windows export was run.
+- Next: stop here pending approval for any subsequent Milestone 03 task.
+
 ## Run 01 — final integration
 
 - Integrated the three task branches on `master`: world spawn policy

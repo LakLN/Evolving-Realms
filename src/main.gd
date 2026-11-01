@@ -9,6 +9,7 @@ const Acceptance = preload("res://src/acceptance/standalone_check.gd")
 const TalentText = preload("res://src/core/talent_text.gd")
 const FantasyTheme = preload("res://src/ui/fantasy_theme.gd")
 const Art = preload("res://src/world/art.gd")
+const WorldMap = preload("res://src/ui/world_map.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
@@ -16,6 +17,7 @@ var database_path := DEFAULT_DATABASE
 var store := Store.new()
 var session: RefCounted
 var map_view: Node2D
+var _world_map: WorldMap
 var _menu: Control
 var _hud: Control
 var _worlds: OptionButton
@@ -99,6 +101,9 @@ func _ready() -> void:
 	_build_talent_panel(frame)
 	_build_skills(frame)
 	_build_death_screen(frame)
+	_world_map = WorldMap.new()
+	_world_map.waypoint_changed.connect(_on_waypoint_changed)
+	frame.add_child(_world_map)
 	var options := launch_options()
 	database_path = options.get("database", database_path)
 	if options.has("acceptance") and ProjectSettings.globalize_path(database_path) == ProjectSettings.globalize_path(DEFAULT_DATABASE):
@@ -254,7 +259,7 @@ func _build_hud(parent: Control) -> void:
 	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
-	_label(column, "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills", 15)
+	_label(column, "WASD: move | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills | M: map | N: minimap", 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
 
@@ -288,7 +293,7 @@ func _build_character(parent: Control) -> void:
 	_character_panel.hide()
 
 func _panel_open() -> bool:
-	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or not _targeting.is_empty()
+	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or (_world_map != null and _world_map.map_open) or not _targeting.is_empty()
 
 func _toggle_character() -> void:
 	if session == null or _menu.visible or session.is_dead():
@@ -1025,6 +1030,7 @@ func _enter_map(active_session: RefCounted) -> void:
 	_hud.show()
 	map_view.show()
 	map_view.attach(session)
+	_world_map.attach(session)
 	_hold_delay = 0.2
 	_discard_on_exit = false
 	_update_info()
@@ -1136,6 +1142,7 @@ func _after_action(accepted: bool, quiet: String = "") -> void:
 		_update_info()
 		return
 	map_view.refresh()
+	_world_map.refresh(session.last_events)
 	map_view.show_events(session.last_events)
 	var text := describe_events(session.last_events)
 	_notice.text = text if not text.is_empty() else quiet
@@ -1266,6 +1273,12 @@ func move_player(direction: Vector2i) -> bool:
 	_after_action(moved)
 	return moved
 
+func _on_waypoint_changed(waypoint: Dictionary) -> void:
+	if session == null:
+		return
+	_update_info()
+	_notice.text = "Waypoint cleared." if waypoint.is_empty() else "Waypoint set to (%d, %d)." % [int(waypoint.x), int(waypoint.y)]
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	if session == null or _menu.visible or not event is InputEventKey or not event.pressed or event.echo:
 		return
@@ -1315,6 +1328,21 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and _world_map != null:
+		if _world_map.map_open:
+			if event.keycode in [KEY_M, KEY_ESCAPE] or event.physical_keycode in [KEY_M, KEY_ESCAPE]:
+				_world_map.close_map()
+			get_viewport().set_input_as_handled()
+			return
+		if session != null and not _menu.visible and not session.is_dead() and not _panel_open():
+			if event.keycode == KEY_M or event.physical_keycode == KEY_M:
+				_world_map.open_map()
+				get_viewport().set_input_as_handled()
+				return
+			if event.keycode == KEY_N or event.physical_keycode == KEY_N:
+				_world_map.toggle_minimap()
+				get_viewport().set_input_as_handled()
+				return
 	if not _targeting.is_empty() and event is InputEventKey and event.pressed and not event.echo:
 		_targeting_input(event)
 		get_viewport().set_input_as_handled() # Modal while choosing a target.
@@ -1415,6 +1443,7 @@ func _return_to_menu() -> void:
 	map_view.skill_marks = {}
 	map_view.clear_map()
 	map_view.hide()
+	_world_map.detach()
 	_hud.hide()
 	_menu.show()
 	_refresh_worlds(world_id)

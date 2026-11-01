@@ -75,7 +75,9 @@ terrain generation version or database migration. Resume uses the saved coordina
 not a fresh selection; creating a new Run never edits previous spawns.
 
 
-Run mutable state has exactly these six fields:
+Run mutable state currently has seven fields. Runs saved before the map waypoint
+addition contain the original six fields; `load_run` normalizes those by adding an
+empty waypoint without changing the saved record:
 
 ```json
 {
@@ -84,12 +86,15 @@ Run mutable state has exactly these six fields:
   "character": {"position": {"x": 0, "y": 0}, "stats": {}},
   "inventory": {"mock:moonleaf": {"version": 1, "quantity": 2}},
   "explored": [{"x": 0, "y": 0}],
-  "entity_mutations": {"chunk:0/0/herb_1": {"collected": true}}
+  "entity_mutations": {"chunk:0/0/herb_1": {"collected": true}},
+  "map_waypoint": {"x": 12, "y": -4}
 }
 ```
 
 Inventory entries pin definition versions; positive integer quantities are
-required. Empty inventory/explored/entity_mutations are valid. Entity IDs must
+required. `map_waypoint` is either an empty object or one integer tile position
+owned by this Run; it does not reveal unexplored terrain. Empty
+inventory/explored/entity_mutations are valid. Entity IDs must
 resolve to fixed instances in this run's world. No mutation means original state,
 so a new run automatically sees resources/chests reset. Every save replaces the
 entire mutation map; omitting an entry resets it for that run only. Game rules for
