@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "workflow_version": 1,
+  "package_id": "landpkg:snow_mountain",
+  "version": 1,
+  "stage": "dependencies",
+  "target_archetype": "frost_highlands",
+  "source": "human-assisted-design-v1",
+  "binding": {},
+  "approvals": {},
+  "entries": [
+    {
+      "id": "snow:art/ground",
+      "kind": "asset",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "40px seamless snow x4, compact snow x2, taiga x3, ice x3; no recoloured grass"
+    },
+    {
+      "id": "snow:art/transitions",
+      "kind": "asset",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "Snow/taiga, snow/ice, snow/road: eight-neighbour masks; cliffs with readable blocked edges"
+    },
+    {
+      "id": "snow:art/props",
+      "kind": "asset",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "Snow pines 60px x3, rocks 40px x3, fallen trunk intact/open, resource stones distinct from blockers"
+    },
+    {
+      "id": "snow:art/landmarks",
+      "kind": "asset",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "96px: lee shelter, ruined relay, bell cairn, sealed cleft; stable feet anchors"
+    },
+    {
+      "id": "snow:art/wildlife",
+      "kind": "asset",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "Rime hare 32px; scree wolf 48px; bellback sentinel 52px. Four directions, idle1/walk4/attack3/hit1/death2; hare attack omitted if noncombatant"
+    },
+    {
+      "id": "snow:art/icons",
+      "kind": "asset",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "32px resin, bark ration, relay clasp, bell shard, rime mantle; inventory readability"
+    },
+    {
+      "id": "snow:art/weather",
+      "kind": "asset",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "Snow flake, wind streak, exposure/sheltered feedback; particles never conceal attacks"
+    },
+    {
+      "id": "snow:mechanic/terrain_v2",
+      "kind": "mechanic",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "Designed corridors, cliff barriers, lake perimeter; keep atlas terrain v1 intact"
+    },
+    {
+      "id": "snow:mechanic/safe_spawn",
+      "kind": "mechanic",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:mechanic/terrain_v2"
+      ],
+      "notes": "Versioned randomized safe sites; current M04 always uses region waystone"
+    },
+    {
+      "id": "snow:mechanic/shelter",
+      "kind": "mechanic",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:mechanic/terrain_v2"
+      ],
+      "notes": "Structures grant existing shelter counterplay; no healing immunity"
+    },
+    {
+      "id": "snow:mechanic/relay_exchange",
+      "kind": "mechanic",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [],
+      "notes": "Existing WorldEvents item costs can be reused; add only branch/keep semantics and verify atomic reward + receipt. No generic crafting subsystem."
+    },
+    {
+      "id": "snow:mechanic/bell_sequence",
+      "kind": "mechanic",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:mechanic/relay_exchange"
+      ],
+      "notes": "Run-local two-stage event state with reload-safe outcomes"
+    },
+    {
+      "id": "snow:content/ecology",
+      "kind": "content",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:art/wildlife",
+        "snow:mechanic/terrain_v2"
+      ],
+      "notes": "Native definitions, encounters, food/water budget and independent IDs"
+    },
+    {
+      "id": "snow:content/relay",
+      "kind": "content",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:mechanic/relay_exchange",
+        "snow:art/landmarks",
+        "snow:art/icons"
+      ],
+      "notes": "Recover clasp from fallen trunk; choose supply exchange or keep equipment"
+    },
+    {
+      "id": "snow:content/bell",
+      "kind": "content",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:mechanic/bell_sequence",
+        "snow:art/landmarks",
+        "snow:art/wildlife"
+      ],
+      "notes": "Optional rare bell shard chain; calm restoration or dangerous salvage"
+    },
+    {
+      "id": "snow:check/connectivity",
+      "kind": "check",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:mechanic/terrain_v2",
+        "snow:mechanic/safe_spawn"
+      ],
+      "notes": "Record exact command/report or human observations, date and limitations"
+    },
+    {
+      "id": "snow:check/weather",
+      "kind": "check",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:mechanic/shelter",
+        "snow:art/weather"
+      ],
+      "notes": "Record exact command/report or human observations, date and limitations"
+    },
+    {
+      "id": "snow:check/save_receipts",
+      "kind": "check",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:content/relay",
+        "snow:content/bell"
+      ],
+      "notes": "Record exact command/report or human observations, date and limitations"
+    },
+    {
+      "id": "snow:check/fog_spoilers",
+      "kind": "check",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:content/bell"
+      ],
+      "notes": "Record exact command/report or human observations, date and limitations"
+    },
+    {
+      "id": "snow:check/render_assets",
+      "kind": "check",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:art/ground",
+        "snow:art/transitions",
+        "snow:art/props",
+        "snow:art/landmarks",
+        "snow:art/wildlife",
+        "snow:art/icons",
+        "snow:art/weather"
+      ],
+      "notes": "Record exact command/report or human observations, date and limitations"
+    },
+    {
+      "id": "snow:check/human_playtest",
+      "kind": "check",
+      "version": 1,
+      "status": "planned",
+      "source": "human-assisted-design-v1",
+      "depends_on": [
+        "snow:content/ecology",
+        "snow:check/connectivity",
+        "snow:check/weather",
+        "snow:check/save_receipts",
+        "snow:check/fog_spoilers",
+        "snow:check/render_assets"
+      ],
+      "notes": "Record exact command/report or human observations, date and limitations"
+    }
+  ]
+}

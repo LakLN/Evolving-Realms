@@ -1,5 +1,58 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Milestone 05 ? Snow Mountain Stage A / minimal Stage B (2026-11-01)
+
+Isolated `feature/m05-snow-mountain` at `D:/Game/RPG-m05-snow`, based on
+M04 `daf6036`. User explicitly authorized Stage A/B only. No merge, official build
+export, personal Run 01 DB access or edits in master/M03/M04 worktrees.
+
+Implemented:
+- Developer design bible: `docs/lands/SNOW_MOUNTAIN_DESIGN.md`, seven connected
+  areas, survival loop, three-species ecosystem, two optional discovery chains,
+  explicit mechanic dependencies and versioned-new-land compatibility plan.
+- Detailed art requests in `docs/lands/SNOW_MOUNTAIN_ASSETS.md`: 40px ground and
+  transitions, anchored props/landmarks, directional native creature animations,
+  icons and weather feedback. All new art remains missing; no token/recolour
+  is called final. Image generation is available but asset production is deferred.
+- Git-persistent `content/land_packages/snow_mountain/manifest.json`, workflow v1,
+  21 incomplete dependency entries, per-entry source/version/status, empty explicit
+  World binding and review records. Ready report currently has 27 blockers.
+- Development-only `src/content/land_package.gd` and CLI: schema/workflow/ID checks,
+  dependency references/cycles, completion evidence, runtime asset presence,
+  active pinned registry content, exact World/land/archetype/plan-hash binding,
+  review requirements and rejection of unfinished published status.
+- No persistence schema, gameplay, atlas generator or activation changes. The report
+  accepts an existing Atlas for World checks; no automatic DB access or publication.
+  Existing M04 prototype expansion is not package publication. Full package activation
+  and publication receipts remain future work, using existing Atlas/AuthoringPipeline.
+
+Verification (native Godot, disposable databases only):
+- `./scripts/test.ps1 -Only land-package`: import, first package suite 16/0 and startup PASS.
+- After final validator/test updates:
+  `./scripts/test.ps1 -Only land-package,m04-world,world -Smoke`: ALL PASS;
+  import, data 96/0, world 49/0, integration 41/0, land-package 18/0,
+  M04 world 86/0, startup. Includes migrations/old saves, receipts, World/Run
+  isolation, frozen terrain fixtures, append-only atlas and save/reopen coverage.
+- `./scripts/godot.ps1 --headless --script res://scripts/land_package_check.gd`:
+  exit 0, valid=true, ready=false, 27 blockers.
+- Same command with `'--' res://content/land_packages/snow_mountain/manifest.json --ready`:
+  expected exit 1; incomplete draft correctly fails readiness.
+- `git diff --check` / staged diff check clean. No rendered or human playtest,
+  full regression, service call or export: this is isolated authoring tooling,
+  not a shared-engine/persistence/generation change or milestone completion.
+
+Local tooling: own .tools/logs, read-only-use Godot junction to M03 integration's
+.tools/godot, .venv junction to its existing environment. No installs or shared
+file replacements. Import-only tracked asset line-ending noise restored.
+
+Gaps/next: gameplay geography, native content, chain states and all art are design
+only. No player World selected or modified. Review the small snow/taiga/ice + pine,
+shelter, wolf visual proof sheet first. Recommended Stage C: terrain v2 for NEW
+frost-land proposals (never rewrite M04 plans), basin/forest/lake/pass routes,
+versioned randomized safe starts, environment assets and shelter feedback; then
+rendered connectivity/weather/boundary checks. Stage D adds content; Stage E
+requires actual human playtesting. No Stage C implementation started here.
+
 ## Milestone 03 C — World map, minimap and waypoints (feature/m03-map-ui)
 
 - Implemented the M-key world map and N-key HUD minimap using the active Run's

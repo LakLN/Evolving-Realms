@@ -76,6 +76,7 @@ try {
     Invoke-EngineCheck -Name 'realtime' -EngineArgs @('--headless', '--script', 'res://tests/realtime_suite.gd') -Summary 'M03 REALTIME: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'realtime-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/realtime_gameplay_suite.gd') -Summary 'M03 REALTIME GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'm03-integration' -EngineArgs @('--headless', '--script', 'res://tests/m03_integration_suite.gd') -Summary 'M03 INTEGRATION: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'land-package' -EngineArgs @('--headless', '--script', 'res://tests/land_package_suite.gd') -Summary 'M05 LAND PACKAGE: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'm04-world' -EngineArgs @('--headless', '--script', 'res://tests/m04_world_suite.gd') -Summary 'M04 WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'm04-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/m04_gameplay_suite.gd') -Summary 'M04 GAMEPLAY: \d+ checks, 0 failures'
     # Keep smoke startup away from the player's database, including opt-in World tests.
