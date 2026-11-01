@@ -1,9 +1,12 @@
 extends RefCounted
 ## Object layer v1. Definitions are data; placements are non-blocking.
+const Structured = preload("res://src/world/structured_world.gd")
+const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
 const Loot = preload("res://src/core/loot_table.gd")
+var regions: RefCounted
 var world: Dictionary
 var terrain: RefCounted
 var terrain_cache: RefCounted
@@ -15,6 +18,7 @@ var center := Vector2i(2147483647, 2147483647)
 var last_error := ""
 
 func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted, cache: RefCounted) -> bool:
+	regions = Regions.new(generator) if Structured.enabled(blueprint) else null
 	world = blueprint
 	terrain = generator
 	registry = content
@@ -122,6 +126,11 @@ func generate_chunk(chunk: Vector2i) -> Array:
 		_fail(registry.last_error)
 		return []
 	var result: Array = []
+	var reserved := {}
+	var regional_percent := 100
+	if regions != null:
+		regional_percent = int(regions.describe(Regions.cell_of(origin)).resource_percent)
+		for destination in regions.placements(chunk): reserved[Vector2i(int(destination.position.x), int(destination.position.y))] = true
 	var occupied := {}
 	for instance in persisted:
 		var key := _key(instance.content_id, int(instance.version))
@@ -135,6 +144,9 @@ func generate_chunk(chunk: Vector2i) -> Array:
 		if not _valid_instance(instance):
 			return []
 		var point := Vector2i(int(instance.position.x), int(instance.position.y))
+		if reserved.has(point):
+			_fail("Authored object overlaps a structured destination; placement refused")
+			return []
 		if occupied.has(point):
 			_fail("Conflicting established objects share a tile")
 			return []
@@ -147,11 +159,13 @@ func generate_chunk(chunk: Vector2i) -> Array:
 		for x in Terrain.CHUNK_SIZE:
 			var point := origin + Vector2i(x, y)
 			var ground: int = bytes[y * 32 + x]
-			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point):
+			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point) or reserved.has(point):
 				continue
 			for rule in rules:
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if Terrain.BIOMES[ground] not in spawn.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000):
+				var chance := int(spawn.per_10000)
+				if regions != null and rule.definition.content_id.begins_with("m03:resource/"): chance = chance * regional_percent / 100
+				if Terrain.BIOMES[ground] not in spawn.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance:
 					continue
 				result.append({"instance_id": "proc:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"object_generation_version": 1}})
 				break

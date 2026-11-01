@@ -35,6 +35,7 @@ function Invoke-EngineCheck {
 try {
     Invoke-EngineCheck -Name 'import' -EngineArgs @('--headless', '--editor', '--import')
     Invoke-EngineCheck -Name 'data' -EngineArgs @('--headless', '--script', 'res://tests/data_suite.gd') -Summary 'CHECKPOINT B: \d+ checks, 0 failures' -ExpectedErrors @('injected failure', 'table content_definitions already exists')
+    Invoke-EngineCheck -Name 'm03-world' -EngineArgs @('--headless', '--script', 'res://tests/m03_world_suite.gd') -Summary 'M03 STRUCTURED WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'world' -EngineArgs @('--headless', '--script', 'res://tests/world_suite.gd') -Summary 'CHECKPOINT C WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'run01-world' -EngineArgs @('--headless', '--script', 'res://tests/run01_world_suite.gd') -Summary 'RUN01 WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'gameplay' -EngineArgs @('--headless', '--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
@@ -71,7 +72,9 @@ try {
     Invoke-EngineCheck -Name 'discovery-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'run01-content' -EngineArgs @('--headless', '--script', 'res://tests/run01_content_suite.gd') -Summary 'RUN01 CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'telemetry' -EngineArgs @('--headless', '--script', 'res://tests/telemetry_suite.gd') -Summary 'RUN 01 TELEMETRY: \d+ checks, 0 failures'
-    Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
+    # Keep smoke startup away from the player's database, including opt-in World tests.
+    $startupDatabase = 'user://startup-tests/' + [guid]::NewGuid().ToString() + '.sqlite'
+    Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5', '--', ('--database=' + $startupDatabase))
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-discoveries' -EngineArgs @('--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-effects' -EngineArgs @('--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'

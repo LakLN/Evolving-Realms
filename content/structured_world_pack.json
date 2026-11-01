@@ -1,0 +1,781 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {
+      "content_id": "m03:event/waystone",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Weathered waystone",
+      "description": "Weathered waystone. A landmark of the surrounding region.",
+      "dependencies": [],
+      "payload": {
+        "tone": "boon",
+        "message": "Weathered waystone.",
+        "outcomes": [
+          {
+            "type": "xp",
+            "amount": 5
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "m03:place/waystone",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Weathered waystone",
+      "description": "Old surveyors marked nearby refuges and ruins. Read the inscriptions for coordinates.",
+      "dependencies": [
+        {
+          "content_id": "m03:event/waystone",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "category": "anomaly",
+        "visual": "shrine",
+        "spawn": {
+          "biomes": [
+            "forest",
+            "beach",
+            "meadow"
+          ],
+          "per_10000": 1,
+          "priority": 90,
+          "conditions": []
+        },
+        "discovery": {
+          "mode": "visible"
+        },
+        "interactions": [
+          {
+            "id": "explore",
+            "verb": "Examine Weathered waystone",
+            "trigger": "interact",
+            "event": {
+              "content_id": "m03:event/waystone",
+              "version": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:event/forest_supply",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Healing grove",
+      "description": "Healing grove. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:berries",
+          "version": 1
+        },
+        {
+          "content_id": "core:herb",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "boon",
+        "message": "Healing grove.",
+        "outcomes": [
+          {
+            "type": "grant_items",
+            "items": [
+              {
+                "content_id": "core:berries",
+                "version": 1,
+                "quantity": 2
+              },
+              {
+                "content_id": "core:herb",
+                "version": 1,
+                "quantity": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "m03:place/forest_supply",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Healing grove",
+      "description": "A refuge with supplies for the journey. Each Run can gather its reward once.",
+      "dependencies": [
+        {
+          "content_id": "m03:event/forest_supply",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "category": "resource_site",
+        "visual": "shrine",
+        "spawn": {
+          "biomes": [
+            "forest"
+          ],
+          "per_10000": 1,
+          "priority": 90,
+          "conditions": []
+        },
+        "discovery": {
+          "mode": "visible"
+        },
+        "interactions": [
+          {
+            "id": "explore",
+            "verb": "Examine Healing grove",
+            "trigger": "interact",
+            "event": {
+              "content_id": "m03:event/forest_supply",
+              "version": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:event/forest_relic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Hunter watchtower",
+      "description": "Hunter watchtower. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:coin",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "bane",
+        "message": "Hunter watchtower.",
+        "outcomes": [
+          {
+            "type": "damage",
+            "amount": 3
+          },
+          {
+            "type": "grant_items",
+            "items": [
+              {
+                "content_id": "core:coin",
+                "version": 1,
+                "quantity": 12
+              }
+            ]
+          },
+          {
+            "type": "xp",
+            "amount": 40
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "m03:place/forest_relic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Hunter watchtower",
+      "description": "Collapsed ruins cost 3 HP to explore. Recover coins and lore, and survey bearings toward other regions.",
+      "dependencies": [
+        {
+          "content_id": "m03:event/forest_relic",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "category": "ruin",
+        "visual": "ruin",
+        "spawn": {
+          "biomes": [
+            "forest"
+          ],
+          "per_10000": 1,
+          "priority": 90,
+          "conditions": []
+        },
+        "discovery": {
+          "mode": "visible"
+        },
+        "interactions": [
+          {
+            "id": "explore",
+            "verb": "Examine Hunter watchtower",
+            "trigger": "interact",
+            "event": {
+              "content_id": "m03:event/forest_relic",
+              "version": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:event/meadow_supply",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Pilgrim spring",
+      "description": "Pilgrim spring. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:fresh_water",
+          "version": 1
+        },
+        {
+          "content_id": "core:fiber",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "boon",
+        "message": "Pilgrim spring.",
+        "outcomes": [
+          {
+            "type": "grant_items",
+            "items": [
+              {
+                "content_id": "core:fresh_water",
+                "version": 1,
+                "quantity": 2
+              },
+              {
+                "content_id": "core:fiber",
+                "version": 1,
+                "quantity": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "m03:place/meadow_supply",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Pilgrim spring",
+      "description": "A refuge with supplies for the journey. Each Run can gather its reward once.",
+      "dependencies": [
+        {
+          "content_id": "m03:event/meadow_supply",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "category": "resource_site",
+        "visual": "shrine",
+        "spawn": {
+          "biomes": [
+            "meadow"
+          ],
+          "per_10000": 1,
+          "priority": 90,
+          "conditions": []
+        },
+        "discovery": {
+          "mode": "visible"
+        },
+        "interactions": [
+          {
+            "id": "explore",
+            "verb": "Examine Pilgrim spring",
+            "trigger": "interact",
+            "event": {
+              "content_id": "m03:event/meadow_supply",
+              "version": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:event/meadow_relic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Standing-stone vault",
+      "description": "Standing-stone vault. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:coin",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "bane",
+        "message": "Standing-stone vault.",
+        "outcomes": [
+          {
+            "type": "damage",
+            "amount": 3
+          },
+          {
+            "type": "grant_items",
+            "items": [
+              {
+                "content_id": "core:coin",
+                "version": 1,
+                "quantity": 12
+              }
+            ]
+          },
+          {
+            "type": "xp",
+            "amount": 40
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "m03:place/meadow_relic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Standing-stone vault",
+      "description": "Collapsed ruins cost 3 HP to explore. Recover coins and lore, and survey bearings toward other regions.",
+      "dependencies": [
+        {
+          "content_id": "m03:event/meadow_relic",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "category": "ruin",
+        "visual": "ruin",
+        "spawn": {
+          "biomes": [
+            "meadow"
+          ],
+          "per_10000": 1,
+          "priority": 90,
+          "conditions": []
+        },
+        "discovery": {
+          "mode": "visible"
+        },
+        "interactions": [
+          {
+            "id": "explore",
+            "verb": "Examine Standing-stone vault",
+            "trigger": "interact",
+            "event": {
+              "content_id": "m03:event/meadow_relic",
+              "version": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:event/beach_supply",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Sheltered tidepool",
+      "description": "Sheltered tidepool. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:fresh_water",
+          "version": 1
+        },
+        {
+          "content_id": "core:shell",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "boon",
+        "message": "Sheltered tidepool.",
+        "outcomes": [
+          {
+            "type": "grant_items",
+            "items": [
+              {
+                "content_id": "core:fresh_water",
+                "version": 1,
+                "quantity": 1
+              },
+              {
+                "content_id": "core:shell",
+                "version": 1,
+                "quantity": 3
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "m03:place/beach_supply",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Sheltered tidepool",
+      "description": "A refuge with supplies for the journey. Each Run can gather its reward once.",
+      "dependencies": [
+        {
+          "content_id": "m03:event/beach_supply",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "category": "resource_site",
+        "visual": "shrine",
+        "spawn": {
+          "biomes": [
+            "beach"
+          ],
+          "per_10000": 1,
+          "priority": 90,
+          "conditions": []
+        },
+        "discovery": {
+          "mode": "visible"
+        },
+        "interactions": [
+          {
+            "id": "explore",
+            "verb": "Examine Sheltered tidepool",
+            "trigger": "interact",
+            "event": {
+              "content_id": "m03:event/beach_supply",
+              "version": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:event/beach_relic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Wreck shrine",
+      "description": "Wreck shrine. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:coin",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "bane",
+        "message": "Wreck shrine.",
+        "outcomes": [
+          {
+            "type": "damage",
+            "amount": 3
+          },
+          {
+            "type": "grant_items",
+            "items": [
+              {
+                "content_id": "core:coin",
+                "version": 1,
+                "quantity": 12
+              }
+            ]
+          },
+          {
+            "type": "xp",
+            "amount": 40
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "m03:place/beach_relic",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Wreck shrine",
+      "description": "Collapsed ruins cost 3 HP to explore. Recover coins and lore, and survey bearings toward other regions.",
+      "dependencies": [
+        {
+          "content_id": "m03:event/beach_relic",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "category": "ruin",
+        "visual": "ruin",
+        "spawn": {
+          "biomes": [
+            "beach"
+          ],
+          "per_10000": 1,
+          "priority": 90,
+          "conditions": []
+        },
+        "discovery": {
+          "mode": "visible"
+        },
+        "interactions": [
+          {
+            "id": "explore",
+            "verb": "Examine Wreck shrine",
+            "trigger": "interact",
+            "event": {
+              "content_id": "m03:event/beach_relic",
+              "version": 1
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:resource/herb_stand",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "resource",
+      "name": "Regional herb stand",
+      "description": "Regional herb stand. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:herb",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "interaction": "gather",
+        "visual": "herb",
+        "spawn": {
+          "biomes": [
+            "forest"
+          ],
+          "per_10000": 90,
+          "priority": 1000
+        },
+        "loot": {
+          "guaranteed": [
+            {
+              "content_id": "core:herb",
+              "version": 1,
+              "min": 2,
+              "max": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "content_id": "m03:resource/reed_stand",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "resource",
+      "name": "Regional reed stand",
+      "description": "Regional reed stand. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:fiber",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "interaction": "gather",
+        "visual": "fiber",
+        "spawn": {
+          "biomes": [
+            "meadow"
+          ],
+          "per_10000": 90,
+          "priority": 1000
+        },
+        "loot": {
+          "guaranteed": [
+            {
+              "content_id": "core:fiber",
+              "version": 1,
+              "min": 2,
+              "max": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "content_id": "m03:resource/stone_stand",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "resource",
+      "name": "Regional stone stand",
+      "description": "Regional stone stand. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:stone",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "interaction": "gather",
+        "visual": "stone",
+        "spawn": {
+          "biomes": [
+            "beach"
+          ],
+          "per_10000": 90,
+          "priority": 1000
+        },
+        "loot": {
+          "guaranteed": [
+            {
+              "content_id": "core:stone",
+              "version": 1,
+              "min": 2,
+              "max": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "content_id": "m03:encounter/forest",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "encounter",
+      "name": "Regional forest wildlife",
+      "description": "Regional forest wildlife. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:wolf",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "creature": {
+          "content_id": "core:wolf",
+          "version": 1
+        },
+        "biomes": [
+          "forest"
+        ],
+        "per_10000": 24,
+        "max_per_chunk": 2,
+        "priority": 70,
+        "conditions": [
+          {
+            "type": "danger",
+            "min": 2,
+            "max": 3
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:encounter/meadow",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "encounter",
+      "name": "Regional meadow wildlife",
+      "description": "Regional meadow wildlife. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:deer",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "creature": {
+          "content_id": "core:deer",
+          "version": 1
+        },
+        "biomes": [
+          "meadow"
+        ],
+        "per_10000": 24,
+        "max_per_chunk": 2,
+        "priority": 70,
+        "conditions": [
+          {
+            "type": "danger",
+            "min": 0,
+            "max": 3
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    },
+    {
+      "content_id": "m03:encounter/beach",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "encounter",
+      "name": "Regional beach wildlife",
+      "description": "Regional beach wildlife. A landmark of the surrounding region.",
+      "dependencies": [
+        {
+          "content_id": "core:shore_crab",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "creature": {
+          "content_id": "core:shore_crab",
+          "version": 1
+        },
+        "biomes": [
+          "beach"
+        ],
+        "per_10000": 24,
+        "max_per_chunk": 2,
+        "priority": 70,
+        "conditions": [
+          {
+            "type": "danger",
+            "min": 0,
+            "max": 3
+          }
+        ]
+      },
+      "provenance": {
+        "encounter_revision": 1,
+        "origin": "structured-world-pack-v1"
+      }
+    }
+  ]
+}

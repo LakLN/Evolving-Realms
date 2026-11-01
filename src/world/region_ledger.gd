@@ -19,14 +19,17 @@ var registry: RefCounted
 var world_id := ""
 ## Current World distribution revision (encounters and locations; see current_revision).
 var revision := 0
+var default_layers: Array = LAYERS.duplicate()
 var _revisions: Dictionary = {}
 var _layers: Dictionary = {}
 var last_error := ""
 
-func configure(content: RefCounted, world: String) -> bool:
+func configure(content: RefCounted, world: String, world_layers: Array = LAYERS) -> bool:
 	registry = content
 	world_id = world
 	_revisions.clear()
+	_layers.clear()
+	default_layers = world_layers.duplicate()
 	var pack := Pack.new()
 	if not pack.install(registry, world_id, Pack.WORLD_PATH):
 		return _fail(pack.last_error)
@@ -72,16 +75,17 @@ func established(chunk: Vector2i) -> int:
 	_layers[chunk] = tags if tags is Array else []
 	return int(revision)
 
-func establish(chunk: Vector2i, at_revision: int, with_layers: Array = LAYERS) -> int:
+func establish(chunk: Vector2i, at_revision: int, with_layers: Variant = null) -> int:
 	## Existing records always win; returns the pinned revision or -1 on failure.
 	last_error = ""
 	var known := established(chunk)
 	if known >= 0 or not last_error.is_empty():
 		return known
+	var tags: Array = default_layers if with_layers == null else with_layers
 	var origin := chunk * Terrain.CHUNK_SIZE
 	var record := {"instance_id": record_id(chunk), "content_id": RECORD.content_id, "version": RECORD.version,
 		"position": {"x": origin.x, "y": origin.y}, "origin": "procedural",
-		"metadata": {"ledger_version": LEDGER_VERSION, "encounter_revision": at_revision, "layers": with_layers.duplicate(), "chunk": {"x": chunk.x, "y": chunk.y}}}
+		"metadata": {"ledger_version": LEDGER_VERSION, "encounter_revision": at_revision, "layers": tags.duplicate(), "chunk": {"x": chunk.x, "y": chunk.y}}}
 	if registry.create_instance(world_id, record).is_empty():
 		# Another process may have established it first; its record is authoritative.
 		var winner := established(chunk)
@@ -91,7 +95,7 @@ func establish(chunk: Vector2i, at_revision: int, with_layers: Array = LAYERS) -
 		_fail(registry.last_error)
 		return -1
 	_revisions[chunk] = at_revision
-	_layers[chunk] = with_layers.duplicate()
+	_layers[chunk] = tags.duplicate()
 	return at_revision
 
 func seal_baseline(store: RefCounted) -> bool:

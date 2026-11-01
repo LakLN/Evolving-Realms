@@ -253,3 +253,16 @@ Player records live in character.statuses, creature records in existing mutation
 Definitions remain pinned Registry content; no migration or generation change.
 Derived stats stay in CharacterStats; no trigger chains or executable content.
 See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md) for order and contracts.
+
+
+## Structured World Core - Milestone 03 Task A
+
+Opt-in Blueprint metadata `structured_world_version=1` adds a deterministic survey
+region/POI plan above frozen terrain v1. `StructuredRegions` derives geography
+profiles, bounded connected clusters and onward bearings; shared bounded caches
+serve object reservation and `WorldLocations`. Trusted pack definitions execute
+through existing discovery/events/encounters, with ordinary Run mutation receipts.
+Ledger defaults add `structured-world-v1` only in opted-in Worlds; existing records
+remain immutable. No SQL migration or automatic old-World upgrade. Player Map and
+future authoring contracts, creation API, examples and limits are documented in
+[M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md). Task A does not modify rendering or UI.

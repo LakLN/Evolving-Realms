@@ -3,6 +3,8 @@ extends RefCounted
 ## region. Placements are a pure function of World seed, terrain v1, the chunk, its
 ## object placements and the revision/layers it was established with (RegionLedger).
 ## They are World facts; discovery and resolution are per-Run entity mutations.
+const Structured = preload("res://src/world/structured_world.gd")
+const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Loot = preload("res://src/core/loot_table.gd")
@@ -16,6 +18,7 @@ const BUDGET := 1 # At most one special place per chunk, whatever is activated.
 const FIELDS := ["category", "visual", "spawn", "discovery", "interactions"]
 const DISCOVERY := ["visible", "proximity", "hidden", "search"]
 const TRIGGERS := ["discover", "enter", "interact"]
+var regions: RefCounted
 var world: Dictionary
 var terrain: RefCounted
 var registry: RefCounted
@@ -75,6 +78,7 @@ static func revision_of(definition: Dictionary) -> int:
 	return int(value) if Data.integer(value) else 0
 
 func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted, region_ledger: RefCounted, object_layer: RefCounted, context: Dictionary, skills: RefCounted) -> bool:
+	regions = object_layer.regions
 	world = blueprint
 	terrain = generator
 	registry = content
@@ -98,6 +102,7 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 				return _fail("Location %s uses an unsupported event %s: %s %s" % [header.content_id, interaction.event.content_id, checked.problem, str(checked.missing)])
 			definitions[_key(event.content_id, int(event.version))] = event
 		definitions[_key(definition.content_id, int(definition.version))] = definition
+		if regions != null and definition.content_id.begins_with("m03:place/"): continue
 		rules.append({"definition": definition, "revision": revision_of(definition), "stream": Loot.number("locations-v1/" + definition.content_id)})
 	last_error = ""
 	return true
@@ -119,15 +124,17 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 	## Pure: special places of a chunk established with these layers at this revision.
 	if LAYER not in layers:
 		return []
+	var destinations: Array = regions.placements(chunk) if regions != null and "structured-world-v1" in layers and at_revision >= 1 else []
 	var active := rules_at(at_revision)
 	if active.is_empty():
-		return []
+		return destinations
 	if bytes.is_empty():
 		bytes = terrain.generate_chunk(chunk)
 	var occupied := {}
 	var placed: Array = objects.chunks[chunk] if objects.chunks.has(chunk) else objects.generate_chunk(chunk)
 	for instance in placed: # Never cover or replace an object (landmarks included).
 		occupied[Vector2i(int(instance.position.x), int(instance.position.y))] = true
+	for instance in destinations: occupied[Vector2i(int(instance.position.x), int(instance.position.y))] = true
 	var shares := Region.biome_shares(bytes)
 	var danger := Region.danger(terrain, chunk)
 	var eligible := active.filter(func(rule: Dictionary) -> bool: return Encounters._chunk_allows(rule.definition.payload.spawn, shares, danger))
@@ -154,9 +161,9 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 					best = {"point": point, "local": Vector2i(x, y), "rule": rule, "order": order}
 				break
 	if best.is_empty() or BUDGET < 1:
-		return []
+		return destinations
 	var definition: Dictionary = best.rule.definition
-	return [{"instance_id": "loc:v%d/%d/%d/%d_%d" % [GENERATION_VERSION, chunk.x, chunk.y, best.local.x, best.local.y],
+	return destinations + [{"instance_id": "loc:v%d/%d/%d/%d_%d" % [GENERATION_VERSION, chunk.x, chunk.y, best.local.x, best.local.y],
 		"content_id": definition.content_id, "version": int(definition.version), "position": {"x": best.point.x, "y": best.point.y}, "origin": "procedural",
 		"metadata": {"location_generation_version": GENERATION_VERSION, "location_revision": best.rule.revision, "established_revision": at_revision}}]
 
@@ -232,3 +239,49 @@ func _key(content_id: String, version: int) -> String:
 func _fail(message: String) -> bool:
 	last_error = message
 	return false
+
+func clue(instance: Dictionary, include_frontiers: bool = false) -> String:
+	if regions == null or not str(instance.instance_id).begins_with("loc:sw1/"): return ""
+	var text := Structured.clue(instance, instance.get("metadata", {}).get("leads", []))
+	if include_frontiers:
+		for frontier in instance.get("metadata", {}).get("frontiers", []):
+			text += " Beyond here: %s to the %s (%s). Route unsurveyed; water may require a detour." % [frontier.name, frontier.direction, frontier.opportunity]
+	return text
+
+func known_leads(mutations: Dictionary, from: Vector2i) -> Array:
+	last_error = ""
+	var found := {}
+	for id in mutations:
+		if regions == null or not str(id).begins_with("loc:sw1/"): continue
+		if not mutations[id].get("location", false) or not mutations[id].get("discovered", false): continue
+		var instance: Dictionary = registry.load_instance(world.world_id, id)
+		if instance.is_empty():
+			_fail(registry.last_error)
+			return []
+		for lead in instance.get("metadata", {}).get("leads", []):
+			var result: Dictionary = lead.duplicate(true)
+			result["knowledge"] = "discovered" if mutations.get(lead.instance_id, {}).get("discovered", false) else "lead"
+			result["resolved"] = not mutations.get(lead.instance_id, {}).get("resolved", {}).is_empty()
+			result["manhattan_distance"] = absi(int(lead.position.x) - from.x) + absi(int(lead.position.y) - from.y)
+			found[lead.instance_id] = result
+	var ids: Array = found.keys()
+	ids.sort()
+	var result: Array = []
+	for id in ids: result.append(found[id])
+	return result
+
+func known_frontiers(mutations: Dictionary) -> Array:
+	last_error = ""
+	var found := {}
+	for id in mutations:
+		if regions == null or not str(id).begins_with("loc:sw1/") or mutations[id].get("resolved", {}).is_empty(): continue
+		var instance: Dictionary = registry.load_instance(world.world_id, id)
+		if instance.is_empty():
+			_fail(registry.last_error)
+			return []
+		for frontier in instance.get("metadata", {}).get("frontiers", []): found[frontier.region_id] = frontier.duplicate(true)
+	var ids: Array = found.keys()
+	ids.sort()
+	var result: Array = []
+	for id in ids: result.append(found[id])
+	return result

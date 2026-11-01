@@ -141,7 +141,7 @@ func _discover(session: RefCounted, instance: Dictionary) -> Array:
 	mutation.discovered_turn = int(session.run.state.turn)
 	session.run.state.entity_mutations[instance.instance_id] = mutation
 	session.dirty = true
-	var events: Array = [{"type": "discovery", "target": instance.instance_id, "name": definition.name, "description": definition.description, "category": definition.payload.category, "position": instance.position.duplicate()}]
+	var events: Array = [{"type": "discovery", "target": instance.instance_id, "name": instance.get("metadata", {}).get("title", definition.name), "description": definition.description + " " + layer.clue(instance), "category": definition.payload.category, "position": instance.position.duplicate()}]
 	for interaction in available(session, instance, "discover"):
 		if unmet(session, layer.event(interaction.event).payload.get("conditions", [])).is_empty():
 			events.append_array(resolve(session, instance, interaction).get("events", []))
@@ -235,7 +235,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	mutation.resolved[interaction.id] = {"turn": int(session.run.state.turn), "event": {"content_id": event.content_id, "version": int(event.version)}, "received": award.received.duplicate(true)}
 	session.run.state.entity_mutations[instance.instance_id] = mutation
 	session.dirty = true
-	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", "")] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
+	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", ""), layer.clue(instance, true)] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
 	var source := {"content_id": event.content_id, "version": int(event.version), "actor": "player"}
 	for outcome in outcomes:
 		match outcome.type:
@@ -252,3 +252,10 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 func _refuse(session: RefCounted, message: String) -> Dictionary:
 	session.last_error = message
 	return {}
+
+func reveal_start(session: RefCounted) -> Array:
+	## New structured Run only: its safe waystone grants clues, never a turn/effect.
+	for instance in layer.loaded():
+		if instance.content_id == "m03:place/waystone" and int(instance.position.x) == session.position.x and int(instance.position.y) == session.position.y:
+			return _discover(session, instance)
+	return []

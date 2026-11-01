@@ -278,3 +278,16 @@ status records extend character.statuses and creature entity_mutations JSON; the
 contain remaining/stacks/source/target and tick/age counters, plus application inputs.
 Old until_turn statuses load unchanged. No effective stats or Blueprint fields are
 added. See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md#persistence).
+
+## Structured World Core (Milestone 03 Task A)
+
+`StructuredWorld.create(store,name,seed)` creates an explicitly opted-in World with
+immutable `blueprint.metadata.structured_world_version=1`. Terrain generation_version
+remains1; no SQL migration. Missing metadata preserves the legacy generation path;
+unknown/non-integer layout versions fail creation/load explicitly. Standard pack
+installation on Session activation adds the trusted M03 definitions only to these
+Worlds. New structured spawns record selection_version3; old saved positions do
+not change. Player-facing read-only APIs: `session.world_region()`,
+`session.exploration_leads()`, `session.exploration_frontiers()`.
+These return knowledge/context without establishing unseen chunks. Full contracts
+and explicit creation CLI: [M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md).

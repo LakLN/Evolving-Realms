@@ -1,5 +1,7 @@
 extends RefCounted
 ## Gameplay state over the unchanged Checkpoint B persistence API.
+const Structured = preload("res://src/world/structured_world.gd")
+const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Chunks = preload("res://src/world/chunk_cache.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
@@ -93,7 +95,7 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var generator := Terrain.new()
 	if not generator.configure(int(blueprint.seed), int(blueprint.generation_version)):
 		return _fail(generator.last_error)
-	var spawn := Spawn.select(generator, run_seed, biome, Spawn.RUN_SELECTION_VERSION)
+	var spawn: Dictionary = Regions.new(generator).spawn(run_seed, biome) if Structured.enabled(blueprint) else Spawn.select(generator, run_seed, biome, Spawn.RUN_SELECTION_VERSION)
 	if spawn.is_empty():
 		return _fail("No accessible spawn found for biome " + biome)
 	if not survival.load_rules():
@@ -101,7 +103,9 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var created: Dictionary = store.create_run(world_id, run_seed, spawn, mode, survival.normalize(Combat.player_stats({})))
 	if created.is_empty():
 		return _fail(store.last_error)
-	return _activate(blueprint, created) and _grant_starting_items() and save()
+	if not _activate(blueprint, created): return false
+	if Structured.enabled(blueprint): last_events.append_array(places.reveal_start(self))
+	return _grant_starting_items() and save()
 
 func _grant_starting_items() -> bool:
 	## Data-defined starting kit (new runs only); equipped items go straight to a slot.
@@ -168,6 +172,8 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 		# Idempotent append-only install; survival resources must exist before objects load.
 		if not packs.install(store.content, blueprint.world_id, path):
 			return _fail(packs.last_error)
+	if Structured.enabled(blueprint) and not packs.install(store.content, blueprint.world_id, Structured.PACK):
+		return _fail(packs.last_error)
 	var next_uses := _load_uses(blueprint.world_id)
 	if not last_error.is_empty():
 		return false
@@ -227,7 +233,7 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	# World-scoped established regions: pre-ledger exploration is sealed at revision 0
 	# once, then every newly loaded chunk pins the current encounter revision.
 	var ledger := Ledger.new()
-	if not ledger.configure(store.content, blueprint.world_id) or not ledger.seal_baseline(store):
+	if not ledger.configure(store.content, blueprint.world_id, Structured.layers(blueprint)) or not ledger.seal_baseline(store):
 		return _fail(ledger.last_error)
 	var next_locations := Locations.new()
 	if not next_locations.configure(blueprint, generator, store.content, ledger, next_objects, skill_context, next_skill_rules) or not next_locations.follow(tile, next_cache.chunks):
@@ -1189,3 +1195,15 @@ func talent_loot(definition: Dictionary, seed_key: String, loot: Array, plan: Ar
 				"grant_item":
 					result.append({"content_id": effect.content_id, "version": int(effect.version), "quantity": int(effect.quantity)})
 	return result
+
+func world_region() -> Dictionary:
+	## Read-only map/AI contract: does not reveal fog, generate POIs or establish chunks.
+	return objects.regions.describe(Regions.cell_of(position)) if objects != null and objects.regions != null else {}
+
+func exploration_leads() -> Array:
+	## Only clues acquired through this Run's discoveries, not every World destination.
+	return locations.known_leads(run.state.entity_mutations, position) if locations != null else []
+
+func exploration_frontiers() -> Array:
+	## Region bearings learned by surveying a relic, not a promised walking route.
+	return locations.known_frontiers(run.state.entity_mutations) if locations != null else []

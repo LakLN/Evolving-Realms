@@ -2,6 +2,8 @@ extends RefCounted
 ## Minimal derived region facts (Milestone 02 H): biome shares and a danger tier per
 ## chunk. Derived from World seed and terrain v1 with separate hash streams, never
 ## stored and never changing geography. Future world generation can extend this.
+const Structured = preload("res://src/world/structured_world.gd")
+const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const DANGER_SCALE := 4 # Chunks per danger region side (128x128 tiles).
@@ -47,7 +49,9 @@ static func describe(layer: RefCounted, chunk: Vector2i) -> Dictionary:
 	valid.sort()
 	var names: Array = present.keys()
 	names.sort()
-	return {"chunk": {"x": chunk.x, "y": chunk.y}, "danger": danger(layer.terrain, chunk), "biome_shares": shares,
+	var description := {"chunk": {"x": chunk.x, "y": chunk.y}, "danger": danger(layer.terrain, chunk), "biome_shares": shares,
 		"established": revision >= 0, "encounter_revision": effective, "world_revision": layer.ledger.revision if layer.ledger != null else layer.encounters.revision,
 		"present_creatures": names, "valid_creatures": valid,
 		"capabilities": ["definition.encounter"] + layer.encounters.condition_names().map(func(c: String) -> String: return "encounter.condition." + c)}
+	if Structured.enabled(layer.world): description["structured_region"] = Regions.new(layer.terrain).plan(Regions.cell_of(chunk * 32))
+	return description

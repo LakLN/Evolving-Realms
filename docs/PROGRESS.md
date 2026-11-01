@@ -1690,3 +1690,51 @@ are not ledger-versioned; arbitrary new object rules can affect unmaterialized
 placements after reload. No automatic reset/World upgrade, terrain overlay or
 retroactive region evolution is implemented. See [RUN01_WORLD.md](RUN01_WORLD.md)
 for measured distribution, compatibility policy, limits and integration commands.
+
+## Milestone 03 / Task A - structured World exploration (isolated branch)
+
+User authorized Task A only. Branch `feature/m03-structured-world`, worktree
+`D:/Game/RPG-m03-world`, base `9a28f64`. No main worktree changes, merge, export,
+personal-save modification or official Run 02 creation. Startup smoke now uses an
+explicit isolated database instead of relying on the application default.
+
+Implemented explicit new-World Core opt-in via immutable Blueprint metadata
+structured_world_version=1, preserving frozen terrain v1 and all legacy World paths.
+128-tile survey districts carry seeded names, sampled geographic themes, existing
+danger tiers and M03 resource/encounter opportunities. A bounded reachability plan
+places unique waystone/supply/relic locations in one connected regional component.
+New Runs start at a biome-valid waystone with two acquired leads; existing E and
+location events deliver coordinates, one-time supplies/risk/rewards and onward
+unsurveyed-region bearings. Save/Load and Run isolation use existing mutation and
+receipt contracts. No new quest framework or SQL migration.
+
+Read-only Map/Task C APIs: world_region, exploration_leads, exploration_frontiers.
+Developer AI region context includes the complete regional plan; player queries
+expose only acquired leads. Creation API + explicit-database CLI allow selecting a
+structured World in the existing menu. The old Create world button remains legacy;
+Task C creation/menu/marker wiring is documented, not implemented here.
+
+Verification:
+
+- `.\scripts\test.ps1 -Only m03-world,world,interactions,ai-world,discoveries -Smoke`:
+  all passed; M03 world45/0, world49/0, interactions69/0, AI World41/0,
+  discoveries40/0, data96/0, integration41/0, offline provider8 tests OK;
+  import/startup PASS. Final `-Only m03-world` recheck also PASS after refinement.
+- Three frozen layout-v1 geometry fixtures supplement fresh/cache-evicted plan
+  equality. POI definitions match their actual tile biome, including mixed shores.
+- CLI exercised on an explicit ignored test database; SQL read-only confirms one
+  opted-in World, zero Runs. Pure terrain/POI diagram visually inspected at
+  `.tools/m03-regions.png`; raw plans at `.tools/m03-world-examples.json`.
+- No full regression/export; no UI rendering claim or personal-save upgrade.
+
+Three generated examples (public synthetic seeds 1847/-99/707, not Run 01 seeds)
+exercise forest/coast/meadow districts. Walks to supply are 24/25/20 steps, followed
+by 56/27/35 steps to a relic; each relic gives two different neighboring-region
+bearings. Test fixtures suppress creature runtime for navigation checks; they are
+not human/render/combat-balance playtests. Water detours and island connectivity
+remain limits; regional names can repeat without IDs and some districts have no
+viable cluster. New cold regional planning is synchronous with bounded caches.
+
+See [M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md) for version safety, architecture,
+Map/AI data contracts, missing landmark assets, examples, explicit local-play
+instructions and integration steps. No further Milestone 03 feature is started.

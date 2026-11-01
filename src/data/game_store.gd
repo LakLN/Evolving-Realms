@@ -24,6 +24,8 @@ func create_world(name: String, seed_value: int, generation_version: int = 1, bl
 		return _error("World needs a name, signed 32-bit seed and supported generation version 1")
 	if not Data.valid(blueprint) or not blueprint.get("fixed_locations") is Array or not blueprint.get("metadata") is Dictionary:
 		return _error("Blueprint needs finite JSON, fixed_locations array and metadata object")
+	if blueprint.metadata.has("structured_world_version") and (not Data.integer(blueprint.metadata.structured_world_version) or blueprint.metadata.structured_world_version != 1):
+		return _error("Unsupported structured World Core version; existing save was not changed")
 	var world_id := Data.uuid()
 	if not _db.execute("INSERT INTO worlds VALUES(?,?,?,?,?,?,?)", [world_id, name, seed_value, generation_version, 1, JSON.stringify(blueprint), _timestamp()]):
 		return {}
@@ -41,6 +43,8 @@ func load_world(world_id: String) -> Dictionary:
 	var blueprint: Variant = JSON.parse_string(world.blueprint_json)
 	if not blueprint is Dictionary or not blueprint.get("fixed_locations") is Array or not blueprint.get("metadata") is Dictionary:
 		return _error("Corrupt world blueprint")
+	if blueprint.metadata.has("structured_world_version") and (not Data.integer(blueprint.metadata.structured_world_version) or blueprint.metadata.structured_world_version != 1):
+		return _error("Unsupported structured World Core version; existing save was not changed")
 	world.erase("blueprint_json")
 	world.blueprint = blueprint
 	return world
