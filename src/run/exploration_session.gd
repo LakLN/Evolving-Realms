@@ -28,6 +28,11 @@ const StatusRuntime = preload("res://src/run/status_runtime.gd")
 const Skills = preload("res://src/core/skills.gd")
 const SkillActions = preload("res://src/run/skill_actions.gd")
 const SIGHT_RADIUS := 7
+## Milestone 03 B prototype: a Run created with this time model is played in real time
+## (see docs/M03_REALTIME_DESIGN.md). It is stored in the immutable spawn JSON; Runs
+## without it keep the turn model, so older saves never change behaviour.
+const TIME_MODELS := ["turn", "realtime-v1"]
+const DIAGONALS := [Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]
 ## Suites written before Milestone 02 D measure baseline rules with exact numbers, so
 ## they switch this off: their runs then hold no talent. The game always awakens.
 static var auto_awaken := true
@@ -81,14 +86,24 @@ var _definitions: Dictionary = {}
 ## Combat/AI events of the last accepted action, in order (for UI feedback).
 var last_events: Array = []
 var _action_handlers: Dictionary = {}
+## Real-time Runs: player actions apply immediately and never advance `turn`; the
+## RealtimeController calls pulse() once per gameplay second instead (turn = pulse).
+var realtime := false
+var resting := false
+## Dominant player activity since the last pulse (survival/energy rate key).
+var _pulse_activity := "default"
+var _hurt_since_pulse := false
+var _strike_seq := 0 # Not saved: only distinguishes draw keys within a session.
 
 func _init(data_store: RefCounted) -> void:
 	store = data_store
 	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action, "learn": _learn_action, "skill": _skill_action, "search": _search_action}
 
-func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal") -> bool:
+func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal", time_model: String = "turn") -> bool:
 	if not Data.seed_value(run_seed):
 		return _fail("Run seed must be a signed 32-bit integer")
+	if time_model not in TIME_MODELS:
+		return _fail("Unsupported time model: " + time_model)
 	var blueprint: Dictionary = store.load_world(world_id)
 	if blueprint.is_empty():
 		return _fail(store.last_error)
@@ -98,6 +113,8 @@ func start_new(world_id: String, run_seed: int, biome: String = "any", mode: Str
 	var spawn: Dictionary = Regions.new(generator).spawn(run_seed, biome) if Structured.enabled(blueprint) else Spawn.select(generator, run_seed, biome, Spawn.RUN_SELECTION_VERSION)
 	if spawn.is_empty():
 		return _fail("No accessible spawn found for biome " + biome)
+	if time_model != "turn":
+		spawn.time_model = time_model # Additive spawn field, like selection_version.
 	if not survival.load_rules():
 		return _fail(survival.last_error)
 	var created: Dictionary = store.create_run(world_id, run_seed, spawn, mode, survival.normalize(Combat.player_stats({})))
@@ -146,6 +163,9 @@ func resume(run_id: String) -> bool:
 func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	if loaded.state.status != "alive":
 		return _fail("This run has ended and cannot be played")
+	var model: Variant = loaded.get("spawn", {}).get("time_model", "turn")
+	if model not in TIME_MODELS:
+		return _fail("Unsupported time model %s; save was not changed" % str(model))
 	var generator := Terrain.new()
 	if not generator.configure(int(blueprint.seed), int(blueprint.generation_version)):
 		return _fail(generator.last_error)
@@ -245,6 +265,10 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	terrain = generator
 	world = blueprint
 	run = loaded
+	realtime = model != "turn"
+	resting = false
+	_pulse_activity = "default"
+	_hurt_since_pulse = false
 	position = tile
 	explored = discovered
 	fog_masks = fog.masks
@@ -315,6 +339,8 @@ func perform_action(action: Dictionary) -> bool:
 		return _fail("You are dead — no further actions")
 	if run.is_empty() or not Data.valid(action) or not _action_handlers.has(action.get("type")):
 		return _fail("No active run or unsupported action")
+	if realtime:
+		return _realtime_action(action)
 	_new_tiles = 0
 	if statuses.blocked(self, "player") and action.type != "wait":
 		last_result = {"events": [{"type": "status_blocked", "target": "player"}]}
@@ -345,6 +371,102 @@ func perform_action(action: Dictionary) -> bool:
 	last_result["events"] = last_events.duplicate(true)
 	action_completed.emit(action.duplicate(true), last_result.duplicate(true))
 	return true
+
+# --- Real-time model (Milestone 03 B prototype) ---------------------------------
+# Same handlers and rules as the turn model, split in two clocks:
+#   action  -> handler -> place discoveries/enter events -> death   (no turn, no world tick)
+#   pulse() -> turn + 1 -> survival -> statuses/energy -> talents -> places -> ageing -> death -> autosave
+# Creatures act on their own timers (RealtimeCreatures) through CreatureRoster.
+
+func _realtime_action(action: Dictionary) -> bool:
+	if action.type == "wait":
+		return _fail("Time passes on its own in real time — nothing to wait for")
+	if action.type == "rest":
+		return set_resting(true)
+	if statuses.skip_factor(self, "player") == 1:
+		return _fail("You cannot act while stunned")
+	if not _action_handlers[action.type].call(action):
+		return false
+	if action.type != "use":
+		resting = false # Any deliberate action ends a rest (using an item does not).
+	if action.type in ["attack", "skill"]:
+		_pulse_activity = "attack" # Survival per_action key for the next pulse.
+	last_events = last_result.get("events", []).duplicate(true)
+	if int(stats().hp) > 0:
+		last_events.append_array(places.tick(self)) # Discoveries in sight, "enter" events.
+	dirty = true
+	last_error = ""
+	if int(stats().hp) <= 0:
+		_die()
+	last_result["events"] = last_events.duplicate(true)
+	action_completed.emit(action.duplicate(true), last_result.duplicate(true))
+	return true
+
+func pulse() -> Array:
+	## One gameplay second of world time (real-time Runs only). `turn` counts pulses, so
+	## status durations, cooldowns, every_turns and autosave intervals read as seconds.
+	last_events = []
+	if run.is_empty() or is_dead():
+		return []
+	var activity := "rest" if resting else _pulse_activity
+	_pulse_activity = "default"
+	run.state.turn = int(run.state.turn) + 1
+	dirty = true
+	last_events.append_array(survival.tick(stats(), activity, int(combat_stats().max_hp)))
+	if int(stats().hp) > 0:
+		last_events.append_array(skills.tick(self, activity))
+		last_events.append_array(statuses.tick(self))
+		if int(stats().hp) > 0:
+			last_events.append_array(_talent_tick()) # on_turn, and on_explore for tiles found this second.
+			_new_tiles = 0
+			last_events.append_array(places.tick(self))
+	last_events.append_array(statuses.finish_turn(self))
+	if resting:
+		var stop := ""
+		if threatened(): stop = "danger"
+		elif int(stats().hp) >= int(combat_stats().max_hp): stop = "healed"
+		elif last_events.any(func(e: Dictionary) -> bool: return e.type in ["survival", "starvation"] or (e.type == "status_tick" and e.target == "player" and int(e.amount) < 0)): stop = "needs"
+		if not stop.is_empty():
+			resting = false
+			last_events.append({"type": "rest_end", "reason": stop})
+	if int(stats().hp) <= 0:
+		_die()
+	else:
+		_autosave()
+	_hurt_since_pulse = false
+	return last_events.duplicate(true)
+
+func creature_events(events: Array) -> Array:
+	## Bookkeeping after creatures acted between pulses: rests break, death applies now.
+	if events.any(func(e: Dictionary) -> bool: return e.type == "hit" and e.target == "player"):
+		_hurt_since_pulse = true
+		if resting:
+			resting = false
+			events.append({"type": "rest_end", "reason": "attacked"})
+	if not events.is_empty():
+		dirty = true
+	if int(stats().hp) <= 0 and not is_dead():
+		last_events = []
+		_die()
+		events.append_array(last_events)
+	return events
+
+func set_resting(on: bool) -> bool:
+	if on and threatened():
+		return _fail("You cannot rest with a hostile creature in sight")
+	if on and int(stats().hp) >= int(combat_stats().max_hp) and not _energy_missing():
+		return _fail("You are already fully rested")
+	resting = on
+	last_result = {"type": "rest", "resting": on, "events": [{"type": "rest_start" if on else "rest_end", "reason": "manual"}]}
+	last_events = last_result.events.duplicate(true)
+	last_error = ""
+	return true
+
+func _energy_missing() -> bool:
+	for id in skill_rules.resource_ids():
+		if skills.resource(self, id) < skills.resource_max(self, id):
+			return true
+	return false
 
 func stats() -> Dictionary:
 	## Live player combat stats (hp, max_hp, attack, defense) inside Run state.
@@ -388,6 +510,8 @@ func _rest_action(_action: Dictionary) -> bool:
 func rest(max_turns: int = -1) -> bool:
 	## Rest turn by turn (creatures act every turn). Stops on danger, damage, a new
 	## survival warning, full HP or death. last_result summarizes the whole rest.
+	if realtime:
+		return set_resting(not resting) # Real time: R toggles resting; pulses use the rest rates.
 	var limit := int(survival.rules.rest.max_turns) if max_turns < 1 else max_turns
 	var hp_before := int(stats().hp)
 	var events: Array = []
@@ -536,6 +660,7 @@ func _autosave() -> void:
 
 func at_risk() -> bool:
 	var hurt := last_events.any(func(event: Dictionary) -> bool: return (event.type == "hit" and event.target == "player") or event.type == "starvation" or (event.type == "status_tick" and event.target == "player" and int(event.amount) < 0) or (event.type == "location" and int(event.get("damage", 0)) > 0))
+	hurt = hurt or _hurt_since_pulse # Real time: creature hits land between pulses.
 	return hurt or threatened() or int(stats().hp) * 100 < int(survival.rules.autosave.permadeath_risk_hp_percent) * int(combat_stats().max_hp) or survival.worst_level(stats()) >= 2
 
 func safe_to_autosave() -> bool:
@@ -553,6 +678,11 @@ func _attack_action(action: Dictionary) -> bool:
 func strike(target_id: String, options: Dictionary = {}) -> Dictionary:
 	## One player strike (basic attack or a skill): roster resolution with loot, talent
 	## reactions and kill XP together. {} = refused with last_error, nothing changed.
+	if realtime and not options.get("status_tick", false):
+		# Several strikes share one pulse (turn) in real time: a sequence keeps rolls distinct.
+		_strike_seq += 1
+		options = options.duplicate()
+		options.key = str(options.get("key", "")) + "/rt%d" % _strike_seq
 	var result: Dictionary = roster.attack(self, target_id, options)
 	if result.is_empty():
 		_fail(roster.last_error)
@@ -774,13 +904,20 @@ func _move_action(action: Dictionary) -> bool:
 	if not Data.position(delta) or absf(float(delta.x)) > 1 or absf(float(delta.y)) > 1:
 		return _fail("Choose one cardinal direction")
 	var direction := Vector2i(int(delta.x), int(delta.y))
-	if direction not in Spawn.DIRECTIONS:
+	if direction not in Spawn.DIRECTIONS and not (realtime and direction in DIAGONALS):
 		return _fail("Choose one cardinal direction")
 	var target := position + direction
 	if cache.tile_at(target) not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW]:
 		return _fail("Blocked — no turn spent")
+	if direction in DIAGONALS:
+		# No corner cutting: both orthogonal neighbours must be open and unoccupied.
+		for side in [position + Vector2i(direction.x, 0), position + Vector2i(0, direction.y)]:
+			if cache.tile_at(side) not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or not roster.living_at(side).is_empty():
+				return _fail("Blocked")
 	var occupant: Dictionary = roster.living_at(target)
 	if not occupant.is_empty():
+		if realtime:
+			return _fail("%s blocks the way" % occupant.definition.name) # Attacks use F and their own cooldown.
 		if roster.aggressive(occupant) and visible.has(target):
 			return _attack_action({"type": "attack", "target_id": occupant.instance_id}) # Bump attack.
 		return _fail("%s blocks the way — press F to attack it (no turn spent)" % occupant.definition.name)

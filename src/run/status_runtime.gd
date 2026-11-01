@@ -125,6 +125,27 @@ func blocked(session: RefCounted, target: String) -> bool:
 		if every > 0 and int(session.run.state.turn) % every == 0: return true
 	return false
 
+func skip_factor(session: RefCounted, target: String) -> int:
+	## Real-time reading of `skip_every` (M03 B): 1 = cannot act (stun), n >= 2 = every
+	## step/attack interval takes n times as long (slow), 0 = unaffected. The turn model
+	## keeps blocked() (skip every n-th global turn) unchanged.
+	var result := 0
+	for record in actor(session, target).get("statuses", []):
+		if not record.has("remaining"): continue
+		var def := definition(session, record)
+		if not supported(def): continue
+		var every := int(def.payload.get("skip_every", 0))
+		if every == 1: return 1
+		result = maxi(result, every)
+	return result
+
+func source_name(session: RefCounted, record: Dictionary) -> String:
+	## Damage attribution for ticks: who applied the status.
+	var actor_id := str(record.get("source", {}).get("actor", ""))
+	if actor_id == "player": return "you"
+	var creature: Dictionary = session.roster.creatures.get(actor_id, {})
+	return str(creature.definition.name) if not creature.is_empty() else ""
+
 func stat_modifiers(session: RefCounted, statuses: Array) -> Dictionary:
 	var result := {"flat": {}, "percent": {}}
 	for record in statuses:
@@ -159,7 +180,7 @@ func tick(session: RefCounted) -> Array:
 					if id == "player":
 						amount = Effects.damage(amount, [p.get("element", "neutral")], actor(session, str(record.source.actor)), actor(session, id))
 						session.stats().hp = maxi(0, int(session.stats().hp) - amount)
-						events.append({"type": "status_tick", "target": id, "status": def.name, "amount": -amount})
+						events.append({"type": "status_tick", "target": id, "status": def.name, "amount": -amount, "source": source_name(session, record)})
 					else:
 						# Same kill/loot/XP path, without on_attack/lifesteal procs.
 						var hit: Dictionary = session.strike(id, {"status_tick": true, "direct_damage": amount, "elements": [p.get("element", "neutral")], "source_actor": record.source.actor})

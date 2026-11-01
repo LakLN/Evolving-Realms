@@ -111,3 +111,12 @@ Use `.\scripts\test.ps1 -Only run01-world`.
 fixture) covers the region ledger, encounter rules, activation revisions and the
 AI creature encounter → combat → loot → reopen → return flow, Run isolation and legacy
 saves. Use `.\scripts\test.ps1 -Only ai-world,ai-content,world,combat -Smoke`.
+
+## Milestone 03 / Task B real-time prototype
+
+`realtime` (`tests/realtime_suite.gd`) drives the RealtimeController headless with fixed
+16 ms frames: movement cadence, walls/diagonals, creatures acting while the hero is idle,
+telegraphed hits, cooldowns, dodge, statuses and skill cooldowns in gameplay seconds,
+pause, death and save isolation of the time model. `realtime-gameplay` (and
+`rendered-realtime` with `-Render`, screenshots `.tools/m03-realtime-*.png`) plays the real
+scene at 60 FPS. Use `.\scripts\test.ps1 -Smoke -Only realtime,realtime-gameplay,combat,effects,skills`.

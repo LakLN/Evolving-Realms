@@ -73,10 +73,13 @@ try {
     Invoke-EngineCheck -Name 'map' -EngineArgs @('--headless', '--script', 'res://tests/map_gameplay_suite.gd') -Summary 'M03 MAP GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'run01-content' -EngineArgs @('--headless', '--script', 'res://tests/run01_content_suite.gd') -Summary 'RUN01 CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'telemetry' -EngineArgs @('--headless', '--script', 'res://tests/telemetry_suite.gd') -Summary 'RUN 01 TELEMETRY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'realtime' -EngineArgs @('--headless', '--script', 'res://tests/realtime_suite.gd') -Summary 'M03 REALTIME: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'realtime-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/realtime_gameplay_suite.gd') -Summary 'M03 REALTIME GAMEPLAY: \d+ checks, 0 failures'
     # Keep smoke startup away from the player's database, including opt-in World tests.
     $startupDatabase = 'user://startup-tests/' + [guid]::NewGuid().ToString() + '.sqlite'
     Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5', '--', ('--database=' + $startupDatabase))
     if ($Render) {
+        Invoke-EngineCheck -Name 'rendered-realtime' -EngineArgs @('--script', 'res://tests/realtime_gameplay_suite.gd') -Summary 'M03 REALTIME GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-discoveries' -EngineArgs @('--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-effects' -EngineArgs @('--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'

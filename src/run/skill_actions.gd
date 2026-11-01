@@ -152,7 +152,7 @@ func use_check(session: RefCounted, definition: Dictionary) -> String:
 		return "%s needs an unsupported capability" % definition.name
 	var turn := int(session.run.state.turn)
 	if int(entry.cooldown_until) > turn:
-		return "%s is recharging (%d turns)" % [definition.name, int(entry.cooldown_until) - turn]
+		return "%s is recharging (%d %s)" % [definition.name, int(entry.cooldown_until) - turn, "s" if session.realtime else "turns"]
 	var unmet: Array = session.skill_rules.evaluate(definition.payload.use.get("conditions", []), character_view(session))
 	if not unmet.is_empty():
 		return "%s needs: %s" % [definition.name, "; ".join(unmet)]

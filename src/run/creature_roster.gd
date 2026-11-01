@@ -154,33 +154,50 @@ func take_turn(session: RefCounted) -> Array:
 			events.append({"type": "stunned", "target": id, "name": creature.definition.name, "position": _point(creature.position)})
 			continue # Stunned (skill): no decision this turn.
 		var key := "ai-v1/%d/%d/%s/%d" % [session.world.seed, session.run.seed, id, int(session.run.state.turn)]
-		var radius := int(creature.definition.payload.ai.detect_radius)
-		var offset: Vector2i = session.position - creature.position
-		var context := {
-			"player": session.position,
-			"sees_player": offset.x * offset.x + offset.y * offset.y <= radius * radius and session.line_clear(creature.position, session.position),
-			"roll": Loot.number(key) % 10000, "direction": Loot.number(key + "/dir") % 4, "move_roll": Loot.number(key + "/move") % 10000,
-			"can_enter": func(tile: Vector2i) -> bool: return _can_enter(session, creature, tile),
-		}
-		var decision := AI.decide(creature, creature.definition, context)
+		var decision := decide(session, creature, key)
 		creature.state = decision.state
 		if decision.type == "move":
-			if not _ensure_materialized(creature):
-				continue # Storage failure: this creature skips its turn, nothing changes.
-			creature.position = decision.to
-			_commit(session, creature)
+			move_creature(session, creature, decision.to)
 		elif decision.type == "attack" and _distance(creature.position, session.position) == 1:
-			var result := Combat.resolve(creature_stats(session, creature), player, key + "/attack")
-			result.damage = Effects.damage(int(result.damage), creature.definition.payload.get("elements", ["neutral"]), session.statuses.actor(session, id), session.statuses.actor(session, "player"))
-			result.hp = maxi(0, int(player.hp) - int(result.damage))
-			result.killed = result.hp == 0
-			var guarded: Dictionary = session.talent_guard(creature, player, result) # Talent reactions to the hit.
-			session.stats().hp = guarded.hp
-			events.append({"type": "hit", "attacker": id, "name": creature.definition.name, "target": "player", "damage": guarded.damage, "hp": guarded.hp, "max_hp": player.max_hp, "position": _point(session.position)})
-			events.append_array(guarded.events)
-			if int(guarded.damage) > 0 and int(guarded.hp) > 0:
-				for effect in creature.definition.payload.get("on_hit_effects", []):
-					events.append_array(session.statuses.apply(session, effect, {"content_id": creature.content_id, "version": int(creature.version), "actor": id}, "player"))
+			events.append_array(creature_strike(session, creature, key + "/attack"))
+	return events
+
+func decide(session: RefCounted, creature: Dictionary, key: String, move_roll: int = -1) -> Dictionary:
+	## One AI decision (shared by the turn model and real time). move_roll -1 draws the
+	## v1 speed roll; real time passes 0 and expresses speed as step duration instead.
+	var radius := int(creature.definition.payload.ai.detect_radius)
+	var offset: Vector2i = session.position - creature.position
+	var context := {
+		"player": session.position,
+		"sees_player": offset.x * offset.x + offset.y * offset.y <= radius * radius and session.line_clear(creature.position, session.position),
+		"roll": Loot.number(key) % 10000, "direction": Loot.number(key + "/dir") % 4, "move_roll": Loot.number(key + "/move") % 10000 if move_roll < 0 else move_roll,
+		"can_enter": func(tile: Vector2i) -> bool: return _can_enter(session, creature, tile),
+	}
+	return AI.decide(creature, creature.definition, context)
+
+func move_creature(session: RefCounted, creature: Dictionary, to: Vector2i) -> bool:
+	if not _ensure_materialized(creature):
+		return false # Storage failure: this creature skips its move, nothing changes.
+	creature.position = to
+	_commit(session, creature)
+	return true
+
+func creature_strike(session: RefCounted, creature: Dictionary, key: String) -> Array:
+	## One creature hit on the player: combat formula, elements, talent guards, on-hit statuses.
+	var id: String = creature.instance_id
+	var player: Dictionary = session.combat_stats() # Effective defense from gear/growth.
+	var events: Array = []
+	var result := Combat.resolve(creature_stats(session, creature), player, key)
+	result.damage = Effects.damage(int(result.damage), creature.definition.payload.get("elements", ["neutral"]), session.statuses.actor(session, id), session.statuses.actor(session, "player"))
+	result.hp = maxi(0, int(player.hp) - int(result.damage))
+	result.killed = result.hp == 0
+	var guarded: Dictionary = session.talent_guard(creature, player, result) # Talent reactions to the hit.
+	session.stats().hp = guarded.hp
+	events.append({"type": "hit", "attacker": id, "name": creature.definition.name, "target": "player", "damage": guarded.damage, "hp": guarded.hp, "max_hp": player.max_hp, "position": _point(session.position)})
+	events.append_array(guarded.events)
+	if int(guarded.damage) > 0 and int(guarded.hp) > 0:
+		for effect in creature.definition.payload.get("on_hit_effects", []):
+			events.append_array(session.statuses.apply(session, effect, {"content_id": creature.content_id, "version": int(creature.version), "actor": id}, "player"))
 	return events
 
 func stun(session: RefCounted, target_id: String, turns: int) -> Dictionary:

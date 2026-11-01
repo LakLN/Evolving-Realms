@@ -1765,3 +1765,36 @@ viable cluster. New cold regional planning is synchronous with bounded caches.
 See [M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md) for version safety, architecture,
 Map/AI data contracts, missing landmark assets, examples, explicit local-play
 instructions and integration steps. No further Milestone 03 feature is started.
+
+## Milestone 03 / Task B — real-time movement and combat prototype (experimental)
+
+Branch `feature/m03-realtime` (worktree `D:/Game/RPG-m03-realtime`, base `9a28f64`).
+Milestone 03 work started on explicit user request. No merge, no Windows export, no
+change to Run 01 or personal saves; world generation and AI packs untouched.
+
+A Run can now be created with time model `realtime-v1` (menu dropdown, or launch
+`-- --time=realtime` to preselect it); stored as `spawn.time_model`. Real-time Runs keep
+every rule module but split the turn pipeline: actions apply immediately, a 1-second
+world pulse (`turn`) runs survival/energy/statuses/talents/ageing/autosave, creatures
+act on their own timers with a telegraphed 450 ms wind-up (dodge by leaving reach,
+at most 2 at once, 1300 ms attack interval), the hero walks continuously on the grid
+(160 ms per tile, diagonals without corner cutting) and attacks with F every 800 ms.
+Menus/panels/targeting/death/unfocused window pause gameplay time. Turn Runs (default,
+and every existing save) are unchanged. Design, per-system timing table, compatibility
+and limits: [M03_REALTIME_DESIGN.md](M03_REALTIME_DESIGN.md).
+
+Verification (targeted, Godot 4.7.2):
+
+- `tests/realtime_suite.gd` (`-Only realtime`): 58 checks, 0 failures.
+- `tests/realtime_gameplay_suite.gd` (`realtime-gameplay`): 16/0 headless; 18/0 with the
+  native renderer (`rendered-realtime`), screenshots `.tools/m03-realtime-*.png`.
+- `.\scripts\test.ps1 -Smoke -Only realtime,realtime-gameplay,combat,combat-gameplay,effects,skills,survival,talents,world,gameplay`:
+  all passed (data 96, world 49, gameplay 22, integration 41, combat 75, combat-gameplay
+  20, survival 60, talents 126, skills 105, effects 49). `skills,skill-gameplay` rerun
+  after the cooldown-message change: 105/0 and 21/0.
+- Not run: full regression, `-Export`, old-save exe checks (no persistence change).
+
+Gaps / next steps: playtest tuning of `content/realtime_rules.json`; grid-locked (not
+free) movement; ranged skills still Manhattan/instant; skills/target panels still speak
+in turns; per-weapon/species attack speed; decide whether real time becomes the default
+before any integration with Tasks A/C.

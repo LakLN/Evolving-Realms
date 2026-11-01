@@ -10,6 +10,12 @@ const DISPOSITION_COLORS := {"hostile": Color("e0564b"), "neutral": Color("e0b34
 const BODY_COLORS := {"wolf": Color("9aa2a8"), "boar": Color("8a5a3c"), "rabbit": Color("e6dccb"), "deer": Color("c08a52"), "crab": Color("e2713f")}
 const KINDS := {Terrain.FOREST: "forest", Terrain.BEACH: "beach", Terrain.MEADOW: "meadow", Terrain.WATER: "ocean", Terrain.TREE: "forest"}
 const STEP_TIME := 0.13
+## Real-time Runs (M03 B): tweens last exactly one step (player_step_time, or a
+## creature's runtime `step_ms`), start from the drawn position and allow diagonals.
+## Off for turn Runs, whose rendering is unchanged.
+var smooth_steps := false
+var player_step_time := STEP_TIME
+var _player_tween_origin := Vector2i.ZERO
 const FOG_UNSEEN := Color(0.02, 0.03, 0.05, 1.0)
 const FOG_REMEMBERED := Color(0.03, 0.05, 0.09, 0.58)
 var session: RefCounted
@@ -151,6 +157,19 @@ func _shift_transients(offset: Vector2) -> void:
 	_dying = _dying.filter(func(node: Variant) -> bool: return is_instance_valid(node) and node is Node2D)
 	for node in _dying:
 		node.position += offset
+	if smooth_steps:
+		# Real time: actors may be mid-step when the origin moves; keep their on-screen
+		# position so the next tween continues from where they are drawn.
+		_player.position += offset
+		for entry in _creatures.values():
+			entry.node.position += offset
+
+func sync_actors() -> void:
+	## Real time: creatures moved or acted but the hero did not (no fog/chunk work).
+	if session == null:
+		return
+	_sync_creatures()
+	_mark_layer.queue_redraw()
 
 func face(direction: Vector2i) -> void:
 	## Turn the hero toward an attempted move, even when the move is blocked.
@@ -275,17 +294,23 @@ func _update_player() -> void:
 			_play_player("death")
 		return
 	_player_dead = false
-	if session.position != _player_tile and absi(session.position.x - _player_tile.x) + absi(session.position.y - _player_tile.y) == 1:
-		_facing = _direction_name(session.position - _player_tile)
-		_player.position = _feet(_player_tile)
+	var delta: Vector2i = session.position - _player_tile
+	var one_step: bool = (absi(delta.x) + absi(delta.y) == 1) or (smooth_steps and absi(delta.x) == 1 and absi(delta.y) == 1)
+	if session.position != _player_tile and one_step:
+		_facing = _direction_name(delta)
+		if not smooth_steps:
+			_player.position = _feet(_player_tile)
 		if _player_tween != null and _player_tween.is_valid():
 			_player_tween.kill()
 		_player_tween = _player.create_tween()
-		_player_tween.tween_property(_player, "position", target, STEP_TIME)
+		_player_tween_origin = _origin
+		_player_tween.tween_property(_player, "position", target, player_step_time if smooth_steps else STEP_TIME)
 		_play_player("walk")
 		_player_tween.tween_callback(func() -> void:
 			if _player_sprite != null and _player_sprite.animation.begins_with("walk"):
 				_play_player("idle"))
+	elif smooth_steps and session.position == _player_tile and _player_tween != null and _player_tween.is_valid() and _player_tween_origin == _origin:
+		pass # Same tile, step still animating: let it finish instead of snapping.
 	else:
 		if _player_tween != null and _player_tween.is_valid():
 			_player_tween.kill()
@@ -332,13 +357,19 @@ func _sync_creatures() -> void:
 			var entry: Dictionary = _creatures[id]
 			var tile: Vector2i = creature.position
 			var tween_node: Node2D = entry.node
-			if entry.has("tween") and entry.tween.is_valid():
+			var animating: bool = entry.has("tween") and entry.tween.is_valid()
+			if smooth_steps and animating and tile == entry.tile and entry.get("tween_origin") == _origin:
+				entry.creature = creature
+				continue # Mid-step and unchanged: let the tween finish.
+			if animating:
 				entry.tween.kill()
 			if tile != entry.tile and absi(tile.x - entry.tile.x) + absi(tile.y - entry.tile.y) == 1:
 				entry.facing = _direction_name(tile - entry.tile)
-				tween_node.position = _feet(entry.tile)
+				if not smooth_steps:
+					tween_node.position = _feet(entry.tile)
 				entry.tween = tween_node.create_tween()
-				entry.tween.tween_property(tween_node, "position", _feet(tile), STEP_TIME)
+				entry.tween_origin = _origin
+				entry.tween.tween_property(tween_node, "position", _feet(tile), float(creature.get("step_ms", 130)) / 1000.0 if smooth_steps else STEP_TIME)
 				_play_creature(entry, "walk")
 				entry.tween.tween_callback(func() -> void: _play_creature(entry, "idle"))
 			else:
@@ -564,6 +595,17 @@ func show_events(events: Array) -> void:
 						_hero_hurt(delay + 0.14)
 					_popup(session.position, "-%d" % event.damage if int(event.damage) > 0 else "block", Color("ff7a6b") if int(event.damage) > 0 else Color("c8d0d8"), -0.35, delay + 0.14)
 				delay += 0.22
+			"telegraph":
+				# Real time: the attack lands after windup_ms unless the hero leaves reach.
+				var foe: Dictionary = _creatures.get(str(event.attacker), {})
+				if not foe.is_empty():
+					_popup(foe.tile, "!", Color("ffb347"), 0.55, 0.0, 26)
+					foe.node.modulate = Color(1.9, 1.15, 0.5)
+					foe.node.create_tween().tween_property(foe.node, "modulate", Color.WHITE, float(event.windup_ms) / 1000.0)
+			"dodge":
+				_popup(session.position, "dodged", Color("c8e6ff"), -0.35, 0.0, 15)
+			"rest_start":
+				_popup(session.position, "resting…", Color("8be08b"), 0.0, 0.0, 14)
 			"creature_death":
 				_popup(_tile_of(event), "defeated", Color("d8d8d8"), 0.55, delay)
 			"regen":

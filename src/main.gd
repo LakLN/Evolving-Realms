@@ -10,7 +10,10 @@ const TalentText = preload("res://src/core/talent_text.gd")
 const FantasyTheme = preload("res://src/ui/fantasy_theme.gd")
 const Art = preload("res://src/world/art.gd")
 const WorldMap = preload("res://src/ui/world_map.gd")
+const Realtime = preload("res://src/run/realtime_controller.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
+const CONTROLS_TURN := "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills | M: map | N: minimap"
+const CONTROLS_REALTIME := "Hold WASD: move, diagonals ok | F: attack (cooldown) | Tab: target | \"!\" = step away to dodge | R: rest on/off | M: map | N: minimap | E X 1-9 I C T K | panels pause"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
 var database_path := DEFAULT_DATABASE
@@ -27,6 +30,10 @@ var _world_seed: LineEdit
 var _run_seed: LineEdit
 var _biome: OptionButton
 var _mode: OptionButton
+var _time_model: OptionButton
+var _controls_hint: Label
+## M03 B prototype: gameplay clock of a real-time Run (null for turn Runs).
+var _realtime: RefCounted
 var _create_world: Button
 var _new_run: Button
 var _resume: Button
@@ -179,6 +186,13 @@ func _build_menu(parent: Control) -> void:
 		_mode.add_item("Mode: " + mode + (" (death reloads last save)" if mode == "normal" else " (death ends the run)"))
 		_mode.set_item_metadata(_mode.item_count - 1, mode)
 	left.add_child(_mode)
+	_time_model = OptionButton.new()
+	for model in [["turn", "Time: turn-based (one action = one turn)"], ["realtime-v1", "Time: real-time (M03 prototype)"]]:
+		_time_model.add_item(model[1])
+		_time_model.set_item_metadata(_time_model.item_count - 1, model[0])
+	# Turn-based stays the default; `-- --time=realtime` preselects the prototype.
+	_time_model.select(1 if launch_options().get("time", "") == "realtime" else 0)
+	left.add_child(_time_model)
 	_run_seed = _entry(left, "Run seed (blank = random)", "")
 	_new_run = _button(left, "Begin a new run", _on_new_run)
 	var right := VBoxContainer.new()
@@ -259,7 +273,7 @@ func _build_hud(parent: Control) -> void:
 	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
-	_label(column, "WASD: move | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills | M: map | N: minimap", 15)
+	_controls_hint = _label(column, CONTROLS_TURN, 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
 
@@ -1006,7 +1020,7 @@ func _on_new_run() -> void:
 	if seed_value == null or _selected_world().is_empty():
 		return
 	var next := Session.new(store)
-	if not next.start_new(_selected_world(), seed_value, _biome.get_item_metadata(_biome.selected), _mode.get_item_metadata(_mode.selected)):
+	if not next.start_new(_selected_world(), seed_value, _biome.get_item_metadata(_biome.selected), _mode.get_item_metadata(_mode.selected), _time_model.get_item_metadata(_time_model.selected)):
 		_message(next.last_error, true)
 		_refresh_runs()
 		return
@@ -1023,6 +1037,18 @@ func _on_resume() -> void:
 	_enter_map(next)
 
 func _enter_map(active_session: RefCounted) -> void:
+	_realtime = null
+	if active_session.realtime:
+		var clock := Realtime.new()
+		if not clock.configure(active_session):
+			_message(clock.last_error, true)
+			_refresh_runs()
+			return
+		_realtime = clock
+		active_session.action_completed.connect(func(action: Dictionary, _result: Dictionary) -> void:
+			if _realtime != null: _realtime.note_action(str(action.get("type", ""))))
+	map_view.smooth_steps = _realtime != null
+	_controls_hint.text = CONTROLS_REALTIME if _realtime != null else CONTROLS_TURN
 	session = active_session
 	_target_id = ""
 	_death_panel.hide()
@@ -1035,6 +1061,8 @@ func _enter_map(active_session: RefCounted) -> void:
 	_discard_on_exit = false
 	_update_info()
 	_notice.text = "Explore freely. Save with Ctrl+S; Esc saves and returns to the menu."
+	if _realtime != null:
+		_notice.text = "REAL TIME: hold WASD to move (diagonals too), F attacks on a cooldown, R rests. Watch for \"!\" — step away to dodge. Menus pause the world."
 	get_viewport().gui_release_focus()
 	_talent_panel.hide()
 	_skills_panel.hide()
@@ -1046,6 +1074,8 @@ func _enter_map(active_session: RefCounted) -> void:
 
 func _update_info() -> void:
 	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s | Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	if _realtime != null: # Real time: `turn` counts world seconds.
+		_info.text = _info.text.replace("Turn %d" % session.run.state.turn, "Time %d s%s" % [session.run.state.turn, " | resting" if session.resting else ""])
 	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
 	_hp_label.text = "Lv %d  HP %d/%d  ATK %d DEF %d" % [session.character_rules.level(session.run.state.character), stats.hp, stats.max_hp, stats.attack, stats.defense]
 	_hp_bar.max_value = int(stats.max_hp)
@@ -1121,12 +1151,25 @@ func _attack() -> void:
 		_update_info()
 		return
 	_target_id = foe.instance_id
+	if _realtime != null:
+		if not _realtime.attack(foe.instance_id):
+			_notice.text = _realtime.last_error # Cooldown: nothing happens, nothing is spent.
+			return
+		_after_action(true)
+		return
 	_after_action(session.attack_target(foe.instance_id))
 
 func _wait() -> void:
 	_after_action(session.wait_turn(), "You wait a turn.")
 
 func _rest() -> void:
+	if _realtime != null:
+		if session.rest():
+			_notice.text = "Resting… needs and energy recover faster. Move, attack or press R to stop." if session.resting else "You stop resting."
+			_update_info()
+		else:
+			_notice.text = session.last_error
+		return
 	if not session.rest():
 		_after_action(false)
 		return
@@ -1198,7 +1241,15 @@ func describe_events(events: Array) -> String:
 			"status_dispel":
 				parts.append("%s: %s removed." % [event.target, event.status])
 			"status_tick":
-				parts.append("%s: %s %+d HP." % [event.target, event.status, int(event.amount)])
+				var by := str(event.get("source", ""))
+				parts.append("%s: %s %+d HP%s." % [event.target, event.status, int(event.amount), "" if by.is_empty() or by == "you" else " (from %s)" % by])
+			"dodge":
+				parts.append("You dodge %s's attack." % event.name)
+			"rest_start":
+				pass # The R handler explains resting.
+			"rest_end":
+				if event.reason != "manual":
+					parts.append({"danger": "Rest interrupted: danger in sight!", "attacked": "Rest interrupted: you were attacked!", "healed": "Fully rested.", "needs": "Rest interrupted: you need food, water or care."}.get(event.reason, "You stop resting."))
 			"status_error":
 				parts.append("Status could not resolve: " + str(event.error))
 			"status_blocked":
@@ -1289,6 +1340,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_return_to_menu()
 		get_viewport().set_input_as_handled()
 		return
+	var acting: bool = event.physical_keycode in [KEY_E, KEY_X] or event.keycode in [KEY_E, KEY_X] or (event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9) or (event.keycode >= KEY_1 and event.keycode <= KEY_9)
+	if _realtime != null and acting and not event.ctrl_pressed and not event.alt_pressed and not _realtime.ready_for_action():
+		_notice.text = _realtime.last_error # Real time: short shared recovery between actions.
+		get_viewport().set_input_as_handled()
+		return
 	if _is_save_shortcut(event):
 		_save_game()
 	elif event.ctrl_pressed or event.alt_pressed:
@@ -1319,7 +1375,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		begin_skill(event.physical_keycode - KEY_1)
 	elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
 		begin_skill(event.keycode - KEY_1)
-	else:
+	elif _realtime == null: # Real time reads held movement keys every frame in _process.
 		for action in MOVE_KEYS:
 			if event.is_action_pressed(action):
 				move_player(MOVE_DIRECTIONS[action])
@@ -1401,6 +1457,9 @@ func _process(delta: float) -> void:
 		elif entry[1] < entry[0].item_count:
 			entry[0].set_item_custom_fg_color(entry[1], session.quality.color(entry[2], Time.get_ticks_msec() / 1000.0))
 	if session == null or _menu.visible or _panel_open() or session.is_dead():
+		return # Real time: this is also the pause rule (menus, panels, targeting, death).
+	if _realtime != null:
+		_realtime_frame(delta)
 		return
 	_hold_delay -= delta
 	if _hold_delay > 0 or Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT):
@@ -1410,6 +1469,34 @@ func _process(delta: float) -> void:
 			move_player(MOVE_DIRECTIONS[action])
 			_hold_delay = 0.14
 			return
+
+func _realtime_frame(delta: float) -> void:
+	## One frame of a real-time Run: held keys -> controller -> render and messages.
+	if DisplayServer.get_name() != "headless" and not get_window().has_focus():
+		return # Alt-tab pauses the world.
+	var direction := Vector2i.ZERO
+	if not Input.is_key_pressed(KEY_CTRL) and not Input.is_key_pressed(KEY_ALT):
+		for action in MOVE_KEYS:
+			if Input.is_action_pressed(action):
+				direction += MOVE_DIRECTIONS[action]
+	direction = direction.clamp(-Vector2i.ONE, Vector2i.ONE)
+	var events: Array = _realtime.update(int(round(delta * 1000.0)), direction)
+	if _realtime.moved:
+		map_view.player_step_time = _realtime.last_step_ms / 1000.0
+		map_view.refresh() # Fog, chunks, objects: only when the hero changed tile.
+	elif direction != Vector2i.ZERO:
+		map_view.face(direction) # Blocked: still turn toward the attempted direction.
+	if not _realtime.moved and (_realtime.creatures.moved or not events.is_empty()):
+		map_view.sync_actors()
+	if events.is_empty() and not _realtime.moved:
+		return
+	map_view.show_events(events)
+	var text := describe_events(events)
+	if not text.is_empty():
+		_notice.text = text
+	_update_info()
+	if session.is_dead():
+		_show_death()
 
 func _save_game() -> void:
 	if session == null:
@@ -1434,6 +1521,8 @@ func _return_to_menu() -> void:
 		return
 	var world_id: String = session.world.world_id
 	session = null
+	_realtime = null
+	map_view.smooth_steps = false
 	_inventory_panel.hide()
 	_character_panel.hide()
 	_talent_panel.hide()
