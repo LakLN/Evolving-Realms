@@ -1816,3 +1816,33 @@ Verification: `.\scripts\test.ps1 -Render` all passed (m03-integration 28/0, ren
 30/0) opened by this build: legacy 7/0, verify 8/0. No export, merge or personal save
 change. Report, known issues, playtest launch and export recommendation:
 [M03_INTEGRATION_REPORT.md](M03_INTEGRATION_REPORT.md).
+
+## Milestone 03 preview build (internal playtest, 2026-11-01)
+
+Commands (integration worktree, commit `07dbfbf` + packaging script):
+`.\scripts\export.ps1 -Verify` (write 30/0, crash, verify 8/0, features 15/0,
+features-verify 5/0, refuse-default: all PASS), then
+`.\scripts\package-m03-preview.ps1 -Destination D:\Game\RPG\builds\windows-m03-preview`.
+The official `D:\Game\RPG\builds\windows` is never written (export goes to the worktree's
+own `builds/windows`; the package script refuses any `windows` destination).
+
+Database isolation, verified on the exported exe: game options are only read after a
+literal `--` (`OS.get_cmdline_user_args`), so shortcuts do not forward `--database`.
+`override.cfg` beside the exe sets a custom user dir, so even a double-clicked exe uses
+`%APPDATA%\EvolvingRealms-M03-Preview\realms.sqlite` (and its own logs/shader cache);
+`Launch-M03-Preview.ps1/.cmd` passes the same file as one quoted argument
+`-- "--database=<path>"` and refuses the personal `Godot\app_userdata\Evolving Realms`
+folder. Paths with spaces were checked through both launchers (process command line).
+The exported release template ignores `--script`, so M03 smoke runs on the real window.
+Why it matters: M03 Runs save a seventh state field (`map_waypoint`) that the M02 build
+rejects, so the preview must never write the personal Run 01 save.
+
+Standalone smoke (exported exe via launcher, real window, posted input, separate DB):
+new structured World (seed 1847, tagged `[structured]`), new real-time Run (seed 7301),
+held-key movement, World Map with leads, waypoint, Esc save, Exit, relaunch via `.cmd`,
+Continue: real time, tile, world time, fog and waypoint restored; DB `user_version` 2,
+integrity ok, `structured_world_version` 1, `time_model` `realtime-v1`. No ERROR lines in
+the preview logs. Personal `realms.sqlite` SHA-256 and mtime unchanged.
+`test.ps1 -Smoke -Only m03-world,map,realtime,realtime-gameplay,m03-integration`: all
+passed (m03-world 45, map 22, realtime 58, realtime-gameplay 16, m03-integration 28).
+Not run: full `-Render -Service -Export` regression (no gameplay change).
