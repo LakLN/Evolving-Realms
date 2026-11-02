@@ -246,8 +246,26 @@ func _content_tour(s: RefCounted, plan: Dictionary) -> void:
 	await _settle()
 	var markers: Array = app._world_map._all_markers()
 	check(markers.size() >= 4, "World Map shows the discovered Snow Mountain landmarks (%d markers)" % markers.size())
+	var noted: Array = _journal_notes()
+	check(noted.size() >= 4 and str(noted.back().detail).contains("Last entry") and markers.all(func(m: Dictionary) -> bool: return not str(m.get("id", "")).begins_with("note")), "Journal lists this Run's place notes (ledger text in full), adding no map marker: %d notes" % noted.size())
 	await _capture("snow-map-landmarks.png")
 	await _key(KEY_M)
+	# The notes come back from the saved Run, not from this session's memory.
+	await _key(KEY_ESCAPE)
+	for index in app._runs.item_count:
+		if str(app._runs.get_item_metadata(index)) == s.run.run_id: app._runs.select(index)
+	app._resume.pressed.emit()
+	await process_frame
+	await _settle()
+	await _key(KEY_M)
+	await _settle()
+	var after: Array = _journal_notes()
+	check(app.session != s and after.map(func(l: Dictionary) -> String: return str(l.detail)) == noted.map(func(l: Dictionary) -> String: return str(l.detail)), "Journal notes are identical after Esc and Continue (%d)" % after.size())
+	await _capture("snow-journal-resumed.png")
+	await _key(KEY_M)
+
+func _journal_notes() -> Array:
+	return app._world_map._journal.filter(func(l: Dictionary) -> bool: return l.get("state") == "note")
 
 func _wolf_home(s: RefCounted, plan: Dictionary) -> Vector2i:
 	var first := Vector2i(int(plan.slot.x), int(plan.slot.y)) * 16

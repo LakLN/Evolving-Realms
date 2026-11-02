@@ -45,7 +45,7 @@ var _journal: Array = []
 ## Marker colours by kind/state: discovered and resolved places differ; leads are rings
 ## (location known from a clue, not seen); frontiers are unsurveyed region bearings.
 const JOURNAL_WIDTH := 300.0
-const MARKER_COLORS := {"discovered": Color("e0b65f"), "resolved": Color("7fa37a"), "lead": Color("f0a64a"), "frontier": Color("b79cf0")}
+const MARKER_COLORS := {"discovered": Color("e0b65f"), "resolved": Color("7fa37a"), "lead": Color("f0a64a"), "frontier": Color("b79cf0"), "note": Color("d7c9a9")}
 var _dragging := false
 var _drag_moved := false
 var _drag_start := Vector2.ZERO
@@ -397,14 +397,24 @@ func _draw_journal() -> void:
 	draw_rect(box, Color("120f0b"))
 	draw_rect(box, Color("94784b"), false, 2.0)
 	_draw_text(box.position + Vector2(12, 24), "KNOWN LEADS", 16, Color("e6c47b"))
+	var font := ThemeDB.fallback_font
 	var y := box.position.y + 52
-	for line in _journal:
-		if y > box.end.y - 30:
+	for index in _journal.size():
+		var line: Dictionary = _journal[index]
+		# Notes wrap in full: a clue cut to one line would lose its meaning.
+		var wrap: bool = line.get("wrap", false)
+		var detail_height := font.get_multiline_string_size(str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13).y if wrap else 16.0
+		if y + 18 + detail_height > box.end.y - 24:
+			draw_string(font, Vector2(box.position.x + 12, box.end.y - 12), "+%d more" % (_journal.size() - index), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 24, 13, Color("bfb091"))
 			break
 		var color: Color = MARKER_COLORS.get(str(line.state), Color("d7c9a9"))
-		draw_string(ThemeDB.fallback_font, Vector2(box.position.x + 12, y), str(line.title), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 24, 14, color)
-		draw_string(ThemeDB.fallback_font, Vector2(box.position.x + 24, y + 18), str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13, Color("bfb091"))
-		y += 44
+		draw_string(font, Vector2(box.position.x + 12, y), str(line.title), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 24, 14, color)
+		if wrap:
+			draw_multiline_string(font, Vector2(box.position.x + 24, y + 18), str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13, -1, Color("bfb091"))
+			y += 28 + detail_height
+		else:
+			draw_string(font, Vector2(box.position.x + 24, y + 18), str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13, Color("bfb091"))
+			y += 44
 
 func _all_markers() -> Array:
 	var result: Array = _landmarks.values()

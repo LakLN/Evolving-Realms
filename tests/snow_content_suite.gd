@@ -165,6 +165,10 @@ func _equip(session: RefCounted, content_id: String) -> bool:
 func _count(session: RefCounted, content_id: String) -> int:
 	return int(session.run.state.inventory.get(content_id, {}).get("quantity", 0))
 
+func _notes(session: RefCounted, sites: Array) -> Array:
+	var ids: Array = sites.map(func(s: Dictionary) -> String: return s.instance_id)
+	return session.places.notes(session).filter(func(n: Dictionary) -> bool: return n.target in ids)
+
 func _resolved(session: RefCounted, site: Dictionary) -> Dictionary:
 	return session.run.state.entity_mutations.get(site.instance_id, {}).get("resolved", {})
 
@@ -181,7 +185,11 @@ func _carriers_debt(world: Dictionary, plan: Dictionary) -> void:
 	var turn := int(session.run.state.turn)
 	check(session.places.discovered(session, locker.instance_id) and not _act(session, locker, "return") and session.last_error.contains("Relay clasp"), "Returning the clasp without it is refused: " + session.last_error)
 	check(session.run.state.inventory == before and int(session.run.state.turn) == turn and _resolved(session, locker).is_empty(), "The refusal changes nothing (inventory, turn, place state)")
+	check(_notes(session, [locker, pine]).is_empty(), "Journal: no note before anything is read (a refusal writes none)")
 	check(_act(session, locker, "ledger") and _resolved(session, locker).has("ledger"), "Read the carrier's ledger: the clue points to the fallen pine")
+	var ledger_text: String = store.content.load_definition(world.world_id, "snow:event/relay_ledger", 1).payload.message
+	var noted := _notes(session, [locker, pine])
+	check(noted.size() == 1 and noted[0].message == ledger_text and noted[0].place == "Carriers' locker" and noted[0].verb == "Read the carrier's ledger" and not noted[0].has("position"), "Journal note keeps the ledger's exact words, with no position")
 	_go(session, pine)
 	check(session.places.discovered(session, pine.instance_id) and _act(session, pine, "search") and _count(session, "snow:relay_clasp") == 1 and _count(session, "snow:resin") >= 2, "Search the fallen pine: relay clasp, resin and wood")
 	check(not _act(session, pine, "search") and _count(session, "snow:relay_clasp") == 1, "The fallen pine pays once per Run")
@@ -198,8 +206,11 @@ func _carriers_debt(world: Dictionary, plan: Dictionary) -> void:
 	check(resumed.save(), "Save the finished chain")
 	var again := Session.new(store)
 	check(again.resume(session.run.run_id) and _resolved(again, locker).has("return") and not _resolved(again, locker).has("force") and _count(again, "snow:relay_clasp") == 0, "Chain outcome persists across save/load")
+	var order: Array = _notes(again, [locker, pine]).map(func(n: Dictionary) -> String: return n.interaction)
+	check(order == ["return", "search", "ledger"], "Journal notes survive reload, newest first, never the forfeited choice: " + str(order))
 	var fresh := _session(world, plan, 502)
 	check(fresh != null and _resolved(fresh, locker).is_empty() and _resolved(fresh, pine).is_empty(), "Another Run starts with both chain sites unresolved")
+	check(fresh != null and fresh.places.notes(fresh).is_empty(), "Another Run's journal has no notes from this one")
 
 func _force_branch(world: Dictionary, plan: Dictionary) -> void:
 	var session := _session(world, plan, 503)
@@ -219,7 +230,7 @@ func _bell(world: Dictionary, plan: Dictionary) -> void:
 	var cairn := _site(plan, "bell_cairn")
 	var bell := _site(plan, "summit_bell")
 	var lucky: RefCounted = null
-	var unlucky := 0
+	var unlucky: RefCounted = null
 	for run_seed in range(600, 640):
 		var session := _session(world, plan, run_seed)
 		if session == null: continue
@@ -227,16 +238,23 @@ func _bell(world: Dictionary, plan: Dictionary) -> void:
 		if not _act(session, cairn, "dig"): continue
 		if _count(session, "snow:bell_shard") == 1:
 			if lucky == null: lucky = session
-		else:
-			unlucky += 1
-		if lucky != null and unlucky > 0: break
-	check(lucky != null and unlucky > 0, "The cairn shard is a Run-keyed chance: some Runs find it, others do not")
-	if lucky == null: return
+		elif unlucky == null:
+			unlucky = session
+		if lucky != null and unlucky != null: break
+	check(lucky != null and unlucky != null, "The cairn shard is a Run-keyed chance: some Runs find it, others do not")
+	if lucky == null or unlucky == null: return
+	# The journal replays this Run's own roll: the found/not-found line matches the inventory.
+	var found_note: Array = _notes(lucky, [cairn])
+	var empty_note: Array = _notes(unlucky, [cairn])
+	check(found_note.size() == 1 and found_note[0].message.contains("Her voice sleeps") and found_note[0].message.contains("curved shard") and not found_note[0].message.contains("Only frozen stones"), "Journal: the lucky dig's note names the shard it found")
+	check(empty_note.size() == 1 and empty_note[0].message.contains("Only frozen stones") and not empty_note[0].message.contains("curved shard"), "Journal: the empty dig's note never mentions a shard")
 	_go(lucky, cairn)
 	check(not _act(lucky, cairn, "dig") and _count(lucky, "snow:bell_shard") == 1, "Digging again never rerolls")
 	_go(lucky, bell)
 	check(not _act(lucky, bell, "restore"), "The bell must be examined first: " + lucky.last_error)
 	check(_act(lucky, bell, "inspect"), "Examine the silent bell")
+	var bell_notes: Array = _notes(lucky, [bell])
+	check(bell_notes.size() == 1 and bell_notes[0].interaction == "inspect" and not bell_notes[0].message.contains("mantle"), "Journal: examining the bell notes only what was seen, nothing of its restoration")
 	check(lucky.save(), "Save before restoring")
 	var resumed := Session.new(store)
 	check(resumed.resume(lucky.run.run_id), "Reload with the shard in hand")

@@ -199,7 +199,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 		if removal.is_empty():
 			return {"error": "%s: needs %s x%d" % [interaction.get("verb", "Explore"), str(session._definition(item.content_id, int(item.version)).get("name", item.content_id)), int(item.get("quantity", 1))]}
 		inventory = removal.inventory
-	var key := "location-v1/%d/%d/%d/%s@%d/%s/%s" % [int(session.world.seed), int(session.world.generation_version), int(session.run.seed), event.content_id, int(event.version), instance.instance_id, interaction.id]
+	var key := _roll_key(session, event, instance.instance_id, interaction.id)
 	# `chance` branches resolve first (fixed per Run and place); nothing else changes.
 	var resolved: Dictionary = Events.effective(p.outcomes, key)
 	var outcomes: Array = resolved.outcomes
@@ -248,6 +248,43 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 				resources[outcome.resource].value = mini(int(session.skills.resource_max(session, outcome.resource)), current + int(outcome.amount))
 	session.refresh_stats()
 	return {"events": events, "received": award.display_received}
+
+func _roll_key(session: RefCounted, event: Dictionary, instance_id: String, interaction_id: String) -> String:
+	return "location-v1/%d/%d/%d/%s@%d/%s/%s" % [int(session.world.seed), int(session.world.generation_version), int(session.run.seed), event.content_id, int(event.version), instance_id, interaction_id]
+
+func notes(session: RefCounted) -> Array:
+	## Journal: what this Run's resolved places told the player, newest first. Rebuilt from
+	## the saved record (pinned event + the same Run-keyed chance roll); nothing new is stored,
+	## no position or unresolved text is revealed.
+	var result: Array = []
+	var mutations: Dictionary = session.run.state.entity_mutations
+	for id in mutations:
+		var resolved: Dictionary = record(session, str(id)).get("resolved", {})
+		if resolved.is_empty(): continue
+		var instance: Dictionary = layer.find(str(id))
+		if instance.is_empty(): instance = layer.registry.load_instance(session.world.world_id, str(id))
+		if instance.is_empty(): continue
+		var place := _pinned(session, instance)
+		for interaction_id in resolved:
+			var entry: Variant = resolved[interaction_id]
+			if not entry is Dictionary or not entry.get("event") is Dictionary: continue
+			var event := _pinned(session, entry.event)
+			if event.is_empty(): continue
+			var p: Dictionary = event.payload
+			var text := " ".join([p.get("message", "")] + Events.effective(p.get("outcomes", []), _roll_key(session, event, str(id), str(interaction_id))).notes).strip_edges()
+			if text.is_empty(): continue
+			var verb := str(interaction_id)
+			for interaction in place.get("payload", {}).get("interactions", []):
+				if interaction.id == interaction_id: verb = str(interaction.get("verb", verb))
+			result.append({"turn": int(entry.get("turn", 0)), "target": str(id), "interaction": str(interaction_id), "place": str(place.get("name", "")), "verb": verb, "message": text})
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.turn > b.turn or (a.turn == b.turn and (a.target + "/" + a.interaction) < (b.target + "/" + b.interaction)))
+	return result
+
+func _pinned(session: RefCounted, ref: Dictionary) -> Dictionary:
+	## Active definitions are cached by the layer; an older pinned version still loads.
+	var definition: Dictionary = layer.event(ref)
+	return definition if not definition.is_empty() else layer.registry.load_definition(session.world.world_id, ref.content_id, int(ref.version))
 
 func _refuse(session: RefCounted, message: String) -> Dictionary:
 	session.last_error = message

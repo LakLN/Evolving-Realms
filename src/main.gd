@@ -1259,6 +1259,10 @@ func _refresh_exploration() -> void:
 	var routes: Array = [] # Atlas lands and routes lead the journal; clues follow.
 	for land in session.known_lands():
 		routes.append({"state": "discovered", "title": "◆ %s (%s)" % [land.name, land.title], "detail": "%s — %d/%d regions walked" % [land.epithet, land.regions.size(), int(land.region_count)]})
+	# What resolved places said in this Run, newest first: words only, never a marker.
+	var notes: Array = []
+	for note in session.places.notes(session):
+		notes.append({"state": "note", "title": "» " + str(note.place),"detail": note.message, "wrap": true})
 	for lead in _leads:
 		var title := str(lead.metadata.get("title", lead.role))
 		if lead.knowledge == "lead": # Not seen yet: discovered ones are already map landmarks.
@@ -1276,7 +1280,7 @@ func _refresh_exploration() -> void:
 		markers.append({"id": "frontier:" + str(frontier.region_id), "position": center, "label": "→ %s (%s, unsurveyed)" % [frontier.name, frontier.direction], "kind": "frontier"})
 		journal.append({"state": "frontier", "title": "→ %s (%s)" % [frontier.name, frontier.direction], "detail": "unsurveyed — %s" % frontier.opportunity})
 	_world_map.set_markers(markers)
-	_world_map.set_journal(routes + journal)
+	_world_map.set_journal(routes + notes + journal)
 
 func _after_exploration_events(events: Array) -> void:
 	if events.any(func(e: Dictionary) -> bool: return e.get("type") in ["discovery", "location", "land_entered", "region_entered", "route_sighted", "route_learned"]):
