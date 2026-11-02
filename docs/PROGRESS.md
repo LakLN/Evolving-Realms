@@ -2110,3 +2110,19 @@ check: those belong to later release authorization. All unfinished manifest entr
 remain blocked/in_progress/pending; render_assets now records partial QA only.
 Next: review palette, deliver prioritized S2/S4/S5 then S3, integrate real assets,
 then human acceptance and later explicit binding/release review.
+
+## AI Studio workflow reset (2026-11-02)
+
+Documentation only, at HEAD `14b1cad`. No code, content, art, saves, tests or
+manifest changes. Added `docs/AI_STUDIO.md` (roles, pillars, package loop,
+PASS/CONCERNS/NOT ASSESSED/FAIL gates, spoiler and playtest rules; a few ideas
+adapted from donchitos/claude-code-game-studios, framework not installed),
+`docs/STUDIO_AUDIT_2026-11-02.md` (repository-grounded audit) and
+`docs/lands/SNOW_MOUNTAIN_V1_PACKAGE.md` (first package plan + consolidated asset
+manifest). Findings recorded there:
+- Bell chain completable in only about 60% of Runs.
+- Chain clues never persist in the journal.
+- `snow:bronze_scrap` has no sink.
+
+Tests: none run (docs only). Next: T1 journal notes from resolved place records;
+T2 content v2 after director decisions D1/D2.

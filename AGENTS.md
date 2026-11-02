@@ -53,3 +53,4 @@ changing the world atlas, land design, atlas terrain, routes, environment or Run
 Atlas records (lands, regions, routes, revisions) are append-only; only Veil may become land.
 Atlas terrain/plan changes need a new terrain_version/atlas_version; never alter old plans.
 Lands are added only through propose -> validate -> explicit approval -> activate.
+Read docs/AI_STUDIO.md for the Content Package workflow, roles, gates and spoiler rules.
