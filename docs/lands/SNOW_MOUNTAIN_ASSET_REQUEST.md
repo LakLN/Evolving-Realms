@@ -1,108 +1,160 @@
-# Snow Mountain — image generation request (relay to ChatGPT)
+# Snow Mountain — next asset generation requests
 
-Status 2026-11-01: **no Snow Mountain art exists yet.** Everything the game draws for
-the new surfaces is a code-painted placeholder (`src/world/snow_art.gd`) or an M04
-recolour. This file is the exact request to relay; it refines
-[SNOW_MOUNTAIN_ASSETS.md](SNOW_MOUNTAIN_ASSETS.md). Send **Batch S1 only** first and
-return the images; S2–S4 wait until S1's palette and scale are approved in-game.
+2026-11-02, Stage E1. S1 already exists and is integrated provisionally. Do not
+regenerate S1 or mistake these requests for completed art. Reference images:
+`assets/sources/EvolvingRealms_Batch_S1/reference/S1_style_proof.png` and its
+terrain/props/shelter/wolf boards. Human palette/style acceptance is still pending.
 
-## How to deliver (all batches)
+## Shared prompt (prepend to every request)
 
-- One PNG per sheet listed below, RGBA, no JPEG. Return them unedited; the agent stores
-  them as immutable sources in `assets/sources/EvolvingRealms_SnowMountain_S<n>/`
-  (`environment/`, `creatures/`, `landmarks/`, `ui/`, plus `manifest.json` and a
-  short `README.md` with the prompt used) and slices them with
-  `tools/art/build_assets.py` + `sheet_tools.py`. You do not need to slice anything.
-- Layout like Batch 01/02: items on a plain flat background with **generous gutters
-  (≥ 24 px) between items**, no item touching another or the sheet edge, no labels,
-  text, grid lines, frames, logos or watermarks. Transparent background preferred; if
-  the generator cannot, use flat pure magenta `#FF00FF` (never black, never a gradient).
-- Drawn large and clean (each item roughly 150–200 px on the sheet). The pipeline
-  downscales to the game sizes below with hard alpha edges, so avoid 1-px details and
-  soft glows that disappear at 40 px.
+Create ORIGINAL cohesive fantasy pixel art matching the attached Evolving Realms
+S1 reference. Three-quarter top-down orthographic RPG view, upper-left light,
+crisp controlled pixel clusters, no anti-aliased outline, no reskinned stock assets.
+Ivory snow, cool blue/lavender shadows, cyan ice, charcoal-green pitchpine,
+dark timber and aged bronze; warm lantern accents. Readable beside a 48px-tall
+hero on a 40px tile grid. Preserve dark silhouettes on snow. No text, labels,
+logos, watermarks, frames, decorative sheet background or perspective scenery.
+Do not embed cast shadows or scenery in ground textures. Sprite backgrounds must
+be genuine transparent RGBA, never depicted checkerboard. No white matte/halo.
 
-## Shared style prompt (prefix every request)
+Deliver separate PNGs and a sidecar JSON listing asset name, pixel rect, pivot,
+direction, state and frame order. Exact grids are preferred; if the generator
+cannot honor them, deliver one isolated image per asset/frame with >=24px empty
+gutters and record actual dimensions. Agent slices/scales/anchors, never trusts
+labels or implied transparency. Supply prompts, generator name/date and reference
+provenance; keep immutable originals under `assets/sources/EvolvingRealms_SnowMountain_S<n>/`.
+Do not claim perfect seamlessness or synchronized animation without engine checks.
 
-> Original colourful, slightly mystical fantasy pixel art for a top-down /
-> three-quarter top-down survival RPG. Light from the upper left, soft dark ellipse
-> shadow under every standing object. Crisp controlled pixel clusters, readable at
-> 40 pixels per ground tile. Snow is pale ivory with cool blue shade (never pure white
-> fills); ice is translucent-looking cyan but painted opaque; pines are dark charcoal
-> green with white snow on the lit branches; relay ruins are aged bronze and dark
-> timber. No text, logos, UI, grid lines, perspective camera or background scenery.
+## S2 — priority 1: terrain and boundaries
 
-Game scale for judging: ground tile 40×40, hero ≈ 48 px tall, wolf 44–52 px long,
-trees ≈ 60 px tall, landmarks 76–100 px wide. Snow must not swallow the hero's light
-clothing or the red/white attack telegraphs: keep snow mid-light, not the brightest
-value on screen.
+Prompt: "Use the shared prompt and S1 terrain reference. Produce separate opaque
+40x40 production terrain tiles at native scale (or 4x nearest-neighbour scale,
+no new subpixels). Flat ground texture only, no raised frame or isometric block.
+Snow: four distinct low-contrast wind/loose/packed variants. Blue lake ice: three
+variants with fine cracks, no holes, transparent-looking color but opaque pixels.
+Taiga: three frosted needle/soil variants. Packed trail: two variants. Frozen
+scree: three gray/slate earth variants with scattered small frost and gravel,
+clearly distinct from both ice and impassable cliffs. All variants in each family
+share compatible edges; detail remains inside the tile."
 
-## Batch S1 — style proof (send first; one sheet)
+Outputs: `S2_ground.png`, 4 columns x 5 rows, 40px cells, 160x200 RGBA,
+fully opaque occupied cells. Rows: snow4 / ice3 / taiga3 / trail2 / frozen3;
+unused cells transparent. Optional one-image-per-tile delivery allowed above.
 
-`environment/snow_style_proof.png`, about 1536×1024:
+Second prompt: "Same palette and scale. Produce boundary strips for snow onto
+ice, frozen scree, trail, taiga and shelter floor, plus frozen scree onto ice and
+trail. Each pair needs N/E/S/W edges, NE/SE/SW/NW outer corners and NE/SE/SW/NW
+inner corners. Keep walkable ground flat. Transparent outside the upper-material
+edge; no full opaque backing. Do not add a collision-looking ridge."
 
-| # | Item | Game size | Notes |
-|---|---|---|---|
-| 1–3 | Fresh snow ground, 3 square variants | 40×40 each | Opaque, seamless on all four edges (tile 3×3 of each in your head). Variation by soft drift ripples and a few sparkle pixels, no objects. |
-| 4–5 | Pine-litter taiga ground, 2 variants | 40×40 | Dark needle litter with snow patches; seamless. Must read as walkable floor, not as trees. |
-| 6–7 | Blue lake ice, 2 variants | 40×40 | Opaque cyan with faint white cracks; walkable, so no dark "deep water" look. |
-| 8 | Snow pine | ~60 px tall, 40 px trunk footprint | Transparent; trunk base and shadow at the bottom centre. Clearly a blocker. |
-| 9 | Lee shelter (lean-to of dark timber against a rock, snow on roof, open front) | 96 px wide | Transparent; the open entrance must face the viewer (south). |
-| 10 | Scree wolf, single standing pose facing down-right | 48 px long | Pale grey-brown with darker back; must contrast against snow. |
+Output: `S2_boundaries.png`, 12 columns x 7 rows, 40px cells, 480x280;
+rows pairs in order above; columns edges, outer corners, inner corners in stated
+order. Agent reconciles these with the engine's 8-neighbour/256-mask convention;
+a 12-cell art set alone is not a ready engine autotile atlas.
 
-Acceptance (agent checks in the running game, screenshots in `.tools/snow-*.png`):
-palette sits with existing grass/forest art; hero and wolf readable on snow; ice
-clearly walkable but distinct from snow and trails; pine clearly blocks; no visible
-seams over a 10×10 repeat.
+Third prompt: "Snow-capped impassable cliff tiles: flat blocked summit cap,
+four lit/shaded face orientations, four convex corners, four concave corners,
+two ends and isolated cap. Keep upper-left lighting fixed across orientations;
+do not rotate a south-facing lit texture to fake all directions. No implied cave
+entrance. Readable boundary from every approach."
 
-## Batch S2 — ground and transitions (after S1 approval)
+Output `S2_cliffs.png`: 4x4 40px cells (160x160), row-major: cap, face N/E/S;
+face W, convex NE/SE/SW; convex NW, concave NE/SE/SW; concave NW, end A/B,
+isolated cap. Transparent only where neighboring ground should show.
+Acceptance: every adjacent variant pair, 3x3 repeats, all masks/corners, rotated
+land captures, alpha and 40px alignment. New rendering support may be needed;
+no terrain generation, collision or established plan changes for art.
 
-`environment/snow_ground_sheet.png`: snow ×4, packed-snow trail ×2 (tramped, slightly
-warm grey), taiga ×3, ice ×3, frozen ground / scree ×3 (grey stones with frost
-dusting), shelter plank floor ×1 — each a seamless 40×40 square, all on one regular
-grid with equal gutters (state the grid in the README).
+## S3 — priority 2: props, shelter and weather
 
-`environment/snow_cliffs_sheet.png`: cliff top ×2 (dark slate with snow caps, seen from
-above, seamless), cliff face ×2 (the south-facing wall drop: snow lip on top, vertical
-fissures, darker toward the base, icicles; tileable left-right), outer and inner
-corners for the face ×2 each. Faces must read as "you cannot walk here" from every
-approach. Transition overlays (snow→ice, snow→trail, snow→taiga, scree→ice) are
-generated by the pipeline from these textures; no separate edge art is needed.
+Prompt: "Same S1 art. Two additional snow pines with distinct narrow/broad
+silhouettes, two additional windbreak rocks, one fallen relay pine with roots and
+intact bark, its searched state with exposed hollow but identical footprint.
+Lean-to and relay outpost facade accents must show a clear open doorway, no fake
+interactable doors. Do not hide the hero's standing cell. Detached snow shadow
+layer optional."
 
-## Batch S3 — props and landmarks
+Outputs: `S3_props.png`, 4 columns x 2 rows of 96px cells (384x192): pine A/B,
+rock A/B; trunk intact/searched, lean-to accent, relay accent. Final pine width
+56–60px, rocks 40–44px, trunk 80–96px; shelter accents 76–100px wide with feet
+pivot centered at ground level. If a larger facade is needed, deliver individually
+rather than clipping a 96px cell. Separate modular 40px wall/floor/door pieces
+must align with existing 5x4/7x5 shelter footprints; art must not invent walkability.
 
-`environment/snow_props_sheet.png` (transparent): snow pines ×3 (~60 px), snow rocks ×3
-(~40 px, clearly blockers), resin seam on a pine trunk (~40 px, resource look: amber
-glints, must not look like a blocker), ration shrub with dark berries (~40 px), fallen
-relay pine intact + searched/open (~76 px wide each).
+Prompt: "Transparent snow particles and wind FX in the S1 palette. Three distinct
+4px/6px/8px flakes inside separate 16px canvases, four 32px wind streak frames,
+three 32px glyphs: incoming blizzard, exposed cold, protected shelter. No full-screen
+opaque veil, no attack-circle imitation; visible on both white snow and dark taiga."
 
-`landmarks/snow_landmarks_sheet.png` (transparent, 76–100 px wide each): lee shelter
-(final), broken relay outpost (roofed timber hut, one collapsed corner, two doorways on
-south and east), bell cairn (stacked stones with a small bronze bell), sealed cleft
-(ice-choked crack in a cliff; must not look enterable). Feet/footprint anchored at the
-bottom; doorways visibly open.
+Outputs: `S3_weather.png`, 4x2 cells at 32px (128x64), row1 wind frames1–4,
+row2 flakes small/medium/large (centered inside cells), unused. `S3_weather_ui.png`,
+3x1 cells at 32px. Agent maps these to the existing weather layer below combat
+telegraphs; visibility, warning timing and shelter rules stay unchanged.
+Acceptance: transparent empty gutters, no matte, anchored shelter doorway clear,
+blizzard combat telegraphs/HP readable on snow/taiga, no spoiler reveals.
 
-## Batch S4 — wildlife, icons, weather
+## S4 — priority 1: native wildlife (three separate sheets)
 
-`creatures/<name>_spritesheet.png` for rime hare (~32 px), scree wolf (~48 px),
-bellback sentinel (~52 px): four direction rows (down, left, right, up); per row
-idle ×1, walk ×4, attack ×3, hit ×1, death ×2 (hare: no attack). Same feet line and
-scale in every frame, ≥ 24 px between frames. Mirrored left/right only if the design is
-symmetric.
+Prompt: "Same S1 wolf style and scale. Produce a [CREATURE] true four-direction
+sprite sheet facing down, left, right, up. Every row depicts that direction only,
+with synchronized feet and consistent body volume. No scenic rocks, shadows from
+other frames, arrows, slash arcs or labels. Attack must visibly face its own row.
+Hit is an original recoil, death an original collapse sequence, not a squashed
+idle. Keep every frame isolated and anchored to the feet."
 
-`ui/snow_icons.png`: 5 icons drawn for 32×32 — resin, bark ration, relay clasp, bell
-shard, rime mantle — distinct silhouettes.
+Replace [CREATURE] with:
+- Scree wolf: S1 snow wolf identity, icy eyes and thick wind-tough fur, final body
+  about 44–52px. Four rows x11 columns: idle1, walk1–4, attack1–3, hit1, death1–2.
+- Bellback sentinel: hulking winter ram-beast whose heavy curved horns resemble
+  cracked bronze bells, matching the existing creature description, final body about 52px, same 4x11 sequence. Distinct from wolf,
+  no new attack or mechanic implied by art.
+- Rime hare: original white winter hare with cool ear tips, final body about 32px;
+  four rows x8 columns: idle1, walk1–4, hit1, death1–2. No unused attack request.
 
-`environment/snow_weather.png`: 3 snowflake sprites (8–12 px), 2 wind-streak strokes
-(~24 px), an "exposed" marker (cold red ring/frost crack under the feet, ~40 px) and a
-"sheltered" marker (calm blue ring, ~40 px). Semi-transparent strokes only; nothing
-that could hide an attack telegraph.
+Outputs `S4_scree_wolf.png` and `S4_bellback_sentinel.png`: 84x76 frame cells,
+924x304 each, pivot (42,69), opaque pixels must stay inside the frame with margin.
+`S4_rime_hare.png`: same canvas/pivot, 672x304. Separate frame delivery acceptable.
+Walk loops must progress through distinct footfalls without idle duplicates.
+Acceptance: inspect all directions/states as contact sheets and playback, no edge
+clipping or feet jitter, correct left/right/down/up attack identity. Native hare
+needs a presentation mapping that preserves immutable existing definitions.
 
-## What the agent does when images come back
+## S5 — priority 1: landmarks and exact item identities
 
-Store sources unchanged, add SHEETS/GRIDS/GROUND/ENV_PROPS/LANDMARKS/CHARACTERS/MAPPING
-entries, rebuild with the existing `.venv` (inspect installed packages first; no new
-installs into the shared environment), then replace the placeholder kinds in
-`src/world/snow_art.gd`/`art.gd` with indexed art, re-run
-`.\scripts\test.ps1 -Only snow-gameplay,rendered-snow-gameplay` and review the
-screenshots. A manifest asset entry becomes `complete` only with runtime files, index
-mapping, in-game screenshots and the review recorded as evidence.
+Prompt: "Same S1 style. A silent cracked bronze bell hanging in a broken dark
+wood frame (not a hut), three states: damaged, examined, restored with fitted
+shard; a deliberate stacked memorial cairn with a broken bell fragment, intact
+and dug; a relay locker closed and opened; a fallen relay pine intact/searched
+if not delivered in S3. Keep each state on identical ground footprint and pivot.
+No readable text, glowing objective arrows, portal or fake entrance."
+
+Outputs: individual transparent PNGs named `bell_damaged`, `bell_examined`,
+`bell_restored` (96x112 canvas, pivot 48,104), `cairn_intact`, `cairn_dug`
+(80x80, pivot40,72), `relay_locker_closed`, `relay_locker_open` (80x80, pivot40,72).
+Final bell width 76–96px, cairn 60–76px. State images require renderer mapping
+before integration: generating multiple states does not implement state visuals.
+Optional sealed-cleft image is P2 only: closed rock fissure, no cave mouth,
+no fake travel affordance; no existing content handler or placement is claimed.
+
+Prompt: "Six original 32x32 transparent pixel-art inventory icons, dark readable
+outlines: amber pine resin lump; tied bark ration bundle; aged bronze scrap;
+carrier's bronze relay clasp stamped with a bell silhouette; broken curved bronze
+bell shard; folded pale rime mantle with blue fur edge. Match S1 bronze/ivory/cyan,
+consistent upper-left lighting, no text or UI frame."
+
+Output `S5_items.png`: 3x2 32px cells (96x64), row-major order above. Exact IDs:
+`snow:resin`, `snow:bark_ration`, `snow:bronze_scrap`, `snow:relay_clasp`,
+`snow:bell_shard`, `snow:rime_mantle`. Existing water/wood/herb/coin icons can be
+reused. There are no native snow skill definitions requiring new skill icons;
+request these only after explicit future skill content approval. Do not use
+keyword or equipment-slot fallbacks as acceptance evidence for these six icons.
+
+## User/ChatGPT assistance and handoff
+
+Please supply S2 terrain/cliffs, S4 creatures and S5 bell/cairn/items first, then
+S3 variants/shelter/weather. Use S1 images as attached references when relaying
+prompts. Human assistance remains necessary for style approval, reviewing the
+ram-beast sentinel silhouette, final art acceptance and an actual playtest. Generation can
+also be run in a future agent art pass; this E1 pass has not invoked imagegen.
+Agent handles extraction, alpha/seam/frame validation, runtime mapping, screenshots
+and manifest evidence. No art approval or release readiness is implied by delivery.

@@ -2034,3 +2034,79 @@ or not started; no visual atlas view of lands yet (journal only); new-surface ar
 runtime recolour without transition overlays; new habitats borrow existing creatures
 and resources (no native snow/ash species yet); AI World Creator integration is a
 documented contract only; `-Export` and old-save exe checks not run on this branch.
+
+
+## Milestone 05 ? Snow Mountain Stage E1 (2026-11-02)
+
+Worktree `D:\Game\RPG-m05-snow`, branch `feature/m05-snow-mountain`, baseline
+`a0c99ff`. User authorized visual dependency completion/readiness audit only;
+no publication, merge, Windows export or personal-save access. Gameplay, atlas
+plans, saves, content definitions and generator versions are unchanged.
+
+Delivered full 28-blocker classification/prioritized closure checklist in
+`docs/lands/SNOW_MOUNTAIN_STAGE_E1.md`; corrected stale claims that no S1 art exists;
+replaced next S2?S5 prompts with exact dimensions, variants, directions/frame
+counts/pivots, IDs, provenance and acceptance requirements. Sentinel request
+matches the existing ram-beast description. No Snow-specific skill icons invented.
+Salvage and sealed cleft are optional design scope, but retained as unfinished;
+no blocker/dependency removed, no approval fabricated, no World binding added.
+Manifest remains valid, ready=false, exactly 28 blockers.
+
+Presentation repairs in `tools/art/build_snow_s1.py` (build revision 2): rolled
+cross-fade alone left opposite edges unequal (snow max RGB delta110, ice116,
+taiga129, cliff137). Three-pixel bands now converge, with identical edges across
+variants; face/timber joins remain horizontal only. Rebuilt `ground.png` feeds
+existing snow overlays. Pine's 61px crop could not fit above the intended ground
+anchor in an 80px cell and was clamped down 5px; 96px prop cells preserve the
+same source pixels/scale, correct ground anchor and a transparent tip gutter.
+Rebuilt `props.png` and index; all S1 source boards remain unchanged. No external
+image generator invoked and no new generated artwork claimed.
+
+Verification (isolated fixture DBs only):
+
+- `.venv/Scripts/python.exe tools/art/build_snow_s1.py`: success; repeated rebuild
+  SHA-256 comparison byte-identical for all 15 runtime files (14 PNGs + index).
+- `.venv/Scripts/python.exe tools/art/check_snow_s1.py`: 0 failures. Every ground
+  variant pair, tile opacity/alignment, prop gutters/alpha, object/place dimensions
+  and alpha, all referenced wolf frames nonempty/unclipped. This is extraction QA,
+  not final artistic acceptance or animation completeness.
+- Baseline `.\scripts\godot.ps1 --script res://tests/snow_mountain_gameplay_suite.gd`:
+  43 checks / 0 failures on native OpenGL; before captures in `.tools/e1-before/`.
+- `.\scripts\test.ps1 -Smoke -Only land-package,snow-mountain,snow-content,snow-gameplay,world,rendered-snow-gameplay -Render`:
+  import passed; data96/0, world49/0, integration41/0, land-package18/0,
+  snow-mountain65/0, snow-content47/0. Initial scene check caught 7 native texture
+  errors after prop dimensions changed during the run: imported texture cache was
+  stale. This invocation stopped at snow-gameplay; it is not recorded as all-pass.
+- Final `.\scripts\test.ps1 -Only land-package,snow-gameplay,rendered-snow-gameplay -Render`:
+  fresh import, land-package18/0, snow-gameplay28/0, isolated startup PASS,
+  rendered-snow-gameplay43/0, all requested checks passed, no native errors.
+  Final renderer worst chunk-border frame437.6ms vs M04 baseline338.7ms; known
+  streaming hitch persists and is not certified as acceptable for release.
+- `.\scripts\godot.ps1 --headless --script res://scripts/land_package_check.gd`:
+  valid=true, ready=false, errors=[], 28 blockers. Clean report
+  `.tools/e1-manifest-check.log`. An earlier concurrent CLI invocation shared the
+  wrapper's temporary stdout with the terrain suite; final report was rerun
+  sequentially to avoid mixed diagnostic output.
+- `git diff --check`: passed. Godot import-only line-ending churn restored.
+
+Native comparison screenshots (left a0c99ff, right final E1; independent disposable
+Runs, so clocks/UI/fog history differ): `.tools/e1-comparison/snow-trough.png`,
+`snow-escarpment.png`, `snow-lee-shelter.png`, `snow-relay-ledger.png`,
+`snow-scree-wolf.png`. After captures are `.tools/snow-*.png`; contact sheet
+`.tools/snow_s1_review.png`. Inspected shore, escarpment, pine anchors, shelter and
+wolf in engine plus source/asset sheets: no gross alpha/halo/clipped frame issue
+observed. Missing directional animation, cliff corners, frozen ground, landmark
+identity and weather/icons are not certified by these captures. Screenshots/logs
+stay ignored under `.tools/`, no caches/builds/saves committed.
+
+Remaining: S2 production frozen ground/cliff/boundary art; S4 native hare,
+ram-beast sentinel and complete wolf animations; S5 bell/cairn/locker states and
+six icons; S3 extra props/shelter/weather. Some legacy green resource/rock art is
+still visible on snow and needs mapping review. User/ChatGPT art assistance and
+human style/asset acceptance + actual playtest remain necessary. Existing shelter
+facade/footprint mismatch, repeated terrain detail, map legend overlap and streaming
+hitches are logged. No full `-Render -Service -Export` regression or old-save exe
+check: those belong to later release authorization. All unfinished manifest entries
+remain blocked/in_progress/pending; render_assets now records partial QA only.
+Next: review palette, deliver prioritized S2/S4/S5 then S3, integrate real assets,
+then human acceptance and later explicit binding/release review.

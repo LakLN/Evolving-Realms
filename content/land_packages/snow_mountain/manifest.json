@@ -17,7 +17,7 @@
       "source": "human-assisted-design-v1",
       "depends_on": [],
       "notes": "Batch S1 (assets/sources/EvolvingRealms_Batch_S1, presentation boards) built by tools/art/build_snow_s1.py into assets/game/snow/: snow x4, ice x3, taiga x3, trail x2, cliff x2, cliff face x2, shelter floor x2, timber wall; tiles made seamless in the script. Missing: frozen ground/scree (code placeholder), production S2 atlas with verified seams.",
-      "evidence": "2026-11-01 Stage D: rendered in .tools/snow-arrival.png, snow-scree-wolf.png, snow-escarpment.png; snow-gameplay checks S1 sources are active and only 'frozen' remains placeholder."
+      "evidence": "2026-11-01 Stage D: rendered in .tools/snow-arrival.png, snow-scree-wolf.png, snow-escarpment.png; snow-gameplay checks S1 sources are active and only 'frozen' remains placeholder. 2026-11-02 E1: S1 build revision 2 repairs unequal opposite edges; tools/art/check_snow_s1.py checks every variant pairing and opaque alignment. Frozen ground remains placeholder; no final asset acceptance."
     },
     {
       "id": "snow:art/transitions",
@@ -27,7 +27,7 @@
       "source": "human-assisted-design-v1",
       "depends_on": [],
       "notes": "Edge overlays are generated in code from the S1 snow base (snow onto ice/frozen/trail/taiga/floor); S1 has only two sample transition tiles. Cliff corners/orientations missing (S2).",
-      "evidence": "2026-11-01 Stage D: visible in .tools/snow-trough.png and snow-scree-wolf.png."
+      "evidence": "2026-11-01 Stage D: visible in .tools/snow-trough.png and snow-scree-wolf.png. 2026-11-02 E1: overlays consume seam-corrected S1 snow base; orientation/corner art and placeholder frozen upper texture remain unresolved."
     },
     {
       "id": "snow:art/props",
@@ -37,7 +37,7 @@
       "source": "human-assisted-design-v1",
       "depends_on": [],
       "notes": "Batch S1 (assets/sources/EvolvingRealms_Batch_S1, presentation boards) built by tools/art/build_snow_s1.py into assets/game/snow/: snowy pine (all pine tiles), windbreak rock (snow/taiga/frozen rocks), snow stump (resin seam), frozen shrub (ration shrub), barrel (water cache). Missing: 2 more pine/rock variants, fallen trunk intact/searched pair.",
-      "evidence": "2026-11-01 Stage D: rendered in .tools/snow-scree-wolf.png, snow-arrival.png."
+      "evidence": "2026-11-01 Stage D: rendered in .tools/snow-scree-wolf.png, snow-arrival.png. 2026-11-02 E1: S1 props use 96px cells to preserve transparent pine-tip gutter and intended ground anchor (80px cells shifted pine feet 5px). Extraction QA validates prop cells/alpha/gutters; missing variants remain blocked."
     },
     {
       "id": "snow:art/landmarks",
@@ -229,7 +229,7 @@
       "id": "snow:check/render_assets",
       "kind": "check",
       "version": 1,
-      "status": "planned",
+      "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [
         "snow:art/ground",
@@ -240,7 +240,8 @@
         "snow:art/icons",
         "snow:art/weather"
       ],
-      "notes": "Record exact command/report or human observations, date and limitations"
+      "notes": "Partial extraction QA and native rendered comparisons only; full production inventory, cliff directions, native species/animations, landmark identity, weather/icons and human acceptance still blocked. See docs/lands/SNOW_MOUNTAIN_STAGE_E1.md.",
+      "evidence": "2026-11-02 E1: tools/art/check_snow_s1.py checks ground variant joins, opaque tiles, object/place dimensions and alpha, and all indexed wolf frames for empty/clipped cells. This does not certify missing art or animation coverage. Final fresh-import snow-gameplay 28/0 and native OpenGL 43/0; five before/after pairs in .tools/e1-comparison/. No missing identity or final animation accepted."
     },
     {
       "id": "snow:check/human_playtest",
@@ -268,5 +269,5 @@
       "notes": "Bell salvage (valuable supplies guarded by a spawned sentinel) needs transactional encounter spawning from a place event; not shipped. Restoration ships alone, as the design bible allows."
     }
   ],
-  "notes": "Stage C geography + Stage D native content and both optional chains on feature/m05-snow-mountain; charted only in disposable test Worlds. Binding empty until a player World is chosen. Not published."
+  "notes": "Stage C geography + Stage D native content and both optional chains on feature/m05-snow-mountain; charted only in disposable test Worlds. Binding empty until a player World is chosen. Not published. Stage E1 2026-11-02: all 28 blockers audited in docs/lands/SNOW_MOUNTAIN_STAGE_E1.md; S2-S5 requests revised. No dependency closed, World binding or approval added."
 }

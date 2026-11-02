@@ -1,4 +1,5 @@
 {
+ "build_revision": 2,
  "version": 1,
  "batch": "EvolvingRealms_Batch_S1",
  "tile_px": 40,
@@ -120,7 +121,7 @@
  },
  "props": {
   "atlas": "snow/props.png",
-  "cell": 80,
+  "cell": 96,
   "pine": [
    [
     0,

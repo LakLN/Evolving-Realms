@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "assets/sources/EvolvingRealms_Batch_S1"
 OUT = ROOT / "assets/game/snow"
 TILE = 40
-PROP_CELL = 80
+PROP_CELL = 96 # Preserve pine tip gutter and ground anchor; 80 forced a 5px downward shift.
 SHEETS = {
     "terrain": SRC / "terrain/S1_terrain_sheet.png",
     "props": SRC / "props/S1_props_sheet.png",
@@ -51,7 +51,7 @@ GROUND = {
     "floor": [((602, 645, 718, 765), "", 5), ((602, 645, 718, 765), "h", 2)],
     "timber": [((900, 772, 990, 862), "x", 5)],
 }
-# Props (80 px cells like build_assets.py): name -> (sheet, box, target width, kind, weight).
+# Props (96 px cells with pine-tip gutters): name -> (sheet, box, target width, kind, weight).
 PROPS = {
     "snow_pine": ("props", (176, 105, 546, 445), 56, "pine", 5),
     "windbreak_rock": ("props", (266, 525, 525, 923), 44, "rock_snow", 3),
@@ -128,7 +128,17 @@ def seamless(img: np.ndarray, x_only: bool = False) -> np.ndarray:
     wx = _cross(TILE, 0.3)[None, :]
     wy = np.ones((TILE, 1)) if x_only else _cross(TILE, 0.3)[:, None]
     w = (wx * wy)[..., None]
-    return img * w + rolled * (1 - w)
+    result = img * w + rolled * (1 - w)
+    # A rolled cross-fade alone does not make opposite edge pixels agree.
+    # Blend three pixel bands toward a common boundary; preserve the interior.
+    for axis in ([1] if x_only else [1, 0]):
+        line = (np.take(result, 0, axis=axis) + np.take(result, -1, axis=axis)) * 0.5
+        for offset, strength in enumerate((1.0, 0.5, 0.2)):
+            for at in (offset, TILE - 1 - offset):
+                sl = [slice(None)] * 3
+                sl[axis] = at
+                result[tuple(sl)] = result[tuple(sl)] * (1 - strength) + line * strength
+    return result
 
 
 def ground_tile(key: str, box, mode: str) -> np.ndarray:
@@ -293,7 +303,7 @@ def main() -> None:
             save(spr, f"snow/{group}/{name}.png")
             table[name] = {"texture": f"snow/{group}/{name}.png", "size": [spr.width, spr.height]}
     index = {
-        "version": 1, "batch": "EvolvingRealms_Batch_S1", "tile_px": TILE,
+        "build_revision": 2, "version": 1, "batch": "EvolvingRealms_Batch_S1", "tile_px": TILE,
         "ground": {"atlas": "snow/ground.png", "kinds": ground},
         "props": props, "objects": objects, "places": places, "characters": {"snow_wolf": wolf},
         "mapping": {
