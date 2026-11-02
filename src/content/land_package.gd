@@ -12,6 +12,7 @@ static func read_manifest(path: String) -> Dictionary:
 static func inspect(manifest: Dictionary, atlas: RefCounted = null) -> Dictionary:
 	var errors: Array = []
 	var blockers: Array = []
+	var deferred: Array = []
 	if not Data.valid(manifest) or manifest.get("schema_version") != 1 or manifest.get("workflow_version") != 1:
 		return {"valid": false, "ready": false, "errors": ["Unsupported manifest schema/workflow"], "blockers": []}
 	if not Data.identifier(manifest.get("package_id")) or not Data.integer(manifest.get("version")) or manifest.get("version", 0) < 1:
@@ -30,10 +31,17 @@ static func inspect(manifest: Dictionary, atlas: RefCounted = null) -> Dictionar
 		if indexed.has(entry.id): errors.append("Duplicate entry " + entry.id)
 		indexed[entry.id] = entry
 		if entry.get("kind") not in ["asset", "content", "mechanic", "check"]: errors.append("Unknown entry kind " + entry.id)
-		if entry.get("status") not in ["planned", "in_progress", "blocked", "complete", "pending_capability"]: errors.append("Unknown entry status " + entry.id)
+		if entry.get("status") not in ["planned", "in_progress", "blocked", "complete", "pending_capability", "deferred"]: errors.append("Unknown entry status " + entry.id)
 		if not Data.integer(entry.get("version")) or entry.get("version", 0) < 1: errors.append("Entry version required " + entry.id)
 		if not entry.get("source") is String or str(entry.get("source", "")).is_empty(): errors.append("Entry source required " + entry.id)
 		if not entry.get("depends_on") is Array: errors.append("Dependencies required " + entry.id)
+		if entry.get("status") == "deferred":
+			# Out of this release by a recorded scope decision: kept, listed, never counted as done.
+			var decision: Variant = entry.get("deferred")
+			if not decision is Dictionary or str(decision.get("by", "")).strip_edges().is_empty() or str(decision.get("reason", "")).strip_edges().is_empty():
+				errors.append("Deferred entry needs {by, reason} " + entry.id)
+			deferred.append(entry.id)
+			continue
 		if entry.get("status") != "complete": blockers.append("Incomplete " + entry.id)
 		if entry.get("status") == "complete":
 			var evidence: Variant = entry.get("evidence")
@@ -55,6 +63,8 @@ static func inspect(manifest: Dictionary, atlas: RefCounted = null) -> Dictionar
 				errors.append("Unknown dependency for " + id)
 			elif _reaches(indexed, dependency, id, {}):
 				errors.append("Dependency cycle for " + id)
+			elif indexed[dependency].get("status") == "deferred" and entry.get("status") != "deferred":
+				errors.append("Release entry %s depends on deferred %s" % [id, dependency])
 			elif entry.get("status") == "complete" and indexed[dependency].get("status") != "complete":
 				blockers.append("Unfinished dependency for " + id)
 	var binding: Variant = manifest.get("binding", {})
@@ -72,7 +82,7 @@ static func inspect(manifest: Dictionary, atlas: RefCounted = null) -> Dictionar
 		if not approvals is Dictionary or not approvals.get(gate) is Dictionary or str(approvals[gate].get("by", "")).strip_edges().is_empty() or str(approvals[gate].get("evidence", "")).strip_edges().is_empty():
 			blockers.append("Review required: " + gate)
 	if manifest.get("stage") == "published" and (not errors.is_empty() or not blockers.is_empty()): errors.append("Unfinished package cannot be published")
-	return {"valid": errors.is_empty(), "ready": errors.is_empty() and blockers.is_empty(), "errors": errors, "blockers": blockers}
+	return {"valid": errors.is_empty(), "ready": errors.is_empty() and blockers.is_empty(), "errors": errors, "blockers": blockers, "deferred": deferred}
 
 static func _reaches(entries: Dictionary, current: String, target: String, visited: Dictionary) -> bool:
 	if current == target: return true

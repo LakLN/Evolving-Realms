@@ -2126,3 +2126,49 @@ manifest). Findings recorded there:
 
 Tests: none run (docs only). Next: T1 journal notes from resolved place records;
 T2 content v2 after director decisions D1/D2.
+
+## Snow Mountain V1 package — T1 journal notes, T2 content fixes (2026-11-02)
+
+Director decisions D1 (shard reliably obtainable, guardian kept as optional
+route), D2 (restoration only; salvage and cleft deferred) and D3 (ChatGPT supplies
+Tier A art) applied.
+- **T1 (`f310151`).** `LocationRuntime.notes` replays each resolved place
+  interaction's message from the saved record, using the same Run-keyed roll
+  through a shared key helper. The World Map journal shows the notes newest
+  first with full wrapping; when the list overflows, it shows "+N more". No new
+  save data or markers.
+- **T2.**
+  - Added `snow:event/cairn_dig` v2 and `snow:place/bell_cairn` v2, with a
+    guaranteed shard. v1 is unchanged.
+  - Layout v3 pins them for new plans; the layout designer now honours a site's
+    `version` (default 1).
+  - Manifest: added a `deferred` status (`{by, reason}`, listed separately, no
+    release entry may depend on it). Salvage is deferred; 27 blockers remain.
+
+Verification:
+- `.\scripts\test.ps1 -Only snow-content,snow-gameplay,rendered-snow-gameplay -Render`
+  (T1): all checks passed (rendered gameplay 46/0), but Godot crashed with an
+  access violation at exit (-1073741819, native errors 0). The two reruns of
+  rendered-snow-gameplay alone exited 0. This is logged as an intermittent
+  teardown crash, 1 of 3 runs; it is not explained.
+- `.\scripts\test.ps1 -Only land-package,snow-mountain,snow-content,snow-gameplay,rendered-snow-gameplay -Render`:
+  import, land-package 22/0, snow-mountain 65/0, snow-content 56/0,
+  snow-gameplay 30/0, startup, and rendered-snow-gameplay 46/0, all passed.
+  Chunk-border worst frame was 317.1 ms (T1 run) against an M04 baseline of
+  345.3 ms.
+- `.\scripts\test.ps1 -Smoke -Only world,m04-world,land-package`: data 96/0,
+  world 49/0, integration 41/0, land-package 22/0, m04-world 86/0, startup,
+  all passed.
+- `land_package_check.gd`: valid=true, ready=false, deferred=[encounter_salvage],
+  27 blockers.
+
+Not run: full regression, `-Service`, `-Export`, old-save exe checks.
+Captures: `.tools/snow-map-landmarks.png`, `.tools/snow-journal-resumed.png`.
+
+Gaps:
+- The journal hides older entries behind "+N more" and has no scrolling.
+- The guardian's shard can duplicate the cairn's shard.
+- `snow:bronze_scrap` still has no sink.
+
+Next: T3, measure the chunk hitch across repeated Snow traversals, then the
+Tier A art handoff.

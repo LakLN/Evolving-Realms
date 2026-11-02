@@ -55,7 +55,7 @@ func _finish() -> void:
 func _isolation(world: Dictionary, other: Dictionary, atlas: RefCounted, plan: Dictionary) -> void:
 	check(not store.content.load_definition(world.world_id, "snow:scree_wolf", 1).is_empty(), "The land's content pack is active in the charted World")
 	check(store.content.load_definition(other.world_id, "snow:scree_wolf", 1).is_empty(), "Another World never receives Snow Mountain content")
-	check(plan.content_packs == ["res://content/land_packages/snow_mountain/content_pack.json"] and int(plan.layout.version) == 2, "The stored plan pins layout v2 and its pack")
+	check(plan.content_packs == ["res://content/land_packages/snow_mountain/content_pack.json"] and int(plan.layout.version) == 3, "The stored plan pins layout v3 and its pack")
 	var terrain: RefCounted = atlas.terrain()
 	var objects := Objects.new()
 	var creatures := Creatures.new()
@@ -229,25 +229,30 @@ func _force_branch(world: Dictionary, plan: Dictionary) -> void:
 func _bell(world: Dictionary, plan: Dictionary) -> void:
 	var cairn := _site(plan, "bell_cairn")
 	var bell := _site(plan, "summit_bell")
+	check(cairn.content_id == "snow:place/bell_cairn" and int(cairn.version) == 2, "New plans pin the v2 bell cairn")
+	# V1 package (decision D1): the shard is always under the cairn, but only for whoever digs there.
 	var lucky: RefCounted = null
-	var unlucky: RefCounted = null
-	for run_seed in range(600, 640):
+	var tried := 0
+	var found := 0
+	for run_seed in range(600, 606):
 		var session := _session(world, plan, run_seed)
 		if session == null: continue
+		tried += 1
 		_go(session, cairn)
-		if not _act(session, cairn, "dig"): continue
-		if _count(session, "snow:bell_shard") == 1:
-			if lucky == null: lucky = session
-		elif unlucky == null:
-			unlucky = session
-		if lucky != null and unlucky != null: break
-	check(lucky != null and unlucky != null, "The cairn shard is a Run-keyed chance: some Runs find it, others do not")
-	if lucky == null or unlucky == null: return
-	# The journal replays this Run's own roll: the found/not-found line matches the inventory.
+		if _count(session, "snow:bell_shard") == 0 and _act(session, cairn, "dig") and _count(session, "snow:bell_shard") == 1: found += 1
+		if lucky == null: lucky = session
+	check(tried > 0 and found == tried, "Every Run that reaches and digs the cairn finds the shard (%d/%d)" % [found, tried])
+	if lucky == null: return
 	var found_note: Array = _notes(lucky, [cairn])
-	var empty_note: Array = _notes(unlucky, [cairn])
-	check(found_note.size() == 1 and found_note[0].message.contains("Her voice sleeps") and found_note[0].message.contains("curved shard") and not found_note[0].message.contains("Only frozen stones"), "Journal: the lucky dig's note names the shard it found")
-	check(empty_note.size() == 1 and empty_note[0].message.contains("Only frozen stones") and not empty_note[0].message.contains("curved shard"), "Journal: the empty dig's note never mentions a shard")
+	check(found_note.size() == 1 and found_note[0].message.contains("Her voice sleeps") and found_note[0].message.contains("curved shard"), "Journal: the dig's note keeps the inscription and names the shard")
+	# Plans that pin v1 keep the chance dig unchanged, and its saved records still replay.
+	var v1: Dictionary = store.content.load_definition(world.world_id, "snow:event/cairn_dig", 1)
+	check(v1.get("status") == "active" and v1.payload.outcomes.any(func(o: Dictionary) -> bool: return o.type == "chance"), "The v1 chance dig stays installed for plans that pin it")
+	var old := _session(world, plan, 650)
+	if old != null:
+		old.run.state.entity_mutations[cairn.instance_id] = {"location": 1, "discovered": true, "discovered_turn": 1, "resolved": {"dig": {"turn": 2, "event": {"content_id": "snow:event/cairn_dig", "version": 1}, "received": []}}}
+		var replay: Array = _notes(old, [cairn])
+		check(replay.size() == 1 and replay[0].message.begins_with(v1.payload.message) and replay[0].message.contains("curved shard") != replay[0].message.contains("Only frozen stones"), "A v1 dig record still replays its own words and exactly one branch")
 	_go(lucky, cairn)
 	check(not _act(lucky, cairn, "dig") and _count(lucky, "snow:bell_shard") == 1, "Digging again never rerolls")
 	_go(lucky, bell)

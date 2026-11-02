@@ -1,7 +1,6 @@
 # Content Package: Snow Mountain V1 — "The Carriers' Relay" (spoilers)
 
-Package plan under [AI_STUDIO.md](../AI_STUDIO.md). Status: **design proposed,
-awaiting director approval.** It consolidates Stage C–E1. It adds no new mechanic
+Package plan under [AI_STUDIO.md](../AI_STUDIO.md). Status: **design approved 2026-11-02 (D1–D3); T1 and T2 done, T3 next.** It consolidates Stage C–E1. It adds no new mechanic
 and does not replace the land manifest; the manifest remains the blocker
 ledger. Evidence: [STUDIO_AUDIT_2026-11-02.md](../STUDIO_AUDIT_2026-11-02.md).
 
@@ -25,7 +24,7 @@ Two stories, one arc:
 | Ledger: names pine and cairn | Broken Relay | Discovery | location + event |
 | Search pine → clasp | Pitchpine Reach (wolves) | Earned reward | event grant_items, once per Run |
 | Return / force | Broken Relay | Run remembers | exclusive interactions, atomic item cost |
-| Dig cairn → shard | White Choir (blizzard) | Read, prepare, venture | event, Run-keyed chance |
+| Dig cairn → shard | White Choir (blizzard) | Read, prepare, venture | event v2, shard always there |
 | Examine → ring bell | Crown Shelf (sentinel) | Earned, durable | `after` ordering, cost, status, xp |
 
 ## Revisions proposed (record of meaningful change)
@@ -56,6 +55,20 @@ The AI proposes these. Items R1 and R2 need director approval; see Decisions.
   - No new save data and no map markers. The pillar is "clues, not waypoints",
     and lead markers would reveal positions.
   - This is generic for all places and needs no Snow-specific code.
+
+## Decisions applied (2026-11-02)
+
+- **D1 → R1 as built.** `cairn_dig` v2 / `bell_cairn` v2 always yield the shard to
+  whoever reaches and digs the cairn. Layout v3 pins them for new plans; v1 stays
+  installed for plans that pin it. The director kept the guardian as an optional
+  dangerous alternative, so `snow:bellback_sentinel` v1 (and its shard drop) is
+  **unchanged**: the sentinel part of R1 and all of R3 were not applied. A second
+  shard from the guardian has no use, which is accepted for V1.
+- **D2 → R2 as built.** `snow:mechanic/encounter_salvage` is manifest status
+  `deferred` with the decision recorded; `snow:content/bell` no longer depends on
+  it. The sealed cleft is deferred with it. Designs are kept.
+- **D3.** ChatGPT supplies Tier A art; the AI prepares one handoff when needed.
+- **T1 done.** Journal notes, commit `f310151`.
 
 ## Work list (in order)
 

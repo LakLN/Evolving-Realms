@@ -72,7 +72,7 @@ func _activation(world: Dictionary, atlas: RefCounted) -> Dictionary:
 	if not check(not proposal.is_empty(), "Propose Snow Mountain beyond one walkable frontier gate: " + atlas.last_error):
 		return {}
 	var plan: Dictionary = proposal.land
-	check(int(plan.terrain_version) == 2 and plan.layout.id == LAYOUT and int(plan.layout.version) == 2 and plan.archetype == "frost_highlands", "The plan pins terrain v2, layout v2 and the frost archetype")
+	check(int(plan.terrain_version) == 2 and plan.layout.id == LAYOUT and int(plan.layout.version) == 3 and plan.archetype == "frost_highlands", "The plan pins terrain v2, layout v3 and the frost archetype")
 	check(plan.regions.map(func(r: Dictionary) -> String: return r.name) == AREAS, "Seven designed areas in layout order: %s" % str(plan.regions.map(func(r: Dictionary) -> String: return r.name)))
 	check(plan.gates.size() == 1 and plan.gates[0].kind == "pass" and not str(plan.gates[0].mirrors).is_empty() and proposal.routes.size() == 1 and proposal.routes[0].traversable, "Exactly one walkable mountain pass, mirrored on an existing gate (no fake travel)")
 	check(Data.valid(plan) and _canon(JSON.parse_string(_canon(plan))) == _canon(plan), "Plan is self-contained JSON data (stable through a storage round trip)")

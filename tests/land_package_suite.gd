@@ -16,6 +16,7 @@ func _initialize() -> void:
 	var manifest := Package.read_manifest("res://content/land_packages/snow_mountain/manifest.json")
 	var result := Package.inspect(manifest)
 	check(result.valid and not result.ready and result.blockers.size() > 15, "Real draft resumes with explicit unfinished work")
+	check(result.deferred == ["snow:mechanic/encounter_salvage"] and not result.blockers.has("Incomplete snow:mechanic/encounter_salvage"), "V1 scope: bell salvage is deferred by decision, listed, not a release blocker")
 	var bad := manifest.duplicate(true)
 	bad.schema_version = 9
 	check(not Package.inspect(bad).valid, "Unknown schema refused")
@@ -61,6 +62,17 @@ func _initialize() -> void:
 	check(not Package.inspect(complete, atlas).ready, "Nonexistent registry definition blocks")
 	complete.entries[0].content_id = "core:atlas/land"
 	check(Package.inspect(complete, atlas).ready, "Active pinned registry definition checked")
+	var later := {"id": "snow:fixture_later", "version": 1, "kind": "mechanic", "source": "test", "status": "deferred", "depends_on": [], "deferred": {"by": "synthetic", "reason": "future expansion"}}
+	complete.entries.append(later)
+	var scoped := Package.inspect(complete, atlas)
+	check(scoped.ready and scoped.deferred == ["snow:fixture_later"], "A recorded deferral keeps the release ready and stays listed")
+	later.deferred = {"by": "", "reason": "future expansion"}
+	check(not Package.inspect(complete, atlas).valid, "A deferral without who decided it is refused")
+	later.deferred = {"by": "synthetic", "reason": "future expansion"}
+	complete.entries[0].depends_on = ["snow:fixture_later"]
+	check(not Package.inspect(complete, atlas).valid, "A release entry cannot depend on deferred work")
+	complete.entries[0].depends_on = []
+	complete.entries.pop_back()
 	complete.entries[0].status = "pending_capability"
 	check(not Package.inspect(complete, atlas).ready, "Unsupported mechanics remain incomplete")
 	complete.entries[0].status = "complete"

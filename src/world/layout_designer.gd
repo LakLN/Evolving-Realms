@@ -178,7 +178,7 @@ func _place_sites(designer: RefCounted, plan: Dictionary, layout: Dictionary, to
 		for candidate in plan.regions:
 			if candidate.kind == site.area: region = candidate
 		var title: String = str(site.content_id).get_slice("/", 1).replace("_", " ").capitalize()
-		plan.sites.append({"instance_id": "loc:atlas/%d_%d/site/%s" % [slot.x, slot.y, site.id], "content_id": site.content_id, "version": 1,
+		plan.sites.append({"instance_id": "loc:atlas/%d_%d/site/%s" % [slot.x, slot.y, site.id], "content_id": site.content_id, "version": int(site.get("version", 1)),
 			"position": _xy(tile), "origin": "procedural",
 			"metadata": {"atlas_version": 1, "land_id": plan.land_id, "region_id": region.region_id, "region_name": region.name, "role": "landmark",
 				"site_name": title, "title": "%s (%s)" % [title, region.name], "reason": site.reason}})

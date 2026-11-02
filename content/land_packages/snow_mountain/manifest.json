@@ -46,7 +46,7 @@
       "status": "in_progress",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Batch S1 (assets/sources/EvolvingRealms_Batch_S1, presentation boards) built by tools/art/build_snow_s1.py into assets/game/snow/: lean-to (lee shelter), crate & barrel (carriers' locker), firewood stack (fallen relay pine), snow hut (stand-in for the silent bell house). Missing: bell, bell cairn (uses the windbreak rock), sealed cleft.",
+      "notes": "Batch S1 (assets/sources/EvolvingRealms_Batch_S1, presentation boards) built by tools/art/build_snow_s1.py into assets/game/snow/: lean-to (lee shelter), crate & barrel (carriers' locker), firewood stack (fallen relay pine), snow hut (stand-in for the silent bell house). Missing: bell, bell cairn (uses the windbreak rock), sealed cleft. V1 package: sealed cleft deferred with salvage (decision D2); Tier A needs bell and cairn single-state images (docs/lands/SNOW_MOUNTAIN_V1_PACKAGE.md).",
       "evidence": "2026-11-01 Stage D: .tools/snow-lee-shelter.png, snow-relay-ledger.png, snow-fallen-pine.png, snow-silent-bell.png."
     },
     {
@@ -130,7 +130,7 @@
       "depends_on": [
         "snow:mechanic/relay_exchange"
       ],
-      "notes": "Implemented as two stages: Run-keyed 40% shard at the bell cairn (fixed per Run, never rerolled) or from the bellback sentinel's loot, then the silent bell (examine -> restore, shard cost -> rime mantle). Restoration is terminal. Salvage branch not shipped: see snow:mechanic/encounter_salvage.",
+      "notes": "Two stages: the bell cairn dig (v2, decision D1 2026-11-02: the shard is always under the cairn; v1's Run-keyed 40% stays for plans that pin it) or, optionally, the bellback sentinel's loot; then the silent bell (examine -> restore, shard cost -> rime mantle). Restoration is terminal. Salvage deferred (snow:mechanic/encounter_salvage).",
       "evidence": "2026-11-01 Stage D: snow-content suite: some Runs find the shard and others do not, no reroll, ordering, terminal state, reload."
     },
     {
@@ -169,10 +169,9 @@
       "depends_on": [
         "snow:mechanic/bell_sequence",
         "snow:art/landmarks",
-        "snow:art/wildlife",
-        "snow:mechanic/encounter_salvage"
+        "snow:art/wildlife"
       ],
-      "notes": "The Bell That Remembers, restoration branch: bell cairn -> silent bell -> rime mantle. Salvage pending.",
+      "notes": "The Bell That Remembers, restoration ending only (V1, decision D2): bell cairn v2 (shard always there for whoever digs) -> silent bell -> rime mantle. The sentinel's shard drop remains an optional dangerous route. Salvage deferred.",
       "evidence": "2026-11-01 Stage D: snow-content suite and snow-silent-bell.png."
     },
     {
@@ -263,11 +262,15 @@
       "id": "snow:mechanic/encounter_salvage",
       "kind": "mechanic",
       "version": 1,
-      "status": "pending_capability",
+      "status": "deferred",
       "source": "human-assisted-design-v1",
       "depends_on": [],
-      "notes": "Bell salvage (valuable supplies guarded by a spawned sentinel) needs transactional encounter spawning from a place event; not shipped. Restoration ships alone, as the design bible allows."
+      "notes": "Bell salvage (valuable supplies guarded by a spawned sentinel) needs transactional encounter spawning from a place event; not shipped. Restoration ships alone, as the design bible allows.",
+      "deferred": {
+        "by": "director (user), decision D2, 2026-11-02",
+        "reason": "V1 ships the restoration ending only. Salvage returns as a future expansion once transactional event encounter spawning is approved and tested; design kept in docs/lands/SNOW_MOUNTAIN_DESIGN.md."
+      }
     }
   ],
-  "notes": "Stage C geography + Stage D native content and both optional chains on feature/m05-snow-mountain; charted only in disposable test Worlds. Binding empty until a player World is chosen. Not published. Stage E1 2026-11-02: all 28 blockers audited in docs/lands/SNOW_MOUNTAIN_STAGE_E1.md; S2-S5 requests revised. No dependency closed, World binding or approval added."
+  "notes": "Stage C geography + Stage D native content and both optional chains on feature/m05-snow-mountain; charted only in disposable test Worlds. Binding empty until a player World is chosen. Not published. Stage E1 2026-11-02: all 28 blockers audited in docs/lands/SNOW_MOUNTAIN_STAGE_E1.md; S2-S5 requests revised. No dependency closed, World binding or approval added. V1 package 2026-11-02: salvage deferred (D2), cairn shard guaranteed via layout v3 / bell_cairn v2 (D1), journal notes from resolved places. No approval, binding or completion added."
 }

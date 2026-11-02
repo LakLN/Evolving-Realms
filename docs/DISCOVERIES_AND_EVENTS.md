@@ -100,6 +100,9 @@ choice).
   reason; no turn, no item, no state changes. Otherwise cost, awards (planned on a copy),
   vitals, the resolution record and status/XP/resource handlers commit together.
 - `X` search is a declared action: it always spends one turn.
+- Journal notes (2026-11-02): `LocationRuntime.notes` replays each resolved interaction's
+  message from its record (pinned event + the same Run-keyed `chance` roll), newest first,
+  on the World Map journal. No stored text, no positions, no marker; other Runs see none.
 - A resolved interaction never pays again: the record is saved with the Run; reload,
   unloading the chunk or returning cannot re-trigger it. `enter` events fire once.
 

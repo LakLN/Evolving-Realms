@@ -1,6 +1,6 @@
 {
  "pack_version": 1,
- "notes": "Snow Mountain native content (M05 Stage D). Installed only into the one World where the layout land is charted. Creatures and resources use spawn.ecology_only: they appear only where a Snow Mountain area's ecology lists them, never natively in other lands of that World.",
+ "notes": "Snow Mountain native content (M05 Stage D). Installed only into the one World where the layout land is charted. Creatures and resources use spawn.ecology_only: they appear only where a Snow Mountain area's ecology lists them, never natively in other lands of that World. Version 2 of the cairn dig and bell cairn (V1 package, director decision D1, 2026-11-02): the shard is always under the cairn; version 1 definitions stay for plans that pin them.",
  "definitions": [
   {
    "content_id": "snow:resin",
@@ -785,6 +785,43 @@
    }
   },
   {
+   "content_id": "snow:event/cairn_dig",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Under the cairn",
+   "description": "Stones stacked by the bell carriers.",
+   "metadata": {
+    "category": "discovery"
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:bell_shard",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "tone": "boon",
+    "message": "Wind-worn letters on the base stone: 'Her voice sleeps on the crown. Bring back what was broken.' Beneath the lowest stone, wrapped in rotten oilcloth: a curved shard of bronze bell.",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 6
+     },
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:bell_shard",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
    "content_id": "snow:event/bell_inspect",
    "version": 1,
    "schema_version": 1,
@@ -1059,6 +1096,50 @@
       "event": {
        "content_id": "snow:event/cairn_dig",
        "version": 1
+      }
+     }
+    ],
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1,
+     "priority": 90,
+     "conditions": []
+    }
+   }
+  },
+  {
+   "content_id": "snow:place/bell_cairn",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Bell cairn",
+   "description": "A carriers' cairn in the bowl of the White Choir, half buried by drifts.",
+   "metadata": {
+    "category": "shrine",
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/cairn_dig",
+     "version": 2
+    }
+   ],
+   "payload": {
+    "category": "shrine",
+    "visual": "cairn",
+    "discovery": {
+     "mode": "visible"
+    },
+    "interactions": [
+     {
+      "id": "dig",
+      "verb": "Dig among the cairn stones",
+      "trigger": "interact",
+      "event": {
+       "content_id": "snow:event/cairn_dig",
+       "version": 2
       }
      }
     ],

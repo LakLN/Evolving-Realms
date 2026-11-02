@@ -14,7 +14,10 @@ snapshot: increment package version, retain the earlier committed artifact.
 Every entry has a stable namespaced ID, positive version, source, kind
 (asset/content/mechanic/check), status and depends_on list. Pending capabilities
 remain listed and block completion. Unknown references, cycles, versions, kinds and
-statuses are rejected. Complete entries require evidence; complete assets need an
+statuses are rejected.
+`deferred` (2026-11-02) takes an entry out of this release by a recorded scope
+decision `{by, reason}`: it stays listed in the report's `deferred`, is never complete,
+and no release entry may depend on it. It is not a way to hide unfinished work. Complete entries require evidence; complete assets need an
 existing res://assets/game path. Complete content needs active pinned ID/version
 in the bound World's registry. Engine handlers remain trusted code, never data.
 
