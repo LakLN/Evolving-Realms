@@ -1,0 +1,23 @@
+{
+ "schema": "er-asset-batch",
+ "version": 1,
+ "batch": "negative_example_concept_board_as_sheet",
+ "package": "snow_mountain_v1",
+ "status": "candidate",
+ "provenance": {"source": "Tier A reference intake (reference only)", "date": "2026-11-03"},
+ "assets": [
+  {
+   "id": "C01",
+   "name": "rime_hare",
+   "kind": "sheet",
+   "file": "res://assets/sources/EvolvingRealms_SnowMountain_TierA/references/S4_rime_hare_reference.png",
+   "size": [672, 304],
+   "cell": [84, 76],
+   "pivot": [42, 69],
+   "body_h": [28, 36],
+   "rows": ["down", "left", "right", "up"],
+   "columns": ["idle", "walk1", "walk2", "walk3", "walk4", "hit", "death1", "death2"],
+   "aliases": {"attack_down": "idle_down", "attack_left": "idle_left", "attack_right": "idle_right", "attack_up": "idle_up"}
+  }
+ ]
+}

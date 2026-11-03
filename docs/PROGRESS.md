@@ -2395,3 +2395,26 @@ Snow Mountain V1 is not declared publication-ready; no readiness gates were waiv
 Best next action: fresh disposable preview playtest of discovery, method costs,
 Knowledge usefulness and controls; triage observed design/balance/bug issues before
 expanding mechanics or producing additional art.
+
+## Art studio foundation (2026-11-03, feature/art-studio-foundation)
+
+Parallel art-pipeline task from baseline 9346f10; no gameplay, save, content or
+runtime asset change. Added docs/ART_BIBLE.md, docs/ART_PIPELINE.md,
+docs/ART_AUDIT_2026-11-03.md, docs/lands/SNOW_MOUNTAIN_V1_ART_DELTA.md (proposed
+delta; the master manifest is untouched), tools/art/asset_check.py (batch/index/
+scan/contact), tools/art/import_check.gd and the `art-import` check in test.ps1,
+plus docs/examples/art_batch/ (reference and negative manifests).
+
+Commands and results: `asset_check.py index` 0 failures, 1 known defect (crab
+frame 7 clipped), 52 warnings; `batch reference_batch.json --emit` 0 failures, the
+emitted wolf entry equals art_index.json; `batch negative_tier_a_hare.json` 3
+failures as intended; `scan` flags all 17 source boards; `import_check.gd` 430
+checks 0 failures (431 with the reference fragment; a broken fragment fails 2);
+`test.ps1 -Only art-import,snow-content` PASS; `check_snow_s1.py` 0 failures.
+`test.ps1 -Render -Only rendered-snow-gameplay` on the untouched baseline: 50
+checks, 7 failures (gameplay timing/journal, pre-existing), captures used for review.
+
+Gaps: automated checks do not judge style, seams or motion; scree, three landmarks,
+three creature sheets and six icons remain P0 art; renderer pivot, content-ID creature
+and icon lookups are proposed, not implemented. Next: Snow P0 batch 1 plus the creature
+method proof (ART_PIPELINE). Not merged.
