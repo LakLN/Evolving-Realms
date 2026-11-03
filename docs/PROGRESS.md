@@ -2451,3 +2451,19 @@ Gaps: automated checks do not judge style, seams or motion; scree, three landmar
 three creature sheets and six icons remain P0 art; renderer pivot, content-ID creature
 and icon lookups are proposed, not implemented. Next: Snow P0 batch 1 plus the creature
 method proof (ART_PIPELINE). Not merged.
+
+## Primary-project consolidation (2026-11-03)
+
+Branch `integration/primary-consolidation` from master `9a28f64`, merged with `--no-ff`:
+`feature/m05-snow-mountain` (fe9e24c; contains 8bba788, 225f19b, 9346f10 and the M03/M04
+integration history), `feature/art-studio-foundation` (87492c6) and the docs-only
+`analysis/run01-retrospective` (6f4a984, cited by Snow design docs). Only conflicts:
+appended PROGRESS sections, all kept. Other side branches were already integrated in
+evolved form (verified file by file). Gameplay code equals fe9e24c.
+Checks on the integrated tree: `scripts/test.ps1 -Render -Smoke -Only art-import,
+snow-content,snow-mountain,snow-gameplay,land-package,telemetry,rendered-snow-gameplay`:
+import, startup, data 96, integration 41, telemetry 32, land-package 22, snow-mountain 66,
+snow-content 75, snow-gameplay 44, art-import 430, all 0 failures; rendered-snow-gameplay
+first failed 15/63 while a Python art check ran concurrently (hero never moved), then
+passed 63/0 alone. `asset_check.py index` 0 failures; reference batch passes; negative
+example rejected as designed. Full regression for fe9e24c is recorded above.
