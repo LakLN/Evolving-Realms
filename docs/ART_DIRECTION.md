@@ -1,5 +1,8 @@
 # Art direction and asset pipeline (Visual Prototype)
 
+Current standard and process: [ART_BIBLE.md](ART_BIBLE.md) and
+[ART_PIPELINE.md](ART_PIPELINE.md). This file records the Batch01/02 build history.
+
 ## Style
 
 - Colourful, slightly mystical fantasy pixel art; top-down / three-quarter top-down.
