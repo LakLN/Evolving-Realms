@@ -2172,3 +2172,63 @@ Gaps:
 
 Next: T3, measure the chunk hitch across repeated Snow traversals, then the
 Tier A art handoff.
+
+
+## Snow Mountain V1 - T3 investigation and Tier A handoff (2026-11-03)
+
+Worktree D:/Game/RPG-m05-snow, feature/m05-snow-mountain, base e64530b. User-authorized
+T3 only: repeat border measurements/profile, exit-crash investigation, readable
+journal and one Tier A request. Report: docs/lands/SNOW_MOUNTAIN_T3_REPORT.md.
+
+- Journal uses one scrollable RichTextLabel with full literal wrapped clue text;
+  oldest notes remain accessible after reload, fresh Runs have no resolved notes,
+  repeated refresh adds none. No save schema, marker, content or generator changes.
+- Matched native diagnostic: three 24-step walks per terrain, before/after object
+  predicate optimization. Snow median/p95/worst 33.31/33.56/460.43 ->
+  33.31/33.52/315.88 ms; M04 33.30/33.54/403.60 -> 33.30/33.52/335.28 ms.
+  Profile identifies object placement as the largest CPU component; test the same
+  deterministic roll before expensive ecology lookup. Object times Snow
+  161.8-216.1 -> 85.8-100.1 ms; M04 142.9-196.9 -> 90.9-92.0 ms. Baseline comparison
+  matches full placements in nine chunks per terrain; no algorithm/version change.
+- Final unprofiled native: Snow 33.30/33.56/243.18 ms; M04 33.30/33.54/285.77 ms.
+  Border-only (3 samples each) median/p95/worst Snow 230.94/243.18/243.18,
+  M04 271.63/285.77/285.77 ms. Still CONCERNS, not a smooth-streaming gate pass.
+- Archived crash is c0000005 in Intel ig9icd64.dll 27.20.100.8280, offset 0x614af3;
+  WER has no dump/usable stack. Four rendered script processes exited 0 on NVIDIA.
+  Isolated diagnostic release in .tools/t3-player (no official build/export script)
+  passed five WM_CLOSE exits plus rendered acceptance write37/0 and verify9/0,
+  both exit0. First shutdown-harness attempt rejected a null exit-code capture;
+  Process.Handle retention fixed collection. No crash was ignored/suppressed.
+  No verified project-side cause, Intel path and its normal-player impact remain
+  unresolved. Clean NVIDIA exits do not certify the historical driver path fixed.
+
+Verification commands:
+- `.\scripts\test.ps1 -Smoke -Only map,interactions,world,m04-world,land-package,snow-mountain,snow-content,snow-gameplay,rendered-snow-gameplay -Render`:
+  import/startup PASS; data96/0, world49/0, interactions69/0, integration41/0,
+  map22/0, land-package22/0, m04-world86/0, snow-mountain65/0,
+  snow-content56/0, snow-gameplay34/0 headless, rendered50/0. All exits0.
+- `.\scripts\godot.ps1 --script res://tests/snow_streaming_probe.gd '--' --profile-streaming`
+  before optimization, then with `--compare-object-baseline` after: native exits0;
+  logs .tools/t3-profile-1.log, .tools/t3-profile-after.log. See report for fixture
+  setup/reproduction, warm-cache assumptions and timing limitations.
+- `.\scripts\godot.ps1 --headless --export-release windows D:/Game/RPG-m05-snow/.tools/t3-player/EvolvingRealms.exe`:
+  isolated diagnostic only, exit0; `.tools/t3-shutdown.ps1` normal executable checks
+  above, explicit disposable databases + isolated custom user dir. Not published.
+- `.\scripts\godot.ps1 --headless --script res://scripts/land_package_check.gd`:
+  valid=true, ready=false, 27 blockers; salvage deferred. git diff --check PASS.
+- Development import caught/fixed a bool inference parse error; initial map test
+  caught the old zero-child assumption, updated to require one journal control
+  while preserving bounded chunk textures/no per-tile nodes. Final checks pass.
+
+One production handoff: docs/lands/SNOW_MOUNTAIN_TIER_A_HANDOFF.md. Seven PNGs with
+exact grids/pivots/states: bell96x112, cairn80x80, pine96x96, hare672x304,
+sentinel924x304, six-icon sheet96x64, three frozen-scree tiles120x40. Reuses S1;
+S2 source absent here, reuse any supplied/validated S2 frozen row instead. Original
+sources remain untouched; future originals/provenance go under
+assets/sources/EvolvingRealms_SnowMountain_TierA/. Older broad prompts marked backlog.
+
+Remaining: hundreds-of-ms streaming stalls; Intel shutdown repro/dump; Tier A delivery,
+QA/style/sentinel review and human playtest. Duplicate bell shards and bronze scrap
+without a sink remain accepted V1 limitations. Manifest readiness unchanged. No
+full/service/official-export regression, World binding, merge, publish or personal
+Run01 save access. Existing import-only working-tree changes were left uncommitted.

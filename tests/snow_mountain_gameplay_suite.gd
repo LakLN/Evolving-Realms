@@ -13,6 +13,8 @@ const ACTIONS := {Vector2i.UP: "explore_up", Vector2i.RIGHT: "explore_right", Ve
 var app: Control
 var checks := 0
 var failures := 0
+var frame_samples: Array[float] = []
+var border_samples: Array[float] = []
 
 func _initialize() -> void:
 	Session.auto_awaken = false
@@ -36,6 +38,9 @@ func _run() -> void:
 	var world := Atlas.create_world(app.store, "The Evolving Realm", 4242)
 	if not check(not world.is_empty(), "Disposable atlas World (seed 4242): " + app.store.last_error):
 		return _finish()
+	var fixture := FileAccess.open("res://.tools/snow-probe-fixture.json", FileAccess.WRITE)
+	fixture.store_string(JSON.stringify({"database": app.database_path, "world_id": world.world_id}))
+	fixture.close()
 	app._refresh_worlds(world.world_id)
 	await process_frame
 	check(app._chart_snow.text == app.CHART_SNOW and not app._chart_snow.disabled, "Menu offers Chart Snow Mountain (dev)")
@@ -61,6 +66,7 @@ func _run() -> void:
 	if not check(app.session != null and app.session.terrain.land_at(app.session.position).get("land_id", "") == plan.land_id, "New Run in Snow Mountain from the menu"):
 		return _finish()
 	var s: RefCounted = app.session
+	check(_journal_notes().is_empty(), "Fresh Run has no resolved story clues")
 	s.roster.creatures.clear() # Scenery fixture: no fights while capturing.
 	check(int(s.run.spawn.selection_version) == 5 and str(s.run.spawn.start_id).contains("/start/") and s.realtime, "Real-time Run on a certified start site (selection v5)")
 	check(app._region_hint.text.contains("Leefoot Basin"), "HUD names the land and area: " + app._region_hint.text)
@@ -118,7 +124,7 @@ func _run() -> void:
 	await _walk_steps(1, trail.direction)
 	var chunk_before: Vector2i = s.cache.center
 	var walk_from: Vector2i = s.position
-	var worst := await _walk_steps(24, trail.direction)
+	var worst := await _repeat_walks(trail, "Snow")
 	print("PERF worst frame walking 24 tiles across Snow Mountain chunk borders: %.1f ms" % worst)
 	check(s.cache.center != chunk_before, "The walk crossed a chunk border: %s -> %s (trail start %s, %s)" % [str(walk_from), str(s.position), str(trail.tile), str(trail.direction)])
 	# Baseline: the same walk across a chunk border on an M04 highland road.
@@ -133,11 +139,13 @@ func _run() -> void:
 			var road := _trail_near_border(m04, candidate)
 			_teleport(m04, road.tile)
 			await _walk_steps(1, road.direction)
-			baseline = await _walk_steps(24, road.direction)
+			baseline = await _repeat_walks(road, "M04")
 			app._return_to_menu()
 		break
 	print("PERF worst frame on the M04 highland baseline walk: %.1f ms" % baseline)
 	check(baseline > 0.0 and worst <= baseline * 1.6 + 25.0, "Snow Mountain border streaming stays close to the M04 baseline (%.1f ms vs %.1f ms)" % [worst, baseline])
+	if OS.get_cmdline_user_args().has("--streaming-only"):
+		return _finish()
 	app._enter_map(s)
 	await _settle()
 	# Fog and World Map alignment.
@@ -261,6 +269,14 @@ func _content_tour(s: RefCounted, plan: Dictionary) -> void:
 	await _settle()
 	var after: Array = _journal_notes()
 	check(app.session != s and after.map(func(l: Dictionary) -> String: return str(l.detail)) == noted.map(func(l: Dictionary) -> String: return str(l.detail)), "Journal notes are identical after Esc and Continue (%d)" % after.size())
+	var panel: RichTextLabel = app._world_map._journal_panel
+	var journal_text := panel.get_parsed_text()
+	app._world_map.set_journal(app._world_map._journal)
+	check(panel.get_parsed_text() == journal_text, "Repeated journal refresh adds no duplicate entries")
+	check(panel.get_parsed_text().contains(str(after.back().detail)), "Oldest discovered clue remains in the scrollable journal in full")
+	panel.scroll_to_line(panel.get_line_count() - 1)
+	await _settle()
+	check(panel.get_v_scroll_bar().value > 0, "Overflow journal scrolls to older clues")
 	await _capture("snow-journal-resumed.png")
 	await _key(KEY_M)
 
@@ -354,6 +370,20 @@ func _teleport(session: RefCounted, tile: Vector2i) -> void:
 	app.map_view.refresh()
 	app._update_info()
 
+func _repeat_walks(route: Dictionary, label: String) -> float:
+	frame_samples.clear()
+	border_samples.clear()
+	var worst := 0.0
+	for traversal in 3:
+		_teleport(app.session, route.tile)
+		await _settle()
+		worst = maxf(worst, await _walk_steps(24, route.direction))
+	frame_samples.sort()
+	print("DISTRIBUTION %s traversals=3 frames=%d median=%.2f p95=%.2f worst=%.2f ms" % [label, frame_samples.size(), frame_samples[frame_samples.size() / 2], frame_samples[ceili(frame_samples.size() * 0.95) - 1], worst])
+	border_samples.sort()
+	print("BORDER %s crossings=%d median=%.2f p95=%.2f worst=%.2f ms" % [label, border_samples.size(), border_samples[border_samples.size() / 2], border_samples[ceili(border_samples.size() * 0.95) - 1], border_samples.back()])
+	return worst
+
 func _walk_steps(count: int, direction: Vector2i) -> float:
 	var worst := 0.0
 	for _step in count:
@@ -365,9 +395,13 @@ func _walk_steps(count: int, direction: Vector2i) -> float:
 		var from: Vector2i = s.position
 		Input.action_press(ACTIONS[dir])
 		for _frame in 40:
+			var before: Vector2i = s.cache.center
 			var t := Time.get_ticks_usec()
 			await process_frame
-			worst = maxf(worst, (Time.get_ticks_usec() - t) / 1000.0)
+			var elapsed := (Time.get_ticks_usec() - t) / 1000.0
+			frame_samples.append(elapsed)
+			if s.cache.center != before: border_samples.append(elapsed)
+			worst = maxf(worst, elapsed)
 			if s.position != from: break
 		Input.action_release(ACTIONS[dir])
 		await process_frame

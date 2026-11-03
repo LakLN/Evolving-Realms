@@ -1,4 +1,7 @@
-# Snow Mountain — next asset generation requests
+# Snow Mountain - reference asset specifications (backlog)
+
+Current consolidated Tier A handoff: [SNOW_MOUNTAIN_TIER_A_HANDOFF.md](SNOW_MOUNTAIN_TIER_A_HANDOFF.md).
+The broader S2-S5 requests remain reference/backlog; use the consolidated request for this delivery.
 
 2026-11-02, Stage E1. S1 already exists and is integrated provisionally. Do not
 regenerate S1 or mistake these requests for completed art. Reference images:

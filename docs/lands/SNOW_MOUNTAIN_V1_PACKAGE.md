@@ -1,6 +1,9 @@
 # Content Package: Snow Mountain V1 — "The Carriers' Relay" (spoilers)
 
-Package plan under [AI_STUDIO.md](../AI_STUDIO.md). Status: **design approved 2026-11-02 (D1–D3); T1 and T2 done, T3 next.** It consolidates Stage C–E1. It adds no new mechanic
+Current consolidated Tier A handoff: [SNOW_MOUNTAIN_TIER_A_HANDOFF.md](SNOW_MOUNTAIN_TIER_A_HANDOFF.md).
+The broader S2-S5 requests remain reference/backlog; use the consolidated request for this delivery.
+
+Package plan under [AI_STUDIO.md](../AI_STUDIO.md). Status: **design approved 2026-11-02 (D1–D3); T1 and T2 done; T3 implemented with remaining performance/crash concerns.** It consolidates Stage C–E1. It adds no new mechanic
 and does not replace the land manifest; the manifest remains the blocker
 ledger. Evidence: [STUDIO_AUDIT_2026-11-02.md](../STUDIO_AUDIT_2026-11-02.md).
 
@@ -76,7 +79,7 @@ The AI proposes these. Items R1 and R2 need director approval; see Decisions.
 |---|---|---|---|
 | T1 | Journal notes from resolved place records (R4) | AI | Notes appear after ledger/marks/dig; survive save/reload; absent in a fresh Run; tests in `snow-gameplay` + `rendered-snow-gameplay` |
 | T2 | Content v2: cairn_dig, bell_cairn, sentinel (R1/R3); manifest scope (R2) | AI, after approval | `snow-content` covers the guaranteed shard and v1 still loading; land-package check valid, blocker list updated honestly |
-| T3 | Measure chunk-border hitch on Snow traversal | AI | Number recorded; if > M04 baseline, a profiling note and a fix proposal (no fix without scope) |
+| T3 | Repeated Snow/M04 frame distributions, profile and focused optimization; shutdown/journal investigation (authorized 2026-11-03) | AI | Findings, validation and remaining concerns in SNOW_MOUNTAIN_T3_REPORT.md; Tier A handoff prepared |
 | T4 | Tier A art delivered, extracted, mapped | User/ChatGPT or AI imagegen → AI | `check_snow_s1`-style QA on new batch; native captures; stand-ins gone for Tier A IDs |
 | T5 | Gate "Playable" | AI | Checkpoint tier tests per TESTING.md + `-Smoke` + startup; screenshots of every beat |
 | T6 | Human playtest, fresh disposable World/Run | User | Report using the AI_STUDIO template |
@@ -146,3 +149,5 @@ AI does all slicing and QA. No preview galleries.
   generates them with imagegen in a later art pass. Either way, palette/style
   acceptance of S1 stays with you.
 - **Later, not now:** which World to bind, and publication.
+
+T3 evidence and open gates: [SNOW_MOUNTAIN_T3_REPORT.md](SNOW_MOUNTAIN_T3_REPORT.md).

@@ -42,6 +42,7 @@ var _extra_markers: Array = []
 ## M03 integration: known leads/bearings as text lines (structured Worlds), drawn as a
 ## persistent list on the world map. Set by main; never derived from undiscovered data.
 var _journal: Array = []
+var _journal_panel: RichTextLabel
 ## Marker colours by kind/state: discovered and resolved places differ; leads are rings
 ## (location known from a clue, not seen); frontiers are unsurveyed region bearings.
 const JOURNAL_WIDTH := 300.0
@@ -55,6 +56,11 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_journal_panel = RichTextLabel.new()
+	_journal_panel.visible = false
+	_journal_panel.scroll_active = true
+	_journal_panel.add_theme_font_size_override("normal_font_size", 14)
+	add_child(_journal_panel)
 	queue_redraw()
 
 func attach(active_session: RefCounted) -> void:
@@ -71,6 +77,7 @@ func attach(active_session: RefCounted) -> void:
 func detach() -> void:
 	session = null
 	map_open = false
+	_journal_panel.visible = false
 	_dragging = false
 	_chunk_textures.clear()
 	_chunk_masks.clear()
@@ -88,6 +95,7 @@ func open_map() -> void:
 
 func close_map() -> void:
 	map_open = false
+	_journal_panel.visible = false
 	_dragging = false
 	if session != null:
 		_camera_center = Vector2(session.position) + Vector2(0.5, 0.5)
@@ -124,7 +132,16 @@ func set_markers(markers: Array) -> void:
 	queue_redraw()
 
 func set_journal(lines: Array) -> void:
-	_journal = lines.duplicate()
+	if _journal == lines:
+		return
+	_journal = lines.duplicate(true)
+	_journal_panel.visible = map_open and not _journal.is_empty()
+	_journal_panel.clear()
+	for line in _journal:
+		_journal_panel.push_color(MARKER_COLORS.get(str(line.state), Color("d7c9a9")))
+		_journal_panel.add_text(str(line.title) + "\n")
+		_journal_panel.pop()
+		_journal_panel.add_text(str(line.detail) + "\n\n")
 	queue_redraw()
 
 func zoom_at(screen_position: Vector2, factor: float) -> void:
@@ -396,25 +413,10 @@ func _draw_journal() -> void:
 	var box := Rect2(Vector2(_map_rect.end.x + 14, _map_rect.position.y), Vector2(JOURNAL_WIDTH, _map_rect.size.y))
 	draw_rect(box, Color("120f0b"))
 	draw_rect(box, Color("94784b"), false, 2.0)
-	_draw_text(box.position + Vector2(12, 24), "KNOWN LEADS", 16, Color("e6c47b"))
-	var font := ThemeDB.fallback_font
-	var y := box.position.y + 52
-	for index in _journal.size():
-		var line: Dictionary = _journal[index]
-		# Notes wrap in full: a clue cut to one line would lose its meaning.
-		var wrap: bool = line.get("wrap", false)
-		var detail_height := font.get_multiline_string_size(str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13).y if wrap else 16.0
-		if y + 18 + detail_height > box.end.y - 24:
-			draw_string(font, Vector2(box.position.x + 12, box.end.y - 12), "+%d more" % (_journal.size() - index), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 24, 13, Color("bfb091"))
-			break
-		var color: Color = MARKER_COLORS.get(str(line.state), Color("d7c9a9"))
-		draw_string(font, Vector2(box.position.x + 12, y), str(line.title), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 24, 14, color)
-		if wrap:
-			draw_multiline_string(font, Vector2(box.position.x + 24, y + 18), str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13, -1, Color("bfb091"))
-			y += 28 + detail_height
-		else:
-			draw_string(font, Vector2(box.position.x + 24, y + 18), str(line.detail), HORIZONTAL_ALIGNMENT_LEFT, JOURNAL_WIDTH - 36, 13, Color("bfb091"))
-			y += 44
+	_draw_text(box.position + Vector2(12, 24), "JOURNAL (scroll for older clues)", 16, Color("e6c47b"))
+	_journal_panel.position = box.position + Vector2(12, 38)
+	_journal_panel.size = box.size - Vector2(24, 50)
+	_journal_panel.visible = map_open
 
 func _all_markers() -> Array:
 	var result: Array = _landmarks.values()

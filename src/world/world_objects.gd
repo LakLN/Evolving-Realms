@@ -171,7 +171,9 @@ func generate_chunk(chunk: Vector2i) -> Array:
 				var spawn: Dictionary = rule.definition.payload.spawn
 				var chance := int(spawn.per_10000)
 				if regions != null and rule.definition.content_id.begins_with("m03:resource/"): chance = chance * regional_percent / 100
-				if not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance:
+				# Most placement rolls fail. Test the same deterministic roll before
+				# querying area ecology; rule order and accepted placements stay identical.
+				if terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance or not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
 					continue
 				result.append({"instance_id": "proc:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"object_generation_version": 1}})
 				break

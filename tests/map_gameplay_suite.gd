@@ -154,7 +154,7 @@ func run_test() -> void:
 	var unknown_local: Vector2i = Terrain.local_of(unknown_tile)
 	check(image.get_pixel(known_local.x, known_local.y).a > 0.9, "Explored negative-coordinate terrain is drawn")
 	check(image.get_pixel(unknown_local.x, unknown_local.y).a == 0.0, "Unexplored terrain remains fully hidden")
-	check(world_map._chunk_textures.size() < 100 and world_map.get_child_count() == 0, "More than 26,000 explored tiles use chunk textures and no per-tile UI nodes")
+	check(world_map._chunk_textures.size() < 100 and world_map.get_child_count() == 1 and world_map._journal_panel is RichTextLabel, "More than 26,000 explored tiles use chunk textures and no per-tile UI nodes")
 
 	var cache_chunks: Array = session.cache.chunks.keys()
 	var ledger_revisions: Array = session.locations.ledger._revisions.keys()

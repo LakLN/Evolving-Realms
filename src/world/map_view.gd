@@ -183,6 +183,8 @@ func _feet(tile: Vector2i) -> Vector2:
 func refresh() -> void:
 	if session == null:
 		return
+	var profile_start := Time.get_ticks_usec()
+	var added := 0
 	var next_origin: Vector2i = session.cache.center * Terrain.CHUNK_SIZE
 	if _has_origin and next_origin != _origin:
 		_shift_transients(Vector2(_origin - next_origin) * px)
@@ -195,8 +197,11 @@ func refresh() -> void:
 	for chunk in session.cache.chunks:
 		if not chunk_nodes.has(chunk):
 			_add_chunk(chunk)
+			added += 1
 		# Chunk-local cells avoid TileMapLayer's serialized coordinate limits.
 		chunk_nodes[chunk].root.position = Vector2(chunk * Terrain.CHUNK_SIZE - _origin) * px
+	if added > 0 and OS.get_cmdline_user_args().has("--profile-streaming"):
+		print("PROFILE presentation chunks=%d ms=%.2f" % [added, (Time.get_ticks_usec() - profile_start) / 1000.0])
 	_update_fog()
 	_update_player()
 	_sync_creatures()

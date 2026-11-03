@@ -980,8 +980,23 @@ func _move_action(action: Dictionary) -> bool:
 
 func relocate(target: Vector2i) -> bool:
 	## Move the player to a validated walkable tile (a step or a skill), streaming chunks.
+	var profile: bool = OS.get_cmdline_user_args().has("--profile-streaming") and cache.center != Terrain.chunk_of(target)
+	var timings: Array = []
+	var stamp := Time.get_ticks_usec()
 	cache.follow(target)
-	if not objects.follow(target) or not locations.follow(target, cache.chunks) or not roster.follow(target, cache.chunks):
+	timings.append(Time.get_ticks_usec() - stamp)
+	stamp = Time.get_ticks_usec()
+	var objects_ok: bool = objects.follow(target)
+	timings.append(Time.get_ticks_usec() - stamp)
+	stamp = Time.get_ticks_usec()
+	var locations_ok: bool = objects_ok and locations.follow(target, cache.chunks)
+	timings.append(Time.get_ticks_usec() - stamp)
+	stamp = Time.get_ticks_usec()
+	var roster_ok: bool = locations_ok and roster.follow(target, cache.chunks)
+	timings.append(Time.get_ticks_usec() - stamp)
+	if profile:
+		print("PROFILE streaming terrain/objects/locations/creatures usec=", timings)
+	if not roster_ok:
 		cache.follow(position)
 		objects.follow(position)
 		locations.follow(position, cache.chunks)
