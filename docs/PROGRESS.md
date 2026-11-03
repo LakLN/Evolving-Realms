@@ -2493,3 +2493,11 @@ data 96, integration 41 and the rest 0 failures; playback_capture hare 31, wolf 
 sentinel 35, 0 failures. Native captures reviewed: bell, scree wolf, Windcut Stair.
 Open: director style acceptance (status candidate), human playtest, T09 seams beyond
 screenshot review, Intel-driver/chunk-stall items unchanged.
+Checkpoint D preview: `builds/snow-p0-preview-20261103/Launch-Preview.cmd` (ignored
+folder) pins its own `preview.sqlite`, made by `tools/create_systemic_preview.gd`
+(fresh World, Snow layout v4, Run seed 919). Export: `Godot --headless --export-release
+windows <folder>/EvolvingRealms.exe`, exit 0; P0 index/textures confirmed in the pck (no
+source images; only example batch JSON path strings). Exe headless start on a copy of
+the DB: exit 0, no errors, preview DB unchanged. `builds/windows` untouched.
+Best next task: director style review of the candidate batch in this preview plus a
+spoiler-free human playtest; correct only rejected rows in a new batch (snow_p0_b2).
