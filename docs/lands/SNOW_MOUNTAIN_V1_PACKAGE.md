@@ -192,3 +192,26 @@ not approval of new design, art completeness, a unique guardian or human game fe
 Known technical baseline: final native Snow median/p95/worst33.30/33.56/243.18ms,
 M04 33.30/33.54/285.77ms (three traversals); archived Intel access violation unresolved
 on that driver path despite clean NVIDIA exits. See SNOW_MOUNTAIN_T3_REPORT.md.
+
+### Studio policy fit (2026-11-03)
+
+AI_STUDIO.md now adds research, world-design, secrets/knowledge, selective
+evolution and telemetry policy. This package stays the baseline: nothing above is
+discarded or restarted. Targeted consequences:
+
+- **Research:** before design approval, a short reference pass (winter regions in
+  RPG/survival games; sources cited, verified vs assumed) is added here. It may
+  refine areas, sites or roles. It does not mandate dragons, seals, dungeons or a
+  boss, and it does not reopen the scope unless a finding justifies that.
+- **Counts are current scope, not limits.** Seven areas, five sites, three species
+  and the master manifest may change when the benefit justifies the cost. Update
+  the master manifest before any art generation.
+- **Step 2 selector:** "unmet requirements" applies only to discovered, offered
+  choices (return/force/cancel). Hidden interactions show nothing until their
+  conditions are met. That matches "do not reveal undiscovered definitions".
+- **Knowledge:** journal notes are player knowledge and must state only what this
+  Run actually observed and what is implemented. Stage C/D claims marked obsolete
+  above never become player text.
+- **Telemetry:** step 3 survey Runs and the step 7 playtest Run are exported with
+  the offline telemetry tool (disposable Runs only). Rare secrets are not made
+  easier on discovery rate alone.
