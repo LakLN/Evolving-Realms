@@ -74,7 +74,9 @@ No real LLM or combat required. Verified in Checkpoint E on the exported build.
     panels, search cue for buried places, offline AI/F–I acceptance inside the exported exe,
     balance probe and old-save checks, playtest guide. No SQL migration.
 
-Milestone 02 is complete. Milestone 03 has not started and needs approval.
+Milestone 02 is complete. Milestone 03 Task A (structured World exploration) is authorized and implemented
+on its isolated branch; integration into master is pending. Other feature scope
+remains separately authorized.
 03: deeper talent/skill mechanics (evolution, fusion, cultivation) as approved; talent
 awakening (02 D) and skill books with learning requirements (02 E) were delivered early.
 04: real provider, region content, quests, context, dependencies and persistence.

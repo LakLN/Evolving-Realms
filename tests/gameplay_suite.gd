@@ -27,6 +27,7 @@ func _run() -> void:
 	app = load("res://scenes/main.tscn").instantiate()
 	app.database_path = db_path
 	root.add_child(app)
+	app.use_legacy_defaults() # Pre-M03 baseline: legacy World layout, turn model (see main.gd).
 	await process_frame
 	check(app._menu.visible and app._worlds.item_count == 0 and app._new_run.disabled, "Fresh menu has no auto-created world/run")
 	app._name_entry.text = "UI exploration"
@@ -109,6 +110,7 @@ func _run() -> void:
 	app = load("res://scenes/main.tscn").instantiate()
 	app.database_path = db_path
 	root.add_child(app)
+	app.use_legacy_defaults() # Pre-M03 baseline: legacy World layout, turn model (see main.gd).
 	await process_frame
 	check(app._worlds.item_count == 1 and app._runs.item_count == 2, "Reopening main scene retains World and both Runs")
 	app.free()

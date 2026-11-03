@@ -4,6 +4,7 @@ extends RefCounted
 ## are a pure function of World seed, terrain v1, the chunk and the encounter revision
 ## the chunk was established at (RegionLedger) — never Run, visit order or time.
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Region = preload("res://src/world/region_context.gd")
@@ -43,7 +44,7 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 	if not p.get("biomes") is Array or p.biomes.is_empty() or p.biomes.size() > 3:
 		return {"problem": "Encounter needs 1..3 biomes", "missing": missing}
 	for biome in p.biomes:
-		if biome not in Terrain.BIOMES: return {"problem": "Unknown encounter biome: " + str(biome), "missing": missing}
+		if biome not in Surfaces.HABITATS: return {"problem": "Unknown encounter biome: " + str(biome), "missing": missing}
 		if biome not in habitat: return {"problem": "Encounter biome is outside the creature's movement biomes: " + str(biome), "missing": missing}
 	if not _between(p.get("per_10000"), 1, 200): return {"problem": "Encounter per_10000 must be 1..200", "missing": missing}
 	if not _between(p.get("max_per_chunk", 1), 1, BUDGET): return {"problem": "Encounter max_per_chunk must be 1..%d" % BUDGET, "missing": missing}
@@ -130,16 +131,18 @@ func generate(terrain: RefCounted, chunk: Vector2i, bytes: PackedByteArray, at_r
 	var eligible := active.filter(func(rule: Dictionary) -> bool: return _chunk_allows(rule.definition.payload, shares, danger))
 	var origin := chunk * Terrain.CHUNK_SIZE
 	var order_stream := Loot.number("encounters-v1/order")
+	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
 	var candidates: Array = []
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			var point := origin + Vector2i(x, y)
-			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point):
+			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
+			if habitat.is_empty() or occupied.has(point):
 				continue
 			for rule in eligible:
 				var p: Dictionary = rule.definition.payload
-				if Terrain.BIOMES[ground] not in p.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(p.per_10000) or not _tile_allows(terrain, chunk, bytes, point, p):
+				if not (habitat in p.biomes or (adaptive and terrain.ecology_hosts(ground, point, str(p.creature.content_id)))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(p.per_10000) or not _tile_allows(terrain, chunk, bytes, point, p):
 					continue
 				candidates.append({"point": point, "local": Vector2i(x, y), "rule": rule, "order": terrain.coordinate_hash(point.x, point.y, order_stream)})
 				break

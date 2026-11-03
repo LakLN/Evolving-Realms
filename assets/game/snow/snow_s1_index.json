@@ -1,0 +1,359 @@
+{
+ "build_revision": 2,
+ "version": 1,
+ "batch": "EvolvingRealms_Batch_S1",
+ "tile_px": 40,
+ "ground": {
+  "atlas": "snow/ground.png",
+  "kinds": {
+   "snow": [
+    [
+     0,
+     0,
+     8
+    ],
+    [
+     1,
+     0,
+     4
+    ],
+    [
+     2,
+     0,
+     3
+    ],
+    [
+     3,
+     0,
+     2
+    ]
+   ],
+   "ice": [
+    [
+     0,
+     1,
+     5
+    ],
+    [
+     1,
+     1,
+     3
+    ],
+    [
+     2,
+     1,
+     2
+    ]
+   ],
+   "taiga": [
+    [
+     0,
+     2,
+     5
+    ],
+    [
+     1,
+     2,
+     3
+    ],
+    [
+     2,
+     2,
+     2
+    ]
+   ],
+   "trail": [
+    [
+     0,
+     3,
+     5
+    ],
+    [
+     1,
+     3,
+     3
+    ]
+   ],
+   "cliff": [
+    [
+     0,
+     4,
+     5
+    ],
+    [
+     1,
+     4,
+     3
+    ]
+   ],
+   "cliff_face": [
+    [
+     0,
+     5,
+     5
+    ],
+    [
+     1,
+     5,
+     3
+    ]
+   ],
+   "floor": [
+    [
+     0,
+     6,
+     5
+    ],
+    [
+     1,
+     6,
+     2
+    ]
+   ],
+   "timber": [
+    [
+     0,
+     7,
+     5
+    ]
+   ]
+  }
+ },
+ "props": {
+  "atlas": "snow/props.png",
+  "cell": 96,
+  "pine": [
+   [
+    0,
+    5
+   ]
+  ],
+  "rock_snow": [
+   [
+    1,
+    3
+   ]
+  ],
+  "rock_taiga": [
+   [
+    1,
+    3
+   ]
+  ],
+  "rock_frozen": [
+   [
+    1,
+    3
+   ]
+  ],
+  "rock_cliff": [
+   [
+    1,
+    3
+   ]
+  ]
+ },
+ "objects": {
+  "frozen_shrub": {
+   "texture": "snow/objects/frozen_shrub.png",
+   "size": [
+    34,
+    27
+   ]
+  },
+  "resin_stump": {
+   "texture": "snow/objects/resin_stump.png",
+   "size": [
+    34,
+    21
+   ]
+  },
+  "snow_supply": {
+   "texture": "snow/objects/snow_supply.png",
+   "size": [
+    40,
+    30
+   ]
+  },
+  "snow_barrel": {
+   "texture": "snow/objects/snow_barrel.png",
+   "size": [
+    24,
+    26
+   ]
+  },
+  "snow_crate": {
+   "texture": "snow/objects/snow_crate.png",
+   "size": [
+    26,
+    24
+   ]
+  }
+ },
+ "places": {
+  "lean_to": {
+   "texture": "snow/places/lean_to.png",
+   "size": [
+    92,
+    57
+   ]
+  },
+  "snow_hut": {
+   "texture": "snow/places/snow_hut.png",
+   "size": [
+    84,
+    75
+   ]
+  },
+  "fallen_pine": {
+   "texture": "snow/places/fallen_pine.png",
+   "size": [
+    44,
+    32
+   ]
+  },
+  "relay_locker": {
+   "texture": "snow/places/relay_locker.png",
+   "size": [
+    46,
+    34
+   ]
+  },
+  "cairn_stones": {
+   "texture": "snow/places/cairn_stones.png",
+   "size": [
+    40,
+    26
+   ]
+  },
+  "camp_fire": {
+   "texture": "snow/places/camp_fire.png",
+   "size": [
+    34,
+    27
+   ]
+  }
+ },
+ "characters": {
+  "snow_wolf": {
+   "sheet": "snow/snow_wolf.png",
+   "frame": [
+    84,
+    76
+   ],
+   "columns": 8,
+   "anchor": [
+    42,
+    69
+   ],
+   "anims": {
+    "idle_down": [
+     0,
+     1,
+     2,
+     3
+    ],
+    "walk_down": [
+     4,
+     5,
+     6,
+     7
+    ],
+    "attack_down": [
+     8,
+     9,
+     10
+    ],
+    "hit_down": [
+     0
+    ],
+    "death_down": [
+     17
+    ],
+    "idle_right": [
+     14
+    ],
+    "walk_right": [
+     14
+    ],
+    "attack_right": [
+     11,
+     12,
+     13
+    ],
+    "hit_right": [
+     14
+    ],
+    "death_right": [
+     17
+    ],
+    "idle_left": [
+     15
+    ],
+    "walk_left": [
+     15
+    ],
+    "attack_left": [
+     8,
+     9,
+     10
+    ],
+    "hit_left": [
+     15
+    ],
+    "death_left": [
+     18
+    ],
+    "idle_up": [
+     16
+    ],
+    "walk_up": [
+     16
+    ],
+    "attack_up": [
+     16
+    ],
+    "hit_up": [
+     16
+    ],
+    "death_up": [
+     17
+    ]
+   },
+   "source_frames": {
+    "idle": 4,
+    "walk": 4,
+    "attack": 3
+   }
+  }
+ },
+ "mapping": {
+  "objects": {
+   "by_visual": {
+    "ration_shrub": "frozen_shrub",
+    "resin_seam": "resin_stump",
+    "water_cache": "snow_barrel"
+   }
+  },
+  "places": {
+   "by_visual": {
+    "lee_shelter": "lean_to",
+    "relay_outpost": "snow_hut",
+    "fallen_pine": "fallen_pine",
+    "relay_locker": "relay_locker",
+    "cairn": "cairn_stones",
+    "bell": "snow_hut"
+   }
+  },
+  "creatures": {
+   "snow_wolf": "snow_wolf"
+  }
+ },
+ "placeholders": [
+  "frozen ground (no S1 tile)",
+  "bell (no S1 art: summit bell drawn as the S1 snow hut)",
+  "rime hare (uses rabbit)",
+  "bellback sentinel (token)",
+  "snow wolf left/right/up are single poses; death is derived"
+ ]
+}

@@ -75,7 +75,9 @@ terrain generation version or database migration. Resume uses the saved coordina
 not a fresh selection; creating a new Run never edits previous spawns.
 
 
-Run mutable state has exactly these six fields:
+Run mutable state currently has seven fields. Runs saved before the map waypoint
+addition contain the original six fields; `load_run` normalizes those by adding an
+empty waypoint without changing the saved record:
 
 ```json
 {
@@ -84,12 +86,15 @@ Run mutable state has exactly these six fields:
   "character": {"position": {"x": 0, "y": 0}, "stats": {}},
   "inventory": {"mock:moonleaf": {"version": 1, "quantity": 2}},
   "explored": [{"x": 0, "y": 0}],
-  "entity_mutations": {"chunk:0/0/herb_1": {"collected": true}}
+  "entity_mutations": {"chunk:0/0/herb_1": {"collected": true}},
+  "map_waypoint": {"x": 12, "y": -4}
 }
 ```
 
 Inventory entries pin definition versions; positive integer quantities are
-required. Empty inventory/explored/entity_mutations are valid. Entity IDs must
+required. `map_waypoint` is either an empty object or one integer tile position
+owned by this Run; it does not reveal unexplored terrain. Empty
+inventory/explored/entity_mutations are valid. Entity IDs must
 resolve to fixed instances in this run's world. No mutation means original state,
 so a new run automatically sees resources/chests reset. Every save replaces the
 entire mutation map; omitting an entry resets it for that run only. Game rules for
@@ -278,3 +283,33 @@ status records extend character.statuses and creature entity_mutations JSON; the
 contain remaining/stacks/source/target and tick/age counters, plus application inputs.
 Old until_turn statuses load unchanged. No effective stats or Blueprint fields are
 added. See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md#persistence).
+
+## Structured World Core (Milestone 03 Task A)
+
+`StructuredWorld.create(store,name,seed)` creates an explicitly opted-in World with
+immutable `blueprint.metadata.structured_world_version=1`. Terrain generation_version
+remains1; no SQL migration. Missing metadata preserves the legacy generation path;
+unknown/non-integer layout versions fail creation/load explicitly. Standard pack
+installation on Session activation adds the trusted M03 definitions only to these
+Worlds. New structured spawns record selection_version3; old saved positions do
+not change. Player-facing read-only APIs: `session.world_region()`,
+`session.exploration_leads()`, `session.exploration_frontiers()`.
+These return knowledge/context without establishing unseen chunks. Full contracts
+and explicit creation CLI: [M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md).
+
+## Systemic slice additive Run payloads (2026-11-03)
+
+`character.knowledge` maps stable fact IDs to version-1 entries containing id,
+category, title, complete text and unlock turn. `character.interaction_history`
+is a bounded 512-entry offline diagnostic array. Neither is World state. Missing
+fields in old Runs remain valid; Knowledge text is retained in the save rather
+than silently replaced by future content text. Unknown entry versions fail resume.
+Location mutations may additionally carry `world_rule_version: 1` and
+`world_state: thawed|shattered`; resolution receipts remain authoritative for
+once-only rewards. The existing GameStore transaction saves these with inventory.
+No SQL schema, generator version, Blueprint or native dependency changed.
+
+Refused-action diagnostics wait in a bounded session-local buffer, leaving the
+Run state unchanged. Save plans the diagnostic addition on a copied payload and
+clears the buffer only after GameStore commits; retry cannot duplicate events.
+Session activation clears the buffer so it cannot leak into another Run.

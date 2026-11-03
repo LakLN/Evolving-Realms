@@ -8,6 +8,7 @@ const Effects = preload("res://src/core/effects.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Skills = preload("res://src/core/skills.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const FIELDS := ["conditions", "cost", "outcomes", "message", "tone"]
 const TONES := ["boon", "bane", "neutral"]
 const OUTCOMES := {"grant_items": ["items"], "loot": ["table"], "apply_status": ["content_id", "version"],
@@ -34,7 +35,7 @@ static func check_conditions(conditions: Variant, context: Dictionary, skills: R
 				"status":
 					if not Data.identifier(condition.get("status")): return "Status condition needs a status ID"
 				"biome":
-					if not condition.get("values") is Array or condition.values.is_empty() or not condition.values.all(func(b: Variant) -> bool: return b in Terrain.BIOMES): return "Biome condition needs forest/beach/meadow values"
+					if not condition.get("values") is Array or condition.values.is_empty() or not condition.values.all(func(b: Variant) -> bool: return b in Surfaces.HABITATS): return "Biome condition needs forest/beach/meadow values"
 				"any_of":
 					if not condition.get("conditions") is Array or condition.conditions.is_empty(): return "any_of needs conditions"
 					var nested := check_conditions(condition.conditions, context, skills, missing)

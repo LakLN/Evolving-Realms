@@ -24,6 +24,10 @@ func create_world(name: String, seed_value: int, generation_version: int = 1, bl
 		return _error("World needs a name, signed 32-bit seed and supported generation version 1")
 	if not Data.valid(blueprint) or not blueprint.get("fixed_locations") is Array or not blueprint.get("metadata") is Dictionary:
 		return _error("Blueprint needs finite JSON, fixed_locations array and metadata object")
+	if not _supported_atlas(blueprint):
+		return _error("Unsupported world atlas version or atlas blueprint with fixed locations")
+	if blueprint.metadata.has("structured_world_version") and (not Data.integer(blueprint.metadata.structured_world_version) or blueprint.metadata.structured_world_version != 1):
+		return _error("Unsupported structured World Core version; existing save was not changed")
 	var world_id := Data.uuid()
 	if not _db.execute("INSERT INTO worlds VALUES(?,?,?,?,?,?,?)", [world_id, name, seed_value, generation_version, 1, JSON.stringify(blueprint), _timestamp()]):
 		return {}
@@ -41,6 +45,10 @@ func load_world(world_id: String) -> Dictionary:
 	var blueprint: Variant = JSON.parse_string(world.blueprint_json)
 	if not blueprint is Dictionary or not blueprint.get("fixed_locations") is Array or not blueprint.get("metadata") is Dictionary:
 		return _error("Corrupt world blueprint")
+	if not _supported_atlas(blueprint):
+		return _error("Unsupported world atlas version; existing save was not changed")
+	if blueprint.metadata.has("structured_world_version") and (not Data.integer(blueprint.metadata.structured_world_version) or blueprint.metadata.structured_world_version != 1):
+		return _error("Unsupported structured World Core version; existing save was not changed")
 	world.erase("blueprint_json")
 	world.blueprint = blueprint
 	return world
@@ -58,7 +66,7 @@ func create_run(world_id: String, seed_value: int, spawn: Dictionary, mode: Stri
 	var state := {
 		"status": "alive", "turn": 0,
 		"character": {"position": spawn.position.duplicate(true), "stats": stats.duplicate(true)},
-		"inventory": {}, "explored": [], "entity_mutations": {},
+		"inventory": {}, "explored": [], "entity_mutations": {}, "map_waypoint": {},
 	}
 	var run_id := Data.uuid()
 	if not _db.execute("INSERT INTO runs(run_id,world_id,seed,schema_version,mode,spawn_json,state_json,created_at) VALUES(?,?,?,?,?,?,?,?)", [run_id, world_id, seed_value, 1, mode, JSON.stringify(spawn), JSON.stringify(state), _timestamp()]):
@@ -89,6 +97,7 @@ func load_run(run_id: String) -> Dictionary:
 	run.spawn = spawn
 	run.state = state
 	run.state["entity_mutations"] = mutations
+	run.state["map_waypoint"] = run.state.get("map_waypoint", {})
 	if not _validate_state(run.world_id, run.state):
 		return {}
 	return run
@@ -129,9 +138,9 @@ func save_run(run_id: String, expected_revision: int, state: Dictionary) -> bool
 	return true
 
 func _validate_state(world_id: String, state: Dictionary) -> bool:
-	if not Data.valid(state) or state.size() != 6:
-		return _db.fail("Run state must have exactly six supported fields and finite JSON data")
-	for key in ["status", "turn", "character", "inventory", "explored", "entity_mutations"]:
+	if not Data.valid(state) or state.size() != 7:
+		return _db.fail("Run state must have exactly seven supported fields and finite JSON data")
+	for key in ["status", "turn", "character", "inventory", "explored", "entity_mutations", "map_waypoint"]:
 		if not state.has(key):
 			return _db.fail("Missing run state field: " + key)
 	if state.status not in ["alive", "dead"] or not Data.integer(state.turn) or state.turn < 0:
@@ -140,6 +149,8 @@ func _validate_state(world_id: String, state: Dictionary) -> bool:
 		return _db.fail("Character needs integer position and object stats")
 	if not state.inventory is Dictionary or not state.explored is Array or not state.entity_mutations is Dictionary:
 		return _db.fail("Invalid inventory, explored or entity_mutations container")
+	if not state.map_waypoint is Dictionary or (not state.map_waypoint.is_empty() and not Data.position(state.map_waypoint)):
+		return _db.fail("Map waypoint must be empty or an integer tile position")
 	if not FogMask.valid_all(state.explored):
 		return _db.fail("Explored entries must be integer tiles or 32x32 chunk masks")
 	for content_id in state.inventory:
@@ -163,6 +174,15 @@ func _validate_state(world_id: String, state: Dictionary) -> bool:
 		if int(found[0].known) != ids.size():
 			return _db.fail("Content instance not found")
 	return true
+
+static func _supported_atlas(blueprint: Dictionary) -> bool:
+	## Milestone 04 atlas Worlds: the row keeps generation_version 1 (schema CHECK); the
+	## blueprint declares world_atlas_version 1 and each land plan pins its terrain version.
+	## Unknown atlas versions are refused; atlas blueprints carry no fixed landmarks.
+	if not blueprint.metadata.has("world_atlas_version"):
+		return true
+	var atlas: Variant = blueprint.metadata.world_atlas_version
+	return Data.integer(atlas) and int(atlas) == 1 and blueprint.fixed_locations.is_empty() and not blueprint.metadata.has("structured_world_version")
 
 func _error(message: String) -> Dictionary:
 	_db.fail(message)

@@ -11,6 +11,9 @@ const Skills = preload("res://src/core/skills.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Inventory = preload("res://src/core/inventory.gd")
 const ItemEffects = preload("res://src/core/item_effects.gd")
+const WorldRules = preload("res://src/core/world_rules.gd")
+const Knowledge = preload("res://src/run/player_knowledge.gd")
+const Telemetry = preload("res://src/run/interaction_telemetry.gd")
 const SEARCH_RADIUS := 2
 const STATES := ["undiscovered", "discovered", "interactable", "resolved", "unavailable"]
 var layer: RefCounted
@@ -24,10 +27,13 @@ func discovered(session: RefCounted, instance_id: String) -> bool:
 
 func validate(session: RefCounted) -> String:
 	## Saved location mutations must be well-formed (older saves have none).
+	var knowledge_error := Knowledge.validate(session.run.state.character)
+	if not knowledge_error.is_empty(): return knowledge_error
 	for id in session.run.state.entity_mutations:
 		var mutation: Variant = session.run.state.entity_mutations[id]
 		if not mutation is Dictionary or not mutation.has("location"): continue
 		if not mutation.get("discovered") is bool or not mutation.get("resolved", {}) is Dictionary: return "Corrupt location state in save: " + str(id)
+		if mutation.has("world_rule_version") and (mutation.world_rule_version != 1 or mutation.get("world_state") not in ["thawed", "shattered"]): return "Unsupported world rule state: " + str(id)
 	return ""
 
 func available(session: RefCounted, instance: Dictionary, trigger: String = "") -> Array:
@@ -40,6 +46,7 @@ func available(session: RefCounted, instance: Dictionary, trigger: String = "") 
 		if resolved.has(interaction.id) or (not trigger.is_empty() and interaction.get("trigger", "interact") != trigger): continue
 		if interaction.has("after") and not resolved.has(interaction.after): continue
 		if interaction.get("exclusive", false) and exclusive_taken: continue
+		if not unmet(session, interaction.get("reveal_conditions", [])).is_empty(): continue
 		result.append(interaction)
 	return result
 
@@ -140,8 +147,9 @@ func _discover(session: RefCounted, instance: Dictionary) -> Array:
 	mutation.discovered = true
 	mutation.discovered_turn = int(session.run.state.turn)
 	session.run.state.entity_mutations[instance.instance_id] = mutation
+	Telemetry.record(session, {"type": "discovery", "target": instance.instance_id, "definition": definition.content_id, "definition_version": int(definition.version)})
 	session.dirty = true
-	var events: Array = [{"type": "discovery", "target": instance.instance_id, "name": definition.name, "description": definition.description, "category": definition.payload.category, "position": instance.position.duplicate()}]
+	var events: Array = [{"type": "discovery", "target": instance.instance_id, "name": instance.get("metadata", {}).get("title", definition.name), "description": definition.description + " " + layer.clue(instance), "category": definition.payload.category, "position": instance.position.duplicate()}]
 	for interaction in available(session, instance, "discover"):
 		if unmet(session, layer.event(interaction.event).payload.get("conditions", [])).is_empty():
 			events.append_array(resolve(session, instance, interaction).get("events", []))
@@ -180,6 +188,7 @@ func interact(session: RefCounted, instance_id: String, wanted: String = "") -> 
 		return _refuse(session, "%s holds nothing more for you (%s) — no turn spent" % [definition.name, state(session, instance)])
 	var outcome := resolve(session, instance, interaction)
 	if outcome.has("error"):
+		Telemetry.record(session, {"type": "interaction", "target": instance_id, "method": interaction.get("world_method", interaction.id), "outcome": "refused", "reason": outcome.error})
 		return _refuse(session, outcome.error + " — no turn spent")
 	return {"type": "interact", "place": true, "name": definition.name, "received": outcome.received, "events": outcome.events}
 
@@ -188,6 +197,11 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	var event: Dictionary = layer.event(interaction.event)
 	var definition: Dictionary = layer.definition_for(instance)
 	var p: Dictionary = event.payload
+	var method := str(interaction.get("world_method", ""))
+	if not method.is_empty():
+		var requirement := WorldRules.requirement(session, definition.payload.world_properties, method)
+		if not requirement.is_empty(): return {"error": requirement}
+		p = WorldRules.response(definition.payload.world_properties, method, p)
 	var missing := unmet(session, p.get("conditions", []))
 	if not missing.is_empty():
 		return {"error": "%s: requires %s" % [interaction.get("verb", "Explore"), ", ".join(missing)]}
@@ -199,7 +213,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 		if removal.is_empty():
 			return {"error": "%s: needs %s x%d" % [interaction.get("verb", "Explore"), str(session._definition(item.content_id, int(item.version)).get("name", item.content_id)), int(item.get("quantity", 1))]}
 		inventory = removal.inventory
-	var key := "location-v1/%d/%d/%d/%s@%d/%s/%s" % [int(session.world.seed), int(session.world.generation_version), int(session.run.seed), event.content_id, int(event.version), instance.instance_id, interaction.id]
+	var key := _roll_key(session, event, instance.instance_id, interaction.id)
 	# `chance` branches resolve first (fixed per Run and place); nothing else changes.
 	var resolved: Dictionary = Events.effective(p.outcomes, key)
 	var outcomes: Array = resolved.outcomes
@@ -235,7 +249,15 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	mutation.resolved[interaction.id] = {"turn": int(session.run.state.turn), "event": {"content_id": event.content_id, "version": int(event.version)}, "received": award.received.duplicate(true)}
 	session.run.state.entity_mutations[instance.instance_id] = mutation
 	session.dirty = true
-	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", "")] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
+	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", ""), layer.clue(instance, true)] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
+	if not method.is_empty():
+		mutation.world_state = "thawed" if method == "heat" else "shattered"
+		mutation.world_rule_version = 1
+		var fact := WorldRules.knowledge(method)
+		if Knowledge.unlock(session, fact):
+			events.append({"type": "knowledge", "name": fact.title})
+			Telemetry.record(session, {"type": "knowledge_unlock", "knowledge_id": fact.id})
+	Telemetry.record(session, {"type": "interaction", "target": instance.instance_id, "definition": definition.content_id, "definition_version": int(definition.version), "method": method if not method.is_empty() else interaction.id, "outcome": "success", "state": mutation.get("world_state", "resolved"), "received": award.received, "damage": damage})
 	var source := {"content_id": event.content_id, "version": int(event.version), "actor": "player"}
 	for outcome in outcomes:
 		match outcome.type:
@@ -249,6 +271,50 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	session.refresh_stats()
 	return {"events": events, "received": award.display_received}
 
+func _roll_key(session: RefCounted, event: Dictionary, instance_id: String, interaction_id: String) -> String:
+	return "location-v1/%d/%d/%d/%s@%d/%s/%s" % [int(session.world.seed), int(session.world.generation_version), int(session.run.seed), event.content_id, int(event.version), instance_id, interaction_id]
+
+func notes(session: RefCounted) -> Array:
+	## Journal: what this Run's resolved places told the player, newest first. Rebuilt from
+	## the saved record (pinned event + the same Run-keyed chance roll); nothing new is stored,
+	## no position or unresolved text is revealed.
+	var result: Array = []
+	var mutations: Dictionary = session.run.state.entity_mutations
+	for id in mutations:
+		var resolved: Dictionary = record(session, str(id)).get("resolved", {})
+		if resolved.is_empty(): continue
+		var instance: Dictionary = layer.find(str(id))
+		if instance.is_empty(): instance = layer.registry.load_instance(session.world.world_id, str(id))
+		if instance.is_empty(): continue
+		var place := _pinned(session, instance)
+		for interaction_id in resolved:
+			var entry: Variant = resolved[interaction_id]
+			if not entry is Dictionary or not entry.get("event") is Dictionary: continue
+			var event := _pinned(session, entry.event)
+			if event.is_empty(): continue
+			var p: Dictionary = event.payload
+			var text := " ".join([p.get("message", "")] + Events.effective(p.get("outcomes", []), _roll_key(session, event, str(id), str(interaction_id))).notes).strip_edges()
+			if text.is_empty(): continue
+			var verb := str(interaction_id)
+			for interaction in place.get("payload", {}).get("interactions", []):
+				if interaction.id == interaction_id: verb = str(interaction.get("verb", verb))
+			result.append({"turn": int(entry.get("turn", 0)), "target": str(id), "interaction": str(interaction_id), "place": str(place.get("name", "")), "verb": verb, "message": text})
+	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.turn > b.turn or (a.turn == b.turn and (a.target + "/" + a.interaction) < (b.target + "/" + b.interaction)))
+	return result
+
+func _pinned(session: RefCounted, ref: Dictionary) -> Dictionary:
+	## Active definitions are cached by the layer; an older pinned version still loads.
+	var definition: Dictionary = layer.event(ref)
+	return definition if not definition.is_empty() else layer.registry.load_definition(session.world.world_id, ref.content_id, int(ref.version))
+
 func _refuse(session: RefCounted, message: String) -> Dictionary:
 	session.last_error = message
 	return {}
+
+func reveal_start(session: RefCounted) -> Array:
+	## New structured Run only: its safe waystone grants clues, never a turn/effect.
+	for instance in layer.loaded():
+		if instance.content_id == "m03:place/waystone" and int(instance.position.x) == session.position.x and int(instance.position.y) == session.position.y:
+			return _discover(session, instance)
+	return []

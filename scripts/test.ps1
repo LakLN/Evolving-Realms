@@ -35,6 +35,7 @@ function Invoke-EngineCheck {
 try {
     Invoke-EngineCheck -Name 'import' -EngineArgs @('--headless', '--editor', '--import')
     Invoke-EngineCheck -Name 'data' -EngineArgs @('--headless', '--script', 'res://tests/data_suite.gd') -Summary 'CHECKPOINT B: \d+ checks, 0 failures' -ExpectedErrors @('injected failure', 'table content_definitions already exists')
+    Invoke-EngineCheck -Name 'm03-world' -EngineArgs @('--headless', '--script', 'res://tests/m03_world_suite.gd') -Summary 'M03 STRUCTURED WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'world' -EngineArgs @('--headless', '--script', 'res://tests/world_suite.gd') -Summary 'CHECKPOINT C WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'run01-world' -EngineArgs @('--headless', '--script', 'res://tests/run01_world_suite.gd') -Summary 'RUN01 WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'gameplay' -EngineArgs @('--headless', '--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'
@@ -69,10 +70,26 @@ try {
     Invoke-EngineCheck -Name 'ai-world' -EngineArgs @('--headless', '--script', 'res://tests/ai_world_suite.gd') -Summary 'M02 CHECKPOINT H AI WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'discoveries' -EngineArgs @('--headless', '--script', 'res://tests/discovery_suite.gd') -Summary 'M02 CHECKPOINT I DISCOVERIES: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'discovery-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'map' -EngineArgs @('--headless', '--script', 'res://tests/map_gameplay_suite.gd') -Summary 'M03 MAP GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'run01-content' -EngineArgs @('--headless', '--script', 'res://tests/run01_content_suite.gd') -Summary 'RUN01 CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'telemetry' -EngineArgs @('--headless', '--script', 'res://tests/telemetry_suite.gd') -Summary 'RUN 01 TELEMETRY: \d+ checks, 0 failures'
-    Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5')
+    Invoke-EngineCheck -Name 'realtime' -EngineArgs @('--headless', '--script', 'res://tests/realtime_suite.gd') -Summary 'M03 REALTIME: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'realtime-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/realtime_gameplay_suite.gd') -Summary 'M03 REALTIME GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'm03-integration' -EngineArgs @('--headless', '--script', 'res://tests/m03_integration_suite.gd') -Summary 'M03 INTEGRATION: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'land-package' -EngineArgs @('--headless', '--script', 'res://tests/land_package_suite.gd') -Summary 'M05 LAND PACKAGE: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'm04-world' -EngineArgs @('--headless', '--script', 'res://tests/m04_world_suite.gd') -Summary 'M04 WORLD: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'm04-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/m04_gameplay_suite.gd') -Summary 'M04 GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'snow-mountain' -EngineArgs @('--headless', '--script', 'res://tests/snow_mountain_suite.gd') -Summary 'M05 SNOW MOUNTAIN: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'snow-content' -EngineArgs @('--headless', '--script', 'res://tests/snow_content_suite.gd') -Summary 'M05 SNOW CONTENT: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'snow-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/snow_mountain_gameplay_suite.gd') -Summary 'M05 SNOW GAMEPLAY: \d+ checks, 0 failures'
+    # Keep smoke startup away from the player's database, including opt-in World tests.
+    $startupDatabase = 'user://startup-tests/' + [guid]::NewGuid().ToString() + '.sqlite'
+    Invoke-EngineCheck -Name 'startup' -EngineArgs @('--headless', '--quit-after', '5', '--', ('--database=' + $startupDatabase))
     if ($Render) {
+        Invoke-EngineCheck -Name 'rendered-realtime' -EngineArgs @('--script', 'res://tests/realtime_gameplay_suite.gd') -Summary 'M03 REALTIME GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-snow-gameplay' -EngineArgs @('--script', 'res://tests/snow_mountain_gameplay_suite.gd') -Summary 'M05 SNOW GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-m04-gameplay' -EngineArgs @('--script', 'res://tests/m04_gameplay_suite.gd') -Summary 'M04 GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-m03-integration' -EngineArgs @('--script', 'res://tests/m03_integration_suite.gd') -Summary 'M03 INTEGRATION: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-discoveries' -EngineArgs @('--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-effects' -EngineArgs @('--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-gameplay' -EngineArgs @('--script', 'res://tests/gameplay_suite.gd') -Summary 'CHECKPOINT C GAMEPLAY: \d+ checks, 0 failures'

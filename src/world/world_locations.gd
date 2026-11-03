@@ -3,19 +3,26 @@ extends RefCounted
 ## region. Placements are a pure function of World seed, terrain v1, the chunk, its
 ## object placements and the revision/layers it was established with (RegionLedger).
 ## They are World facts; discovery and resolution are per-Run entity mutations.
+const Structured = preload("res://src/world/structured_world.gd")
+const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Encounters = preload("res://src/world/world_encounters.gd")
 const Region = preload("res://src/world/region_context.gd")
 const Events = preload("res://src/core/world_events.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
+const WorldRules = preload("res://src/core/world_rules.gd")
 const LAYER := "locations-v1"
 const GENERATION_VERSION := 1
 const BUDGET := 1 # At most one special place per chunk, whatever is activated.
-const FIELDS := ["category", "visual", "spawn", "discovery", "interactions"]
+const FIELDS := ["category", "visual", "spawn", "discovery", "interactions", "world_properties"]
 const DISCOVERY := ["visible", "proximity", "hidden", "search"]
 const TRIGGERS := ["discover", "enter", "interact"]
+var regions: RefCounted
+## Atlas Worlds (M04): the terrain pins land sites (waystones, landmarks) like M03 regions.
+var atlas_sites: RefCounted
 var world: Dictionary
 var terrain: RefCounted
 var registry: RefCounted
@@ -37,13 +44,18 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 	if not p.get("category") is String or p.category.is_empty() or p.category.length() > 32: return {"problem": "Location needs a category (1..32 characters)", "missing": missing}
 	if not p.get("visual", "location") is String: return {"problem": "Location visual must be a string", "missing": missing}
 	var spawn: Variant = p.get("spawn")
-	if not spawn is Dictionary or not spawn.get("biomes") is Array or spawn.biomes.is_empty() or spawn.biomes.size() > 3 or not spawn.biomes.all(func(b: Variant) -> bool: return b in Terrain.BIOMES):
+	if not spawn is Dictionary or not spawn.get("biomes") is Array or spawn.biomes.is_empty() or spawn.biomes.size() > 3 or not spawn.biomes.all(func(b: Variant) -> bool: return b in Surfaces.HABITATS):
 		return {"problem": "Location spawn needs 1..3 of forest/beach/meadow", "missing": missing}
 	if not Events._between(spawn.get("per_10000"), 1, 50) or not Events._between(spawn.get("priority", 50), 0, 100): return {"problem": "Location spawn needs per_10000 1..50 and priority 0..100", "missing": missing}
 	for key in spawn:
 		if key not in ["biomes", "per_10000", "priority", "conditions"]: missing.append("parameter.location_spawn." + str(key))
 	var problem := Encounters.check_spawn_conditions(spawn.get("conditions", []), missing, "location")
 	if not problem.is_empty(): return {"problem": problem, "missing": missing}
+	if p.has("world_properties"):
+		problem = WorldRules.validate(p.world_properties, missing)
+		if not problem.is_empty(): return {"problem": problem, "missing": missing}
+		for item in p.world_properties.thaw_fuel:
+			if not Events._pinned(definition, item) or registry.load_definition(world_id, item.content_id, int(item.version)).get("kind") != "item": return {"problem": "Thaw fuel must pin an item dependency", "missing": missing}
 	var discovery: Variant = p.get("discovery", {"mode": "visible"})
 	if not discovery is Dictionary or not discovery.get("mode") is String: return {"problem": "Discovery needs a mode", "missing": missing}
 	if discovery.mode not in DISCOVERY: missing.append("location.discovery." + discovery.mode)
@@ -57,7 +69,13 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 		if not interaction is Dictionary or not interaction.get("id") is String or not RegEx.create_from_string("^[a-z][a-z0-9_]{0,31}$").search(interaction.id) or interaction.id in ids:
 			return {"problem": "Interaction needs a unique lower-case id", "missing": missing}
 		for key in interaction:
-			if key not in ["id", "verb", "trigger", "event", "after", "exclusive"]: missing.append("parameter.location_interaction." + str(key))
+			if key not in ["id", "verb", "trigger", "event", "after", "exclusive", "world_method", "reveal_conditions"]: missing.append("parameter.location_interaction." + str(key))
+		if interaction.has("world_method"):
+			if not p.has("world_properties"): return {"problem": "World method needs object properties", "missing": missing}
+			if interaction.world_method not in ["heat", "force"]: missing.append("world_rule.method." + str(interaction.world_method))
+			if not interaction.get("exclusive", false) or interaction.get("trigger", "interact") != "interact": return {"problem": "World methods require exclusive player interactions", "missing": missing}
+		problem = Events.check_conditions(interaction.get("reveal_conditions", []), context, skills, missing)
+		if not problem.is_empty(): return {"problem": problem, "missing": missing}
 		if not interaction.get("verb", "Explore") is String or interaction.get("verb", "").length() > 40: return {"problem": "Interaction verb must be short text", "missing": missing}
 		if interaction.get("trigger", "interact") not in TRIGGERS: missing.append("location.trigger." + str(interaction.get("trigger")))
 		if interaction.has("after") and interaction.after not in ids: return {"problem": "Interaction 'after' must name an earlier interaction", "missing": missing}
@@ -66,6 +84,9 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 		if not ref is Dictionary or not Data.identifier(ref.get("content_id")) or not Data.integer(ref.get("version")) or not Events._pinned(definition, ref):
 			return {"problem": "Interaction event must be a pinned dependency", "missing": missing}
 		if registry.load_definition(world_id, ref.content_id, int(ref.version)).get("kind") != "world_event": return {"problem": "Interaction event must be a world_event: " + str(ref.content_id), "missing": missing}
+		if interaction.has("world_method"):
+			var response: Dictionary = registry.load_definition(world_id, ref.content_id, int(ref.version)).payload
+			if response.has("cost") or not response.get("outcomes", []).all(func(o: Dictionary) -> bool: return o.type == "grant_items"): return {"problem": "Ice supply events describe intact item contents only; rules own costs and damage", "missing": missing}
 		ids.append(interaction.id)
 	return {"problem": "", "missing": missing}
 
@@ -75,6 +96,8 @@ static func revision_of(definition: Dictionary) -> int:
 	return int(value) if Data.integer(value) else 0
 
 func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted, region_ledger: RefCounted, object_layer: RefCounted, context: Dictionary, skills: RefCounted) -> bool:
+	regions = object_layer.regions
+	atlas_sites = generator if generator.has_method("placements") else null
 	world = blueprint
 	terrain = generator
 	registry = content
@@ -98,6 +121,9 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 				return _fail("Location %s uses an unsupported event %s: %s %s" % [header.content_id, interaction.event.content_id, checked.problem, str(checked.missing)])
 			definitions[_key(event.content_id, int(event.version))] = event
 		definitions[_key(definition.content_id, int(definition.version))] = definition
+		if (regions != null or atlas_sites != null) and definition.content_id.begins_with("m03:place/"): continue
+		# Land-package places (M05) exist only where a land plan pins them as sites.
+		if definition.get("metadata", {}).get("site_only", false) == true: continue
 		rules.append({"definition": definition, "revision": revision_of(definition), "stream": Loot.number("locations-v1/" + definition.content_id)})
 	last_error = ""
 	return true
@@ -119,30 +145,36 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 	## Pure: special places of a chunk established with these layers at this revision.
 	if LAYER not in layers:
 		return []
+	var destinations: Array = regions.placements(chunk) if regions != null and "structured-world-v1" in layers and at_revision >= 1 else []
+	if atlas_sites != null and "atlas-world-v1" in layers:
+		destinations = atlas_sites.placements(chunk)
 	var active := rules_at(at_revision)
 	if active.is_empty():
-		return []
+		return destinations
 	if bytes.is_empty():
 		bytes = terrain.generate_chunk(chunk)
 	var occupied := {}
 	var placed: Array = objects.chunks[chunk] if objects.chunks.has(chunk) else objects.generate_chunk(chunk)
 	for instance in placed: # Never cover or replace an object (landmarks included).
 		occupied[Vector2i(int(instance.position.x), int(instance.position.y))] = true
+	for instance in destinations: occupied[Vector2i(int(instance.position.x), int(instance.position.y))] = true
 	var shares := Region.biome_shares(bytes)
 	var danger := Region.danger(terrain, chunk)
 	var eligible := active.filter(func(rule: Dictionary) -> bool: return Encounters._chunk_allows(rule.definition.payload.spawn, shares, danger))
 	var origin := chunk * Terrain.CHUNK_SIZE
 	var order_stream := Loot.number("locations-v1/order")
+	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
 	var best := {}
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			var point := origin + Vector2i(x, y)
-			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point):
+			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
+			if habitat.is_empty() or occupied.has(point):
 				continue
 			for rule in eligible:
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if Terrain.BIOMES[ground] not in spawn.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
+				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
 					continue
 				# Four neighbour probes recompute terrain instead of reading chunk bytes.
 				# Test it only for spawn candidates; all rules share this predicate.
@@ -154,9 +186,9 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 					best = {"point": point, "local": Vector2i(x, y), "rule": rule, "order": order}
 				break
 	if best.is_empty() or BUDGET < 1:
-		return []
+		return destinations
 	var definition: Dictionary = best.rule.definition
-	return [{"instance_id": "loc:v%d/%d/%d/%d_%d" % [GENERATION_VERSION, chunk.x, chunk.y, best.local.x, best.local.y],
+	return destinations + [{"instance_id": "loc:v%d/%d/%d/%d_%d" % [GENERATION_VERSION, chunk.x, chunk.y, best.local.x, best.local.y],
 		"content_id": definition.content_id, "version": int(definition.version), "position": {"x": best.point.x, "y": best.point.y}, "origin": "procedural",
 		"metadata": {"location_generation_version": GENERATION_VERSION, "location_revision": best.rule.revision, "established_revision": at_revision}}]
 
@@ -226,9 +258,59 @@ func materialize(instance: Dictionary) -> bool:
 		return _fail(registry.last_error)
 	return true
 
+func _sited(instance_id: String) -> bool:
+	## Pinned destinations with leads: M03 structured regions or M04 atlas land sites.
+	return (regions != null and instance_id.begins_with("loc:sw1/")) or (atlas_sites != null and instance_id.begins_with("loc:atlas/"))
+
 func _key(content_id: String, version: int) -> String:
 	return "%s@%d" % [content_id, version]
 
 func _fail(message: String) -> bool:
 	last_error = message
 	return false
+
+func clue(instance: Dictionary, include_frontiers: bool = false) -> String:
+	if not _sited(str(instance.instance_id)): return ""
+	var text := Structured.clue(instance, instance.get("metadata", {}).get("leads", []))
+	if include_frontiers:
+		for frontier in instance.get("metadata", {}).get("frontiers", []):
+			text += " Beyond here: %s to the %s (%s). Route unsurveyed; water may require a detour." % [frontier.name, frontier.direction, frontier.opportunity]
+	return text
+
+func known_leads(mutations: Dictionary, from: Vector2i) -> Array:
+	last_error = ""
+	var found := {}
+	for id in mutations:
+		if not _sited(str(id)): continue
+		if not mutations[id].get("location", false) or not mutations[id].get("discovered", false): continue
+		var instance: Dictionary = registry.load_instance(world.world_id, id)
+		if instance.is_empty():
+			_fail(registry.last_error)
+			return []
+		for lead in instance.get("metadata", {}).get("leads", []):
+			var result: Dictionary = lead.duplicate(true)
+			result["knowledge"] = "discovered" if mutations.get(lead.instance_id, {}).get("discovered", false) else "lead"
+			result["resolved"] = not mutations.get(lead.instance_id, {}).get("resolved", {}).is_empty()
+			result["manhattan_distance"] = absi(int(lead.position.x) - from.x) + absi(int(lead.position.y) - from.y)
+			found[lead.instance_id] = result
+	var ids: Array = found.keys()
+	ids.sort()
+	var result: Array = []
+	for id in ids: result.append(found[id])
+	return result
+
+func known_frontiers(mutations: Dictionary) -> Array:
+	last_error = ""
+	var found := {}
+	for id in mutations:
+		if not _sited(str(id)) or mutations[id].get("resolved", {}).is_empty(): continue
+		var instance: Dictionary = registry.load_instance(world.world_id, id)
+		if instance.is_empty():
+			_fail(registry.last_error)
+			return []
+		for frontier in instance.get("metadata", {}).get("frontiers", []): found[frontier.region_id] = frontier.duplicate(true)
+	var ids: Array = found.keys()
+	ids.sort()
+	var result: Array = []
+	for id in ids: result.append(found[id])
+	return result

@@ -158,3 +158,14 @@ Checkpoint E exports and verifies the standalone Windows build (README, Standalo
 build). Fog cost measured in E: about 9 new tiles and ~200 bytes of save JSON per
 exploratory step; 100k remembered tiles saved in ~2.5 s and resumed in ~1.7 s. With
 chunk masks (Milestone 02 final) see the before/after table in PROGRESS.
+
+## Milestone 03 opt-in World Core
+
+New structured Worlds retain frozen terrain v1 and explicitly store
+`blueprint.metadata.structured_world_version=1`. Existing Worlds remain unchanged.
+Named 128-tile survey districts add connected waystone/supply/relic destinations,
+Run-scoped acquired leads and unsurveyed onward bearings through existing location
+and event handlers. No new database schema or UI is introduced. See
+[M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md) for creation, version safety, Map/AI
+contracts, examples and limits. Use `StructuredWorld.create` only for new Worlds;
+do not edit an old Blueprint to opt in.

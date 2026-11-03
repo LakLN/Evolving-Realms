@@ -1,9 +1,13 @@
 extends RefCounted
 ## Object layer v1. Definitions are data; placements are non-blocking.
+const Structured = preload("res://src/world/structured_world.gd")
+const Regions = preload("res://src/world/structured_regions.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Pack = preload("res://src/content/starter_pack.gd")
 const Loot = preload("res://src/core/loot_table.gd")
+var regions: RefCounted
 var world: Dictionary
 var terrain: RefCounted
 var terrain_cache: RefCounted
@@ -15,6 +19,7 @@ var center := Vector2i(2147483647, 2147483647)
 var last_error := ""
 
 func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted, cache: RefCounted) -> bool:
+	regions = Regions.new(generator) if Structured.enabled(blueprint) else null
 	world = blueprint
 	terrain = generator
 	registry = content
@@ -40,7 +45,8 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 			return false
 		definitions[_key(definition.content_id, 1)] = definition
 		if definition.payload.has("spawn"):
-			rules.append({"definition": definition, "stream": Loot.number("objects-v1/" + definition.content_id), "priority": int(definition.payload.spawn.get("priority", 20))})
+			# ecology_only (M05 land packages): only where a land's ecology adapts it, never natively.
+			rules.append({"definition": definition, "stream": Loot.number("objects-v1/" + definition.content_id), "priority": int(definition.payload.spawn.get("priority", 20)), "ecology_only": definition.payload.spawn.get("ecology_only", false) == true})
 	rules.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.priority < b.priority or (a.priority == b.priority and a.definition.content_id < b.definition.content_id))
 	for location in world.blueprint.fixed_locations:
 		if not location is Dictionary or not location.has("content_id"):
@@ -73,7 +79,7 @@ func _valid_definition(definition: Dictionary) -> bool:
 		if not spawn is Dictionary or not spawn.get("biomes") is Array or spawn.biomes.is_empty() or not Data.integer(spawn.get("per_10000")) or spawn.per_10000 < 0 or spawn.per_10000 > 10000 or not Data.integer(spawn.get("priority", 20)):
 			return _fail("Invalid object distribution: " + str(definition.content_id))
 		for biome in spawn.biomes:
-			if biome not in Terrain.BIOMES:
+			if biome not in Surfaces.HABITATS:
 				return _fail("Unsupported object spawn biome")
 	return true
 
@@ -122,6 +128,13 @@ func generate_chunk(chunk: Vector2i) -> Array:
 		_fail(registry.last_error)
 		return []
 	var result: Array = []
+	var reserved := {}
+	var regional_percent := 100
+	if regions != null:
+		regional_percent = int(regions.describe(Regions.cell_of(origin)).resource_percent)
+		for destination in regions.placements(chunk): reserved[Vector2i(int(destination.position.x), int(destination.position.y))] = true
+	elif terrain.has_method("placements"): # Atlas land sites keep their tiles free too.
+		for destination in terrain.placements(chunk): reserved[Vector2i(int(destination.position.x), int(destination.position.y))] = true
 	var occupied := {}
 	for instance in persisted:
 		var key := _key(instance.content_id, int(instance.version))
@@ -135,6 +148,9 @@ func generate_chunk(chunk: Vector2i) -> Array:
 		if not _valid_instance(instance):
 			return []
 		var point := Vector2i(int(instance.position.x), int(instance.position.y))
+		if reserved.has(point):
+			_fail("Authored object overlaps a structured destination; placement refused")
+			return []
 		if occupied.has(point):
 			_fail("Conflicting established objects share a tile")
 			return []
@@ -143,15 +159,21 @@ func generate_chunk(chunk: Vector2i) -> Array:
 	var bytes: PackedByteArray = terrain_cache.chunks.get(chunk, PackedByteArray())
 	if bytes.is_empty():
 		bytes = terrain.generate_chunk(chunk)
+	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var point := origin + Vector2i(x, y)
 			var ground: int = bytes[y * 32 + x]
-			if ground not in [Terrain.FOREST, Terrain.BEACH, Terrain.MEADOW] or occupied.has(point):
+			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
+			if habitat.is_empty() or occupied.has(point) or reserved.has(point):
 				continue
 			for rule in rules:
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if Terrain.BIOMES[ground] not in spawn.biomes or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000):
+				var chance := int(spawn.per_10000)
+				if regions != null and rule.definition.content_id.begins_with("m03:resource/"): chance = chance * regional_percent / 100
+				# Most placement rolls fail. Test the same deterministic roll before
+				# querying area ecology; rule order and accepted placements stay identical.
+				if terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance or not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
 					continue
 				result.append({"instance_id": "proc:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"object_generation_version": 1}})
 				break

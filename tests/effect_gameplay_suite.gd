@@ -20,6 +20,7 @@ func run_test() -> void:
 	app = load("res://scenes/main.tscn").instantiate()
 	app.database_path = ProjectSettings.globalize_path("user://m02f-ui-" + Data.uuid() + ".sqlite")
 	root.add_child(app)
+	app.use_legacy_defaults() # Pre-M03 baseline: legacy World layout, turn model (see main.gd).
 	await process_frame
 	app._name_entry.text = "Elemental field test"
 	app._world_seed.text = "1847"

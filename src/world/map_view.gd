@@ -6,10 +6,20 @@ extends Node2D
 const Terrain = preload("res://src/world/terrain_v1.gd")
 const Palette = preload("res://src/world/tile_palette.gd")
 const Art = preload("res://src/world/art.gd")
+const Surfaces = preload("res://src/world/surfaces.gd")
+## Fallback palette (no art index): atlas surfaces drawn as their nearest v1 cell.
+const PALETTE_OF := {Surfaces.SNOW: 2, Surfaces.TAIGA: 0, Surfaces.PINE: 4, Surfaces.ICE: 3, Surfaces.ASH: 1, Surfaces.CINDER: 1, Surfaces.LAVA: 3, Surfaces.BASALT: 5, Surfaces.VEIL: 6, Surfaces.ROAD: 1,
+	Surfaces.CLIFF: 5, Surfaces.FROZEN: 2, Surfaces.TRAIL: 1, Surfaces.FLOOR: 1, Surfaces.TIMBER: 4}
 const DISPOSITION_COLORS := {"hostile": Color("e0564b"), "neutral": Color("e0b34b"), "passive": Color("7fd17a")}
 const BODY_COLORS := {"wolf": Color("9aa2a8"), "boar": Color("8a5a3c"), "rabbit": Color("e6dccb"), "deer": Color("c08a52"), "crab": Color("e2713f")}
 const KINDS := {Terrain.FOREST: "forest", Terrain.BEACH: "beach", Terrain.MEADOW: "meadow", Terrain.WATER: "ocean", Terrain.TREE: "forest"}
 const STEP_TIME := 0.13
+## Real-time Runs (M03 B): tweens last exactly one step (player_step_time, or a
+## creature's runtime `step_ms`), start from the drawn position and allow diagonals.
+## Off for turn Runs, whose rendering is unchanged.
+var smooth_steps := false
+var player_step_time := STEP_TIME
+var _player_tween_origin := Vector2i.ZERO
 const FOG_UNSEEN := Color(0.02, 0.03, 0.05, 1.0)
 const FOG_REMEMBERED := Color(0.03, 0.05, 0.09, 0.58)
 var session: RefCounted
@@ -45,6 +55,13 @@ var _stack := 0 # Centred popups of one turn stack upward instead of overlapping
 var _fx_layer := Node2D.new()
 var _dying: Array = [] # Creature nodes playing their death; shifted like effects.
 var _has_origin := false
+## M05 weather readability (presentation only, PLACEHOLDER for snow:art/weather): thin
+## wind-blown streaks while a blizzard blows (sparser when one is coming) and a ring at
+## the hero's feet: pulsing red when exposed, steady ice-blue when sheltered.
+var _weather_layer := Node2D.new()
+var _weather_time := 0.0
+var _weather_poll := 0.0
+var weather_status: Dictionary = {}
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -64,6 +81,9 @@ func _ready() -> void:
 	_fog_texture = ImageTexture.create_from_image(_fog_image)
 	_fog.texture = _fog_texture
 	add_child(_fog)
+	_weather_layer.z_index = 5
+	_weather_layer.draw.connect(_draw_weather)
+	add_child(_weather_layer)
 	_mark_layer.z_index = 5
 	_mark_layer.draw.connect(_draw_marks)
 	add_child(_mark_layer)
@@ -89,6 +109,43 @@ func _ready() -> void:
 	_player.add_child(camera)
 	camera.enabled = true
 
+func _process(delta: float) -> void:
+	if session == null or not session.has_method("environment_status"):
+		return
+	_weather_time += delta
+	_weather_poll -= delta
+	var was := _weather_drawn()
+	if _weather_poll <= 0.0:
+		_weather_poll = 0.25
+		weather_status = session.environment_status() if not session.run.is_empty() else {}
+	if was or _weather_drawn():
+		_weather_layer.queue_redraw()
+
+func _weather_drawn() -> bool:
+	return not weather_status.is_empty() and (not str(weather_status.get("weather", "")).is_empty() or not str(weather_status.get("incoming", "")).is_empty())
+
+func _draw_weather() -> void:
+	if session == null or not _weather_drawn():
+		return
+	var active := not str(weather_status.get("weather", "")).is_empty()
+	var view := get_viewport_rect().size / (camera.zoom if camera != null else Vector2.ONE) + Vector2(80, 80)
+	var center: Vector2 = _player.position
+	if active:
+		_weather_layer.draw_rect(Rect2(center - view / 2.0, view), Color(0.86, 0.91, 1.0, 0.1))
+	var count := 170 if active else 45
+	for i in count:
+		var speed := 0.75 + float(Art.tile_roll(Vector2i(i, 3), 41) % 100) / 200.0
+		var base := Vector2(Art.tile_roll(Vector2i(i, 1), 41) % int(view.x), Art.tile_roll(Vector2i(i, 2), 41) % int(view.y))
+		var drift := Vector2(-260.0, 140.0) * _weather_time * speed
+		var at := Vector2(fposmod(base.x + drift.x, view.x), fposmod(base.y + drift.y, view.y)) - view / 2.0 + center
+		_weather_layer.draw_line(at, at + Vector2(-11.0, 6.0) * speed, Color(1, 1, 1, 0.6 if active else 0.35), 1.5)
+	var feet := center + Vector2(0, px * 0.32)
+	if weather_status.get("exposed", false):
+		var pulse := 0.5 + 0.5 * sin(_weather_time * 6.0)
+		_weather_layer.draw_arc(feet, px * 0.55, 0, TAU, 28, Color(0.96, 0.33, 0.28, 0.45 + 0.45 * pulse), 3.0)
+	elif weather_status.get("sheltered", false):
+		_weather_layer.draw_arc(feet, px * 0.55, 0, TAU, 28, Color(0.58, 0.86, 1.0, 0.8), 2.0)
+
 func attach(active_session: RefCounted) -> void:
 	clear_map()
 	session = active_session
@@ -110,6 +167,8 @@ func clear_map() -> void:
 	_dying.clear()
 	_has_origin = false
 	session = null
+	weather_status = {}
+	_weather_layer.queue_redraw()
 	_object_layer.queue_redraw()
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
@@ -124,6 +183,8 @@ func _feet(tile: Vector2i) -> Vector2:
 func refresh() -> void:
 	if session == null:
 		return
+	var profile_start := Time.get_ticks_usec()
+	var added := 0
 	var next_origin: Vector2i = session.cache.center * Terrain.CHUNK_SIZE
 	if _has_origin and next_origin != _origin:
 		_shift_transients(Vector2(_origin - next_origin) * px)
@@ -136,8 +197,11 @@ func refresh() -> void:
 	for chunk in session.cache.chunks:
 		if not chunk_nodes.has(chunk):
 			_add_chunk(chunk)
+			added += 1
 		# Chunk-local cells avoid TileMapLayer's serialized coordinate limits.
 		chunk_nodes[chunk].root.position = Vector2(chunk * Terrain.CHUNK_SIZE - _origin) * px
+	if added > 0 and OS.get_cmdline_user_args().has("--profile-streaming"):
+		print("PROFILE presentation chunks=%d ms=%.2f" % [added, (Time.get_ticks_usec() - profile_start) / 1000.0])
 	_update_fog()
 	_update_player()
 	_sync_creatures()
@@ -151,6 +215,19 @@ func _shift_transients(offset: Vector2) -> void:
 	_dying = _dying.filter(func(node: Variant) -> bool: return is_instance_valid(node) and node is Node2D)
 	for node in _dying:
 		node.position += offset
+	if smooth_steps:
+		# Real time: actors may be mid-step when the origin moves; keep their on-screen
+		# position so the next tween continues from where they are drawn.
+		_player.position += offset
+		for entry in _creatures.values():
+			entry.node.position += offset
+
+func sync_actors() -> void:
+	## Real time: creatures moved or acted but the hero did not (no fog/chunk work).
+	if session == null:
+		return
+	_sync_creatures()
+	_mark_layer.queue_redraw()
 
 func face(direction: Vector2i) -> void:
 	## Turn the hero toward an attempted move, even when the move is blocked.
@@ -161,7 +238,12 @@ func face(direction: Vector2i) -> void:
 # ------------------------------------------------------------------ terrain
 
 func _kind(tile: Vector2i) -> String:
-	var value: int = session.cache.tile_at(tile)
+	return _kind_of(session.cache.tile_at(tile), tile)
+
+func _kind_of(value: int, tile: Vector2i) -> String:
+	## Art ground kind of a tile: blockers draw on their land/biome ground.
+	if session.terrain.has_method("art_kind_at"): # Atlas lands (M04).
+		return session.terrain.art_kind_at(tile) if Surfaces.opaque(value) else Surfaces.ART_KIND.get(value, "veil")
 	if value == Terrain.ROCK:
 		return session.terrain.biome_at(tile)
 	return KINDS.get(value, "meadow")
@@ -178,10 +260,11 @@ func _add_chunk(chunk: Vector2i) -> void:
 	if not art.ready():
 		for y in Terrain.CHUNK_SIZE:
 			for x in Terrain.CHUNK_SIZE:
-				ground.set_cell(Vector2i(x, y), 0, Vector2i(bytes[y * Terrain.CHUNK_SIZE + x], 0))
+				var raw: int = bytes[y * Terrain.CHUNK_SIZE + x]
+				ground.set_cell(Vector2i(x, y), 0, Vector2i(PALETTE_OF.get(raw, raw), 0))
 		return
 	var overlays: Array = []
-	for i in Art.OVERLAYS.size():
+	for i in art.overlay_specs.size():
 		var layer := TileMapLayer.new()
 		layer.tile_set = _tiles
 		root.add_child(layer)
@@ -204,29 +287,37 @@ func _add_chunk(chunk: Vector2i) -> void:
 			var global_tile := base + Vector2i(x - 1, y - 1)
 			var inside := x > 0 and y > 0 and x <= Terrain.CHUNK_SIZE and y <= Terrain.CHUNK_SIZE
 			var value: int = bytes[(y - 1) * Terrain.CHUNK_SIZE + x - 1] if inside else -1
-			kinds[y * side + x] = (session.terrain.biome_at(global_tile) if value == Terrain.ROCK else KINDS[value]) if inside else _kind(global_tile)
+			kinds[y * side + x] = _kind_of(value, global_tile) if inside else _kind(global_tile)
 	var offsets := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(-1, -1)]
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var local := Vector2i(x, y)
 			var global_tile := base + local
 			var kind: String = kinds[(y + 1) * side + x + 1]
-			ground.set_cell(local, Art.GROUND_SOURCE, Art.pick(art.ground[kind], Art.tile_roll(global_tile, 1)))
-			for i in Art.OVERLAYS.size():
-				if not kind in Art.OVERLAYS[i][1]:
+			if not art.ground.has(kind): kind = "meadow"
+			var drawn := kind
+			if kind == "cliff" and kinds[(y + 2) * side + x + 1] != "cliff": drawn = "cliff_face" # Wall face toward the viewer.
+			ground.set_cell(local, art.ground_source(drawn), Art.pick(art.ground[drawn], Art.tile_roll(global_tile, 1)))
+			for i in art.overlay_specs.size():
+				if not kind in art.overlay_specs[i][0]:
 					continue
 				var mask := 0
 				for bit in 8:
 					var near: Vector2i = local + offsets[bit] + Vector2i.ONE
-					if kinds[near.y * side + near.x] in Art.OVERLAYS[i][2]:
+					if kinds[near.y * side + near.x] in art.overlay_specs[i][1]:
 						mask |= 1 << bit
 				if mask != 0:
-					overlays[i].set_cell(local, Art.OVERLAY_SOURCE + i, Vector2i(mask % 16, mask / 16))
+					overlays[i].set_cell(local, art.overlay_specs[i][2], Vector2i(mask % 16, mask / 16))
 			var value: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			if value == Terrain.TREE:
 				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.tree, Art.tile_roll(global_tile, 2)))
+			elif value in [Surfaces.PINE, Surfaces.BASALT]:
+				var prop: String = "pine" if value == Surfaces.PINE else "basalt"
+				if not art.props.get(prop, []).is_empty():
+					props.set_cell(local, art.prop_source(prop), Art.pick(art.props[prop], Art.tile_roll(global_tile, 2)))
 			elif value == Terrain.ROCK:
-				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.get("rock_" + kind, art.props.rock), Art.tile_roll(global_tile, 2)))
+				var rock_kind: String = "rock_" + kind if art.props.has("rock_" + kind) else "rock"
+				props.set_cell(local, art.prop_source(rock_kind), Art.pick(art.props[rock_kind], Art.tile_roll(global_tile, 2)))
 			elif art.decor.has(kind) and Art.tile_roll(global_tile, 3) % 100 < 7:
 				# Flat flowers/shells/mushrooms: dressing only, never on blockers.
 				decor.set_cell(local, Art.DECOR_SOURCE, Art.pick(art.decor[kind], Art.tile_roll(global_tile, 4)))
@@ -275,17 +366,23 @@ func _update_player() -> void:
 			_play_player("death")
 		return
 	_player_dead = false
-	if session.position != _player_tile and absi(session.position.x - _player_tile.x) + absi(session.position.y - _player_tile.y) == 1:
-		_facing = _direction_name(session.position - _player_tile)
-		_player.position = _feet(_player_tile)
+	var delta: Vector2i = session.position - _player_tile
+	var one_step: bool = (absi(delta.x) + absi(delta.y) == 1) or (smooth_steps and absi(delta.x) == 1 and absi(delta.y) == 1)
+	if session.position != _player_tile and one_step:
+		_facing = _direction_name(delta)
+		if not smooth_steps:
+			_player.position = _feet(_player_tile)
 		if _player_tween != null and _player_tween.is_valid():
 			_player_tween.kill()
 		_player_tween = _player.create_tween()
-		_player_tween.tween_property(_player, "position", target, STEP_TIME)
+		_player_tween_origin = _origin
+		_player_tween.tween_property(_player, "position", target, player_step_time if smooth_steps else STEP_TIME)
 		_play_player("walk")
 		_player_tween.tween_callback(func() -> void:
 			if _player_sprite != null and _player_sprite.animation.begins_with("walk"):
 				_play_player("idle"))
+	elif smooth_steps and session.position == _player_tile and _player_tween != null and _player_tween.is_valid() and _player_tween_origin == _origin:
+		pass # Same tile, step still animating: let it finish instead of snapping.
 	else:
 		if _player_tween != null and _player_tween.is_valid():
 			_player_tween.kill()
@@ -332,13 +429,19 @@ func _sync_creatures() -> void:
 			var entry: Dictionary = _creatures[id]
 			var tile: Vector2i = creature.position
 			var tween_node: Node2D = entry.node
-			if entry.has("tween") and entry.tween.is_valid():
+			var animating: bool = entry.has("tween") and entry.tween.is_valid()
+			if smooth_steps and animating and tile == entry.tile and entry.get("tween_origin") == _origin:
+				entry.creature = creature
+				continue # Mid-step and unchanged: let the tween finish.
+			if animating:
 				entry.tween.kill()
 			if tile != entry.tile and absi(tile.x - entry.tile.x) + absi(tile.y - entry.tile.y) == 1:
 				entry.facing = _direction_name(tile - entry.tile)
-				tween_node.position = _feet(entry.tile)
+				if not smooth_steps:
+					tween_node.position = _feet(entry.tile)
 				entry.tween = tween_node.create_tween()
-				entry.tween.tween_property(tween_node, "position", _feet(tile), STEP_TIME)
+				entry.tween_origin = _origin
+				entry.tween.tween_property(tween_node, "position", _feet(tile), float(creature.get("step_ms", 130)) / 1000.0 if smooth_steps else STEP_TIME)
 				_play_creature(entry, "walk")
 				entry.tween.tween_callback(func() -> void: _play_creature(entry, "idle"))
 			else:
@@ -564,6 +667,17 @@ func show_events(events: Array) -> void:
 						_hero_hurt(delay + 0.14)
 					_popup(session.position, "-%d" % event.damage if int(event.damage) > 0 else "block", Color("ff7a6b") if int(event.damage) > 0 else Color("c8d0d8"), -0.35, delay + 0.14)
 				delay += 0.22
+			"telegraph":
+				# Real time: the attack lands after windup_ms unless the hero leaves reach.
+				var foe: Dictionary = _creatures.get(str(event.attacker), {})
+				if not foe.is_empty():
+					_popup(foe.tile, "!", Color("ffb347"), 0.55, 0.0, 26)
+					foe.node.modulate = Color(1.9, 1.15, 0.5)
+					foe.node.create_tween().tween_property(foe.node, "modulate", Color.WHITE, float(event.windup_ms) / 1000.0)
+			"dodge":
+				_popup(session.position, "dodged", Color("c8e6ff"), -0.35, 0.0, 15)
+			"rest_start":
+				_popup(session.position, "resting…", Color("8be08b"), 0.0, 0.0, 14)
 			"creature_death":
 				_popup(_tile_of(event), "defeated", Color("d8d8d8"), 0.55, delay)
 			"regen":

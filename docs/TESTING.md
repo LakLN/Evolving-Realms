@@ -111,3 +111,32 @@ Use `.\scripts\test.ps1 -Only run01-world`.
 fixture) covers the region ledger, encounter rules, activation revisions and the
 AI creature encounter → combat → loot → reopen → return flow, Run isolation and legacy
 saves. Use `.\scripts\test.ps1 -Only ai-world,ai-content,world,combat -Smoke`.
+
+## Milestone 03 / Task B real-time prototype
+
+`realtime` (`tests/realtime_suite.gd`) drives the RealtimeController headless with fixed
+16 ms frames: movement cadence, walls/diagonals, creatures acting while the hero is idle,
+telegraphed hits, cooldowns, dodge, statuses and skill cooldowns in gameplay seconds,
+pause, death and save isolation of the time model. `realtime-gameplay` (and
+`rendered-realtime` with `-Render`, screenshots `.tools/m03-realtime-*.png`) plays the real
+scene at 60 FPS. Use `.\scripts\test.ps1 -Smoke -Only realtime,realtime-gameplay,combat,effects,skills`.
+
+## Milestone 03 integration suite
+
+`m03-integration` (`tests/m03_integration_suite.gd`; `rendered-m03-integration` with
+`-Render`, screenshots `.tools/m03-int-*.png`) plays the player defaults — structured World
+and real-time Run — through the real menu and keys: waystone → supply → relic → bearings,
+World Map pause, waypoint, save/continue, telegraphed wolf bite, death and reload. Baseline
+menu suites call `app.use_legacy_defaults()` to keep testing the pre-M03 layout/turn model.
+
+## Systemic Snow vertical slice
+
+The existing `snow-content` suite includes heat/force rules, derived equipment
+capability, hidden-choice filtering, once-only receipts, Knowledge/save/load/Run
+isolation and offline diagnostic history. For a short development loop use:
+`scripts/godot.ps1 --headless --script res://tests/snow_content_suite.gd '--' --rules-only`.
+The default suite still runs every prior check plus these cases.
+`snow-gameplay` / `rendered-snow-gameplay` now operate the E selector and J reader
+with real keys, check pause/cancel and exercise both material approaches. Native
+captures: `.tools/world-rules-selector.png`, `world-rules-knowledge.png` and
+`world-rules-shattered.png`. This is automated gameplay, not a human playtest.

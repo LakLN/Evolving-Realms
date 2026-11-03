@@ -253,3 +253,27 @@ Player records live in character.statuses, creature records in existing mutation
 Definitions remain pinned Registry content; no migration or generation change.
 Derived stats stay in CharacterStats; no trigger chains or executable content.
 See [EFFECTS_AND_ELEMENTS.md](EFFECTS_AND_ELEMENTS.md) for order and contracts.
+
+
+## Structured World Core - Milestone 03 Task A
+
+Opt-in Blueprint metadata `structured_world_version=1` adds a deterministic survey
+region/POI plan above frozen terrain v1. `StructuredRegions` derives geography
+profiles, bounded connected clusters and onward bearings; shared bounded caches
+serve object reservation and `WorldLocations`. Trusted pack definitions execute
+through existing discovery/events/encounters, with ordinary Run mutation receipts.
+Ledger defaults add `structured-world-v1` only in opted-in Worlds; existing records
+remain immutable. No SQL migration or automatic old-World upgrade. Player Map and
+future authoring contracts, creation API, examples and limits are documented in
+[M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md). Task A does not modify rendering or UI.
+
+## Ordinary-ice rules and player Knowledge (2026-11-03)
+
+`src/core/world_rules.gd` validates material v1 properties and plans heat/force
+responses over intact supply events. LocationRuntime retains the only commit
+path for item costs, awards and object receipts. `src/run/player_knowledge.gd`
+stores scoped confirmed facts in the existing character payload; journal and
+atlas knowledge keep their own roles. `src/run/interaction_telemetry.gd` stores a
+bounded offline diagnostic history in that payload. The E selector and J reader
+in main.gd pause with the other modal panels. No schema, service, global event
+framework or changes to CharacterStats derivation.

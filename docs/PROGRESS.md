@@ -1,5 +1,183 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Milestone 05 — Snow Mountain Stage D: S1 art, native life, two chains (2026-11-01)
+
+Same branch/worktree, on explicit user request for Stage D. No merge, no export, no
+personal DB; charted only in disposable test Worlds. Details, gaps and next steps:
+[lands/SNOW_MOUNTAIN_STAGE_D.md](lands/SNOW_MOUNTAIN_STAGE_D.md).
+
+Implemented:
+- Batch S1 sources copied unchanged from `D:\Game\RPG\assets\sources\EvolvingRealms_Batch_S1`
+  (SHA-256: wolf 8e4b1fda…, props 1befd076…, style proof d904e422…, shelter f61ede2d…,
+  terrain 7baac551…). `tools/art/build_snow_s1.py` → `assets/game/snow/**` +
+  `snow_s1_index.json`; `art.gd` loads it over the placeholders (only frozen ground
+  stays code-painted); `map_view.gd` rock props use their own source.
+- `content/land_packages/snow_mountain/content_pack.json` (`snow:` IDs: 3 creatures,
+  3 resources, 6 items + 1 use, 8 events, 5 places); engine rules `spawn.ecology_only`
+  (objects/creatures) and `metadata.site_only` (places); pack installed per World by
+  `WorldAtlas.propose_layout_land`/`open`.
+- Layout v2 (geometry unchanged): native ecology per area, native supplies for start
+  certification, five fixed sites placed by `layout_designer.gd`.
+- Carrier's Debt (complete) and The Bell That Remembers (restoration; salvage recorded as
+  `pending_capability`).
+- UI fix: notices wrap to 3 lines and a fresh place message holds 9 s against routine
+  real-time notices (the ledger clue was overwritten by "Autosaved." within a second).
+- Manifest: art ground/transitions/props/landmarks/wildlife `in_progress` with evidence,
+  icons/weather `blocked`, relay/bell mechanics and content `in_progress`, new
+  `snow:mechanic/encounter_salvage` `pending_capability`. CLI: valid=true, ready=false,
+  28 blockers.
+
+Verification (native Godot 4.7.2, disposable DBs):
+- `.\scripts\test.ps1 -Smoke -Render -Only land-package,world,m04-world,m04-gameplay,snow-mountain,snow-content,snow-gameplay,rendered-snow-gameplay,rendered-m04-gameplay,map,discoveries,discovery-gameplay,interactions,interaction-gameplay,creatures,combat,combat-gameplay,equipment,survival,realtime,realtime-gameplay,gameplay,m03-integration,m03-world,ai-world`:
+  all passed — data 96, m03-world 45, world 49, gameplay 22, interactions 69,
+  interaction-gameplay 17, integration 41, combat 75, combat-gameplay 20, survival 60,
+  equipment 68, offline AI provider tests, ai-world 41, discoveries 40,
+  discovery-gameplay 6, map 22, realtime 58, realtime-gameplay 16, m03-integration 28,
+  land-package 18, m04-world 86, m04-gameplay 23, snow-mountain 65, snow-content 47,
+  snow-gameplay 28, rendered-snow-gameplay 43, rendered-m04-gameplay 31, import, startup.
+- After the final manifest edit: `-Only land-package` 18/0 and the package CLI (exit 0).
+- Screenshots reviewed: `.tools/snow-arrival.png`, `snow-lee-shelter.png`,
+  `snow-relay-ledger.png`, `snow-fallen-pine.png`, `snow-relay-return.png`,
+  `snow-scree-wolf.png`, `snow-silent-bell.png`, `snow-map-landmarks.png`.
+- Not run: full regression, `-Service`, `-Export`, old-save exe checks (no persistence
+  schema change; new content lives in new IDs and one World's registry).
+
+Gaps/next: frozen-ground, bell, cairn, cleft, icons and weather art; wolf has single
+side/back poses; hare/sentinel without art; bell salvage pending; numbers untuned; no
+human playtest; World Map legend overdraw (pre-existing, logged); no World binding.
+
+## Milestone 05 — Snow Mountain Stage C1/C2: geography and visual foundation (2026-11-01)
+
+Same branch/worktree (`feature/m05-snow-mountain`, base `f8582e8`), on explicit user
+request for Stage C1/C2. No merge, no official export, no personal DB access; Snow
+Mountain was charted only in disposable seed-4242 test Worlds. Report, deviations,
+placeholders and the Stage D order: [lands/SNOW_MOUNTAIN_STAGE_C.md](lands/SNOW_MOUNTAIN_STAGE_C.md).
+
+Implemented:
+- Authored layout v1 (`content/land_layouts/snow_mountain.json`) → `layout_designer.gd`
+  → self-contained plan with `terrain_version 2`; `terrain_layout.gd` materializes it
+  (escarpment, lake, ragged ridges, windbreaks, clearings, timber shelters, trails, pass
+  corridor). `terrain_atlas.gd` dispatches per plan; v1 plans run the unchanged code.
+- Surfaces cliff 18, frozen 19, trail 20, floor 21, timber 22; per-area ecology/exposure.
+- `WorldAtlas.propose_layout_land()` (one mirrored mountain-pass gate, rotation to face
+  it) and validation on actual terrain (`land_survey.gd`); dev menu button
+  "Chart Snow Mountain (dev)" → Approve → "New Run in Snow Mountain (dev)".
+- Start selection v5 with `start_certifier.gd` (exits, room, shelter, food ≤ 20 / water
+  ≤ 30 walking steps on real placements, no hostile home within 12).
+- Environment: lee/open/exposed areas, roofed floors, forecast warning, HUD timers
+  (weather status now leads the HUD line so it is never truncated), weather streaks and
+  exposure/shelter ring (placeholder visuals).
+- Code-painted placeholder ground/edge overlays (`snow_art.gd`); image request
+  `docs/lands/SNOW_MOUNTAIN_ASSET_REQUEST.md` (Batch S1 style proof first).
+- Manifest: stage `implementation`; terrain_v2/safe_spawn/shelter and connectivity/
+  weather checks `in_progress` with evidence (await approval + human playtest); all
+  seven art entries `blocked`. CLI check: valid=true, ready=false, 27 blockers.
+
+Verification (native Godot 4.7.2, disposable DBs):
+- `.\scripts\test.ps1 -Smoke -Only land-package,world,m04-world,m04-gameplay,snow-mountain,snow-gameplay,map,realtime,realtime-gameplay,gameplay,m03-integration,m03-world`:
+  all passed — data 96, m03-world 45, world 49 (frozen v1 fixtures), gameplay 22,
+  integration 41, map 22, realtime 58, realtime-gameplay 16, m03-integration 28,
+  land-package 18, m04-world 86, m04-gameplay 23, snow-mountain 65, snow-gameplay 19,
+  import and startup.
+- After the HUD order change: `.\scripts\test.ps1 -Render -Only snow-gameplay,m04-gameplay,rendered-snow-gameplay,rendered-m04-gameplay`:
+  all passed (19, 23, rendered 27, rendered 31); m03-integration 28/0 in the run before.
+  One earlier m04-gameplay run failed "Belrath Vale draws its own ground: [ocean, road]":
+  pre-existing flake (random World seed puts a woodland lakeshore start among water/road
+  only); passed on rerun, test left unchanged.
+- Screenshots reviewed: `.tools/snow-*.png`, terrain overview `.tools/snow-overview.png`
+  (`tools/snow_mountain_preview.gd`).
+- Numbers: 92 of 109,889 walkable tiles unreachable; 4/5 starts certified; exposure hits
+  per 30 turns 3/6/10 (lee/open/exposed); chunk cost 1.2× terrain v1; border-crossing
+  frame 268–741 ms for Snow Mountain vs 262–749 ms for an M04 highland in the same runs.
+- Not run: full regression, `-Service`, `-Export`, old-save exe checks (no persistence
+  schema change; spawn adds optional `start_id`/selection 5 only for new layout Runs).
+
+Gaps/next: all final art missing (placeholders listed in the Stage C doc); no native
+species/items/landmarks or chains (Stage D); no World binding; untuned exposure; the
+synchronous chunk-streaming hitch on border crossing is pre-existing in all atlas lands;
+no human playtest. Awaiting user approval of the S1 style proof and the Stage C mechanics
+before Stage D.
+
+## Milestone 05 ? Snow Mountain Stage A / minimal Stage B (2026-11-01)
+
+Isolated `feature/m05-snow-mountain` at `D:/Game/RPG-m05-snow`, based on
+M04 `daf6036`. User explicitly authorized Stage A/B only. No merge, official build
+export, personal Run 01 DB access or edits in master/M03/M04 worktrees.
+
+Implemented:
+- Developer design bible: `docs/lands/SNOW_MOUNTAIN_DESIGN.md`, seven connected
+  areas, survival loop, three-species ecosystem, two optional discovery chains,
+  explicit mechanic dependencies and versioned-new-land compatibility plan.
+- Detailed art requests in `docs/lands/SNOW_MOUNTAIN_ASSETS.md`: 40px ground and
+  transitions, anchored props/landmarks, directional native creature animations,
+  icons and weather feedback. All new art remains missing; no token/recolour
+  is called final. Image generation is available but asset production is deferred.
+- Git-persistent `content/land_packages/snow_mountain/manifest.json`, workflow v1,
+  21 incomplete dependency entries, per-entry source/version/status, empty explicit
+  World binding and review records. Ready report currently has 27 blockers.
+- Development-only `src/content/land_package.gd` and CLI: schema/workflow/ID checks,
+  dependency references/cycles, completion evidence, runtime asset presence,
+  active pinned registry content, exact World/land/archetype/plan-hash binding,
+  review requirements and rejection of unfinished published status.
+- No persistence schema, gameplay, atlas generator or activation changes. The report
+  accepts an existing Atlas for World checks; no automatic DB access or publication.
+  Existing M04 prototype expansion is not package publication. Full package activation
+  and publication receipts remain future work, using existing Atlas/AuthoringPipeline.
+
+Verification (native Godot, disposable databases only):
+- `./scripts/test.ps1 -Only land-package`: import, first package suite 16/0 and startup PASS.
+- After final validator/test updates:
+  `./scripts/test.ps1 -Only land-package,m04-world,world -Smoke`: ALL PASS;
+  import, data 96/0, world 49/0, integration 41/0, land-package 18/0,
+  M04 world 86/0, startup. Includes migrations/old saves, receipts, World/Run
+  isolation, frozen terrain fixtures, append-only atlas and save/reopen coverage.
+- `./scripts/godot.ps1 --headless --script res://scripts/land_package_check.gd`:
+  exit 0, valid=true, ready=false, 27 blockers.
+- Same command with `'--' res://content/land_packages/snow_mountain/manifest.json --ready`:
+  expected exit 1; incomplete draft correctly fails readiness.
+- `git diff --check` / staged diff check clean. No rendered or human playtest,
+  full regression, service call or export: this is isolated authoring tooling,
+  not a shared-engine/persistence/generation change or milestone completion.
+
+Local tooling: own .tools/logs, read-only-use Godot junction to M03 integration's
+.tools/godot, .venv junction to its existing environment. No installs or shared
+file replacements. Import-only tracked asset line-ending noise restored.
+
+Gaps/next: gameplay geography, native content, chain states and all art are design
+only. No player World selected or modified. Review the small snow/taiga/ice + pine,
+shelter, wolf visual proof sheet first. Recommended Stage C: terrain v2 for NEW
+frost-land proposals (never rewrite M04 plans), basin/forest/lake/pass routes,
+versioned randomized safe starts, environment assets and shelter feedback; then
+rendered connectivity/weather/boundary checks. Stage D adds content; Stage E
+requires actual human playtesting. No Stage C implementation started here.
+
+## Milestone 03 C — World map, minimap and waypoints (feature/m03-map-ui)
+
+- Implemented the M-key world map and N-key HUD minimap using the active Run's
+  explored masks. The map displays the player, discovered landmarks and a
+  Run-local waypoint; left-click sets it, right-click removes it, drag pans, and
+  the mouse wheel zooms.
+- Terrain textures are cached per explored 32x32 chunk and updated only when that
+  chunk's mask changes. Rendering samples explored tile coordinates without
+  filling the chunk cache or establishing Region Ledger records. The minimap is
+  positioned below the top HUD so it does not cover gameplay hints or controls.
+- Added `map_waypoint` to the Run body. The loader normalizes legacy six-field
+  states to the new field; no SQLite migration, terrain generation, gameplay or
+  discovery rules changed. See [M03_MAP_SYSTEM.md](M03_MAP_SYSTEM.md) and
+  [DATA_API.md](DATA_API.md).
+- `.\scripts\test.ps1 -Only map -Smoke`: PASS; import, data (96), integration
+  (41), map UI (22), and startup passed.
+- `.\scripts\godot.ps1 --script 'res://tests/map_gameplay_suite.gd'`: PASS;
+  rendered map suite (24 checks, 0 failures) on Windows OpenGL 3.3. Captures:
+  `.tools/m03-map-ui.png` and `.tools/m03-minimap.png`.
+- Coverage includes M open/close, mouse zoom/pan, waypoint add/remove and
+  save/load, old Run normalization, discovered landmark markers, hidden tiles,
+  negative coordinates, 26,001 explored tiles, and unchanged loaded chunks /
+  region records after map refresh.
+- Limits: no automatic pathfinding, fast travel, hidden-location reveal, or
+  region-name generation. No full regression or Windows export was run.
+- Next: stop here pending approval for any subsequent Milestone 03 task.
+
 ## Run 01 — final integration
 
 - Integrated the three task branches on `master`: world spawn policy
@@ -1690,3 +1868,530 @@ are not ledger-versioned; arbitrary new object rules can affect unmaterialized
 placements after reload. No automatic reset/World upgrade, terrain overlay or
 retroactive region evolution is implemented. See [RUN01_WORLD.md](RUN01_WORLD.md)
 for measured distribution, compatibility policy, limits and integration commands.
+
+## Milestone 03 / Task A - structured World exploration (isolated branch)
+
+User authorized Task A only. Branch `feature/m03-structured-world`, worktree
+`D:/Game/RPG-m03-world`, base `9a28f64`. No main worktree changes, merge, export,
+personal-save modification or official Run 02 creation. Startup smoke now uses an
+explicit isolated database instead of relying on the application default.
+
+Implemented explicit new-World Core opt-in via immutable Blueprint metadata
+structured_world_version=1, preserving frozen terrain v1 and all legacy World paths.
+128-tile survey districts carry seeded names, sampled geographic themes, existing
+danger tiers and M03 resource/encounter opportunities. A bounded reachability plan
+places unique waystone/supply/relic locations in one connected regional component.
+New Runs start at a biome-valid waystone with two acquired leads; existing E and
+location events deliver coordinates, one-time supplies/risk/rewards and onward
+unsurveyed-region bearings. Save/Load and Run isolation use existing mutation and
+receipt contracts. No new quest framework or SQL migration.
+
+Read-only Map/Task C APIs: world_region, exploration_leads, exploration_frontiers.
+Developer AI region context includes the complete regional plan; player queries
+expose only acquired leads. Creation API + explicit-database CLI allow selecting a
+structured World in the existing menu. The old Create world button remains legacy;
+Task C creation/menu/marker wiring is documented, not implemented here.
+
+Verification:
+
+- `.\scripts\test.ps1 -Only m03-world,world,interactions,ai-world,discoveries -Smoke`:
+  all passed; M03 world45/0, world49/0, interactions69/0, AI World41/0,
+  discoveries40/0, data96/0, integration41/0, offline provider8 tests OK;
+  import/startup PASS. Final `-Only m03-world` recheck also PASS after refinement.
+- Three frozen layout-v1 geometry fixtures supplement fresh/cache-evicted plan
+  equality. POI definitions match their actual tile biome, including mixed shores.
+- CLI exercised on an explicit ignored test database; SQL read-only confirms one
+  opted-in World, zero Runs. Pure terrain/POI diagram visually inspected at
+  `.tools/m03-regions.png`; raw plans at `.tools/m03-world-examples.json`.
+- No full regression/export; no UI rendering claim or personal-save upgrade.
+
+Three generated examples (public synthetic seeds 1847/-99/707, not Run 01 seeds)
+exercise forest/coast/meadow districts. Walks to supply are 24/25/20 steps, followed
+by 56/27/35 steps to a relic; each relic gives two different neighboring-region
+bearings. Test fixtures suppress creature runtime for navigation checks; they are
+not human/render/combat-balance playtests. Water detours and island connectivity
+remain limits; regional names can repeat without IDs and some districts have no
+viable cluster. New cold regional planning is synchronous with bounded caches.
+
+See [M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md) for version safety, architecture,
+Map/AI data contracts, missing landmark assets, examples, explicit local-play
+instructions and integration steps. No further Milestone 03 feature is started.
+
+## Milestone 03 / Task B — real-time movement and combat prototype (experimental)
+
+Branch `feature/m03-realtime` (worktree `D:/Game/RPG-m03-realtime`, base `9a28f64`).
+Milestone 03 work started on explicit user request. No merge, no Windows export, no
+change to Run 01 or personal saves; world generation and AI packs untouched.
+
+A Run can now be created with time model `realtime-v1` (menu dropdown, or launch
+`-- --time=realtime` to preselect it); stored as `spawn.time_model`. Real-time Runs keep
+every rule module but split the turn pipeline: actions apply immediately, a 1-second
+world pulse (`turn`) runs survival/energy/statuses/talents/ageing/autosave, creatures
+act on their own timers with a telegraphed 450 ms wind-up (dodge by leaving reach,
+at most 2 at once, 1300 ms attack interval), the hero walks continuously on the grid
+(160 ms per tile, diagonals without corner cutting) and attacks with F every 800 ms.
+Menus/panels/targeting/death/unfocused window pause gameplay time. Turn Runs (default,
+and every existing save) are unchanged. Design, per-system timing table, compatibility
+and limits: [M03_REALTIME_DESIGN.md](M03_REALTIME_DESIGN.md).
+
+Verification (targeted, Godot 4.7.2):
+
+- `tests/realtime_suite.gd` (`-Only realtime`): 58 checks, 0 failures.
+- `tests/realtime_gameplay_suite.gd` (`realtime-gameplay`): 16/0 headless; 18/0 with the
+  native renderer (`rendered-realtime`), screenshots `.tools/m03-realtime-*.png`.
+- `.\scripts\test.ps1 -Smoke -Only realtime,realtime-gameplay,combat,combat-gameplay,effects,skills,survival,talents,world,gameplay`:
+  all passed (data 96, world 49, gameplay 22, integration 41, combat 75, combat-gameplay
+  20, survival 60, talents 126, skills 105, effects 49). `skills,skill-gameplay` rerun
+  after the cooldown-message change: 105/0 and 21/0.
+- Not run: full regression, `-Export`, old-save exe checks (no persistence change).
+
+Gaps / next steps: playtest tuning of `content/realtime_rules.json`; grid-locked (not
+free) movement; ranged skills still Manhattan/instant; skills/target panels still speak
+in turns; per-weapon/species attack speed; decide whether real time becomes the default
+before any integration with Tasks A/C.
+
+## Milestone 03 integration (A + B + C)
+
+Branch `feature/m03-integration` (worktree `D:/Game/RPG-m03-integration`, base `9a28f64`):
+cherry-picked Structured World `c7409ad`, World Map `e6c909b`, Real-time `073420a` (three
+"both sides added" conflicts in main.gd, test.ps1, PROGRESS.md; all functionality kept).
+Integration work: structured layout is the default for new Worlds (legacy selectable),
+real-time the default for new Runs (turn selectable); HUD region/lead line; World Map lead,
+resolved and region-bearing markers plus a KNOWN LEADS sidebar from
+`exploration_leads()`/`exploration_frontiers()`; real-time frames refresh the map/minimap;
+readability fixes from rendered screenshots. Baseline menu suites and release acceptance
+call `use_legacy_defaults()`. New `m03-integration` scene playthrough.
+
+Verification: `.\scripts\test.ps1 -Render` all passed (m03-integration 28/0, rendered
+31/0; every M02/M03 suite 0 failures). Old save from `9a28f64` (`--acceptance=write`
+30/0) opened by this build: legacy 7/0, verify 8/0. No export, merge or personal save
+change. Report, known issues, playtest launch and export recommendation:
+[M03_INTEGRATION_REPORT.md](M03_INTEGRATION_REPORT.md).
+
+## Milestone 03 preview build (internal playtest, 2026-11-01)
+
+Commands (integration worktree, commit `07dbfbf` + packaging script):
+`.\scripts\export.ps1 -Verify` (write 30/0, crash, verify 8/0, features 15/0,
+features-verify 5/0, refuse-default: all PASS), then
+`.\scripts\package-m03-preview.ps1 -Destination D:\Game\RPG\builds\windows-m03-preview`.
+The official `D:\Game\RPG\builds\windows` is never written (export goes to the worktree's
+own `builds/windows`; the package script refuses any `windows` destination).
+
+Database isolation, verified on the exported exe: game options are only read after a
+literal `--` (`OS.get_cmdline_user_args`), so shortcuts do not forward `--database`.
+`override.cfg` beside the exe sets a custom user dir, so even a double-clicked exe uses
+`%APPDATA%\EvolvingRealms-M03-Preview\realms.sqlite` (and its own logs/shader cache);
+`Launch-M03-Preview.ps1/.cmd` passes the same file as one quoted argument
+`-- "--database=<path>"` and refuses the personal `Godot\app_userdata\Evolving Realms`
+folder. Paths with spaces were checked through both launchers (process command line).
+The exported release template ignores `--script`, so M03 smoke runs on the real window.
+Why it matters: M03 Runs save a seventh state field (`map_waypoint`) that the M02 build
+rejects, so the preview must never write the personal Run 01 save.
+
+Standalone smoke (exported exe via launcher, real window, posted input, separate DB):
+new structured World (seed 1847, tagged `[structured]`), new real-time Run (seed 7301),
+held-key movement, World Map with leads, waypoint, Esc save, Exit, relaunch via `.cmd`,
+Continue: real time, tile, world time, fog and waypoint restored; DB `user_version` 2,
+integrity ok, `structured_world_version` 1, `time_model` `realtime-v1`. No ERROR lines in
+the preview logs. Personal `realms.sqlite` SHA-256 and mtime unchanged.
+`test.ps1 -Smoke -Only m03-world,map,realtime,realtime-gameplay,m03-integration`: all
+passed (m03-world 45, map 22, realtime 58, realtime-gameplay 16, m03-integration 28).
+Not run: full `-Render -Service -Export` regression (no gameplay change).
+
+## Milestone 04 — World System redesign (vertical slice, 2026-11-01)
+
+Branch `feature/m04-world-redesign` (worktree `D:\Game\RPG-m04-world`, from
+`feature/m03-integration` d5c0187). Requested by the user as a major architecture
+correction: a persistent World of distinct, evolving lands instead of repeated
+128×128 structured squares. Design and exact implemented/planned lists:
+[M04_WORLD_ARCHITECTURE.md](M04_WORLD_ARCHITECTURE.md),
+[M04_WORLD_GENERATION.md](M04_WORLD_GENERATION.md),
+[M04_WORLD_EVOLUTION.md](M04_WORLD_EVOLUTION.md).
+
+Implemented: World atlas (append-only land/region/route/revision content instances, no
+schema migration; atlas Worlds declare `world_atlas_version 1`), reusable land
+archetypes (`content/land_archetypes.json`: woodland, coast, frost highlands, ash
+caldera), land designer, atlas terrain v1 (typed subclass of the terrain v1 interface;
+v1 itself and its golden fixtures unchanged), shared surface vocabulary, land ecology
+for existing content, routes (causeway/pass walkable, harbour locked), Veil, growth by
+propose → validate → approve → activate, Run start in a random eligible land, per-Run
+atlas knowledge (entity mutations), weather/hazard slice (blizzard exposure + shelter,
+sight-limiting weather, cinder ground), HUD/World Map/journal integration, New
+Adventure and "Chart a new land (dev)" on the main menu, recoloured placeholder art for
+the new surfaces.
+
+Verification: `.\scripts	est.ps1 -Render -Service` all passed (log `.tools/m04-full-regression.log`):
+every M01–M03 suite 0 failures (data 96, world 49 incl. frozen v1 golden chunks,
+integration 41, m03-world 45, m03-integration 28/31 rendered, map 22, realtime 58,
+realtime-gameplay 16/18, ai-content 35, ai-world 41, discoveries 40, run01-content 68,
+telemetry 32, …) plus new `m04-world` 86/0 and `m04-gameplay` 23/0 headless,
+31/0 rendered (screenshots `.tools/m04-*.png`). Performance (same process): atlas
+chunks 0.66–0.96× terrain v1; worst rendered frame walking 24 tiles toward a border
+28–30 ms; World creation with 4 lands takes a few seconds once.
+
+Gaps / next steps: harbour/sea travel, portals, caves and event-gated routes are data
+or not started; no visual atlas view of lands yet (journal only); new-surface art is a
+runtime recolour without transition overlays; new habitats borrow existing creatures
+and resources (no native snow/ash species yet); AI World Creator integration is a
+documented contract only; `-Export` and old-save exe checks not run on this branch.
+
+
+## Milestone 05 ? Snow Mountain Stage E1 (2026-11-02)
+
+Worktree `D:\Game\RPG-m05-snow`, branch `feature/m05-snow-mountain`, baseline
+`a0c99ff`. User authorized visual dependency completion/readiness audit only;
+no publication, merge, Windows export or personal-save access. Gameplay, atlas
+plans, saves, content definitions and generator versions are unchanged.
+
+Delivered full 28-blocker classification/prioritized closure checklist in
+`docs/lands/SNOW_MOUNTAIN_STAGE_E1.md`; corrected stale claims that no S1 art exists;
+replaced next S2?S5 prompts with exact dimensions, variants, directions/frame
+counts/pivots, IDs, provenance and acceptance requirements. Sentinel request
+matches the existing ram-beast description. No Snow-specific skill icons invented.
+Salvage and sealed cleft are optional design scope, but retained as unfinished;
+no blocker/dependency removed, no approval fabricated, no World binding added.
+Manifest remains valid, ready=false, exactly 28 blockers.
+
+Presentation repairs in `tools/art/build_snow_s1.py` (build revision 2): rolled
+cross-fade alone left opposite edges unequal (snow max RGB delta110, ice116,
+taiga129, cliff137). Three-pixel bands now converge, with identical edges across
+variants; face/timber joins remain horizontal only. Rebuilt `ground.png` feeds
+existing snow overlays. Pine's 61px crop could not fit above the intended ground
+anchor in an 80px cell and was clamped down 5px; 96px prop cells preserve the
+same source pixels/scale, correct ground anchor and a transparent tip gutter.
+Rebuilt `props.png` and index; all S1 source boards remain unchanged. No external
+image generator invoked and no new generated artwork claimed.
+
+Verification (isolated fixture DBs only):
+
+- `.venv/Scripts/python.exe tools/art/build_snow_s1.py`: success; repeated rebuild
+  SHA-256 comparison byte-identical for all 15 runtime files (14 PNGs + index).
+- `.venv/Scripts/python.exe tools/art/check_snow_s1.py`: 0 failures. Every ground
+  variant pair, tile opacity/alignment, prop gutters/alpha, object/place dimensions
+  and alpha, all referenced wolf frames nonempty/unclipped. This is extraction QA,
+  not final artistic acceptance or animation completeness.
+- Baseline `.\scripts\godot.ps1 --script res://tests/snow_mountain_gameplay_suite.gd`:
+  43 checks / 0 failures on native OpenGL; before captures in `.tools/e1-before/`.
+- `.\scripts\test.ps1 -Smoke -Only land-package,snow-mountain,snow-content,snow-gameplay,world,rendered-snow-gameplay -Render`:
+  import passed; data96/0, world49/0, integration41/0, land-package18/0,
+  snow-mountain65/0, snow-content47/0. Initial scene check caught 7 native texture
+  errors after prop dimensions changed during the run: imported texture cache was
+  stale. This invocation stopped at snow-gameplay; it is not recorded as all-pass.
+- Final `.\scripts\test.ps1 -Only land-package,snow-gameplay,rendered-snow-gameplay -Render`:
+  fresh import, land-package18/0, snow-gameplay28/0, isolated startup PASS,
+  rendered-snow-gameplay43/0, all requested checks passed, no native errors.
+  Final renderer worst chunk-border frame437.6ms vs M04 baseline338.7ms; known
+  streaming hitch persists and is not certified as acceptable for release.
+- `.\scripts\godot.ps1 --headless --script res://scripts/land_package_check.gd`:
+  valid=true, ready=false, errors=[], 28 blockers. Clean report
+  `.tools/e1-manifest-check.log`. An earlier concurrent CLI invocation shared the
+  wrapper's temporary stdout with the terrain suite; final report was rerun
+  sequentially to avoid mixed diagnostic output.
+- `git diff --check`: passed. Godot import-only line-ending churn restored.
+
+Native comparison screenshots (left a0c99ff, right final E1; independent disposable
+Runs, so clocks/UI/fog history differ): `.tools/e1-comparison/snow-trough.png`,
+`snow-escarpment.png`, `snow-lee-shelter.png`, `snow-relay-ledger.png`,
+`snow-scree-wolf.png`. After captures are `.tools/snow-*.png`; contact sheet
+`.tools/snow_s1_review.png`. Inspected shore, escarpment, pine anchors, shelter and
+wolf in engine plus source/asset sheets: no gross alpha/halo/clipped frame issue
+observed. Missing directional animation, cliff corners, frozen ground, landmark
+identity and weather/icons are not certified by these captures. Screenshots/logs
+stay ignored under `.tools/`, no caches/builds/saves committed.
+
+Remaining: S2 production frozen ground/cliff/boundary art; S4 native hare,
+ram-beast sentinel and complete wolf animations; S5 bell/cairn/locker states and
+six icons; S3 extra props/shelter/weather. Some legacy green resource/rock art is
+still visible on snow and needs mapping review. User/ChatGPT art assistance and
+human style/asset acceptance + actual playtest remain necessary. Existing shelter
+facade/footprint mismatch, repeated terrain detail, map legend overlap and streaming
+hitches are logged. No full `-Render -Service -Export` regression or old-save exe
+check: those belong to later release authorization. All unfinished manifest entries
+remain blocked/in_progress/pending; render_assets now records partial QA only.
+Next: review palette, deliver prioritized S2/S4/S5 then S3, integrate real assets,
+then human acceptance and later explicit binding/release review.
+
+## AI Studio workflow reset (2026-11-02)
+
+Documentation only, at HEAD `14b1cad`. No code, content, art, saves, tests or
+manifest changes. Added `docs/AI_STUDIO.md` (roles, pillars, package loop,
+PASS/CONCERNS/NOT ASSESSED/FAIL gates, spoiler and playtest rules; a few ideas
+adapted from donchitos/claude-code-game-studios, framework not installed),
+`docs/STUDIO_AUDIT_2026-11-02.md` (repository-grounded audit) and
+`docs/lands/SNOW_MOUNTAIN_V1_PACKAGE.md` (first package plan + consolidated asset
+manifest). Findings recorded there:
+- Bell chain completable in only about 60% of Runs.
+- Chain clues never persist in the journal.
+- `snow:bronze_scrap` has no sink.
+
+Tests: none run (docs only). Next: T1 journal notes from resolved place records;
+T2 content v2 after director decisions D1/D2.
+
+## Snow Mountain V1 package — T1 journal notes, T2 content fixes (2026-11-02)
+
+Director decisions D1 (shard reliably obtainable, guardian kept as optional
+route), D2 (restoration only; salvage and cleft deferred) and D3 (ChatGPT supplies
+Tier A art) applied.
+- **T1 (`f310151`).** `LocationRuntime.notes` replays each resolved place
+  interaction's message from the saved record, using the same Run-keyed roll
+  through a shared key helper. The World Map journal shows the notes newest
+  first with full wrapping; when the list overflows, it shows "+N more". No new
+  save data or markers.
+- **T2.**
+  - Added `snow:event/cairn_dig` v2 and `snow:place/bell_cairn` v2, with a
+    guaranteed shard. v1 is unchanged.
+  - Layout v3 pins them for new plans; the layout designer now honours a site's
+    `version` (default 1).
+  - Manifest: added a `deferred` status (`{by, reason}`, listed separately, no
+    release entry may depend on it). Salvage is deferred; 27 blockers remain.
+
+Verification:
+- `.\scripts\test.ps1 -Only snow-content,snow-gameplay,rendered-snow-gameplay -Render`
+  (T1): all checks passed (rendered gameplay 46/0), but Godot crashed with an
+  access violation at exit (-1073741819, native errors 0). The two reruns of
+  rendered-snow-gameplay alone exited 0. This is logged as an intermittent
+  teardown crash, 1 of 3 runs; it is not explained.
+- `.\scripts\test.ps1 -Only land-package,snow-mountain,snow-content,snow-gameplay,rendered-snow-gameplay -Render`:
+  import, land-package 22/0, snow-mountain 65/0, snow-content 56/0,
+  snow-gameplay 30/0, startup, and rendered-snow-gameplay 46/0, all passed.
+  Chunk-border worst frame was 317.1 ms (T1 run) against an M04 baseline of
+  345.3 ms.
+- `.\scripts\test.ps1 -Smoke -Only world,m04-world,land-package`: data 96/0,
+  world 49/0, integration 41/0, land-package 22/0, m04-world 86/0, startup,
+  all passed.
+- `land_package_check.gd`: valid=true, ready=false, deferred=[encounter_salvage],
+  27 blockers.
+
+Not run: full regression, `-Service`, `-Export`, old-save exe checks.
+Captures: `.tools/snow-map-landmarks.png`, `.tools/snow-journal-resumed.png`.
+
+Gaps:
+- The journal hides older entries behind "+N more" and has no scrolling.
+- The guardian's shard can duplicate the cairn's shard.
+- `snow:bronze_scrap` still has no sink.
+
+Next: T3, measure the chunk hitch across repeated Snow traversals, then the
+Tier A art handoff.
+
+
+## Snow Mountain V1 - T3 investigation and Tier A handoff (2026-11-03)
+
+Worktree D:/Game/RPG-m05-snow, feature/m05-snow-mountain, base e64530b. User-authorized
+T3 only: repeat border measurements/profile, exit-crash investigation, readable
+journal and one Tier A request. Report: docs/lands/SNOW_MOUNTAIN_T3_REPORT.md.
+
+- Journal uses one scrollable RichTextLabel with full literal wrapped clue text;
+  oldest notes remain accessible after reload, fresh Runs have no resolved notes,
+  repeated refresh adds none. No save schema, marker, content or generator changes.
+- Matched native diagnostic: three 24-step walks per terrain, before/after object
+  predicate optimization. Snow median/p95/worst 33.31/33.56/460.43 ->
+  33.31/33.52/315.88 ms; M04 33.30/33.54/403.60 -> 33.30/33.52/335.28 ms.
+  Profile identifies object placement as the largest CPU component; test the same
+  deterministic roll before expensive ecology lookup. Object times Snow
+  161.8-216.1 -> 85.8-100.1 ms; M04 142.9-196.9 -> 90.9-92.0 ms. Baseline comparison
+  matches full placements in nine chunks per terrain; no algorithm/version change.
+- Final unprofiled native: Snow 33.30/33.56/243.18 ms; M04 33.30/33.54/285.77 ms.
+  Border-only (3 samples each) median/p95/worst Snow 230.94/243.18/243.18,
+  M04 271.63/285.77/285.77 ms. Still CONCERNS, not a smooth-streaming gate pass.
+- Archived crash is c0000005 in Intel ig9icd64.dll 27.20.100.8280, offset 0x614af3;
+  WER has no dump/usable stack. Four rendered script processes exited 0 on NVIDIA.
+  Isolated diagnostic release in .tools/t3-player (no official build/export script)
+  passed five WM_CLOSE exits plus rendered acceptance write37/0 and verify9/0,
+  both exit0. First shutdown-harness attempt rejected a null exit-code capture;
+  Process.Handle retention fixed collection. No crash was ignored/suppressed.
+  No verified project-side cause, Intel path and its normal-player impact remain
+  unresolved. Clean NVIDIA exits do not certify the historical driver path fixed.
+
+Verification commands:
+- `.\scripts\test.ps1 -Smoke -Only map,interactions,world,m04-world,land-package,snow-mountain,snow-content,snow-gameplay,rendered-snow-gameplay -Render`:
+  import/startup PASS; data96/0, world49/0, interactions69/0, integration41/0,
+  map22/0, land-package22/0, m04-world86/0, snow-mountain65/0,
+  snow-content56/0, snow-gameplay34/0 headless, rendered50/0. All exits0.
+- `.\scripts\godot.ps1 --script res://tests/snow_streaming_probe.gd '--' --profile-streaming`
+  before optimization, then with `--compare-object-baseline` after: native exits0;
+  logs .tools/t3-profile-1.log, .tools/t3-profile-after.log. See report for fixture
+  setup/reproduction, warm-cache assumptions and timing limitations.
+- `.\scripts\godot.ps1 --headless --export-release windows D:/Game/RPG-m05-snow/.tools/t3-player/EvolvingRealms.exe`:
+  isolated diagnostic only, exit0; `.tools/t3-shutdown.ps1` normal executable checks
+  above, explicit disposable databases + isolated custom user dir. Not published.
+- `.\scripts\godot.ps1 --headless --script res://scripts/land_package_check.gd`:
+  valid=true, ready=false, 27 blockers; salvage deferred. git diff --check PASS.
+- Development import caught/fixed a bool inference parse error; initial map test
+  caught the old zero-child assumption, updated to require one journal control
+  while preserving bounded chunk textures/no per-tile nodes. Final checks pass.
+
+One production handoff: docs/lands/SNOW_MOUNTAIN_TIER_A_HANDOFF.md. Seven PNGs with
+exact grids/pivots/states: bell96x112, cairn80x80, pine96x96, hare672x304,
+sentinel924x304, six-icon sheet96x64, three frozen-scree tiles120x40. Reuses S1;
+S2 source absent here, reuse any supplied/validated S2 frozen row instead. Original
+sources remain untouched; future originals/provenance go under
+assets/sources/EvolvingRealms_SnowMountain_TierA/. Older broad prompts marked backlog.
+
+Remaining: hundreds-of-ms streaming stalls; Intel shutdown repro/dump; Tier A delivery,
+QA/style/sentinel review and human playtest. Duplicate bell shards and bronze scrap
+without a sink remain accepted V1 limitations. Manifest readiness unchanged. No
+full/service/official-export regression, World binding, merge, publish or personal
+Run01 save access. Existing import-only working-tree changes were left uncommitted.
+
+
+## Snow Mountain Tier A reference intake (2026-11-03)
+
+User located the unpacked references in the main checkout's assets/sources, not
+Snow worktree. Copied README, supplied manifest, original 1536x1024 board and seven
+reference crops unchanged into assets/sources/EvolvingRealms_SnowMountain_TierA/.
+Byte-for-byte comparisons passed for all ten supplied files; SHA-256/provenance
+and actual-dimension/alpha review are recorded in intake_provenance.json and
+INTAKE_REVIEW.md beside them. Generator/model/prompt unknown, not fabricated.
+
+Inspected the original image with view_image. It is a labeled presentation board:
+backgrounds remain, native dimensions differ from the handoff, animal directions/
+states are incomplete, item identities mismatch, and scree is not validated flat
+seamless terrain. Reference-only status preserved, no runtime mapping or manifest
+readiness changed. Original images in both checkouts remain unchanged.
+
+Validation: Pillow metadata/alpha audit (.tools/tier-a-source-audit.json), SHA-256
+and byte equality for all supplied files; git diff --check. No gameplay tests:
+source/reference intake only. Existing import changes remain untouched. The user's
+integration request was truncated at "They may"; requested the remaining instructions
+before dependent art edits, image generation or preview packaging. No personal saves,
+official build, merge or publication touched.
+
+
+## Snow Mountain V1 reset - coherent package design (2026-11-03)
+
+User explicitly replaced piecemeal art integration with design/production planning.
+Audited code/content/art at dde02f7, preserving all useful implementation. No code
+probe was necessary, and no runtime/data/art/readiness changes were made.
+
+Deliverables A/B/D: docs/lands/SNOW_MOUNTAIN_V1_PACKAGE.md rewritten as the current
+proposed package: exploration loop, seven-area roles, five story sites/three roofs,
+two independent narrative threads in one relay history, existing survival rules,
+three-species ecological/behavior/feasibility matrix, brief future roster and
+ordered implementation/acceptance. No extra species, boss, quest chain or AI system.
+The elite guardian species is stochastic, not one guaranteed unique boss. Existing
+D1-D3 decisions remain baseline; new design acceptance is not fabricated.
+
+Audit surfaced a real player-facing gap: location_runtime supports explicit
+interaction IDs/exclusivity, but main's E path takes the first remaining interaction.
+An unmet clasp return can hide force; the design's meaningful choice is not fully
+usable through normal input. Best next implementation: small discovered-place
+choice UI using the existing handler, with cancel/requirements/repeat/reload tests.
+Follow with seeded encounter-count/overlap/bypass survey before any versioned tuning.
+The v1 creature layer selects definition v1, so a v2 species alone would not tune it.
+
+Deliverable C: docs/lands/SNOW_MOUNTAIN_V1_MASTER_ASSETS.md is the ONLY current asset
+scope. 31 families: 26 P0, 3 P1, 2 P2. Eight P0 production outputs: three landmark
+sprites, three species sheets (reuse good S1 wolf frames), six-icon sheet and
+three-tile frozen-scree strip. Full wolf directions promoted from old Tier B.
+Existing S1 ground, props, roofs, locker, code transitions/weather and core icons
+can remain after QA; detailed cliff/weather art P1, painted boundaries/weather
+UI glyphs P2. Lists include exact native canvases/pivots/frame orders, reuse,
+placeholder acceptability, renderer gaps, provenance and acceptance. No state
+sprite expansion. Source concept board remains reference-only and unchanged.
+Older bible/S1-S5/Tier A request files now carry historical/superseded banners;
+no new production requirements are scattered among them.
+
+Validation: checked content IDs, authored version3/layout format1, five site pins,
+three species stats/AI, actual first-interaction input path, S1 index, two runtime
+256-mask overlay atlases covering seven pairs, and item/creature presentation lookup
+limitations against source. Local docs link/priority count audit and git diff --check.
+No gameplay tests rerun: documentation-only planning, no new implementation claim.
+Historical T3 test results are cited as baseline, not fresh validation. Machine
+manifest unchanged (27 blockers, ready=false); approved priority/scope changes need
+explicit later reconciliation, not silent blocker removal. Performance stalls,
+Intel-driver teardown uncertainty, incomplete art and no human playtest remain.
+
+No merge, export, image generation, publication, personal-save access, new content
+activation or broad implementation. AGENTS unchanged. Next implementation is
+recommended, not started. Design proposed; Playable CONCERNS; Playtested and Publish
+NOT ASSESSED.
+
+
+## Systemic Snow vertical slice - 2026-11-03
+
+Director-authorized implementation on `feature/m05-snow-mountain`, worktree
+`D:/Game/RPG-m05-snow`, actual starting HEAD `9346f10`. Existing import-only edits
+were present before work and remain outside this change. No master merge,
+publication, personal database access or Run 01 changes.
+
+Implemented:
+- A small v1 ordinary-ice material response in `src/core/world_rules.gd`:
+  declared pinned fuel -> intact contents, or derived Attack threshold -> two-thirds
+  fragile-content loss (minimum one per grant) and 2 HP injury. Costs, inventory,
+  state transitions and receipts commit through the existing location handler.
+- Layout v4 adds two discoverable supply cases. All prior definitions, terrain
+  parameters and five existing sites are preserved; established plans stay pinned.
+  Both methods work on both definitions; equipment capability is tested through
+  a real equip action. Existing art is reused as a placeholder.
+- E offers discovered interactions and cancel, known costs and clear refusal text.
+  Hidden reveal conditions are filtered before labels/requirements or explicit-ID
+  selection. Existing single-choice interactions keep their quick path.
+- J reads confirmed, categorized Knowledge with complete saved text. Successful
+  methods unlock scoped facts; Knowledge never gates experimentation. Journal
+  documents and atlas knowledge remain distinct. Panels pause real time, support
+  keyboard focus, and close cleanly through HUD inventory/menu transitions.
+- The existing offline exporter gains bounded significant-event history, methods,
+  failures, transitions, rewards/injury and Knowledge unlocks, plus generation
+  version and atlas revision at spawn. Raw diagnostics are spoiler-sensitive.
+  Refusals buffer outside Run state; save plans the addition on a copy and clears
+  it only after commit, preserving exact refusal semantics and retry safety.
+- Old-save exe validation found an existing atlas issue: JSON numeric region IDs
+  could be appended twice after reload. Membership now compares numeric IDs;
+  existing saved arrays are not rewritten. The atlas reload assertion now checks
+  complete known-land data, rather than only its outer count.
+
+Verification performed so far (all disposable data):
+- `scripts/godot.ps1 --headless --script res://tests/snow_content_suite.gd '--' --rules-only`:
+  final focused run **22 checks / 0 failures**, including exact refusal state,
+  explicit-save diagnostics, both approaches on both objects, real equipment,
+  hidden choices, receipts, save/load and fresh-Run isolation.
+- Native `Godot --path D:/Game/RPG-m05-snow --script res://tests/snow_mountain_gameplay_suite.gd`:
+  **63 checks / 0 failures**, exit 0 on NVIDIA OpenGL. Real E/Enter/Tab/Esc/J,
+  pause/cancel, both methods, HUD panel transitions and both facts after Continue.
+  Inspected `.tools/world-rules-selector.png` and `world-rules-knowledge.png`;
+  `world-rules-shattered.png` also captured. Automated gameplay, not human playtest.
+- Full regression (recovered after the first session was interrupted): one
+  `scripts/test.ps1 -Render` pass ran every headless suite plus startup, all passing
+  (snow-content 75, snow-mountain 66, snow-gameplay 44, m04-world 86, telemetry 32,
+  data 96, integration 41 with expected injected errors, and the rest). Suites logged
+  before the final `atlas_knowledge.gd` edit (data, m03-world, world, run01-world,
+  gameplay, interactions, interaction-gameplay, integration, combat, combat-gameplay)
+  were rerun afterwards with `-Only`: all 0 failures. Every rendered suite then passed
+  via `-Render -Only rendered-...`: realtime 18, snow-gameplay 63, m04-gameplay 31,
+  m03-integration 31, discoveries 7, effects 10, gameplay 24, interactions 20, combat 23,
+  survival 12, equipment 17, talents 19, skills 24. Flakes seen: rendered-realtime
+  "wolf kills the idle hero" once (passed on rerun); rendered-m04-gameplay twice with
+  random World seeds ("No accessible spawn" for a woodland, and the known
+  "draws its own ground: [ocean, road]" flake); the third run passed 31/0, test left
+  unchanged. The certifier probes terrain/objects/creatures only, not this change.
+  `-Service` and the `-Export` (builds/windows) step were not rerun; the preview exe
+  was exported from the final sources and starts headless on a copy of its DB (exit 0).
+  Earlier development runs caught strict refused-state mutation and JSON-number
+  comparison problems; the diagnostic buffer and numeric comparison fix address
+  them. No existing tests were deleted or weakened to permit gameplay mutations.
+- Detached compatibility worktree `D:/Game/RPG-systemic-compat` at `9346f10`, using
+  the preview-creation helper, wrote an isolated Snow layout-v3 World/Run. A fresh
+  copy opened in the new exported exe with `--acceptance=legacy`: **4/0**, exit 0.
+  SQL read-only comparisons confirm all original World, 182 definition and 51
+  instance rows survive unchanged; seed and spawn also match. The initial old-save
+  check caught the atlas duplicate-region bug above; a fresh copy passes after fix.
+- Parsed old/new source comparison confirms every pre-existing content definition,
+  terrain/layout parameter and original site remains equal. `git diff --check`
+  passed on the final tree (excluding unrelated `.import` line-ending churn).
+
+Preview: `builds/systemic-snow-preview-20261103/Launch-Preview.cmd`, explicit local
+`preview.sqlite`, a fresh certified Snow Run, no Python/network/keys required.
+Export command: `Godot --path D:/Game/RPG-m05-snow --headless --export-release windows
+D:/Game/RPG-m05-snow/builds/systemic-snow-preview-20261103/EvolvingRealms.exe`.
+Native SQLite license is included unchanged; engine and third-party notices were
+extracted with the pinned engine's license APIs. Builds, caches and saves are ignored.
+
+Limits: this is a material/supply slice, not universal temperature/physics, direct
+skill-to-object targeting, fire spread or terrain deformation. Combat history,
+death causes and playtime remain unrecorded; diagnostic history retains only the
+last 512 events and needs a save to survive termination. Production art, human
+playtesting, chunk-border stalls and Intel-driver crash uncertainty remain open.
+Snow Mountain V1 is not declared publication-ready; no readiness gates were waived.
+Best next action: fresh disposable preview playtest of discovery, method costs,
+Knowledge usefulness and controls; triage observed design/balance/bug issues before
+expanding mechanics or producing additional art.

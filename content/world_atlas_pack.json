@@ -1,0 +1,9 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {"content_id":"core:atlas/land","version":1,"schema_version":1,"kind":"land","name":"Land record","description":"World atlas: one major land and its full design plan. Written once, never rewritten. Never playable, never drawn.","metadata":{"category":"world"},"payload":{"atlas_version":1}},
+    {"content_id":"core:atlas/region","version":1,"schema_version":1,"kind":"land_region","name":"Land region record","description":"World atlas: one region inside a land (identity for Run knowledge).","metadata":{"category":"world"},"payload":{"atlas_version":1}},
+    {"content_id":"core:atlas/route","version":1,"schema_version":1,"kind":"land_route","name":"Route record","description":"World atlas: a route joining gates of two lands; traversable or gated by a requirement.","metadata":{"category":"world"},"payload":{"atlas_version":1}},
+    {"content_id":"core:atlas/revision","version":1,"schema_version":1,"kind":"atlas_revision","name":"Atlas revision","description":"World atlas: one activated change (lands and routes added) with provenance and approval.","metadata":{"category":"world"},"payload":{"atlas_version":1}}
+  ]
+}

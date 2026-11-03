@@ -100,6 +100,9 @@ choice).
   reason; no turn, no item, no state changes. Otherwise cost, awards (planned on a copy),
   vitals, the resolution record and status/XP/resource handlers commit together.
 - `X` search is a declared action: it always spends one turn.
+- Journal notes (2026-11-02): `LocationRuntime.notes` replays each resolved interaction's
+  message from its record (pinned event + the same Run-keyed `chance` roll), newest first,
+  on the World Map journal. No stored text, no positions, no marker; other Runs see none.
 - A resolved interaction never pays again: the record is saved with the Run; reload,
   unloading the chunk or returning cannot re-trigger it. `enter` events fire once.
 
@@ -161,3 +164,25 @@ drawn or targetable.
   (`event.repeat`, `location.trigger.timer` would be new capabilities).
 - Sense-radius talent markers do not show places yet.
 - Authored place sets added later need a new layer tag to keep established regions intact.
+
+## Ordinary-ice supply rules and confirmed Knowledge (2026-11-03)
+
+Location payloads may declare `world_properties` v1: material `ordinary_ice`,
+`fracture_attack` and pinned item `thaw_fuel` costs. Explicit player interactions
+use `world_method: heat|force` and must be exclusive. Their events describe intact
+`grant_items` contents only; the trusted WorldRules handler plans fuel or
+fracture loss/injury before the ordinary atomic cost/award commit. Unsupported
+property versions/materials/methods remain pending; malformed data is rejected.
+Saved mutations add `world_rule_version: 1` and `world_state: thawed|shattered`;
+unknown saved rule versions are refused. Existing content remains unchanged.
+
+Optional interaction `reveal_conditions` use the validated event-condition
+vocabulary. Unmet reveal conditions remove the interaction from both offered
+choices and explicit-ID lookup, without showing prerequisites. Ordinary event
+conditions remain known requirements after a choice has been revealed.
+
+E selects discovered in-reach choices when there are alternatives. J opens
+confirmed Knowledge; Escape cancels either panel. Character `knowledge` stores
+versioned full fact text and unlock turn, separately from journal/atlas records.
+Only successful material interaction unlocks a scoped fact; trying works before
+learning it. No new top-level Run field or SQL migration.

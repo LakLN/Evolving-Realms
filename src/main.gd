@@ -9,15 +9,25 @@ const Acceptance = preload("res://src/acceptance/standalone_check.gd")
 const TalentText = preload("res://src/core/talent_text.gd")
 const FantasyTheme = preload("res://src/ui/fantasy_theme.gd")
 const Art = preload("res://src/world/art.gd")
+const WorldMap = preload("res://src/ui/world_map.gd")
+const Realtime = preload("res://src/run/realtime_controller.gd")
+const Structured = preload("res://src/world/structured_world.gd")
+const Atlas = preload("res://src/world/world_atlas.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
+const CONTROLS_TURN := "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills | M: map | N: minimap"
+const CONTROLS_REALTIME := "Hold WASD: move | F: attack | \"!\": step away to dodge | E | X | R: rest | 1-9 | I C T K | M: map | N: minimap"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
 var database_path := DEFAULT_DATABASE
 var store := Store.new()
 var session: RefCounted
 var map_view: Node2D
+var _world_map: WorldMap
 var _menu: Control
 var _hud: Control
+var _discovery_panel: PanelContainer
+var _discovery_column: VBoxContainer
+var _discovery_mode := ""
 var _worlds: OptionButton
 var _runs: ItemList
 var _name_entry: LineEdit
@@ -25,9 +35,33 @@ var _world_seed: LineEdit
 var _run_seed: LineEdit
 var _biome: OptionButton
 var _mode: OptionButton
+var _time_model: OptionButton
+var _world_layout: OptionButton
+var _region_hint: Label
+## Known structured-World leads/bearings, refreshed on discoveries and resolutions only
+## (each read loads discovered site records); distances are recomputed from this cache.
+var _leads: Array = []
+var _frontiers: Array = []
+var _controls_hint: Label
+## M03 B prototype: gameplay clock of a real-time Run (null for turn Runs).
+var _realtime: RefCounted
 var _create_world: Button
 var _new_run: Button
 var _resume: Button
+## Milestone 04: the persistent World (atlas) entry points on the main menu.
+var _adventure: Button
+var _chart: Button
+## M05 development: chart the Snow Mountain layout land (land package, not published).
+var _chart_snow: Button
+const SNOW_LAYOUT := "landpkg:snow_mountain/layout"
+const CHART_SNOW := "Chart Snow Mountain (dev)"
+const SNOW_RUN := "New Run in Snow Mountain (dev)"
+## Real-time notices that may not replace a fresh place message (see _hold_notice).
+const ROUTINE_EVENTS := ["autosave", "survival", "status_tick", "skill_resource", "regen"]
+const NOTICE_HOLD_MS := 9000
+var _notice_hold_until := 0
+var _atlas_line: Label
+var _pending_land: Dictionary = {}
 var _status: Label
 var _info: Label
 var _notice: Label
@@ -98,7 +132,11 @@ func _ready() -> void:
 	_build_character(frame)
 	_build_talent_panel(frame)
 	_build_skills(frame)
+	_build_discovery_panel(frame)
 	_build_death_screen(frame)
+	_world_map = WorldMap.new()
+	_world_map.waypoint_changed.connect(_on_waypoint_changed)
+	frame.add_child(_world_map)
 	var options := launch_options()
 	database_path = options.get("database", database_path)
 	if options.has("acceptance") and ProjectSettings.globalize_path(database_path) == ProjectSettings.globalize_path(DEFAULT_DATABASE):
@@ -161,6 +199,13 @@ func _build_menu(parent: Control) -> void:
 	left.add_child(_worlds)
 	_name_entry = _entry(left, "New world name", "")
 	_world_seed = _entry(left, "World seed (blank = random)", "")
+	_world_layout = OptionButton.new()
+	for layout in [["structured", "Layout: structured regions (M03)"], ["legacy", "Layout: legacy (Run 01 style)"], ["atlas", "Layout: persistent atlas lands (M04)"]]:
+		_world_layout.add_item(layout[1])
+		_world_layout.set_item_metadata(_world_layout.item_count - 1, layout[0])
+	# M03 integration: structured Worlds are the default; `-- --layout=legacy` preselects legacy.
+	_world_layout.select(1 if launch_options().get("layout", "") == "legacy" else 0)
+	left.add_child(_world_layout)
 	_create_world = _button(left, "Create world", _on_create_world)
 	left.add_child(HSeparator.new())
 	_label(left, "NEW RUN", 20)
@@ -174,6 +219,14 @@ func _build_menu(parent: Control) -> void:
 		_mode.add_item("Mode: " + mode + (" (death reloads last save)" if mode == "normal" else " (death ends the run)"))
 		_mode.set_item_metadata(_mode.item_count - 1, mode)
 	left.add_child(_mode)
+	_time_model = OptionButton.new()
+	for model in [["turn", "Time: turn-based (one action = one turn)"], ["realtime-v1", "Time: real-time (M03 prototype)"]]:
+		_time_model.add_item(model[1])
+		_time_model.set_item_metadata(_time_model.item_count - 1, model[0])
+	# M03 integration: real time is the default for new Runs; `-- --time=turn` preselects turns.
+	# Existing Runs keep the model stored in their spawn.
+	_time_model.select(0 if launch_options().get("time", "") == "turn" else 1)
+	left.add_child(_time_model)
 	_run_seed = _entry(left, "Run seed (blank = random)", "")
 	_new_run = _button(left, "Begin a new run", _on_new_run)
 	var right := VBoxContainer.new()
@@ -182,12 +235,23 @@ func _build_menu(parent: Control) -> void:
 	body.add_child(right)
 	_label(right, "SAVED RUNS", 20)
 	_runs = ItemList.new()
-	_runs.custom_minimum_size = Vector2(450, 280)
+	_runs.custom_minimum_size = Vector2(450, 190)
 	_runs.item_selected.connect(func(_index: int) -> void: _resume.disabled = false)
 	_runs.item_activated.connect(func(_index: int) -> void: _on_resume())
 	right.add_child(_runs)
 	_resume = _button(right, "Continue selected run", _on_resume)
 	_button(right, "Exit", _request_exit)
+	right.add_child(HSeparator.new())
+	_label(right, "THE EVOLVING REALM", 20)
+	_atlas_line = _label(right, "", 14)
+	_atlas_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var actions := HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 10)
+	right.add_child(actions)
+	_adventure = _button(actions, "New Adventure", _on_new_adventure)
+	_chart = _button(actions, "Chart a new land (dev)", _on_chart_land)
+	_chart_snow = _button(actions, CHART_SNOW, func() -> void: _on_chart_land(SNOW_LAYOUT))
+	for button in [_adventure, _chart, _chart_snow]: button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -249,12 +313,19 @@ func _build_hud(parent: Control) -> void:
 	bottom.add_child(column)
 	_notice = _label(column, "", 17)
 	_notice.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	# Place messages carry clues (M05 chains): wrap up to three lines instead of cutting.
+	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_notice.max_lines_visible = 3
 	_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_notice.mouse_filter = Control.MOUSE_FILTER_PASS
 	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
-	_label(column, "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills", 15)
+	_region_hint = _label(column, "", 16) # Structured World: region and leads (empty otherwise).
+	_region_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_region_hint.mouse_filter = Control.MOUSE_FILTER_PASS
+	_region_hint.add_theme_color_override("font_color", Color("cfe3b0"))
+	_controls_hint = _label(column, CONTROLS_TURN, 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
 	_hud.hide()
 
@@ -288,7 +359,84 @@ func _build_character(parent: Control) -> void:
 	_character_panel.hide()
 
 func _panel_open() -> bool:
-	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or not _targeting.is_empty()
+	if _discovery_panel != null and _discovery_panel.visible: return true
+	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or (_world_map != null and _world_map.map_open) or not _targeting.is_empty()
+
+func _build_discovery_panel(parent: Control) -> void:
+	_discovery_panel = PanelContainer.new()
+	_discovery_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_discovery_panel.offset_left = -340
+	_discovery_panel.offset_right = 340
+	_discovery_panel.offset_top = -240
+	_discovery_panel.offset_bottom = 240
+	parent.add_child(_discovery_panel)
+	_discovery_column = _scroll_column(_discovery_panel, 10)
+	_discovery_panel.hide()
+
+func _clear_discovery_panel(mode: String) -> void:
+	for child in _discovery_column.get_children():
+		_discovery_column.remove_child(child)
+		child.queue_free()
+	_discovery_mode = mode
+	_discovery_panel.show()
+
+func _close_discovery_panel() -> void:
+	_discovery_panel.hide()
+	get_viewport().gui_release_focus()
+	_hold_delay = 0.2
+
+func _show_knowledge() -> void:
+	_clear_discovery_panel("knowledge")
+	_label(_discovery_column, "KNOWLEDGE — confirmed this Run", 22)
+	var entries: Array = preload("res://src/run/player_knowledge.gd").entries(session)
+	if entries.is_empty(): _label(_discovery_column, "No confirmed entries yet. Learn through experience.", 16)
+	for entry in entries:
+		_label(_discovery_column, "%s / %s" % [entry.category, entry.title], 19)
+		var body := _label(_discovery_column, entry.text, 17)
+		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_button(_discovery_column, "Close [J / Esc]", _close_discovery_panel).grab_focus()
+
+func _show_interactions() -> bool:
+	var rows: Array = []
+	for instance in session.places.targets(session):
+		for choice in session.places.available(session, instance, "interact"):
+			rows.append({"instance": instance, "choice": choice})
+	# Preserve quick E for a single ordinary gather/open or place interaction.
+	if rows.is_empty() or (rows.size() == 1 and session.interaction_target().is_empty() and not rows[0].choice.has("world_method")): return false
+	_clear_discovery_panel("interactions")
+	_label(_discovery_column, "INTERACT — choose an approach", 22)
+	var first: Button
+	var object: Dictionary = session.interaction_target()
+	if not object.is_empty():
+		first = _button(_discovery_column, "Gather / open nearby supplies", func() -> void:
+			_close_discovery_panel()
+			_after_action(session.interact(object.instance_id)))
+	for row in rows:
+		var instance: Dictionary = row.instance
+		var choice: Dictionary = row.choice
+		var definition: Dictionary = session.locations.definition_for(instance)
+		var event: Dictionary = session.locations.event(choice.event)
+		var details: Array = session.places.unmet(session, event.payload.get("conditions", []))
+		if choice.has("world_method"):
+			var threshold := int(definition.payload.world_properties.fracture_attack)
+			if choice.world_method == "force":
+				details.append("Attack %d+ (current %d); 2 HP; two thirds of fragile contents lost" % [threshold, int(session.combat_stats().attack)])
+			else:
+				details.append("Contents preserved")
+				for fuel in definition.payload.world_properties.thaw_fuel:
+					details.append("%s x%d" % [session._definition(fuel.content_id, int(fuel.version)).get("name", fuel.content_id), int(fuel.quantity)])
+		for item in event.payload.get("cost", {}).get("items", []):
+			details.append("%s x%d" % [session._definition(item.content_id, int(item.version)).get("name", item.content_id), int(item.get("quantity", 1))])
+		var button := _button(_discovery_column, "%s: %s" % [definition.name, choice.get("verb", "Explore")], func() -> void:
+			_close_discovery_panel()
+			_after_action(session.perform_action({"type": "interact", "instance_id": instance.instance_id, "interaction": choice.id})))
+		if first == null: first = button
+		if not details.is_empty():
+			var label := _label(_discovery_column, "; ".join(details), 16)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_button(_discovery_column, "Cancel [Esc] — no action spent", _close_discovery_panel)
+	if first != null: first.grab_focus()
+	return true
 
 func _toggle_character() -> void:
 	if session == null or _menu.visible or session.is_dead():
@@ -803,6 +951,7 @@ func _build_death_screen(parent: Control) -> void:
 	_death_panel.hide()
 
 func _show_death() -> void:
+	_discovery_panel.hide()
 	_inventory_panel.hide()
 	_character_panel.hide()
 	_talent_panel.hide()
@@ -827,6 +976,7 @@ func _reload_after_death() -> void:
 func _toggle_inventory() -> void:
 	if session == null or _menu.visible or session.is_dead():
 		return
+	_discovery_panel.hide()
 	_character_panel.hide()
 	_skills_panel.hide()
 	_inventory_panel.visible = not _inventory_panel.visible
@@ -951,12 +1101,112 @@ func _refresh_worlds(selected: String = "") -> void:
 	_worlds.clear()
 	if _data_ready:
 		for world in store.list_worlds():
-			_worlds.add_item("%s  /  seed %d" % [str(world.name).left(32), world.seed])
+			var loaded: Dictionary = store.load_world(world.world_id)
+			var tag := "  [atlas]" if Atlas.enabled(loaded) else ("  [structured]" if Structured.enabled(loaded) else "")
+			_worlds.add_item("%s  /  seed %d%s" % [str(world.name).left(32), world.seed, tag])
 			var index := _worlds.item_count - 1
 			_worlds.set_item_metadata(index, world.world_id)
 			if world.world_id == selected:
 				_worlds.select(index)
+	_refresh_atlas_line()
 	_refresh_runs()
+
+func _persistent_world() -> Dictionary:
+	## The persistent World is the first atlas World of this save (created on demand).
+	if not _data_ready:
+		return {}
+	for header in store.list_worlds():
+		var loaded: Dictionary = store.load_world(header.world_id)
+		if Atlas.enabled(loaded):
+			return loaded
+	return {}
+
+func _refresh_atlas_line() -> void:
+	if _atlas_line == null:
+		return
+	var world := _persistent_world()
+	_chart.disabled = world.is_empty()
+	_chart_snow.disabled = world.is_empty()
+	if world.is_empty():
+		_atlas_line.text = "No persistent world yet: New Adventure charts one (a few seconds, once)."
+		return
+	var atlas := Atlas.new()
+	if not atlas.open(store.content, world):
+		_atlas_line.text = atlas.last_error
+		return
+	var names: Array = atlas.lands.values().map(func(plan: Dictionary) -> String: return str(plan.name))
+	if _pending_land.is_empty():
+		_chart_snow.text = SNOW_RUN if atlas.lands.values().any(func(p: Dictionary) -> bool: return p.get("layout", {}).get("id", "") == SNOW_LAYOUT) else CHART_SNOW
+	_atlas_line.text = "%s: %d lands, revision %d. Each adventure starts in a random land." % [world.name, atlas.lands.size(), atlas.revision()]
+	_atlas_line.tooltip_text = ", ".join(names)
+
+func _on_new_adventure() -> void:
+	## Normal play: the persistent World, a random eligible land, a fresh character.
+	var world := _persistent_world()
+	if world.is_empty():
+		_message("Charting the persistent world for the first time...")
+		_adventure.disabled = true
+		await get_tree().process_frame
+		await get_tree().process_frame
+		world = Atlas.create_world(store, "The Evolving Realm", int(randi() & 0x7fffffff))
+		_adventure.disabled = false
+		if world.is_empty():
+			_message(store.last_error, true)
+			return
+	_start_adventure(world, "any")
+
+func _start_adventure(world: Dictionary, land_id: String) -> void:
+	var next := Session.new(store)
+	if not next.start_new(world.world_id, int(randi() & 0x7fffffff), land_id, _mode.get_item_metadata(_mode.selected), _time_model.get_item_metadata(_time_model.selected)):
+		_message(next.last_error, true)
+		_refresh_worlds(world.world_id)
+		return
+	_refresh_worlds(world.world_id)
+	var arrival := describe_events(next.last_events)
+	_enter_map(next)
+	_notice.text = (arrival + " " + _notice.text).strip_edges()
+
+func _on_chart_land(layout_id: String = "") -> void:
+	## Development: propose -> validate -> (click again to approve) -> activate.
+	var world := _persistent_world()
+	if world.is_empty():
+		return
+	var atlas := Atlas.new()
+	if not atlas.open(store.content, world):
+		_message(atlas.last_error, true)
+		return
+	var button: Button = _chart_snow if not layout_id.is_empty() else _chart
+	if not layout_id.is_empty():
+		for plan in atlas.lands.values():
+			if plan.get("layout", {}).get("id", "") == layout_id:
+				_start_adventure(world, plan.land_id) # Charted already: a new Run there.
+				return
+	if _pending_land.get("world_id", "") != world.world_id or int(_pending_land.get("revision", -1)) != atlas.revision() or _pending_land.get("layout", "") != layout_id:
+		_chart.text = "Chart a new land (dev)"
+		_chart_snow.text = CHART_SNOW
+		_message("Designing a land beyond a frontier gate%s..." % (" (validating the whole land on foot, a few seconds)" if not layout_id.is_empty() else ""))
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var proposal: Dictionary = atlas.propose_layout_land(layout_id) if not layout_id.is_empty() else atlas.propose_expansion()
+		if proposal.is_empty():
+			_message(atlas.last_error, true)
+			return
+		var problem: String = atlas.validate(proposal)
+		if not problem.is_empty():
+			_message("Proposal rejected by validation: " + problem, true)
+			return
+		_pending_land = {"world_id": world.world_id, "revision": atlas.revision(), "proposal": proposal, "layout": layout_id}
+		button.text = "Approve: %s" % proposal.land.name
+		_message("PROPOSED (validated, not active): %s. %s. Click Approve to add it to the World." % [proposal.summary, str(proposal.land.history)])
+		return
+	if not atlas.activate(_pending_land.proposal, {"by": "developer (main menu)"}):
+		_message(atlas.last_error, true)
+		return
+	_message("Revision %d: %s joins the World. Established lands are unchanged; new adventures may begin there." % [atlas.revision(), _pending_land.proposal.land.name])
+	_pending_land = {}
+	_chart.text = "Chart a new land (dev)"
+	_chart_snow.text = CHART_SNOW
+	_refresh_worlds(world.world_id)
 
 func _refresh_runs() -> void:
 	_runs.clear()
@@ -981,9 +1231,34 @@ func _parse_seed(entry: LineEdit) -> Variant:
 		return null
 	return text.to_int()
 
+func use_legacy_defaults() -> void:
+	## Baseline suites and release acceptance select the pre-M03 layout and turn model
+	## explicitly (like Session.auto_awaken = false); players get the M03 defaults.
+	_world_layout.select(1)
+	_time_model.select(0)
+
 func _on_create_world() -> void:
 	var seed_value: Variant = _parse_seed(_world_seed)
 	if seed_value == null:
+		return
+	if _world_layout.get_item_metadata(_world_layout.selected) == "atlas":
+		_message("Charting the atlas World...")
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var atlas_world := Atlas.create_world(store, _name_entry.text, seed_value)
+		if atlas_world.is_empty():
+			_message(store.last_error, true)
+			return
+		_refresh_worlds(atlas_world.world_id)
+		_message("Atlas World created with its first lands. Begin a run (a random land) or New Adventure.")
+		return
+	if _world_layout.get_item_metadata(_world_layout.selected) == "structured":
+		var structured := Structured.create(store, _name_entry.text, seed_value)
+		if structured.is_empty():
+			_message(store.last_error, true)
+			return
+		_refresh_worlds(structured.world_id)
+		_message("Structured World created: named regions with a waystone, supplies and a relic site each. Begin a run.")
 		return
 	var blueprint := StarterPack.blueprint(seed_value)
 	if blueprint.is_empty():
@@ -1001,7 +1276,7 @@ func _on_new_run() -> void:
 	if seed_value == null or _selected_world().is_empty():
 		return
 	var next := Session.new(store)
-	if not next.start_new(_selected_world(), seed_value, _biome.get_item_metadata(_biome.selected), _mode.get_item_metadata(_mode.selected)):
+	if not next.start_new(_selected_world(), seed_value, _biome.get_item_metadata(_biome.selected), _mode.get_item_metadata(_mode.selected), _time_model.get_item_metadata(_time_model.selected)):
 		_message(next.last_error, true)
 		_refresh_runs()
 		return
@@ -1018,6 +1293,19 @@ func _on_resume() -> void:
 	_enter_map(next)
 
 func _enter_map(active_session: RefCounted) -> void:
+	_discovery_panel.hide()
+	_realtime = null
+	if active_session.realtime:
+		var clock := Realtime.new()
+		if not clock.configure(active_session):
+			_message(clock.last_error, true)
+			_refresh_runs()
+			return
+		_realtime = clock
+		active_session.action_completed.connect(func(action: Dictionary, _result: Dictionary) -> void:
+			if _realtime != null: _realtime.note_action(str(action.get("type", ""))))
+	map_view.smooth_steps = _realtime != null
+	_controls_hint.text = CONTROLS_REALTIME if _realtime != null else CONTROLS_TURN
 	session = active_session
 	_target_id = ""
 	_death_panel.hide()
@@ -1025,10 +1313,14 @@ func _enter_map(active_session: RefCounted) -> void:
 	_hud.show()
 	map_view.show()
 	map_view.attach(session)
+	_world_map.attach(session)
+	_refresh_exploration()
 	_hold_delay = 0.2
 	_discard_on_exit = false
 	_update_info()
 	_notice.text = "Explore freely. Save with Ctrl+S; Esc saves and returns to the menu."
+	if _realtime != null:
+		_notice.text = "REAL TIME: hold WASD to move, F to attack. \"!\" = a blow is coming: step away. Panels and the map pause."
 	get_viewport().gui_release_focus()
 	_talent_panel.hide()
 	_skills_panel.hide()
@@ -1038,8 +1330,106 @@ func _enter_map(active_session: RefCounted) -> void:
 		show_talent(true) # Reveal once; the record is already part of the Run state.
 		session.awakened_now = []
 
+const ROUTE_NAMES := {"pass": "mountain pass", "causeway": "causeway", "harbor": "harbour"}
+const DIRECTIONS_8 := ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"]
+
+func _refresh_exploration() -> void:
+	## Structured Worlds: known leads, places and region bearings -> map markers, journal
+	## and the HUD region line. Only acquired knowledge (Task A contract) is shown.
+	_leads = session.exploration_leads()
+	_frontiers = session.exploration_frontiers()
+	var markers: Array = []
+	var journal: Array = []
+	var routes: Array = [] # Atlas lands and routes lead the journal; clues follow.
+	for land in session.known_lands():
+		routes.append({"state": "discovered", "title": "◆ %s (%s)" % [land.name, land.title], "detail": "%s — %d/%d regions walked" % [land.epithet, land.regions.size(), int(land.region_count)]})
+	# What resolved places said in this Run, newest first: words only, never a marker.
+	var notes: Array = []
+	for note in session.places.notes(session):
+		notes.append({"state": "note", "title": "» " + str(note.place),"detail": note.message, "wrap": true})
+	for lead in _leads:
+		var title := str(lead.metadata.get("title", lead.role))
+		if lead.knowledge == "lead": # Not seen yet: discovered ones are already map landmarks.
+			markers.append({"id": "lead:" + str(lead.instance_id), "position": lead.position.duplicate(), "label": "? " + title, "kind": "lead"})
+		var state := "resolved" if lead.resolved else ("discovered" if lead.knowledge == "discovered" else "lead")
+		journal.append({"state": state, "title": "%s %s" % [{"lead": "?", "discovered": "•", "resolved": "✓"}[state], _short_title(title)], "detail": "%s — %s" % [{"lead": "lead, not seen yet", "discovered": "found", "resolved": "done"}[state], str(lead.reason)]})
+	for frontier in _frontiers:
+		if frontier.has("gate_id"): # Atlas route/gate (M04): only what this Run has seen or read.
+			var state: String = {"open": "open", "locked": "locked", "veil": "into the Veil"}.get(frontier.state, frontier.state)
+			markers.append({"id": "frontier:" + str(frontier.gate_id), "position": frontier.position.duplicate(), "label": "→ %s (%s)" % [frontier.name, state], "kind": "frontier"})
+			routes.append({"state": "frontier", "title": "→ %s, %s" % [frontier.name, frontier.direction], "detail": str(frontier.opportunity)})
+			continue
+		var bounds: Dictionary = frontier.bounds
+		var center := {"x": int(bounds.x) + int(bounds.size) / 2, "y": int(bounds.y) + int(bounds.size) / 2}
+		markers.append({"id": "frontier:" + str(frontier.region_id), "position": center, "label": "→ %s (%s, unsurveyed)" % [frontier.name, frontier.direction], "kind": "frontier"})
+		journal.append({"state": "frontier", "title": "→ %s (%s)" % [frontier.name, frontier.direction], "detail": "unsurveyed — %s" % frontier.opportunity})
+	_world_map.set_markers(markers)
+	_world_map.set_journal(routes + notes + journal)
+
+func _after_exploration_events(events: Array) -> void:
+	if events.any(func(e: Dictionary) -> bool: return e.get("type") in ["discovery", "location", "land_entered", "region_entered", "route_sighted", "route_learned"]):
+		_refresh_exploration()
+
+func _bearing(target: Dictionary) -> String:
+	var delta := Vector2(int(target.x) - session.position.x, int(target.y) - session.position.y)
+	if delta.length() < 1.0:
+		return "here"
+	return DIRECTIONS_8[posmod(roundi(delta.angle() / (PI / 4.0)), 8)]
+
+func _hold_notice(events: Array) -> void:
+	## Keep a place/discovery message readable: routine real-time notices wait for it.
+	if events.any(func(e: Dictionary) -> bool: return str(e.get("type", "")) in ["location", "discovery", "land_entered"]):
+		_notice_hold_until = Time.get_ticks_msec() + NOTICE_HOLD_MS
+
+func weather_text(status: Dictionary) -> String:
+	## "Blizzard: EXPOSED −1 HP in 3s (wind-scoured)" / "Blizzard: sheltered (roof)".
+	var unit := "s" if session.realtime else " turns"
+	var text := str(status.weather)
+	if status.exposed:
+		text += ": EXPOSED −1 HP in %d%s" % [int(status.next_damage_in), unit]
+		text += {"lee": " (lee slope: slower)", "exposed": " (wind-scoured: faster)"}.get(str(status.get("area", "")), "")
+	elif status.sheltered:
+		text += ": sheltered (%s)" % ("under a roof" if status.shelter == "roof" else "beside cover")
+	return text + " · %d%s left" % [int(status.remaining), unit]
+
+func region_text() -> String:
+	## HUD line: current region, then the nearest unfinished lead or a region bearing.
+	var region: Dictionary = session.world_region()
+	if region.is_empty():
+		return ""
+	var text := "Region: %s (danger %d, %s)" % [region.name, int(region.danger), region.opportunity]
+	if region.has("land_name"): # Atlas World: weather where you stand first, then land > region.
+		text = "%s › %s (danger %d, %s)" % [region.land_name, region.name, int(region.danger), region.opportunity]
+		var status: Dictionary = session.environment_status()
+		if not str(status.get("weather", "")).is_empty():
+			text = weather_text(status) + "  |  " + text # First: it must never be cut off.
+		elif not str(status.get("incoming", "")).is_empty():
+			text = "⚠ %s coming in %d%s — find cover  |  %s" % [status.incoming, int(status.incoming_in), "s" if session.realtime else " turns", text]
+		if not str(status.get("hazard", "")).is_empty():
+			text = "⚠ " + status.hazard + "  |  " + text
+	var best: Dictionary = {}
+	var best_distance := 2147483647
+	for lead in _leads:
+		var distance := absi(int(lead.position.x) - session.position.x) + absi(int(lead.position.y) - session.position.y)
+		if not lead.resolved and distance < best_distance:
+			best = lead
+			best_distance = distance
+	if not best.is_empty():
+		text += "  |  Lead: %s, %d tiles %s%s" % [_short_title(str(best.metadata.get("title", best.role))), best_distance, _bearing(best.position), "" if best.knowledge == "lead" else " (found)"]
+	elif not _frontiers.is_empty():
+		text += "  |  Onward: %s to the %s" % [_frontiers[0].name, _frontiers[0].direction]
+	return text
+
+static func _short_title(title: String) -> String:
+	## "Silver Hunting wood - Healing grove" -> "Healing grove" (the region is shown already).
+	return title.get_slice(" - ", 1) if title.contains(" - ") else title
+
 func _update_info() -> void:
 	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s | Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	_region_hint.text = region_text()
+	_region_hint.tooltip_text = _region_hint.text
+	if _realtime != null: # Real time: `turn` counts world seconds.
+		_info.text = _info.text.replace("Turn %d" % session.run.state.turn, "Time %d s%s" % [session.run.state.turn, " | resting" if session.resting else ""])
 	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
 	_hp_label.text = "Lv %d  HP %d/%d  ATK %d DEF %d" % [session.character_rules.level(session.run.state.character), stats.hp, stats.max_hp, stats.attack, stats.defense]
 	_hp_bar.max_value = int(stats.max_hp)
@@ -1067,7 +1457,7 @@ func _update_info() -> void:
 	if not foe.is_empty():
 		_target_hint.text += "\n" + session.statuses.describe(session, foe.get("statuses", []))
 	var target: Dictionary = session.interaction_target()
-	_interaction_hint.text = "E: interact on your tile or a cardinal neighbor.  I: view inventory."
+	_interaction_hint.text = "E: interact / choose an approach.  I: inventory.  J: Knowledge."
 	if not target.is_empty():
 		var definition: Dictionary = session.objects.definition_for(target)
 		_interaction_hint.text = "E: %s %s  /  (%d, %d)" % [str(definition.payload.interaction).capitalize(), definition.name, target.position.x, target.position.y]
@@ -1115,12 +1505,25 @@ func _attack() -> void:
 		_update_info()
 		return
 	_target_id = foe.instance_id
+	if _realtime != null:
+		if not _realtime.attack(foe.instance_id):
+			_notice.text = _realtime.last_error # Cooldown: nothing happens, nothing is spent.
+			return
+		_after_action(true)
+		return
 	_after_action(session.attack_target(foe.instance_id))
 
 func _wait() -> void:
 	_after_action(session.wait_turn(), "You wait a turn.")
 
 func _rest() -> void:
+	if _realtime != null:
+		if session.rest():
+			_notice.text = "Resting… needs and energy recover faster. Move, attack or press R to stop." if session.resting else "You stop resting."
+			_update_info()
+		else:
+			_notice.text = session.last_error
+		return
 	if not session.rest():
 		_after_action(false)
 		return
@@ -1136,9 +1539,12 @@ func _after_action(accepted: bool, quiet: String = "") -> void:
 		_update_info()
 		return
 	map_view.refresh()
+	_world_map.refresh(session.last_events)
+	_after_exploration_events(session.last_events)
 	map_view.show_events(session.last_events)
 	var text := describe_events(session.last_events)
 	_notice.text = text if not text.is_empty() else quiet
+	_hold_notice(session.last_events)
 	_update_info()
 	if session.is_dead():
 		_show_death()
@@ -1191,7 +1597,15 @@ func describe_events(events: Array) -> String:
 			"status_dispel":
 				parts.append("%s: %s removed." % [event.target, event.status])
 			"status_tick":
-				parts.append("%s: %s %+d HP." % [event.target, event.status, int(event.amount)])
+				var by := str(event.get("source", ""))
+				parts.append("%s: %s %+d HP%s." % [event.target, event.status, int(event.amount), "" if by.is_empty() or by == "you" else " (from %s)" % by])
+			"dodge":
+				parts.append("You dodge %s's attack." % event.name)
+			"rest_start":
+				pass # The R handler explains resting.
+			"rest_end":
+				if event.reason != "manual":
+					parts.append({"danger": "Rest interrupted: danger in sight!", "attacked": "Rest interrupted: you were attacked!", "healed": "Fully rested.", "needs": "Rest interrupted: you need food, water or care."}.get(event.reason, "You stop resting."))
 			"status_error":
 				parts.append("Status could not resolve: " + str(event.error))
 			"status_blocked":
@@ -1228,6 +1642,23 @@ func describe_events(events: Array) -> String:
 				if event.found.is_empty(): parts.append("You search the area but find nothing new.")
 			"location_error":
 				parts.append("Place could not be recorded: " + str(event.error))
+			"land_entered":
+				parts.append("LAND: %s, %s (%s, %s)." % [event.name, event.epithet, event.title, event.climate])
+			"region_entered":
+				parts.append("Region: %s (danger %d)." % [event.name, int(event.danger)])
+			"route_sighted":
+				parts.append("You sight a %s to the %s." % [ROUTE_NAMES.get(event.kind, "route"), event.side])
+			"route_learned":
+				parts.append("Road-marks tell of a %s to the %s." % [ROUTE_NAMES.get(event.kind, "route"), event.side])
+			"weather":
+				match str(event.state):
+					"start": parts.append("%s! Sight drops to %d." % [event.name, int(event.sight)])
+					"warning": parts.append("⚠ The wind rises: %s in %d%s. Head for pines, rocks or a roof." % [str(event.name).to_lower(), int(event.get("in", 0)), "s" if session != null and session.realtime else " turns"])
+					_: parts.append("The %s passes." % str(event.name).to_lower())
+			"environment":
+				parts.append("%s: %d HP%s" % [event.name, int(event.amount), " — shelter beside pines or rocks, or under a roof!" if event.kind == "exposure" else " — get off the scorching ground!"])
+			"knowledge":
+				parts.append("Knowledge learned: %s. Press J to read." % event.name)
 			"autosave":
 				parts.append("Autosaved.")
 			"autosave_failed":
@@ -1237,6 +1668,7 @@ func describe_events(events: Array) -> String:
 func _interact() -> void:
 	if session == null or _panel_open():
 		return
+	if _show_interactions(): return
 	var target: Dictionary = session.interaction_target()
 	if session.interact():
 		if not target.is_empty() and not session.last_result.get("place", false):
@@ -1266,6 +1698,12 @@ func move_player(direction: Vector2i) -> bool:
 	_after_action(moved)
 	return moved
 
+func _on_waypoint_changed(waypoint: Dictionary) -> void:
+	if session == null:
+		return
+	_update_info()
+	_notice.text = "Waypoint cleared." if waypoint.is_empty() else "Waypoint set to (%d, %d)." % [int(waypoint.x), int(waypoint.y)]
+
 func _unhandled_key_input(event: InputEvent) -> void:
 	if session == null or _menu.visible or not event is InputEventKey or not event.pressed or event.echo:
 		return
@@ -1274,6 +1712,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if session.is_dead():
 		if event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE:
 			_return_to_menu()
+		get_viewport().set_input_as_handled()
+		return
+	var acting: bool = event.physical_keycode in [KEY_E, KEY_X] or event.keycode in [KEY_E, KEY_X] or (event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9) or (event.keycode >= KEY_1 and event.keycode <= KEY_9)
+	if _realtime != null and acting and not event.ctrl_pressed and not event.alt_pressed and not _realtime.ready_for_action():
+		_notice.text = _realtime.last_error # Real time: short shared recovery between actions.
 		get_viewport().set_input_as_handled()
 		return
 	if _is_save_shortcut(event):
@@ -1302,11 +1745,13 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_talent()
 	elif event.keycode == KEY_K or event.physical_keycode == KEY_K:
 		_toggle_skills()
+	elif event.keycode == KEY_J or event.physical_keycode == KEY_J:
+		_show_knowledge()
 	elif event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9:
 		begin_skill(event.physical_keycode - KEY_1)
 	elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
 		begin_skill(event.keycode - KEY_1)
-	else:
+	elif _realtime == null: # Real time reads held movement keys every frame in _process.
 		for action in MOVE_KEYS:
 			if event.is_action_pressed(action):
 				move_player(MOVE_DIRECTIONS[action])
@@ -1315,6 +1760,26 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
+	if _discovery_panel != null and _discovery_panel.visible and event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE or (_discovery_mode == "knowledge" and event.keycode == KEY_J):
+			_close_discovery_panel()
+			get_viewport().set_input_as_handled()
+		return
+	if event is InputEventKey and event.pressed and not event.echo and _world_map != null:
+		if _world_map.map_open:
+			if event.keycode in [KEY_M, KEY_ESCAPE] or event.physical_keycode in [KEY_M, KEY_ESCAPE]:
+				_world_map.close_map()
+			get_viewport().set_input_as_handled()
+			return
+		if session != null and not _menu.visible and not session.is_dead() and not _panel_open():
+			if event.keycode == KEY_M or event.physical_keycode == KEY_M:
+				_world_map.open_map()
+				get_viewport().set_input_as_handled()
+				return
+			if event.keycode == KEY_N or event.physical_keycode == KEY_N:
+				_world_map.toggle_minimap()
+				get_viewport().set_input_as_handled()
+				return
 	if not _targeting.is_empty() and event is InputEventKey and event.pressed and not event.echo:
 		_targeting_input(event)
 		get_viewport().set_input_as_handled() # Modal while choosing a target.
@@ -1373,6 +1838,9 @@ func _process(delta: float) -> void:
 		elif entry[1] < entry[0].item_count:
 			entry[0].set_item_custom_fg_color(entry[1], session.quality.color(entry[2], Time.get_ticks_msec() / 1000.0))
 	if session == null or _menu.visible or _panel_open() or session.is_dead():
+		return # Real time: this is also the pause rule (menus, panels, targeting, death).
+	if _realtime != null:
+		_realtime_frame(delta)
 		return
 	_hold_delay -= delta
 	if _hold_delay > 0 or Input.is_key_pressed(KEY_CTRL) or Input.is_key_pressed(KEY_ALT):
@@ -1382,6 +1850,37 @@ func _process(delta: float) -> void:
 			move_player(MOVE_DIRECTIONS[action])
 			_hold_delay = 0.14
 			return
+
+func _realtime_frame(delta: float) -> void:
+	## One frame of a real-time Run: held keys -> controller -> render and messages.
+	if DisplayServer.get_name() != "headless" and not get_window().has_focus():
+		return # Alt-tab pauses the world.
+	var direction := Vector2i.ZERO
+	if not Input.is_key_pressed(KEY_CTRL) and not Input.is_key_pressed(KEY_ALT):
+		for action in MOVE_KEYS:
+			if Input.is_action_pressed(action):
+				direction += MOVE_DIRECTIONS[action]
+	direction = direction.clamp(-Vector2i.ONE, Vector2i.ONE)
+	var events: Array = _realtime.update(int(round(delta * 1000.0)), direction)
+	if _realtime.moved:
+		map_view.player_step_time = _realtime.last_step_ms / 1000.0
+		map_view.refresh() # Fog, chunks, objects: only when the hero changed tile.
+	elif direction != Vector2i.ZERO:
+		map_view.face(direction) # Blocked: still turn toward the attempted direction.
+	if not _realtime.moved and (_realtime.creatures.moved or not events.is_empty()):
+		map_view.sync_actors()
+	if events.is_empty() and not _realtime.moved:
+		return
+	_world_map.refresh(events) # Minimap/fog/landmarks follow real-time steps too.
+	_after_exploration_events(events)
+	map_view.show_events(events)
+	var text := describe_events(events)
+	if not text.is_empty() and (Time.get_ticks_msec() >= _notice_hold_until or not events.all(func(e: Dictionary) -> bool: return str(e.get("type", "")) in ROUTINE_EVENTS)):
+		_notice.text = text
+		_hold_notice(events)
+	_update_info()
+	if session.is_dead():
+		_show_death()
 
 func _save_game() -> void:
 	if session == null:
@@ -1405,7 +1904,10 @@ func _return_to_menu() -> void:
 		_notice.text = "Save failed; staying in game: " + session.last_error
 		return
 	var world_id: String = session.world.world_id
+	_discovery_panel.hide()
 	session = null
+	_realtime = null
+	map_view.smooth_steps = false
 	_inventory_panel.hide()
 	_character_panel.hide()
 	_talent_panel.hide()
@@ -1415,6 +1917,7 @@ func _return_to_menu() -> void:
 	map_view.skill_marks = {}
 	map_view.clear_map()
 	map_view.hide()
+	_world_map.detach()
 	_hud.hide()
 	_menu.show()
 	_refresh_worlds(world_id)

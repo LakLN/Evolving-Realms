@@ -46,3 +46,12 @@ Read docs/DISCOVERIES_AND_EVENTS.md before changing locations, world events, dis
 Read docs/ART_DIRECTION.md before changing art, rendering (map_view/art.gd) or the asset pipeline.
 Visual Prototype work is presentation only: never change gameplay, saves or coordinates for art.
 Read docs/AI_CONTENT.md (Content packs) before changing content/ai_packs; packs apply to one explicit World only.
+Read docs/lands/SNOW_MOUNTAIN_STAGE_C.md before changing land layouts, atlas terrain v2 or start selection v5.
+Milestone 04 world redesign (feature/m04-world-redesign) was requested by the user; read
+docs/M04_WORLD_ARCHITECTURE.md, M04_WORLD_GENERATION.md and M04_WORLD_EVOLUTION.md before
+changing the world atlas, land design, atlas terrain, routes, environment or Run starts.
+Atlas records (lands, regions, routes, revisions) are append-only; only Veil may become land.
+Atlas terrain/plan changes need a new terrain_version/atlas_version; never alter old plans.
+Lands are added only through propose -> validate -> explicit approval -> activate.
+Read docs/AI_STUDIO.md for the Content Package workflow, roles, gates, spoilers, research,
+world design, secrets/knowledge, selective redesign and telemetry policy.

@@ -99,6 +99,7 @@ func _test_exit_after_failed_save() -> void:
 	var app: Control = load("res://scenes/main.tscn").instantiate()
 	app.database_path = path
 	root.add_child(app)
+	app.use_legacy_defaults() # Pre-M03 baseline: legacy World layout, turn model (see main.gd).
 	await process_frame
 	app._name_entry.text = "Exit"
 	app._world_seed.text = "1847"
