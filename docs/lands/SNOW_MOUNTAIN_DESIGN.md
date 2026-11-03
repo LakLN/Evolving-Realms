@@ -1,5 +1,10 @@
 # Snow Mountain — developer design bible (spoilers)
 
+> Historical reference, superseded for new work by the 2026-11-03 reset
+> [package definition](SNOW_MOUNTAIN_V1_PACKAGE.md) and sole
+> [master asset manifest](SNOW_MOUNTAIN_V1_MASTER_ASSETS.md).
+> Do not use this older document as an additional generation or implementation order.
+
 Status: Stage A design and Stage B tooling, 2026-11-01. No land is published.
 Stage C geography/terrain v2/starts/weather: [SNOW_MOUNTAIN_STAGE_C.md](SNOW_MOUNTAIN_STAGE_C.md).
 Working epithet: **The Hushed Crown**. Preserve the selected World's generated land

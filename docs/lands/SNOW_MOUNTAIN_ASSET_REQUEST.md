@@ -1,5 +1,10 @@
 # Snow Mountain - reference asset specifications (backlog)
 
+> Historical reference, superseded for new work by the 2026-11-03 reset
+> [package definition](SNOW_MOUNTAIN_V1_PACKAGE.md) and sole
+> [master asset manifest](SNOW_MOUNTAIN_V1_MASTER_ASSETS.md).
+> Do not use this older document as an additional generation or implementation order.
+
 Current consolidated Tier A handoff: [SNOW_MOUNTAIN_TIER_A_HANDOFF.md](SNOW_MOUNTAIN_TIER_A_HANDOFF.md).
 The broader S2-S5 requests remain reference/backlog; use the consolidated request for this delivery.
 

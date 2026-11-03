@@ -1,5 +1,10 @@
 # Snow Mountain asset inventory — Stage E1
 
+> Historical reference, superseded for new work by the 2026-11-03 reset
+> [package definition](SNOW_MOUNTAIN_V1_PACKAGE.md) and sole
+> [master asset manifest](SNOW_MOUNTAIN_V1_MASTER_ASSETS.md).
+> Do not use this older document as an additional generation or implementation order.
+
 Updated 2026-11-02. S1 source boards **exist** under
 `assets/sources/EvolvingRealms_Batch_S1/` and runtime slices are integrated under
 `assets/game/snow/`. They remain provisional, not final accepted assets.

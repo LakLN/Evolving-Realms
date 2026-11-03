@@ -1,153 +1,194 @@
-# Content Package: Snow Mountain V1 — "The Carriers' Relay" (spoilers)
+# Snow Mountain V1 - The Hushed Relay (spoilers)
 
-Current consolidated Tier A handoff: [SNOW_MOUNTAIN_TIER_A_HANDOFF.md](SNOW_MOUNTAIN_TIER_A_HANDOFF.md).
-The broader S2-S5 requests remain reference/backlog; use the consolidated request for this delivery.
+**Reset design proposal, 2026-11-03; audited at dde02f7.** This is the current
+package definition (deliverables A, B and D). The sole asset scope is
+[SNOW_MOUNTAIN_V1_MASTER_ASSETS.md](SNOW_MOUNTAIN_V1_MASTER_ASSETS.md) (deliverable C).
+It supersedes the earlier package/task list and S1-S5/Tier A request sequence.
+Previous D1-D3 decisions remain the implemented baseline, not approval of this
+redesign. This pass changes documentation only; no runtime, content, plan or save
+is revised. Design approval, Playable, Playtested and Publish are separate gates.
 
-Package plan under [AI_STUDIO.md](../AI_STUDIO.md). Status: **design approved 2026-11-02 (D1–D3); T1 and T2 done; T3 implemented with remaining performance/crash concerns.** It consolidates Stage C–E1. It adds no new mechanic
-and does not replace the land manifest; the manifest remains the blocker
-ledger. Evidence: [STUDIO_AUDIT_2026-11-02.md](../STUDIO_AUDIT_2026-11-02.md).
+## 1. Package promise and exploration loop
 
-## Player experience
+**Fantasy:** become a capable traveller in an abandoned winter relay valley,
+learning to read shelter, animal territory and the marks of earlier travellers.
+Its identity is human infrastructure being reclaimed by winter: resin-dark pines,
+blue lake ice, wind-scoured stone, timber roofs and weathered bronze. The generated
+land name stays authoritative; The Hushed Relay is a package title, not a rename.
 
-You arrive in a sheltered basin with food and water nearby, and the wind is
-rising. Carriers' marks in the lee shelter teach the one survival rule (get
-under a roof or into the pines) and point up the trail. The relay ledger turns
-the land into a story: a lost clasp is somewhere in the pines, and a silent bell
-waits on the crown. Getting the clasp back is a short, safe first payoff, with a
-real choice between honesty and greed. The bell is the land's capstone. To reach
-it you cross the blizzard bowl and pass the crown's guardian, and ringing it
-rewards the whole valley trip with a durable mantle. Both stories are optional.
-The land is worth living in without them.
+The first outing should teach preparation, not demand a kill: find food/water in
+the sheltered basin, notice cover and a marked shelter, follow either pines or
+lake shore, reach the relay, make a small consequential choice, then decide whether
+to venture into the upper bowl. The summit is a voluntary second expedition,
+not the tutorial exit. Return routes and the compatible mountain pass make the
+land useful after the story. No quest tracker pointing at undiscovered tiles.
 
-Two stories, one arc:
+Loop: **observe -> gather -> choose route/weather window -> discover -> return
+with supplies or gear -> venture higher**. Target one satisfying lower-valley
+outing and one upper-valley outing; do not promise a duration before human testing.
+No timer starts because a clue was read. Walking away is always a valid choice.
 
-| Beat | Area | Pillar served | Existing system |
-|---|---|---|---|
-| Marks: shelter rule + "RELAY" | Leefoot Basin | Read, prepare | location + event (xp) |
-| Ledger: names pine and cairn | Broken Relay | Discovery | location + event |
-| Search pine → clasp | Pitchpine Reach (wolves) | Earned reward | event grant_items, once per Run |
-| Return / force | Broken Relay | Run remembers | exclusive interactions, atomic item cost |
-| Dig cairn → shard | White Choir (blizzard) | Read, prepare, venture | event v2, shard always there |
-| Examine → ring bell | Crown Shelf (sentinel) | Earned, durable | `after` ordering, cost, status, xp |
+## 2. Audit: what is actually present
 
-## Revisions proposed (record of meaningful change)
+| Repository evidence | Current fact | Design consequence |
+|---|---|---|
+| content/land_layouts/snow_mountain.json | Layout format1, authored version3; seven areas, five fixed sites, three roof footprints, five candidate starts | Keep geometry; actual layout is a connected ring around the escarpment, not the old bible's horseshoe. Candidate starts are certified, not all always accepted. |
+| src/world/terrain_layout.gd, start_certifier.gd | terrain v2; reachable-area/start validation and food/water walking checks | Keep. No re-authoring terrain merely to fit artwork. |
+| content/land_packages/snow_mountain/content_pack.json | Three native species, three native resource sources, six native items, two story threads on ordinary events | Enough scope for V1. Descriptions are not evidence of additional mechanics. |
+| src/core/creature_ai.gd; src/run/creature_roster.gd | Flee/chase/wander/return, line of sight, home leash, deterministic decisions | Use these for distinct territorial roles; no prey simulation, pack coordination or storm AI exists. |
+| src/run/realtime_controller.gd; content/realtime_rules.json | Shared melee windups/cadence, at most two windups; ordinary turn mode also exists | No species-specific charged attack, stagger or boss phase is implemented. |
+| src/run/environment_runtime.gd | Forecast up to 12 ticks; roofs/adjacent cover; exposure and sight differ by area | Weather is the upper-valley pressure, not a reason to add a new monster. |
+| location_runtime.gd + exploration_session.gd | Once-only records, pinned costs/rewards, exclusive branches and explicit interaction IDs | Reuse; no new quest framework. |
+| src/main.gd _interact; location_runtime.gd next_interaction | E invokes the first remaining interaction; no branch chooser found. After ledger, unmet return can mask force | The locker choice exists in data/API but is not a complete player-facing choice. This is a required usability fix. |
+| src/ui/world_map.gd | Scrollable full Run-local notes, no extra saved text or note markers | Keep; no new journal schema. |
+| snow_s1_index.json; art.gd | Useful S1 ground/props; bell drawn as hut, hare as rabbit, sentinel token; item icons use slot/keywords | Preserve useful art, replace identity-breaking stand-ins. Hare needs an ID-specific mapping to avoid replacing all rabbits. |
+| place_sprite / _draw_places | One place image, darkened after resolution; no per-interaction state sprite selection | Single-state V1 landmarks; do not request restored/open/dug art that cannot be displayed. |
+| T3 report + reference intake review | Border stalls remain; historical Intel-driver exit crash unresolved. New Tier A board is reference-only | No readiness inflation; concept intake is not production art acceptance. |
 
-The AI proposes these. Items R1 and R2 need director approval; see Decisions.
+Historical Stage C/D/bible text contains obsolete 40%-shard, salvage-blocking and
+journal claims. Current new plans pin cairn/event v2 and always yield a shard;
+old pins remain loadable. The machine manifest still has 27 blockers and ready=false.
+The new master asset priorities do not silently waive that ledger's older variants
+or art requirements; reconcile it explicitly after scope approval with reasons.
 
-- **R1 — make the capstone completable.** About 40% of Runs currently have no
-  shard anywhere.
-  - Proposal: `snow:event/cairn_dig` v2 grants the shard every time, while keeping
-    the inscription.
-  - `snow:place/bell_cairn` v2 pins the new event version.
-  - The sentinel stays as the danger on the bell's shelf, not as a shard source:
-    `snow:bellback_sentinel` v2 removes the shard from its loot, because a second
-    shard would be junk.
-  - The v1 definitions stay loadable.
-- **R2 — restoration-only scope for V1.**
-  - Move `snow:mechanic/encounter_salvage` and the optional sealed cleft out of V1
-    readiness, and keep them listed as future `pending_capability` entries.
-  - Remove `encounter_salvage` from `snow:content/bell` depends_on. This is the
-    reviewed scope change the E1 audit asked for.
-- **R3 — bronze scrap has no use.** In sentinel v2, replace the bronze scrap with
-  existing core drops (hide, meat, coin). `snow:bronze_scrap` stays defined for a
-  future salvage or smith package. This is an AI creative call; the director can
-  veto it.
-- **R4 — clues must persist.**
-  - Add journal notes derived from the Run's own resolved place records: each
-    resolved interaction shows the event message that was actually received.
-  - No new save data and no map markers. The pillar is "clues, not waypoints",
-    and lead markers would reveal positions.
-  - This is generic for all places and needs no Snow-specific code.
+## 3. Seven areas, one legible journey
 
-## Decisions applied (2026-11-02)
+| Area | V1 role | Pressure / retreat / essential feature |
+|---|---|---|
+| Leefoot Basin | Preparation and a gentle first read of carrier history | Ration shrubs, sealed water, hares; lower exposure, certified starts, lee shelter. No forced tutorial predator. |
+| Pitchpine Reach | First route decision: cover and materials versus predators | Hares and resin; lone scree wolves. Pines break sight and provide weather cover; they are not combat invulnerability. Fallen relay pine is the discovery anchor. |
+| Mirror Trough | Alternate approach and breathing room | Hares/water, open sight, exposed crossing versus shore cover. Ice stays walkable: no breaking, sliding or hidden instant death. |
+| Broken Relay | Safe weather refuge and narrative hinge | Roofed outpost and locker. Wolves may inhabit the outer approach; a roof does not exclude creatures or heal for free. |
+| Windcut Stair | Read terrain and decide to turn back or reach the pass | Narrow scree, wolves, ledge hut. A traversal route, not another quest hub. |
+| White Choir | The upper expedition's central hazard | Treeless blizzard bowl, cairn and two retreat directions. Keep free of native predators as in current ecology; winter supplies the pressure. |
+| Crown Shelf | Optional high-risk capstone | Bell, short-leash sentinels and possible wolf overlap. Survey overlap before tuning: no claimed single scripted boss arena or guaranteed guardian. |
 
-- **D1 → R1 as built.** `cairn_dig` v2 / `bell_cairn` v2 always yield the shard to
-  whoever reaches and digs the cairn. Layout v3 pins them for new plans; v1 stays
-  installed for plans that pin it. The director kept the guardian as an optional
-  dangerous alternative, so `snow:bellback_sentinel` v1 (and its shard drop) is
-  **unchanged**: the sentinel part of R1 and all of R3 were not applied. A second
-  shard from the guardian has no use, which is accepted for V1.
-- **D2 → R2 as built.** `snow:mechanic/encounter_salvage` is manifest status
-  `deferred` with the decision recorded; `snow:content/bell` no longer depends on
-  it. The sealed cleft is deferred with it. Designs are kept.
-- **D3.** ChatGPT supplies Tier A art; the AI prepares one handoff when needed.
-- **T1 done.** Journal notes, commit `f310151`.
+Essential authored site set: **lee marks, fallen pine, relay locker/ledger, cairn,
+summit bell** (five). Retain the relay and stair roof footprints as functional
+refuges, not additional interaction sites. Escarpment, lake and pass are geographic
+landmarks, not extra interactables requiring bespoke quest art.
 
-## Work list (in order)
+## 4. Narrative: two independent threads in one relay history
 
-| # | Task | Owner | Done when |
-|---|---|---|---|
-| T1 | Journal notes from resolved place records (R4) | AI | Notes appear after ledger/marks/dig; survive save/reload; absent in a fresh Run; tests in `snow-gameplay` + `rendered-snow-gameplay` |
-| T2 | Content v2: cairn_dig, bell_cairn, sentinel (R1/R3); manifest scope (R2) | AI, after approval | `snow-content` covers the guaranteed shard and v1 still loading; land-package check valid, blocker list updated honestly |
-| T3 | Repeated Snow/M04 frame distributions, profile and focused optimization; shutdown/journal investigation (authorized 2026-11-03) | AI | Findings, validation and remaining concerns in SNOW_MOUNTAIN_T3_REPORT.md; Tier A handoff prepared |
-| T4 | Tier A art delivered, extracted, mapped | User/ChatGPT or AI imagegen → AI | `check_snow_s1`-style QA on new batch; native captures; stand-ins gone for Tier A IDs |
-| T5 | Gate "Playable" | AI | Checkpoint tier tests per TESTING.md + `-Smoke` + startup; screenshots of every beat |
-| T6 | Human playtest, fresh disposable World/Run | User | Report using the AI_STUDIO template |
-| T7 | Fix top 3 playtest findings; Tier B art as needed | AI | Re-run T5 |
-| T8 | Bind World, full `-Render -Service -Export` + old-save regression, publish | User approval | Manifest `ready=true`; later, separate authorization |
+Retain **Carrier's Debt** as the lower-valley payoff and **The Bell That Remembers**
+as the upper-valley culmination. Connect them through the ledger, carriers' marks
+and shared bronze language; do not make completing the debt a prerequisite for the
+bell. Finding the pine or cairn first must still make sense. No living quest giver,
+faction reputation, NPC rescue or third story chain in V1.
 
-Dependencies: T2 needs decisions D1/D2. T4 needs D3. T6 needs T1, T2, T4 and T5.
-T8 is out of scope for this plan.
+| Beat | Guaranteed or optional | Existing resolution / intended experience |
+|---|---|---|
+| Read shelter marks | Fixed site; optional reading, not guaranteed seen from every start | Teaches roof/pine protection and points along a trail. Supply survival must not depend on reading it. |
+| Read relay ledger | Fixed site; optional reading | Names the lost clasp and upper cairn/bell, preserving exact received text in this Run's journal. |
+| Search fallen pine | Fixed site; reward guaranteed once if searched | Clasp plus wood/resin; player can keep/wear clasp by declining to return it. No tree cutting system. |
+| Return clasp OR force locker | Optional exclusive decision | Return consumes clasp for better provisions/XP; force injures and gives less, leaving a found clasp wearable. Implement a readable selector showing cost and risk before committing. Cancel spends nothing; unmet return cannot hide force. No new 'keep' receipt is necessary. |
+| Search cairn | Fixed v2 site; shard guaranteed once if searched | A reliable non-combat route to the bell; no chance-only capstone or repeated searching until lucky. |
+| Examine then restore bell | Fixed site; optional completion, no required guardian kill | Existing ordered actions consume shard and award mantle/heal/regeneration/XP once. Restoration is personal Run progress, not a new persistent World state or weather cure. |
 
-## Consolidated asset manifest
+Guaranteed means **placement or reward contract**, not automatic discovery, a
+nearby UI marker, a danger-free approach or success without supplies. No optional
+random cache, sentinel drop or undisclosed rare spawn may be required to complete
+either thread. Guardian shard remains an optional alternative under the prior
+accepted decision; duplicates and bronze scrap without a sink remain documented
+V1 limitations. Resin also has no crafting/fuel handler: do not imply a usable
+campfire, crafting recipe or warm-by-resin solution. Keep it a legacy material,
+not a preparation requirement; its sink belongs to a later package.
 
-**Reuse first.** These S1 runtime assets are kept as-is for V1:
+## 5. Creature roster and behavior matrix (deliverable B)
 
-- snow ×4, ice ×3, taiga ×3, trail ×2, cliff top/face, floor, timber
-- pine, windbreak rock, frozen shrub (ration shrub), resin stump, snow barrel
-  (water cache), crate/supply, lean-to (lee shelter), snow hut (relay outpost),
-  camp fire
-- wolf front idle/walk
-- core water/wood/herb/coin/stone icons
+**Three species, zero new V1 species.** Variety comes from prey, mobile pressure
+and a localized high threat, with winter separating their habitats. Ecology below
+is authored placement/narrative intent; predators do not actually hunt hares.
 
-Specs (prompts, grids, pivots) are in
-[SNOW_MOUNTAIN_ASSET_REQUEST.md](SNOW_MOUNTAIN_ASSET_REQUEST.md). The sections below
-reference that file and do not repeat it.
+| Species / class | Role and hostility | V1 behavior and counterplay | Content tie | Complexity / status | Decision |
+|---|---|---|---|---|---|
+| snow:rime_hare / common non-hostile prey | Small forager in basin, pines and lake shore; passive | Already flees when seen within configured radius or provoked; wanders near home. Patience/routing, not guaranteed easy capture. HP5; no attack kit requested. It can wait when trapped, not a promised cornered retaliator. | Optional meat/hide source beside reliable shrubs/water; makes the lower valley feel inhabited | Existing AI/data, V1 playable now; native visuals missing | Keep species and rules; replace rabbit presentation. No freeze/camouflage ability claimed from prose. |
+| snow:scree_wolf / uncommon pressure predator | Solitary hunter of outer pines, relay approach and stair; hostile | Sight-driven chase, home leash10, normal melee/windup; break sight or leave its bounded reach. HP16/ATK5/DEF1 are current, not approved final balance | Makes taking the covered forest/material route consequential; no clasp theft/drop requirement | Existing AI, V1 playable now; full directions still unfinished | Keep; explicitly reject pack AI. Review local clustering/wolf-sentinel overlap by survey, not new global spawn rules. |
+| snow:bellback_sentinel / localized elite guardian species | Weathered winter ram-beast on Crown Shelf; hostile, not a boss | Current detect4/leash5/low wander/50% movement roll; HP38/ATK8/DEF3. Slow bounded threat suggests observe, detour, retreat or fight. Shared melee attack, no charge/sonic stun | Signature silhouette evokes the lost bronze relay; optional danger/reward near the summit, not spawned by ringing or required for restoration | Existing AI is V1 lite territorial guardian. Exact count, bell proximity and bypass are NOT certified; per-tile procedural homes can yield multiple or none near the bell | Keep ram identity. Prefer visual/placement clarity over a new boss. Do not claim a unique individual, guaranteed encounter or per-species windup. |
 
-**Tier A — required before the human playtest.** These are the identities the story
-depends on.
+**Recommendation:** one signature high-threat *species*, not a boss or guaranteed
+single guardian event. Target a readable localized encounter when present, not
+several elites stacked with wolves at the interaction tile. Count/proximity/bypass
+need a seeded encounter survey; if tuning is necessary, propose versioned NEW-plan
+changes and test them before claiming this target. Do not rewrite existing homes.
+Do not make uniqueness/guarantee a new dependency for the first V1.
 
-| Asset | Replaces stand-in | Spec | Notes |
-|---|---|---|---|
-| `bell_damaged` 96×112, pivot 48,104 | snow hut | S5 | Single state for V1; the renderer has no state visuals |
-| `cairn_intact` 80×80, pivot 40,72 | rock pile | S5 | Single state |
-| fallen relay pine (intact) 96px cell | log stack | S3 prop | Searched state deferred |
-| `S4_rime_hare` 4 dir × idle/walk/hit/death | generic rabbit | S4 | |
-| `S4_bellback_sentinel` 4 dir × 11 | token | S4 | Needs director review of the silhouette |
-| `S5_items` 6 icons (resin, bark ration, bronze scrap, relay clasp, bell shard, rime mantle) | generic fallback | S5 | Bronze scrap icon kept for the future sink |
-| frozen scree ×3 (row 5 of `S2_ground`) | code placeholder | S2 | Only this row is required in Tier A |
+Do not add a fourth scavenger merely to fill a taxonomy slot; refuse the supplied
+armored wolf-like sentinel concept as a silent species replacement. Keep the
+original ram-beast; horns like cracked bells, thick winter body, hooves and aged
+bronze associations. Art does not promise AoE attacks or bell-trigger behavior.
 
-**Tier B — V1 polish. Ship after the playtest if it shows they matter.**
+Short future roster (not art or implementation orders):
 
-- `S4_scree_wolf` full directions
-- `S2_cliffs` orientations/corners
-- `S2_boundaries`
-- `S3_weather` and weather UI glyphs
-- relay locker closed/open
-- pine/rock variants
+| Future candidate | Purpose | Missing support / reason to postpone |
+|---|---|---|
+| Cache crow (working name) | Scavenger near abandoned supplies, a hint of activity | Ground wildlife lite could reuse neutral behavior, but cache attraction/carcass ecology/flying are absent; adds little before core three work |
+| Whiteout stalker (working name) | Rare weather-linked 'leave now' encounter | Storm-gated activation, fair warning and persisted encounter lifecycle absent; weather already creates this tension |
+| Named elder bellback | Unique regional guardian with a deliberate confrontation | Unique pinned placement/count and possibly new attacks require a separate approved encounter package, not a stat-inflated extra species now |
 
-**Deferred (not V1):**
+## 6. Survival and scope boundary
 
-- bell examined/restored and cairn dug states (wait until a renderer state-visual
-  mapping is approved)
-- pine searched state
-- shelter accents and modular pieces
-- sealed cleft
-- snow skill icons
+Keep hunger/thirst, ordinary recovery/rest, existing items, certified starts,
+forecast, sight loss and local cover. Current storm cycle150/duration50/chance60;
+exposure every10 in lee,5 open,3 exposed, 1 HP; storm sight4/3/2 respectively before
+base-sight clamping. These are current values to playtest, not redesign buffs.
+Time is turns for turn Runs and world-second pulses for real time; no real-world
+schedule. Mantle is defense/maxHP gear, not cold immunity. Shelters stop weather
+exposure, not combat. Add no heat meter, slippery ice, fire simulation or clothes
+warmth stat. Existing warning/HUD/code weather can ship if readable over white snow.
 
-Delivery follows the AI_STUDIO handoff rules: immutable originals go to
-`assets/sources/EvolvingRealms_SnowMountain_S<n>/` with prompts/provenance, and the
-AI does all slicing and QA. No preview galleries.
+In V1: seven-area loop, three roofs, five authored sites, three species, three
+native resource sources, six native item identities plus reused core supplies,
+two linked-but-independent stories, one local elite species, Run-specific receipts
+and journal. Leave current reward amounts until a fresh playtest supports tuning.
 
-## Decisions for the director
+Postpone: salvage/cleft, caves, sea travel, procedural bosses, storm spawning,
+pack hunts, tracking/carcasses, invasions, achievements, crafting/scrap/resin sinks,
+extra species/quests, restored-state sprites and bespoke sounds/music. Existing
+audio may be reused; new bell audio is optional and must not gate the text event.
+No force-to-fit artwork redesign of ecology or narrative.
 
-- **D1 — approve R1 (guaranteed shard at the cairn, sentinel stops carrying it)?**
-  The alternative is to keep a rare shard and add a "the chain has closed for this
-  Run" message.
-- **D2 — approve R2, restoration-only V1** (salvage and cleft become future scope)?
-- **D3 — art source for Tier A:** you relay the prompts to ChatGPT, or the AI
-  generates them with imagegen in a later art pass. Either way, palette/style
-  acceptance of S1 stays with you.
-- **Later, not now:** which World to bind, and publication.
+## 7. Production order and acceptance (deliverable D)
 
-T3 evidence and open gates: [SNOW_MOUNTAIN_T3_REPORT.md](SNOW_MOUNTAIN_T3_REPORT.md).
+1. **Confirm this package scope and master manifest.** New design is proposed,
+   not implicitly approved by earlier D1-D3. No art generation until the full
+   consolidated order is selected. Machine manifest stays unchanged in this pass.
+2. **Best next implementation task: expose existing place choices.** Small generic
+   selector for discovered, in-reach interactions using the existing explicit ID;
+   show return/force/cancel and unmet requirements, pause real time while open.
+   Do not reveal undiscovered definitions. Verify both branches, cancellation,
+   insufficient cost, repeated actions, reload and Run isolation through actual
+   input. This repairs the package's central decision without new quest mechanics.
+3. **Survey encounter pacing and routes before balance edits.** Disposable Worlds
+   with several seeds/orientations and certified starts; record homes by area,
+   sentinel/wolf overlap, bell approach/bypass and distance to refuge. Separate
+   fixed sites from stochastic homes. If a defect is verified, propose the minimum
+   append-only layout/content change; the v1 species layer pins version1, so a new
+   species version alone does NOT update procedural homes. Any new selection path
+   needs explicit design/test approval. No global AI rewrite.
+4. **One consolidated art production pass from the master manifest.** Reuse accepted
+   S1 first; prioritize all P0 identity assets together (including full wolf,
+   previously Tier B). Originals/provenance immutable; batch palette/silhouette
+   review before extraction. Reject the reference board as a production delivery.
+5. **Integrate presentation in a short ordered pass:** ground/seams -> static story
+   landmarks -> three species animation/ID mapping -> six exact item icons. Add
+   minimal ID-priority lookup/pivot support where required, not gameplay changes.
+   Never replace core rabbits by remapping the shared rabbit visual globally.
+6. **Validate the complete package:** import, touched content/map/creature suites,
+   item/action/save invariants and smoke per TESTING.md, native captures of every
+   area/story beat and animation, repeated clean shutdowns, repeated border frame
+   distributions. Review roof/doorway footprints and telegraphs under blizzard.
+   Retain T3 stalls/Intel teardown concerns until evidence resolves them; no export
+   or personal old-save access under this authorization.
+7. **Human playtest of a fresh disposable Run, no spoiler walkthrough.** Ask whether
+   food/cover, locker choice, clues, creature roles, retreat and summit payoff read
+   clearly. Record design/balance/bug/polish, address top three; no content growth
+   until findings are triaged. A preview is a later authorized artifact, not built
+   here. Bind/publish/official export are later explicit decisions.
+
+Current gates: **reset Design proposed; Playable CONCERNS; Playtested NOT ASSESSED;
+Publish NOT ASSESSED**. Prior automated success is evidence for individual handlers,
+not approval of new design, art completeness, a unique guardian or human game feel.
+Known technical baseline: final native Snow median/p95/worst33.30/33.56/243.18ms,
+M04 33.30/33.54/285.77ms (three traversals); archived Intel access violation unresolved
+on that driver path despite clean NVIDIA exits. See SNOW_MOUNTAIN_T3_REPORT.md.

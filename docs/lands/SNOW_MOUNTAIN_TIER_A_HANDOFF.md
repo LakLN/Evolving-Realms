@@ -1,5 +1,10 @@
 # Snow Mountain V1 - consolidated ChatGPT production request
 
+> Historical reference, superseded for new work by the 2026-11-03 reset
+> [package definition](SNOW_MOUNTAIN_V1_PACKAGE.md) and sole
+> [master asset manifest](SNOW_MOUNTAIN_V1_MASTER_ASSETS.md).
+> Do not use this older document as an additional generation or implementation order.
+
 2026-11-03. Developer spoilers. Deliver only the Tier A batch below. This is the
 single current handoff; S2-S5 broad prompts in SNOW_MOUNTAIN_ASSET_REQUEST.md are
 reference specifications, not additional requests. No art delivery or approval claimed.

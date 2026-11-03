@@ -2255,3 +2255,53 @@ source/reference intake only. Existing import changes remain untouched. The user
 integration request was truncated at "They may"; requested the remaining instructions
 before dependent art edits, image generation or preview packaging. No personal saves,
 official build, merge or publication touched.
+
+
+## Snow Mountain V1 reset - coherent package design (2026-11-03)
+
+User explicitly replaced piecemeal art integration with design/production planning.
+Audited code/content/art at dde02f7, preserving all useful implementation. No code
+probe was necessary, and no runtime/data/art/readiness changes were made.
+
+Deliverables A/B/D: docs/lands/SNOW_MOUNTAIN_V1_PACKAGE.md rewritten as the current
+proposed package: exploration loop, seven-area roles, five story sites/three roofs,
+two independent narrative threads in one relay history, existing survival rules,
+three-species ecological/behavior/feasibility matrix, brief future roster and
+ordered implementation/acceptance. No extra species, boss, quest chain or AI system.
+The elite guardian species is stochastic, not one guaranteed unique boss. Existing
+D1-D3 decisions remain baseline; new design acceptance is not fabricated.
+
+Audit surfaced a real player-facing gap: location_runtime supports explicit
+interaction IDs/exclusivity, but main's E path takes the first remaining interaction.
+An unmet clasp return can hide force; the design's meaningful choice is not fully
+usable through normal input. Best next implementation: small discovered-place
+choice UI using the existing handler, with cancel/requirements/repeat/reload tests.
+Follow with seeded encounter-count/overlap/bypass survey before any versioned tuning.
+The v1 creature layer selects definition v1, so a v2 species alone would not tune it.
+
+Deliverable C: docs/lands/SNOW_MOUNTAIN_V1_MASTER_ASSETS.md is the ONLY current asset
+scope. 31 families: 26 P0, 3 P1, 2 P2. Eight P0 production outputs: three landmark
+sprites, three species sheets (reuse good S1 wolf frames), six-icon sheet and
+three-tile frozen-scree strip. Full wolf directions promoted from old Tier B.
+Existing S1 ground, props, roofs, locker, code transitions/weather and core icons
+can remain after QA; detailed cliff/weather art P1, painted boundaries/weather
+UI glyphs P2. Lists include exact native canvases/pivots/frame orders, reuse,
+placeholder acceptability, renderer gaps, provenance and acceptance. No state
+sprite expansion. Source concept board remains reference-only and unchanged.
+Older bible/S1-S5/Tier A request files now carry historical/superseded banners;
+no new production requirements are scattered among them.
+
+Validation: checked content IDs, authored version3/layout format1, five site pins,
+three species stats/AI, actual first-interaction input path, S1 index, two runtime
+256-mask overlay atlases covering seven pairs, and item/creature presentation lookup
+limitations against source. Local docs link/priority count audit and git diff --check.
+No gameplay tests rerun: documentation-only planning, no new implementation claim.
+Historical T3 test results are cited as baseline, not fresh validation. Machine
+manifest unchanged (27 blockers, ready=false); approved priority/scope changes need
+explicit later reconciliation, not silent blocker removal. Performance stalls,
+Intel-driver teardown uncertainty, incomplete art and no human playtest remain.
+
+No merge, export, image generation, publication, personal-save access, new content
+activation or broad implementation. AGENTS unchanged. Next implementation is
+recommended, not started. Design proposed; Playable CONCERNS; Playtested and Publish
+NOT ASSESSED.
