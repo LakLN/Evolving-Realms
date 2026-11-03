@@ -23,6 +23,9 @@ The AI works under two hats in the same session. They are not separate agents:
 
 ## Pillars (tie-breakers)
 
+Package-level tie-breakers derived from [PROJECT_VISION.md](PROJECT_VISION.md); the
+vision wins if they ever disagree.
+
 1. **The world remembers within a Run.** Choices and discoveries persist in that Run;
    the World baseline never changes through play.
 2. **Read, prepare, venture.** Danger is readable (weather, telegraphs, terrain) and
