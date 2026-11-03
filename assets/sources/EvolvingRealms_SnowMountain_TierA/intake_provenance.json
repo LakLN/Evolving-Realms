@@ -1,0 +1,53 @@
+{
+  "status": "REFERENCE_ONLY",
+  "production_ready": false,
+  "received_date": "2026-11-03",
+  "provided_by": "user",
+  "copied_from": "D:/Game/RPG/assets/sources",
+  "original_archive_name_reported": "EvolvingRealms_TierA_reference_only.zip",
+  "archive_available": false,
+  "generator_model": "unknown; not supplied",
+  "generation_prompt": "unknown; not supplied",
+  "files": [
+    {
+      "file": "README.md",
+      "sha256": "6e4ab8eb70f431b99fe902cf10ab5b9036244c8688ed89c4d6c6f8eaf426027b"
+    },
+    {
+      "file": "manifest.json",
+      "sha256": "c673240681d4c3ae37440d38c821955aada3c5f4fa71c43162d3b078d3f6c171"
+    },
+    {
+      "file": "source/original_generated_sheet.png",
+      "sha256": "7f8568b0f6afb9bf2812fbd1e56ca5d7efd43629f67ba0f7f8d12c02d026b529"
+    },
+    {
+      "file": "references/bell_damaged_reference.png",
+      "sha256": "06d19219717da78a4e7d17c46636fa8dd7d0900690f0125deac79532313656e4"
+    },
+    {
+      "file": "references/cairn_intact_reference.png",
+      "sha256": "dbcf94a8be6c46a506f84d4b5b185eb51bd3346a598a65a7a2e09a5b49f3baff"
+    },
+    {
+      "file": "references/relay_pine_intact_reference.png",
+      "sha256": "32d2c8d3a89986f1268acde883c8ac10e233c6c91995fea427875ca10fb2d3c6"
+    },
+    {
+      "file": "references/S2_frozen_scree_reference.png",
+      "sha256": "c4aabc5327102a30651e3360a06ae5cd23307b255508bdda71664be3c774bb25"
+    },
+    {
+      "file": "references/S4_bellback_sentinel_reference.png",
+      "sha256": "4dfc96af63c84ed055866206d79ebb1cbef1b9a1215b5cc2df106e701e5da5f1"
+    },
+    {
+      "file": "references/S4_rime_hare_reference.png",
+      "sha256": "7f5694c9bdcbb15deba38322cbd6303eccd1999192d2b627491e12ce78dff663"
+    },
+    {
+      "file": "references/S5_items_reference.png",
+      "sha256": "f353ccb6093fc41f0790ce5ff93b32aad9da9135b38b5aa0fed00edccbb77ff3"
+    }
+  ]
+}

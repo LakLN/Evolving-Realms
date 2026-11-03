@@ -1,0 +1,36 @@
+{
+  "status": "REFERENCE_ONLY",
+  "production_ready": false,
+  "targets": {
+    "bell_damaged.png": [
+      96,
+      112
+    ],
+    "cairn_intact.png": [
+      80,
+      80
+    ],
+    "relay_pine_intact.png": [
+      96,
+      96
+    ],
+    "S4_rime_hare.png": [
+      672,
+      304
+    ],
+    "S4_bellback_sentinel.png": [
+      924,
+      304
+    ],
+    "S5_items.png": [
+      96,
+      64
+    ],
+    "S2_frozen_scree.png": [
+      120,
+      40
+    ]
+  },
+  "missing": "Exact transparent isolated sprites, true four-direction animation, correctly identified inventory icons, seamless native-scale tiles",
+  "source": "Earlier S2-S5 spec; exact Tier A handoff not attached"
+}

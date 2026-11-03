@@ -2232,3 +2232,26 @@ QA/style/sentinel review and human playtest. Duplicate bell shards and bronze sc
 without a sink remain accepted V1 limitations. Manifest readiness unchanged. No
 full/service/official-export regression, World binding, merge, publish or personal
 Run01 save access. Existing import-only working-tree changes were left uncommitted.
+
+
+## Snow Mountain Tier A reference intake (2026-11-03)
+
+User located the unpacked references in the main checkout's assets/sources, not
+Snow worktree. Copied README, supplied manifest, original 1536x1024 board and seven
+reference crops unchanged into assets/sources/EvolvingRealms_SnowMountain_TierA/.
+Byte-for-byte comparisons passed for all ten supplied files; SHA-256/provenance
+and actual-dimension/alpha review are recorded in intake_provenance.json and
+INTAKE_REVIEW.md beside them. Generator/model/prompt unknown, not fabricated.
+
+Inspected the original image with view_image. It is a labeled presentation board:
+backgrounds remain, native dimensions differ from the handoff, animal directions/
+states are incomplete, item identities mismatch, and scree is not validated flat
+seamless terrain. Reference-only status preserved, no runtime mapping or manifest
+readiness changed. Original images in both checkouts remain unchanged.
+
+Validation: Pillow metadata/alpha audit (.tools/tier-a-source-audit.json), SHA-256
+and byte equality for all supplied files; git diff --check. No gameplay tests:
+source/reference intake only. Existing import changes remain untouched. The user's
+integration request was truncated at "They may"; requested the remaining instructions
+before dependent art edits, image generation or preview packaging. No personal saves,
+official build, merge or publication touched.
