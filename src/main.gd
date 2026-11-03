@@ -25,6 +25,9 @@ var map_view: Node2D
 var _world_map: WorldMap
 var _menu: Control
 var _hud: Control
+var _discovery_panel: PanelContainer
+var _discovery_column: VBoxContainer
+var _discovery_mode := ""
 var _worlds: OptionButton
 var _runs: ItemList
 var _name_entry: LineEdit
@@ -129,6 +132,7 @@ func _ready() -> void:
 	_build_character(frame)
 	_build_talent_panel(frame)
 	_build_skills(frame)
+	_build_discovery_panel(frame)
 	_build_death_screen(frame)
 	_world_map = WorldMap.new()
 	_world_map.waypoint_changed.connect(_on_waypoint_changed)
@@ -355,7 +359,84 @@ func _build_character(parent: Control) -> void:
 	_character_panel.hide()
 
 func _panel_open() -> bool:
+	if _discovery_panel != null and _discovery_panel.visible: return true
 	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or (_world_map != null and _world_map.map_open) or not _targeting.is_empty()
+
+func _build_discovery_panel(parent: Control) -> void:
+	_discovery_panel = PanelContainer.new()
+	_discovery_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_discovery_panel.offset_left = -340
+	_discovery_panel.offset_right = 340
+	_discovery_panel.offset_top = -240
+	_discovery_panel.offset_bottom = 240
+	parent.add_child(_discovery_panel)
+	_discovery_column = _scroll_column(_discovery_panel, 10)
+	_discovery_panel.hide()
+
+func _clear_discovery_panel(mode: String) -> void:
+	for child in _discovery_column.get_children():
+		_discovery_column.remove_child(child)
+		child.queue_free()
+	_discovery_mode = mode
+	_discovery_panel.show()
+
+func _close_discovery_panel() -> void:
+	_discovery_panel.hide()
+	get_viewport().gui_release_focus()
+	_hold_delay = 0.2
+
+func _show_knowledge() -> void:
+	_clear_discovery_panel("knowledge")
+	_label(_discovery_column, "KNOWLEDGE — confirmed this Run", 22)
+	var entries: Array = preload("res://src/run/player_knowledge.gd").entries(session)
+	if entries.is_empty(): _label(_discovery_column, "No confirmed entries yet. Learn through experience.", 16)
+	for entry in entries:
+		_label(_discovery_column, "%s / %s" % [entry.category, entry.title], 19)
+		var body := _label(_discovery_column, entry.text, 17)
+		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_button(_discovery_column, "Close [J / Esc]", _close_discovery_panel).grab_focus()
+
+func _show_interactions() -> bool:
+	var rows: Array = []
+	for instance in session.places.targets(session):
+		for choice in session.places.available(session, instance, "interact"):
+			rows.append({"instance": instance, "choice": choice})
+	# Preserve quick E for a single ordinary gather/open or place interaction.
+	if rows.is_empty() or (rows.size() == 1 and session.interaction_target().is_empty() and not rows[0].choice.has("world_method")): return false
+	_clear_discovery_panel("interactions")
+	_label(_discovery_column, "INTERACT — choose an approach", 22)
+	var first: Button
+	var object: Dictionary = session.interaction_target()
+	if not object.is_empty():
+		first = _button(_discovery_column, "Gather / open nearby supplies", func() -> void:
+			_close_discovery_panel()
+			_after_action(session.interact(object.instance_id)))
+	for row in rows:
+		var instance: Dictionary = row.instance
+		var choice: Dictionary = row.choice
+		var definition: Dictionary = session.locations.definition_for(instance)
+		var event: Dictionary = session.locations.event(choice.event)
+		var details: Array = session.places.unmet(session, event.payload.get("conditions", []))
+		if choice.has("world_method"):
+			var threshold := int(definition.payload.world_properties.fracture_attack)
+			if choice.world_method == "force":
+				details.append("Attack %d+ (current %d); 2 HP; two thirds of fragile contents lost" % [threshold, int(session.combat_stats().attack)])
+			else:
+				details.append("Contents preserved")
+				for fuel in definition.payload.world_properties.thaw_fuel:
+					details.append("%s x%d" % [session._definition(fuel.content_id, int(fuel.version)).get("name", fuel.content_id), int(fuel.quantity)])
+		for item in event.payload.get("cost", {}).get("items", []):
+			details.append("%s x%d" % [session._definition(item.content_id, int(item.version)).get("name", item.content_id), int(item.get("quantity", 1))])
+		var button := _button(_discovery_column, "%s: %s" % [definition.name, choice.get("verb", "Explore")], func() -> void:
+			_close_discovery_panel()
+			_after_action(session.perform_action({"type": "interact", "instance_id": instance.instance_id, "interaction": choice.id})))
+		if first == null: first = button
+		if not details.is_empty():
+			var label := _label(_discovery_column, "; ".join(details), 16)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_button(_discovery_column, "Cancel [Esc] — no action spent", _close_discovery_panel)
+	if first != null: first.grab_focus()
+	return true
 
 func _toggle_character() -> void:
 	if session == null or _menu.visible or session.is_dead():
@@ -870,6 +951,7 @@ func _build_death_screen(parent: Control) -> void:
 	_death_panel.hide()
 
 func _show_death() -> void:
+	_discovery_panel.hide()
 	_inventory_panel.hide()
 	_character_panel.hide()
 	_talent_panel.hide()
@@ -894,6 +976,7 @@ func _reload_after_death() -> void:
 func _toggle_inventory() -> void:
 	if session == null or _menu.visible or session.is_dead():
 		return
+	_discovery_panel.hide()
 	_character_panel.hide()
 	_skills_panel.hide()
 	_inventory_panel.visible = not _inventory_panel.visible
@@ -1210,6 +1293,7 @@ func _on_resume() -> void:
 	_enter_map(next)
 
 func _enter_map(active_session: RefCounted) -> void:
+	_discovery_panel.hide()
 	_realtime = null
 	if active_session.realtime:
 		var clock := Realtime.new()
@@ -1373,7 +1457,7 @@ func _update_info() -> void:
 	if not foe.is_empty():
 		_target_hint.text += "\n" + session.statuses.describe(session, foe.get("statuses", []))
 	var target: Dictionary = session.interaction_target()
-	_interaction_hint.text = "E: interact on your tile or a cardinal neighbor.  I: view inventory."
+	_interaction_hint.text = "E: interact / choose an approach.  I: inventory.  J: Knowledge."
 	if not target.is_empty():
 		var definition: Dictionary = session.objects.definition_for(target)
 		_interaction_hint.text = "E: %s %s  /  (%d, %d)" % [str(definition.payload.interaction).capitalize(), definition.name, target.position.x, target.position.y]
@@ -1573,6 +1657,8 @@ func describe_events(events: Array) -> String:
 					_: parts.append("The %s passes." % str(event.name).to_lower())
 			"environment":
 				parts.append("%s: %d HP%s" % [event.name, int(event.amount), " — shelter beside pines or rocks, or under a roof!" if event.kind == "exposure" else " — get off the scorching ground!"])
+			"knowledge":
+				parts.append("Knowledge learned: %s. Press J to read." % event.name)
 			"autosave":
 				parts.append("Autosaved.")
 			"autosave_failed":
@@ -1582,6 +1668,7 @@ func describe_events(events: Array) -> String:
 func _interact() -> void:
 	if session == null or _panel_open():
 		return
+	if _show_interactions(): return
 	var target: Dictionary = session.interaction_target()
 	if session.interact():
 		if not target.is_empty() and not session.last_result.get("place", false):
@@ -1658,6 +1745,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_talent()
 	elif event.keycode == KEY_K or event.physical_keycode == KEY_K:
 		_toggle_skills()
+	elif event.keycode == KEY_J or event.physical_keycode == KEY_J:
+		_show_knowledge()
 	elif event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9:
 		begin_skill(event.physical_keycode - KEY_1)
 	elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
@@ -1671,6 +1760,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
+	if _discovery_panel != null and _discovery_panel.visible and event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE or (_discovery_mode == "knowledge" and event.keycode == KEY_J):
+			_close_discovery_panel()
+			get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey and event.pressed and not event.echo and _world_map != null:
 		if _world_map.map_open:
 			if event.keycode in [KEY_M, KEY_ESCAPE] or event.physical_keycode in [KEY_M, KEY_ESCAPE]:
@@ -1810,6 +1904,7 @@ func _return_to_menu() -> void:
 		_notice.text = "Save failed; staying in game: " + session.last_error
 		return
 	var world_id: String = session.world.world_id
+	_discovery_panel.hide()
 	session = null
 	_realtime = null
 	map_view.smooth_steps = false

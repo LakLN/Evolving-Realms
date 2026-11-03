@@ -128,3 +128,15 @@ scene at 60 FPS. Use `.\scripts\test.ps1 -Smoke -Only realtime,realtime-gameplay
 and real-time Run — through the real menu and keys: waystone → supply → relic → bearings,
 World Map pause, waypoint, save/continue, telegraphed wolf bite, death and reload. Baseline
 menu suites call `app.use_legacy_defaults()` to keep testing the pre-M03 layout/turn model.
+
+## Systemic Snow vertical slice
+
+The existing `snow-content` suite includes heat/force rules, derived equipment
+capability, hidden-choice filtering, once-only receipts, Knowledge/save/load/Run
+isolation and offline diagnostic history. For a short development loop use:
+`scripts/godot.ps1 --headless --script res://tests/snow_content_suite.gd '--' --rules-only`.
+The default suite still runs every prior check plus these cases.
+`snow-gameplay` / `rendered-snow-gameplay` now operate the E selector and J reader
+with real keys, check pause/cancel and exercise both material approaches. Native
+captures: `.tools/world-rules-selector.png`, `world-rules-knowledge.png` and
+`world-rules-shattered.png`. This is automated gameplay, not a human playtest.

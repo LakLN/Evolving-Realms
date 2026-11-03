@@ -1,9 +1,9 @@
 {
   "layout_version": 1,
   "id": "landpkg:snow_mountain/layout",
-  "version": 3,
+  "version": 4,
   "archetype": "frost_highlands",
-  "notes": "Stage C geography of docs/lands/SNOW_MOUNTAIN_DESIGN.md. Coordinates are land-local, unit = land radius, x east, y south, layout north = the side of the mountain-pass gate. Compiled once into a self-contained land plan (terrain_version 2); editing this file never changes an established land. Version 2 (Stage D): native ecology, supplies, content pack and chain sites; geometry identical to version 1. Version 3 (V1 package, 2026-11-02): the bell cairn site pins snow:place/bell_cairn v2 (guaranteed shard); geometry, ecology and every other site identical to version 2.",
+  "notes": "Stage C geography of docs/lands/SNOW_MOUNTAIN_DESIGN.md. Coordinates are land-local, unit = land radius, x east, y south, layout north = the side of the mountain-pass gate. Compiled once into a self-contained land plan (terrain_version 2); editing this file never changes an established land. Version 2 (Stage D): native ecology, supplies, content pack and chain sites; geometry identical to version 1. Version 3 (V1 package, 2026-11-02): the bell cairn site pins snow:place/bell_cairn v2 (guaranteed shard); geometry, ecology and every other site identical to version 2. Version 4 (world rules vertical slice): two ordinary-ice supply sites; all prior sites and terrain parameters preserved.",
   "radius": 184,
   "coast": {
     "min": 1.02,
@@ -748,6 +748,26 @@
       ],
       "area": "crown_shelf",
       "reason": "a silent bell on the crown"
+    },
+    {
+      "id": "icebound_provisions",
+      "content_id": "snow:place/icebound_provisions",
+      "at": [
+        -0.31,
+        0.48
+      ],
+      "area": "leefoot_basin",
+      "reason": "an icebound carrier case beside the basin trail"
+    },
+    {
+      "id": "frozen_medicine",
+      "content_id": "snow:place/frozen_medicine",
+      "at": [
+        -0.57,
+        0.12
+      ],
+      "area": "pitchpine_reach",
+      "reason": "a medicine case frozen beside the pines"
     }
   ]
 }

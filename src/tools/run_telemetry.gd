@@ -37,9 +37,13 @@ static func build(world: Dictionary, run: Dictionary) -> Dictionary:
 	var saved_status: Variant = state.get("status")
 	return {
 		"schema_version": SCHEMA_VERSION,
+		"development_interactions": {"spoiler_sensitive": true, "history_limit": 512, "events": character.get("interaction_history", []).duplicate(true)},
+		"knowledge": character.get("knowledge", {}).duplicate(true),
 		"generated_at_utc": Time.get_datetime_string_from_system(true) + "Z",
 		"world": {
 			"world_id": str(run.get("world_id", "")),
+			"generation_version": world.get("generation_version"),
+			"definition_revision_at_spawn": run.get("spawn", {}).get("atlas_revision"),
 			"seed": _metric_from(world, "seed", "saved world header"),
 		},
 		"run": {

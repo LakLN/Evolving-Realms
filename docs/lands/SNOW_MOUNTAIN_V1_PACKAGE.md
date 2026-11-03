@@ -1,5 +1,42 @@
 # Snow Mountain V1 - The Hushed Relay (spoilers)
 
+## Approved systemic vertical slice — 2026-11-03
+
+The director's implementation request authorizes this focused extension. Layout
+v4 adds two discoverable frozen supply cases in the basin and pitchpine reach,
+using existing locker art. Terrain parameters, five prior sites, ecology, start
+policy and established land plans stay unchanged. This supersedes the earlier
+documentation-only restriction for this slice; publication gates remain.
+
+The player finds ordinary ice around supplies and chooses preparation or force.
+Heat consumes the object's declared fuel and preserves its intact contents. Force
+checks derived Attack (thresholds 8 and 12), destroys two thirds of the contents
+(minimum one per grant), and costs 2 HP. Both definitions use the same material
+response handler, then the existing atomic location cost/award/receipt path.
+Definitions describe intact contents; the rule transforms the consequences.
+Exclusive receipts prevent a second payout. No Knowledge flag gates experiments.
+
+E exposes discovered choices, filtering hidden reveal conditions before labels
+or requirements reach the UI. J opens confirmed Knowledge, separately from the
+journal and atlas, with full useful text acquired only by this Run. Both panels
+pause real time and use the existing Godot keyboard focus/navigation patterns.
+
+Offline export gains a bounded 512-event internal history: discoveries, methods,
+refusals/reasons, transitions, rewards, injury and Knowledge unlocks. Generation
+version and atlas revision at spawn accompany the existing seeds. This history is
+spoiler-sensitive developer data; director reports remain separate. Combat/death
+history and play-duration measurement remain outside this slice.
+
+Reference check: the [GDC 2017 session listing](https://www.gdcvault.com/play/1024562/Change-and-Constant-Breaking-Conventions)
+verifies the Nintendo directors' design/implementation talk, but the listing alone
+does not verify particular chemistry mechanics. Our synthesis is a much smaller
+material/state rule with distinct preparation and injury costs. Whether this
+choice is interesting in practice remains a human-playtest hypothesis.
+
+No new art order, boss, quest branch or terrain simulation. Intel-driver crash
+uncertainty and chunk-border stalls remain open. See PROGRESS.md for automated
+evidence; human playtesting and publication remain separate decisions.
+
 **Reset design proposal, 2026-11-03; audited at dde02f7.** This is the current
 package definition (deliverables A, B and D). The sole asset scope is
 [SNOW_MOUNTAIN_V1_MASTER_ASSETS.md](SNOW_MOUNTAIN_V1_MASTER_ASSETS.md) (deliverable C).

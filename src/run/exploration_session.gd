@@ -19,6 +19,7 @@ const Roster = preload("res://src/run/creature_roster.gd")
 const Ledger = preload("res://src/world/region_ledger.gd")
 const Locations = preload("res://src/world/world_locations.gd")
 const LocationRuntime = preload("res://src/run/location_runtime.gd")
+const InteractionTelemetry = preload("res://src/run/interaction_telemetry.gd")
 const FogMask = preload("res://src/run/fog_mask.gd")
 const Combat = preload("res://src/core/combat.gd")
 const Survival = preload("res://src/core/survival.gd")
@@ -94,6 +95,9 @@ var _effective: Dictionary = {}
 var _definitions: Dictionary = {}
 ## Combat/AI events of the last accepted action, in order (for UI feedback).
 var last_events: Array = []
+## Refused-action diagnostics are not gameplay mutations. Saved atomically on the
+## next save (or folded into the next accepted location interaction).
+var pending_interaction_events: Array = []
 var _action_handlers: Dictionary = {}
 ## Real-time Runs: player actions apply immediately and never advance `turn`; the
 ## RealtimeController calls pulse() once per gameplay second instead (turn = pulse).
@@ -282,6 +286,7 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	environment.reset()
 	world = blueprint
 	run = loaded
+	pending_interaction_events.clear()
 	realtime = model != "turn"
 	resting = false
 	_pulse_activity = "default"
@@ -1131,8 +1136,15 @@ func save() -> bool:
 		last_error = ""
 		return true
 	run.state.explored = explored_entries()
-	if not store.save_run(run.run_id, int(run.revision), run.state):
+	var saved_state: Dictionary = run.state
+	if not pending_interaction_events.is_empty():
+		saved_state = run.state.duplicate(true)
+		InteractionTelemetry.append(saved_state, pending_interaction_events)
+	if not store.save_run(run.run_id, int(run.revision), saved_state):
 		return _fail(store.last_error)
+	if not pending_interaction_events.is_empty():
+		run.state.character.interaction_history = saved_state.character.interaction_history
+		pending_interaction_events.clear()
 	run.revision = int(run.revision) + 1
 	last_save_turn = int(run.state.turn)
 	dirty = false

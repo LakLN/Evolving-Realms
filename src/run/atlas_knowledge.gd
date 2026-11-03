@@ -28,7 +28,9 @@ func update(session: RefCounted, events: Array = []) -> Array:
 		mutation = {"atlas": 1, "first_turn": int(session.run.state.turn), "regions": [], "gates": []}
 		result.append({"type": "land_entered", "land_id": land.land_id, "name": land.name, "title": land.archetype_title, "climate": land.climate, "epithet": land.epithet})
 	var region: Dictionary = session.terrain.region_at(session.position)
-	if not int(region.index) in mutation.regions:
+	# JSON loads integral numbers as floats; Array membership is type-sensitive.
+	# Compare numeric IDs without rewriting saved arrays or re-announcing a region.
+	if not mutation.regions.any(func(index: Variant) -> bool: return int(index) == int(region.index)):
 		mutation.regions.append(int(region.index))
 		changed = true
 		result.append({"type": "region_entered", "region_id": region.region_id, "name": region.name, "danger": int(region.danger)})

@@ -72,7 +72,7 @@ func _activation(world: Dictionary, atlas: RefCounted) -> Dictionary:
 	if not check(not proposal.is_empty(), "Propose Snow Mountain beyond one walkable frontier gate: " + atlas.last_error):
 		return {}
 	var plan: Dictionary = proposal.land
-	check(int(plan.terrain_version) == 2 and plan.layout.id == LAYOUT and int(plan.layout.version) == 3 and plan.archetype == "frost_highlands", "The plan pins terrain v2, layout v3 and the frost archetype")
+	check(int(plan.terrain_version) == 2 and plan.layout.id == LAYOUT and int(plan.layout.version) == 4 and plan.archetype == "frost_highlands", "The plan pins terrain v2, layout v4 and the frost archetype")
 	check(plan.regions.map(func(r: Dictionary) -> String: return r.name) == AREAS, "Seven designed areas in layout order: %s" % str(plan.regions.map(func(r: Dictionary) -> String: return r.name)))
 	check(plan.gates.size() == 1 and plan.gates[0].kind == "pass" and not str(plan.gates[0].mirrors).is_empty() and proposal.routes.size() == 1 and proposal.routes[0].traversable, "Exactly one walkable mountain pass, mirrored on an existing gate (no fake travel)")
 	check(Data.valid(plan) and _canon(JSON.parse_string(_canon(plan))) == _canon(plan), "Plan is self-contained JSON data (stable through a storage round trip)")
@@ -110,6 +110,7 @@ func _connectivity(plan: Dictionary, report: Dictionary) -> void:
 	for region in plan.regions: areas = areas and int(report.by_region.get(int(region.index), 0)) >= 2000
 	check(areas, "All seven areas are reachable on foot with room to explore (>= 2000 tiles each)")
 	check(report.gates.values().all(func(v: bool) -> bool: return v), "The mountain pass gate is reachable from the basin")
+	check(plan.sites.all(func(site: Dictionary) -> bool: return report.reached_set.has(Vector2i(int(site.position.x), int(site.position.y)))), "All authored sites, including both frozen supplies, are reachable on foot from the basin")
 	check(report.starts.size() >= 4 and report.starts.values().all(func(v: bool) -> bool: return v), "Every start site (%d) is reachable" % report.starts.size())
 	check(report.shelters.size() == 3 and report.shelters.values().all(func(v: bool) -> bool: return v), "All three shelters can be entered through their doors")
 

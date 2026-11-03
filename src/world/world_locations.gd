@@ -13,10 +13,11 @@ const Encounters = preload("res://src/world/world_encounters.gd")
 const Region = preload("res://src/world/region_context.gd")
 const Events = preload("res://src/core/world_events.gd")
 const Spawn = preload("res://src/world/spawn_selector.gd")
+const WorldRules = preload("res://src/core/world_rules.gd")
 const LAYER := "locations-v1"
 const GENERATION_VERSION := 1
 const BUDGET := 1 # At most one special place per chunk, whatever is activated.
-const FIELDS := ["category", "visual", "spawn", "discovery", "interactions"]
+const FIELDS := ["category", "visual", "spawn", "discovery", "interactions", "world_properties"]
 const DISCOVERY := ["visible", "proximity", "hidden", "search"]
 const TRIGGERS := ["discover", "enter", "interact"]
 var regions: RefCounted
@@ -50,6 +51,11 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 		if key not in ["biomes", "per_10000", "priority", "conditions"]: missing.append("parameter.location_spawn." + str(key))
 	var problem := Encounters.check_spawn_conditions(spawn.get("conditions", []), missing, "location")
 	if not problem.is_empty(): return {"problem": problem, "missing": missing}
+	if p.has("world_properties"):
+		problem = WorldRules.validate(p.world_properties, missing)
+		if not problem.is_empty(): return {"problem": problem, "missing": missing}
+		for item in p.world_properties.thaw_fuel:
+			if not Events._pinned(definition, item) or registry.load_definition(world_id, item.content_id, int(item.version)).get("kind") != "item": return {"problem": "Thaw fuel must pin an item dependency", "missing": missing}
 	var discovery: Variant = p.get("discovery", {"mode": "visible"})
 	if not discovery is Dictionary or not discovery.get("mode") is String: return {"problem": "Discovery needs a mode", "missing": missing}
 	if discovery.mode not in DISCOVERY: missing.append("location.discovery." + discovery.mode)
@@ -63,7 +69,13 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 		if not interaction is Dictionary or not interaction.get("id") is String or not RegEx.create_from_string("^[a-z][a-z0-9_]{0,31}$").search(interaction.id) or interaction.id in ids:
 			return {"problem": "Interaction needs a unique lower-case id", "missing": missing}
 		for key in interaction:
-			if key not in ["id", "verb", "trigger", "event", "after", "exclusive"]: missing.append("parameter.location_interaction." + str(key))
+			if key not in ["id", "verb", "trigger", "event", "after", "exclusive", "world_method", "reveal_conditions"]: missing.append("parameter.location_interaction." + str(key))
+		if interaction.has("world_method"):
+			if not p.has("world_properties"): return {"problem": "World method needs object properties", "missing": missing}
+			if interaction.world_method not in ["heat", "force"]: missing.append("world_rule.method." + str(interaction.world_method))
+			if not interaction.get("exclusive", false) or interaction.get("trigger", "interact") != "interact": return {"problem": "World methods require exclusive player interactions", "missing": missing}
+		problem = Events.check_conditions(interaction.get("reveal_conditions", []), context, skills, missing)
+		if not problem.is_empty(): return {"problem": problem, "missing": missing}
 		if not interaction.get("verb", "Explore") is String or interaction.get("verb", "").length() > 40: return {"problem": "Interaction verb must be short text", "missing": missing}
 		if interaction.get("trigger", "interact") not in TRIGGERS: missing.append("location.trigger." + str(interaction.get("trigger")))
 		if interaction.has("after") and interaction.after not in ids: return {"problem": "Interaction 'after' must name an earlier interaction", "missing": missing}
@@ -72,6 +84,9 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 		if not ref is Dictionary or not Data.identifier(ref.get("content_id")) or not Data.integer(ref.get("version")) or not Events._pinned(definition, ref):
 			return {"problem": "Interaction event must be a pinned dependency", "missing": missing}
 		if registry.load_definition(world_id, ref.content_id, int(ref.version)).get("kind") != "world_event": return {"problem": "Interaction event must be a world_event: " + str(ref.content_id), "missing": missing}
+		if interaction.has("world_method"):
+			var response: Dictionary = registry.load_definition(world_id, ref.content_id, int(ref.version)).payload
+			if response.has("cost") or not response.get("outcomes", []).all(func(o: Dictionary) -> bool: return o.type == "grant_items"): return {"problem": "Ice supply events describe intact item contents only; rules own costs and damage", "missing": missing}
 		ids.append(interaction.id)
 	return {"problem": "", "missing": missing}
 

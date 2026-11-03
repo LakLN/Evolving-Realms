@@ -38,12 +38,16 @@ func _initialize() -> void:
 	if not check(not proposal.is_empty() and atlas.activate(proposal, {"by": "content suite"}), "Chart Snow Mountain in one World: " + atlas.last_error):
 		return _finish()
 	var plan: Dictionary = atlas.lands[proposal.land.land_id]
+	if "--rules-only" in OS.get_cmdline_user_args():
+		_world_rules(world, plan)
+		return _finish()
 	_isolation(world, other, atlas, plan)
 	_ecology(world, atlas, plan)
 	_sites(plan, atlas)
 	_carriers_debt(world, plan)
 	_force_branch(world, plan)
 	_bell(world, plan)
+	_world_rules(world, plan)
 	_finish()
 
 func _finish() -> void:
@@ -55,7 +59,7 @@ func _finish() -> void:
 func _isolation(world: Dictionary, other: Dictionary, atlas: RefCounted, plan: Dictionary) -> void:
 	check(not store.content.load_definition(world.world_id, "snow:scree_wolf", 1).is_empty(), "The land's content pack is active in the charted World")
 	check(store.content.load_definition(other.world_id, "snow:scree_wolf", 1).is_empty(), "Another World never receives Snow Mountain content")
-	check(plan.content_packs == ["res://content/land_packages/snow_mountain/content_pack.json"] and int(plan.layout.version) == 3, "The stored plan pins layout v3 and its pack")
+	check(plan.content_packs == ["res://content/land_packages/snow_mountain/content_pack.json"] and int(plan.layout.version) == 4, "The stored plan pins layout v4 and its pack")
 	var terrain: RefCounted = atlas.terrain()
 	var objects := Objects.new()
 	var creatures := Creatures.new()
@@ -107,12 +111,12 @@ func _ecology(world: Dictionary, atlas: RefCounted, plan: Dictionary) -> void:
 
 func _sites(plan: Dictionary, atlas: RefCounted) -> void:
 	var terrain: RefCounted = atlas.terrain()
-	var expected := {"snow:place/lee_shelter": 0, "snow:place/relay_locker": 3, "snow:place/fallen_relay_pine": 1, "snow:place/bell_cairn": 5, "snow:place/summit_bell": 6}
+	var expected := {"snow:place/lee_shelter": 0, "snow:place/relay_locker": 3, "snow:place/fallen_relay_pine": 1, "snow:place/bell_cairn": 5, "snow:place/summit_bell": 6, "snow:place/icebound_provisions": 0, "snow:place/frozen_medicine": 1}
 	var ok: bool = plan.sites.size() == expected.size()
 	for site in plan.sites:
 		var tile := Vector2i(int(site.position.x), int(site.position.y))
 		ok = ok and expected.has(site.content_id) and terrain.walkable(tile) and int(terrain.region_at(tile).index) == expected[site.content_id]
-	check(ok, "Five fixed sites on walkable tiles of their design areas")
+	check(ok, "Seven fixed sites on walkable tiles of their design areas")
 	var locker := _site(plan, "relay_locker")
 	var shelter: Dictionary = plan.geography.shelters[1]
 	check(Rect2i(int(shelter.rect.x), int(shelter.rect.y), int(shelter.rect.w), int(shelter.rect.h)).has_point(_tile(locker)) and terrain.tile_at(_tile(locker)) == Surfaces.FLOOR, "The carriers' locker stands inside the roofed relay outpost")
@@ -279,3 +283,61 @@ func _bell(world: Dictionary, plan: Dictionary) -> void:
 	if plain != null:
 		_go(plain, bell)
 		check(_act(plain, bell, "inspect") and not _act(plain, bell, "restore") and plain.last_error.contains("Bell shard") and _count(plain, "snow:rime_mantle") == 0, "Without a shard the bell stays silent (no reward, nothing consumed)")
+
+func _world_rules(world: Dictionary, plan: Dictionary) -> void:
+	var s := _session(world, plan, 919)
+	if not check(s != null, "Start isolated rules Run"): return
+	var supplies := _site(plan, "icebound_provisions")
+	var medicine := _site(plan, "frozen_medicine")
+	_go(s, supplies)
+	s.stats().attack = 1
+	s.refresh_stats()
+	var original: Dictionary = s.locations.definition_for(supplies)
+	var hidden: Dictionary = original.payload.interactions[0].duplicate(true)
+	hidden.id = "unseen"
+	hidden.verb = "Unseen choice"
+	hidden.reveal_conditions = [{"type": "stat", "stat": "attack", "min": 999}]
+	original.payload.interactions.append(hidden)
+	check(not s.places.available(s, supplies, "interact").any(func(i: Dictionary) -> bool: return i.id == "unseen") and s.places.next_interaction(s, supplies, "unseen").is_empty(), "Hidden choice is neither offered nor explicitly callable before its discovery condition")
+	original.payload.interactions.pop_back()
+	var turn := int(s.run.state.turn)
+	var before_refusal: Dictionary = s.run.state.duplicate(true)
+	check(not _act(s, supplies, "force") and s.last_error.contains("Attack 8+") and int(s.run.state.turn) == turn and preload("res://src/acceptance/standalone_check.gd").same(s.run.state, before_refusal), "Weak force refused with a concrete threshold and exactly unchanged gameplay state")
+	check(not _act(s, supplies, "heat") and _resolved(s, supplies).is_empty(), "Thaw without fuel refuses without resolving or awarding")
+	check(s.save() and store.load_run(s.run.run_id).state.character.interaction_history.any(func(e: Dictionary) -> bool: return e.get("outcome") == "refused") and s.pending_interaction_events.is_empty(), "Explicit save persists buffered refusals without needing a later successful interaction")
+	s.run.state.inventory["snow:resin"] = {"version": 1, "quantity": 2}
+	s.run.state.inventory["core:wood"] = {"version": 1, "quantity": 2}
+	var hp := int(s.stats().hp)
+	check(_act(s, supplies, "heat") and _count(s, "snow:bark_ration") == 3 and _count(s, "snow:resin") == 1 and int(s.stats().hp) == hp, "Heat consumes fuel and preserves all three supplies without injury")
+	check(s.places.record(s, supplies.instance_id).world_state == "thawed" and s.run.state.character.knowledge.has("rules:ice_heat_v1"), "Persistent thawed state and useful Knowledge unlocked by action")
+	var inventory: Dictionary = s.run.state.inventory.duplicate(true)
+	check(not _act(s, supplies, "force") and not _act(s, supplies, "heat") and inventory == s.run.state.inventory, "Neither method can pay twice or bypass exclusivity")
+	_go(s, medicine)
+	s.stats().attack = 8
+	s.refresh_stats()
+	check(not _act(s, medicine, "force"), "Bare-handed attack below the second object's threshold refuses")
+	var award: Dictionary = preload("res://src/core/inventory.gd").new().award(store.content, world.world_id, s.run.state.inventory, [{"content_id": "core:traveler_blade", "version": 1, "quantity": 1}], "rules-test-blade")
+	s.run.state.inventory = award.inventory
+	check(_equip(s, "core:traveler_blade") and int(s.combat_stats().attack) >= 12, "Equipping a real blade raises derived force capability")
+	hp = int(s.stats().hp)
+	check(_act(s, medicine, "force") and _count(s, "core:herb") == 1 and int(s.stats().hp) == hp - 2, "Second definition reuses force rule: threshold 12, one surviving herb and 2 HP cost")
+	check(s.places.record(s, medicine.instance_id).world_state == "shattered" and s.run.state.character.knowledge.size() == 2, "Different method records shattered state and a separate scoped fact")
+	check(s.save(), "Save world rules, Knowledge and diagnostic history")
+	var resumed := Session.new(store)
+	check(resumed.resume(s.run.run_id) and JSON.stringify(JSON.parse_string(JSON.stringify(resumed.run.state.character.knowledge)), "", true) == JSON.stringify(JSON.parse_string(JSON.stringify(s.run.state.character.knowledge)), "", true) and resumed.places.record(resumed, medicine.instance_id).world_state == "shattered", "Reload preserves learned text and world consequences: " + resumed.last_error)
+	var report: Dictionary = preload("res://src/tools/run_telemetry.gd").build(world, resumed.run)
+	var events: Array = report.development_interactions.events
+	check(events.any(func(e: Dictionary) -> bool: return e.get("method") == "force" and e.get("outcome") == "refused") and events.any(func(e: Dictionary) -> bool: return e.get("method") == "heat" and e.get("outcome") == "success"), "Offline telemetry includes failed and successful approaches")
+	var fresh := _session(world, plan, 920)
+	check(not fresh.run.state.character.has("knowledge") and _resolved(fresh, supplies).is_empty() and not fresh.run.state.character.get("interaction_history", []).any(func(e: Dictionary) -> bool: return e.get("method") in ["heat", "force"]), "Fresh Run inherits no Knowledge, object mutations or interaction history")
+	_go(fresh, supplies)
+	fresh.stats().attack = 6
+	fresh.refresh_stats()
+	check(_act(fresh, supplies, "force") and _count(fresh, "snow:bark_ration") == 1 and s.places.record(s, supplies.instance_id).world_state == "thawed", "Same obstacle supports force in another Run while the first Run stays thawed")
+	_go(fresh, medicine)
+	fresh.run.state.inventory["snow:resin"] = {"version": 1, "quantity": 1}
+	fresh.run.state.inventory["core:wood"] = {"version": 1, "quantity": 1}
+	check(_act(fresh, medicine, "heat") and _count(fresh, "core:herb") == 3, "The second object also supports heat, preserving three herbs instead of one")
+	var missing: Array = []
+	var problem: String = preload("res://src/core/world_rules.gd").validate({"version": 99, "material": "ordinary_ice", "fracture_attack": 8, "thaw_fuel": [{"content_id": "core:wood", "version": 1, "quantity": 1}]}, missing)
+	check(problem.is_empty() and not missing.is_empty(), "Unknown rule version remains unsupported rather than running")

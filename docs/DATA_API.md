@@ -296,3 +296,20 @@ not change. Player-facing read-only APIs: `session.world_region()`,
 `session.exploration_leads()`, `session.exploration_frontiers()`.
 These return knowledge/context without establishing unseen chunks. Full contracts
 and explicit creation CLI: [M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md).
+
+## Systemic slice additive Run payloads (2026-11-03)
+
+`character.knowledge` maps stable fact IDs to version-1 entries containing id,
+category, title, complete text and unlock turn. `character.interaction_history`
+is a bounded 512-entry offline diagnostic array. Neither is World state. Missing
+fields in old Runs remain valid; Knowledge text is retained in the save rather
+than silently replaced by future content text. Unknown entry versions fail resume.
+Location mutations may additionally carry `world_rule_version: 1` and
+`world_state: thawed|shattered`; resolution receipts remain authoritative for
+once-only rewards. The existing GameStore transaction saves these with inventory.
+No SQL schema, generator version, Blueprint or native dependency changed.
+
+Refused-action diagnostics wait in a bounded session-local buffer, leaving the
+Run state unchanged. Save plans the diagnostic addition on a copied payload and
+clears the buffer only after GameStore commits; retry cannot duplicate events.
+Session activation clears the buffer so it cannot leak into another Run.

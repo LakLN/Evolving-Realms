@@ -1,5 +1,10 @@
 # Snow Mountain V1 - sole master asset manifest (spoilers)
 
+2026-11-03 systemic slice: layout v4's two frozen supply cases reuse L03's existing
+`relay_locker` placeholder image. Existing place dimming and text show resolution.
+No new production-image order or acceptance claim is added. Consider distinct
+frozen/resolved art after playtesting, through this manifest only.
+
 Reset proposal, 2026-11-03; grounded at dde02f7. This is deliverable C and the
 **only current art scope/order source**, paired with
 [SNOW_MOUNTAIN_V1_PACKAGE.md](SNOW_MOUNTAIN_V1_PACKAGE.md). Prior S1-S5 requests and

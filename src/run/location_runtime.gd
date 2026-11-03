@@ -11,6 +11,9 @@ const Skills = preload("res://src/core/skills.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Inventory = preload("res://src/core/inventory.gd")
 const ItemEffects = preload("res://src/core/item_effects.gd")
+const WorldRules = preload("res://src/core/world_rules.gd")
+const Knowledge = preload("res://src/run/player_knowledge.gd")
+const Telemetry = preload("res://src/run/interaction_telemetry.gd")
 const SEARCH_RADIUS := 2
 const STATES := ["undiscovered", "discovered", "interactable", "resolved", "unavailable"]
 var layer: RefCounted
@@ -24,10 +27,13 @@ func discovered(session: RefCounted, instance_id: String) -> bool:
 
 func validate(session: RefCounted) -> String:
 	## Saved location mutations must be well-formed (older saves have none).
+	var knowledge_error := Knowledge.validate(session.run.state.character)
+	if not knowledge_error.is_empty(): return knowledge_error
 	for id in session.run.state.entity_mutations:
 		var mutation: Variant = session.run.state.entity_mutations[id]
 		if not mutation is Dictionary or not mutation.has("location"): continue
 		if not mutation.get("discovered") is bool or not mutation.get("resolved", {}) is Dictionary: return "Corrupt location state in save: " + str(id)
+		if mutation.has("world_rule_version") and (mutation.world_rule_version != 1 or mutation.get("world_state") not in ["thawed", "shattered"]): return "Unsupported world rule state: " + str(id)
 	return ""
 
 func available(session: RefCounted, instance: Dictionary, trigger: String = "") -> Array:
@@ -40,6 +46,7 @@ func available(session: RefCounted, instance: Dictionary, trigger: String = "") 
 		if resolved.has(interaction.id) or (not trigger.is_empty() and interaction.get("trigger", "interact") != trigger): continue
 		if interaction.has("after") and not resolved.has(interaction.after): continue
 		if interaction.get("exclusive", false) and exclusive_taken: continue
+		if not unmet(session, interaction.get("reveal_conditions", [])).is_empty(): continue
 		result.append(interaction)
 	return result
 
@@ -140,6 +147,7 @@ func _discover(session: RefCounted, instance: Dictionary) -> Array:
 	mutation.discovered = true
 	mutation.discovered_turn = int(session.run.state.turn)
 	session.run.state.entity_mutations[instance.instance_id] = mutation
+	Telemetry.record(session, {"type": "discovery", "target": instance.instance_id, "definition": definition.content_id, "definition_version": int(definition.version)})
 	session.dirty = true
 	var events: Array = [{"type": "discovery", "target": instance.instance_id, "name": instance.get("metadata", {}).get("title", definition.name), "description": definition.description + " " + layer.clue(instance), "category": definition.payload.category, "position": instance.position.duplicate()}]
 	for interaction in available(session, instance, "discover"):
@@ -180,6 +188,7 @@ func interact(session: RefCounted, instance_id: String, wanted: String = "") -> 
 		return _refuse(session, "%s holds nothing more for you (%s) — no turn spent" % [definition.name, state(session, instance)])
 	var outcome := resolve(session, instance, interaction)
 	if outcome.has("error"):
+		Telemetry.record(session, {"type": "interaction", "target": instance_id, "method": interaction.get("world_method", interaction.id), "outcome": "refused", "reason": outcome.error})
 		return _refuse(session, outcome.error + " — no turn spent")
 	return {"type": "interact", "place": true, "name": definition.name, "received": outcome.received, "events": outcome.events}
 
@@ -188,6 +197,11 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	var event: Dictionary = layer.event(interaction.event)
 	var definition: Dictionary = layer.definition_for(instance)
 	var p: Dictionary = event.payload
+	var method := str(interaction.get("world_method", ""))
+	if not method.is_empty():
+		var requirement := WorldRules.requirement(session, definition.payload.world_properties, method)
+		if not requirement.is_empty(): return {"error": requirement}
+		p = WorldRules.response(definition.payload.world_properties, method, p)
 	var missing := unmet(session, p.get("conditions", []))
 	if not missing.is_empty():
 		return {"error": "%s: requires %s" % [interaction.get("verb", "Explore"), ", ".join(missing)]}
@@ -236,6 +250,14 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	session.run.state.entity_mutations[instance.instance_id] = mutation
 	session.dirty = true
 	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", ""), layer.clue(instance, true)] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
+	if not method.is_empty():
+		mutation.world_state = "thawed" if method == "heat" else "shattered"
+		mutation.world_rule_version = 1
+		var fact := WorldRules.knowledge(method)
+		if Knowledge.unlock(session, fact):
+			events.append({"type": "knowledge", "name": fact.title})
+			Telemetry.record(session, {"type": "knowledge_unlock", "knowledge_id": fact.id})
+	Telemetry.record(session, {"type": "interaction", "target": instance.instance_id, "definition": definition.content_id, "definition_version": int(definition.version), "method": method if not method.is_empty() else interaction.id, "outcome": "success", "state": mutation.get("world_state", "resolved"), "received": award.received, "damage": damage})
 	var source := {"content_id": event.content_id, "version": int(event.version), "actor": "player"}
 	for outcome in outcomes:
 		match outcome.type:

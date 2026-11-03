@@ -259,7 +259,7 @@ func _runs(world: Dictionary) -> void:
 	check(a.save(), "Save Run A: " + a.last_error)
 	var resumed := Session.new(store)
 	check(resumed.resume(a.run.run_id), "Resume Run A: " + resumed.last_error)
-	check(resumed.position == a.position and resumed.known_lands().size() == a.known_lands().size() and resumed.exploration_frontiers().size() == a.exploration_frontiers().size(), "Position, land/region knowledge and known routes survive save/load")
+	check(resumed.position == a.position and JSON.stringify(resumed.known_lands()) == JSON.stringify(a.known_lands()) and resumed.exploration_frontiers().size() == a.exploration_frontiers().size(), "Position, complete land/region knowledge (without numeric-ID duplicates) and known routes survive save/load")
 	check(resumed.atlas.revision() == a.atlas.revision() and JSON.stringify(resumed.atlas.lands) == JSON.stringify(a.atlas.lands), "World atlas is identical after resuming")
 	var c := Session.new(store)
 	check(c.start_new(world.world_id, 99, b.run.spawn.land_id), "Development control: start in a chosen land")

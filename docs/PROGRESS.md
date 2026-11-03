@@ -2305,3 +2305,93 @@ No merge, export, image generation, publication, personal-save access, new conte
 activation or broad implementation. AGENTS unchanged. Next implementation is
 recommended, not started. Design proposed; Playable CONCERNS; Playtested and Publish
 NOT ASSESSED.
+
+
+## Systemic Snow vertical slice - 2026-11-03
+
+Director-authorized implementation on `feature/m05-snow-mountain`, worktree
+`D:/Game/RPG-m05-snow`, actual starting HEAD `9346f10`. Existing import-only edits
+were present before work and remain outside this change. No master merge,
+publication, personal database access or Run 01 changes.
+
+Implemented:
+- A small v1 ordinary-ice material response in `src/core/world_rules.gd`:
+  declared pinned fuel -> intact contents, or derived Attack threshold -> two-thirds
+  fragile-content loss (minimum one per grant) and 2 HP injury. Costs, inventory,
+  state transitions and receipts commit through the existing location handler.
+- Layout v4 adds two discoverable supply cases. All prior definitions, terrain
+  parameters and five existing sites are preserved; established plans stay pinned.
+  Both methods work on both definitions; equipment capability is tested through
+  a real equip action. Existing art is reused as a placeholder.
+- E offers discovered interactions and cancel, known costs and clear refusal text.
+  Hidden reveal conditions are filtered before labels/requirements or explicit-ID
+  selection. Existing single-choice interactions keep their quick path.
+- J reads confirmed, categorized Knowledge with complete saved text. Successful
+  methods unlock scoped facts; Knowledge never gates experimentation. Journal
+  documents and atlas knowledge remain distinct. Panels pause real time, support
+  keyboard focus, and close cleanly through HUD inventory/menu transitions.
+- The existing offline exporter gains bounded significant-event history, methods,
+  failures, transitions, rewards/injury and Knowledge unlocks, plus generation
+  version and atlas revision at spawn. Raw diagnostics are spoiler-sensitive.
+  Refusals buffer outside Run state; save plans the addition on a copy and clears
+  it only after commit, preserving exact refusal semantics and retry safety.
+- Old-save exe validation found an existing atlas issue: JSON numeric region IDs
+  could be appended twice after reload. Membership now compares numeric IDs;
+  existing saved arrays are not rewritten. The atlas reload assertion now checks
+  complete known-land data, rather than only its outer count.
+
+Verification performed so far (all disposable data):
+- `scripts/godot.ps1 --headless --script res://tests/snow_content_suite.gd '--' --rules-only`:
+  final focused run **22 checks / 0 failures**, including exact refusal state,
+  explicit-save diagnostics, both approaches on both objects, real equipment,
+  hidden choices, receipts, save/load and fresh-Run isolation.
+- Native `Godot --path D:/Game/RPG-m05-snow --script res://tests/snow_mountain_gameplay_suite.gd`:
+  **63 checks / 0 failures**, exit 0 on NVIDIA OpenGL. Real E/Enter/Tab/Esc/J,
+  pause/cancel, both methods, HUD panel transitions and both facts after Continue.
+  Inspected `.tools/world-rules-selector.png` and `world-rules-knowledge.png`;
+  `world-rules-shattered.png` also captured. Automated gameplay, not human playtest.
+- Full regression (recovered after the first session was interrupted): one
+  `scripts/test.ps1 -Render` pass ran every headless suite plus startup, all passing
+  (snow-content 75, snow-mountain 66, snow-gameplay 44, m04-world 86, telemetry 32,
+  data 96, integration 41 with expected injected errors, and the rest). Suites logged
+  before the final `atlas_knowledge.gd` edit (data, m03-world, world, run01-world,
+  gameplay, interactions, interaction-gameplay, integration, combat, combat-gameplay)
+  were rerun afterwards with `-Only`: all 0 failures. Every rendered suite then passed
+  via `-Render -Only rendered-...`: realtime 18, snow-gameplay 63, m04-gameplay 31,
+  m03-integration 31, discoveries 7, effects 10, gameplay 24, interactions 20, combat 23,
+  survival 12, equipment 17, talents 19, skills 24. Flakes seen: rendered-realtime
+  "wolf kills the idle hero" once (passed on rerun); rendered-m04-gameplay twice with
+  random World seeds ("No accessible spawn" for a woodland, and the known
+  "draws its own ground: [ocean, road]" flake); the third run passed 31/0, test left
+  unchanged. The certifier probes terrain/objects/creatures only, not this change.
+  `-Service` and the `-Export` (builds/windows) step were not rerun; the preview exe
+  was exported from the final sources and starts headless on a copy of its DB (exit 0).
+  Earlier development runs caught strict refused-state mutation and JSON-number
+  comparison problems; the diagnostic buffer and numeric comparison fix address
+  them. No existing tests were deleted or weakened to permit gameplay mutations.
+- Detached compatibility worktree `D:/Game/RPG-systemic-compat` at `9346f10`, using
+  the preview-creation helper, wrote an isolated Snow layout-v3 World/Run. A fresh
+  copy opened in the new exported exe with `--acceptance=legacy`: **4/0**, exit 0.
+  SQL read-only comparisons confirm all original World, 182 definition and 51
+  instance rows survive unchanged; seed and spawn also match. The initial old-save
+  check caught the atlas duplicate-region bug above; a fresh copy passes after fix.
+- Parsed old/new source comparison confirms every pre-existing content definition,
+  terrain/layout parameter and original site remains equal. `git diff --check`
+  passed on the final tree (excluding unrelated `.import` line-ending churn).
+
+Preview: `builds/systemic-snow-preview-20261103/Launch-Preview.cmd`, explicit local
+`preview.sqlite`, a fresh certified Snow Run, no Python/network/keys required.
+Export command: `Godot --path D:/Game/RPG-m05-snow --headless --export-release windows
+D:/Game/RPG-m05-snow/builds/systemic-snow-preview-20261103/EvolvingRealms.exe`.
+Native SQLite license is included unchanged; engine and third-party notices were
+extracted with the pinned engine's license APIs. Builds, caches and saves are ignored.
+
+Limits: this is a material/supply slice, not universal temperature/physics, direct
+skill-to-object targeting, fire spread or terrain deformation. Combat history,
+death causes and playtime remain unrecorded; diagnostic history retains only the
+last 512 events and needs a save to survive termination. Production art, human
+playtesting, chunk-border stalls and Intel-driver crash uncertainty remain open.
+Snow Mountain V1 is not declared publication-ready; no readiness gates were waived.
+Best next action: fresh disposable preview playtest of discovery, method costs,
+Knowledge usefulness and controls; triage observed design/balance/bug issues before
+expanding mechanics or producing additional art.

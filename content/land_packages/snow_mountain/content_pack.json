@@ -1210,6 +1210,298 @@
      "conditions": []
     }
    }
+  },
+  {
+   "content_id": "snow:event/icebound_provisions_heat",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Icebound provisions / heat",
+   "dependencies": [
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:bark_ration",
+        "version": 1,
+        "quantity": 3
+       }
+      ]
+     }
+    ],
+    "message": "The ice thaws; the supplies are intact."
+   }
+  },
+  {
+   "content_id": "snow:event/icebound_provisions_force",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Icebound provisions / force",
+   "dependencies": [
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:bark_ration",
+        "version": 1,
+        "quantity": 3
+       }
+      ]
+     }
+    ],
+    "message": "The ice shatters. Splinters cut your hands and ruin part of the supplies."
+   }
+  },
+  {
+   "content_id": "snow:place/icebound_provisions",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Icebound provisions",
+   "description": "Ordinary ice seals a carrier supply case. Heat preserves the contents; force risks breaking them.",
+   "metadata": {
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/icebound_provisions_heat",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/icebound_provisions_force",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "category": "supplies",
+    "visual": "relay_locker",
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1
+    },
+    "discovery": {
+     "mode": "proximity",
+     "radius": 5
+    },
+    "world_properties": {
+     "version": 1,
+     "material": "ordinary_ice",
+     "fracture_attack": 8,
+     "thaw_fuel": [
+      {
+       "content_id": "snow:resin",
+       "version": 1,
+       "quantity": 1
+      },
+      {
+       "content_id": "core:wood",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "interactions": [
+     {
+      "id": "heat",
+      "verb": "Thaw with a resin fire",
+      "world_method": "heat",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/icebound_provisions_heat",
+       "version": 1
+      }
+     },
+     {
+      "id": "force",
+      "verb": "Shatter the ice",
+      "world_method": "force",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/icebound_provisions_force",
+       "version": 1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/frozen_medicine_heat",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Frozen medicine case / heat",
+   "dependencies": [
+    {
+     "content_id": "core:herb",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:herb",
+        "version": 1,
+        "quantity": 3
+       }
+      ]
+     }
+    ],
+    "message": "The ice thaws; the supplies are intact."
+   }
+  },
+  {
+   "content_id": "snow:event/frozen_medicine_force",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Frozen medicine case / force",
+   "dependencies": [
+    {
+     "content_id": "core:herb",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:herb",
+        "version": 1,
+        "quantity": 3
+       }
+      ]
+     }
+    ],
+    "message": "The ice shatters. Splinters cut your hands and ruin part of the supplies."
+   }
+  },
+  {
+   "content_id": "snow:place/frozen_medicine",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Frozen medicine case",
+   "description": "Ordinary ice seals a carrier supply case. Heat preserves the contents; force risks breaking them.",
+   "metadata": {
+    "site_only": true
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:event/frozen_medicine_heat",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/frozen_medicine_force",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "category": "supplies",
+    "visual": "relay_locker",
+    "spawn": {
+     "biomes": [
+      "forest"
+     ],
+     "per_10000": 1
+    },
+    "discovery": {
+     "mode": "proximity",
+     "radius": 5
+    },
+    "world_properties": {
+     "version": 1,
+     "material": "ordinary_ice",
+     "fracture_attack": 12,
+     "thaw_fuel": [
+      {
+       "content_id": "snow:resin",
+       "version": 1,
+       "quantity": 1
+      },
+      {
+       "content_id": "core:wood",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "interactions": [
+     {
+      "id": "heat",
+      "verb": "Thaw with a resin fire",
+      "world_method": "heat",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/frozen_medicine_heat",
+       "version": 1
+      }
+     },
+     {
+      "id": "force",
+      "verb": "Shatter the ice",
+      "world_method": "force",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/frozen_medicine_force",
+       "version": 1
+      }
+     }
+    ]
+   }
   }
  ]
 }

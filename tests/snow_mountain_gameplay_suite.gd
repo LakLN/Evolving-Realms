@@ -217,6 +217,8 @@ func _content_tour(s: RefCounted, plan: Dictionary) -> void:
 	_near_site(s, locker)
 	await _settle()
 	await _key(KEY_E)
+	check(app._discovery_panel.visible, "E exposes the discovered locker choices")
+	await _choose("Read the carrier")
 	check(app._notice.text.contains("Last entry") and s.run.state.entity_mutations.get(locker.instance_id, {}).get("resolved", {}).has("ledger"), "E on the carriers' locker reads the ledger: " + app._notice.text.left(90))
 	await _capture("snow-relay-ledger.png")
 	var pine := _site(plan, "fallen_relay_pine")
@@ -228,8 +230,10 @@ func _content_tour(s: RefCounted, plan: Dictionary) -> void:
 	_near_site(s, locker)
 	await _settle()
 	await _key(KEY_E)
+	await _choose("Return")
 	check(not s.run.state.inventory.has("snow:relay_clasp") and s.run.state.inventory.has("snow:bark_ration"), "E again returns the clasp for the carriers' stores: " + app._notice.text.left(90))
 	await _capture("snow-relay-return.png")
+	await _rules_gameplay(s, plan)
 	# Native predator drawn with the S1 snow wolf.
 	var wolf := _wolf_home(s, plan)
 	if check(wolf.x != 2147483647, "A scree wolf home exists in the Pitchpine Reach"):
@@ -279,6 +283,10 @@ func _content_tour(s: RefCounted, plan: Dictionary) -> void:
 	check(panel.get_v_scroll_bar().value > 0, "Overflow journal scrolls to older clues")
 	await _capture("snow-journal-resumed.png")
 	await _key(KEY_M)
+	await _key(KEY_J)
+	check(app._discovery_panel.visible and app.session.run.state.character.get("knowledge", {}).size() == 2, "Both acquired Knowledge entries remain accessible after Continue")
+	app._return_to_menu() # Same callback as the always-visible Menu HUD button.
+	check(app._menu.visible and app.session == null and not app._discovery_panel.visible, "HUD Menu closes Knowledge without leaving a modal overlay on the menu")
 
 func _journal_notes() -> Array:
 	return app._world_map._journal.filter(func(l: Dictionary) -> bool: return l.get("state") == "note")
@@ -436,3 +444,50 @@ func _finish() -> void:
 	app.free()
 	print("M05 SNOW GAMEPLAY: %d checks, %d failures (%s)" % [checks, failures, DisplayServer.get_name()])
 	quit(0 if failures == 0 else 1)
+
+func _choose(text: String) -> void:
+	if not app._discovery_panel.visible: return
+	for child in app._discovery_column.get_children():
+		if child is Button and child.text.to_lower().contains(text.to_lower()):
+			child.grab_focus()
+			await _key(KEY_ENTER)
+			return
+	check(false, "Interaction button available: " + text)
+
+func _rules_gameplay(s: RefCounted, plan: Dictionary) -> void:
+	var supplies := _site(plan, "icebound_provisions")
+	_near_site(s, supplies)
+	await _settle()
+	var before := int(s.run.state.turn)
+	await _key(KEY_E)
+	check(app._discovery_panel.visible and app._panel_open(), "Frozen supplies open a paused approach selector")
+	await _capture("world-rules-selector.png")
+	for _frame in 70: await process_frame
+	check(int(s.run.state.turn) == before, "World clock pauses while selecting")
+	await _key(KEY_ESCAPE)
+	check(not app._discovery_panel.visible and s.places.record(s, supplies.instance_id).get("resolved", {}).is_empty(), "Cancel spends no action and resolves nothing")
+	s.run.state.inventory["snow:resin"] = {"version": 1, "quantity": 1}
+	s.run.state.inventory["core:wood"] = {"version": 1, "quantity": 1}
+	await _key(KEY_E)
+	await _choose("Thaw")
+	check(s.places.record(s, supplies.instance_id).get("world_state") == "thawed", "Real E and Enter thaw supplies using inventory fuel")
+	await _key(KEY_J)
+	check(app._discovery_panel.visible and app._discovery_mode == "knowledge" and app._discovery_column.get_children().any(func(n: Node) -> bool: return n is Label and n.text.contains("Each thaw consumes")), "J presents complete useful Knowledge learned from play")
+	await _capture("world-rules-knowledge.png")
+	# The always-visible HUD inventory control must not leave two modal panels open.
+	app._toggle_inventory()
+	check(app._inventory_panel.visible and not app._discovery_panel.visible, "HUD inventory closes Knowledge before opening its own panel")
+	await _key(KEY_ESCAPE)
+	var medicine := _site(plan, "frozen_medicine")
+	_near_site(s, medicine)
+	s.stats().attack = 12
+	s.refresh_stats()
+	await _settle()
+	await _key(KEY_E)
+	for _step in 6:
+		var focused: Control = root.gui_get_focus_owner()
+		if focused is Button and focused.text.contains("Shatter"): break
+		await _key(KEY_TAB)
+	await _key(KEY_ENTER)
+	check(s.places.record(s, medicine.instance_id).get("world_state") == "shattered", "Real selector applies force to a second object definition")
+	await _capture("world-rules-shattered.png")

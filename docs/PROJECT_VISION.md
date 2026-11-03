@@ -103,12 +103,15 @@ No final boss is required to finish or continue a Run.
 
 Gaps to close through content packages, each with its own approval:
 
-- Knowledge is partial: Run-local journal notes and atlas knowledge exist, but there
-  is no dedicated Knowledge system separating verified facts, rumours and documents.
+- Knowledge now has a dedicated Run-local confirmed-facts panel for ordinary-ice
+  interactions; journal documents and atlas knowledge remain separate. Broader
+  evidence/rumour acquisition is not yet implemented.
 - Run-local changes cover entities, places, discoveries and atlas knowledge, not
   terrain, routes or territories.
 - World Quests and Regional Bosses are not implemented.
-- Shared world-rule interactions exist only through current effects/elements
-  handlers; there is no general material/temperature property model.
-- Telemetry is a manual offline export from saved state; combat outcomes, play time
-  and death cause are not recorded.
+- Shared ordinary-ice supply rules now combine declared fuel, derived Attack,
+  intact rewards and persistent thaw/fracture states. There is no universal
+  material/temperature simulation.
+- Telemetry remains a manual offline export from saved state, now including a
+  bounded discovery/interaction/Knowledge history. Combat history, play time and
+  death cause are not recorded.

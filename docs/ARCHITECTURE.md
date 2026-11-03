@@ -266,3 +266,14 @@ Ledger defaults add `structured-world-v1` only in opted-in Worlds; existing reco
 remain immutable. No SQL migration or automatic old-World upgrade. Player Map and
 future authoring contracts, creation API, examples and limits are documented in
 [M03_WORLD_DESIGN.md](M03_WORLD_DESIGN.md). Task A does not modify rendering or UI.
+
+## Ordinary-ice rules and player Knowledge (2026-11-03)
+
+`src/core/world_rules.gd` validates material v1 properties and plans heat/force
+responses over intact supply events. LocationRuntime retains the only commit
+path for item costs, awards and object receipts. `src/run/player_knowledge.gd`
+stores scoped confirmed facts in the existing character payload; journal and
+atlas knowledge keep their own roles. `src/run/interaction_telemetry.gd` stores a
+bounded offline diagnostic history in that payload. The E selector and J reader
+in main.gd pause with the other modal panels. No schema, service, global event
+framework or changes to CharacterStats derivation.
