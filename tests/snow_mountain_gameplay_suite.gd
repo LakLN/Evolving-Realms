@@ -248,6 +248,9 @@ func _content_tour(s: RefCounted, plan: Dictionary) -> void:
 		check(drawn, "The scree wolf is drawn with the S1 snow wolf sheet")
 		await _capture("snow-scree-wolf.png")
 		s.roster.creatures.clear()
+	# Snow P0 art: native species resolve by content ID; shared visuals stay untouched.
+	var art: RefCounted = app.map_view.art
+	check(art.creature_sheet(s._definition("snow:rime_hare", 1)) == "rime_hare" and art.creature_sheet(s._definition("core:rabbit", 1)) == "rabbit", "The rime hare has its own sheet; core rabbits keep theirs")
 	var bell := _site(plan, "summit_bell")
 	_near_site(s, bell)
 	await _settle()
