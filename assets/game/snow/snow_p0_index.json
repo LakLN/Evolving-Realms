@@ -93,17 +93,338 @@
      24
     ]
    }
+  },
+  "scree_wolf": {
+   "sheet": "snow/p0/scree_wolf.png",
+   "frame": [
+    84,
+    76
+   ],
+   "columns": 11,
+   "anchor": [
+    42,
+    69
+   ],
+   "anims": {
+    "idle_down": [
+     0
+    ],
+    "walk_down": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "attack_down": [
+     5,
+     6,
+     7
+    ],
+    "hit_down": [
+     8
+    ],
+    "death_down": [
+     9,
+     10
+    ],
+    "idle_left": [
+     11
+    ],
+    "walk_left": [
+     12,
+     13,
+     14,
+     15
+    ],
+    "attack_left": [
+     16,
+     17,
+     18
+    ],
+    "hit_left": [
+     19
+    ],
+    "death_left": [
+     20,
+     21
+    ],
+    "idle_right": [
+     22
+    ],
+    "walk_right": [
+     23,
+     24,
+     25,
+     26
+    ],
+    "attack_right": [
+     27,
+     28,
+     29
+    ],
+    "hit_right": [
+     30
+    ],
+    "death_right": [
+     31,
+     32
+    ],
+    "idle_up": [
+     33
+    ],
+    "walk_up": [
+     34,
+     35,
+     36,
+     37
+    ],
+    "attack_up": [
+     38,
+     39,
+     40
+    ],
+    "hit_up": [
+     41
+    ],
+    "death_up": [
+     42,
+     43
+    ]
+   }
+  },
+  "bellback_sentinel": {
+   "sheet": "snow/p0/bellback_sentinel.png",
+   "frame": [
+    84,
+    76
+   ],
+   "columns": 11,
+   "anchor": [
+    42,
+    69
+   ],
+   "anims": {
+    "idle_down": [
+     0
+    ],
+    "walk_down": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "attack_down": [
+     5,
+     6,
+     7
+    ],
+    "hit_down": [
+     8
+    ],
+    "death_down": [
+     9,
+     10
+    ],
+    "idle_left": [
+     11
+    ],
+    "walk_left": [
+     12,
+     13,
+     14,
+     15
+    ],
+    "attack_left": [
+     16,
+     17,
+     18
+    ],
+    "hit_left": [
+     19
+    ],
+    "death_left": [
+     20,
+     21
+    ],
+    "idle_right": [
+     22
+    ],
+    "walk_right": [
+     23,
+     24,
+     25,
+     26
+    ],
+    "attack_right": [
+     27,
+     28,
+     29
+    ],
+    "hit_right": [
+     30
+    ],
+    "death_right": [
+     31,
+     32
+    ],
+    "idle_up": [
+     33
+    ],
+    "walk_up": [
+     34,
+     35,
+     36,
+     37
+    ],
+    "attack_up": [
+     38,
+     39,
+     40
+    ],
+    "hit_up": [
+     41
+    ],
+    "death_up": [
+     42,
+     43
+    ]
+   }
   }
  },
- "places": {},
- "icons": {},
+ "places": {
+  "fallen_relay_pine": {
+   "texture": "snow/p0/places/fallen_relay_pine.png",
+   "size": [
+    96,
+    96
+   ],
+   "pivot": [
+    48,
+    88
+   ]
+  },
+  "memorial_cairn": {
+   "texture": "snow/p0/places/memorial_cairn.png",
+   "size": [
+    80,
+    80
+   ],
+   "pivot": [
+    40,
+    72
+   ]
+  },
+  "damaged_bell": {
+   "texture": "snow/p0/places/damaged_bell.png",
+   "size": [
+    96,
+    112
+   ],
+   "pivot": [
+    48,
+    104
+   ]
+  },
+  "icebound_case": {
+   "texture": "snow/p0/places/icebound_case.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    50
+   ]
+  }
+ },
+ "icons": {
+  "snow_resin": {
+   "texture": "snow/p0/icons/snow_resin.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_bark_ration": {
+   "texture": "snow/p0/icons/snow_bark_ration.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_bronze_scrap": {
+   "texture": "snow/p0/icons/snow_bronze_scrap.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_relay_clasp": {
+   "texture": "snow/p0/icons/snow_relay_clasp.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_bell_shard": {
+   "texture": "snow/p0/icons/snow_bell_shard.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_rime_mantle": {
+   "texture": "snow/p0/icons/snow_rime_mantle.png",
+   "size": [
+    32,
+    32
+   ]
+  }
+ },
  "mapping": {
   "creatures_by_id": {
-   "snow:rime_hare": "rime_hare"
+   "snow:rime_hare": "rime_hare",
+   "snow:scree_wolf": "scree_wolf",
+   "snow:bellback_sentinel": "bellback_sentinel"
   },
   "places": {
-   "by_id": {}
+   "by_id": {
+    "snow:place/fallen_relay_pine": "fallen_relay_pine",
+    "snow:place/bell_cairn": "memorial_cairn",
+    "snow:place/summit_bell": "damaged_bell",
+    "snow:place/icebound_provisions": "icebound_case",
+    "snow:place/frozen_medicine": "icebound_case"
+   }
   },
-  "item_icons_by_id": {}
+  "item_icons_by_id": {
+   "snow:resin": "snow_resin",
+   "snow:bark_ration": "snow_bark_ration",
+   "snow:bronze_scrap": "snow_bronze_scrap",
+   "snow:relay_clasp": "snow_relay_clasp",
+   "snow:bell_shard": "snow_bell_shard",
+   "snow:rime_mantle": "snow_rime_mantle"
+  }
+ },
+ "ground": {
+  "atlas": "snow/p0/frozen_scree.png",
+  "kinds": {
+   "frozen": [
+    [
+     0,
+     0,
+     6
+    ],
+    [
+     1,
+     0,
+     2
+    ],
+    [
+     2,
+     0,
+     2
+    ]
+   ]
+  }
  }
 }

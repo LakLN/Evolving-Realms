@@ -2467,3 +2467,29 @@ snow-content 75, snow-gameplay 44, art-import 430, all 0 failures; rendered-snow
 first failed 15/63 while a Python art check ran concurrently (hero never moved), then
 passed 63/0 alone. `asset_check.py index` 0 failures; reference batch passes; negative
 example rejected as designed. Full regression for fe9e24c is recorded above.
+
+## Snow Mountain P0 art production (2026-11-03, feature/snow-p0-production)
+
+From master `df76e90`. Content review: the seven areas, five sites, three species and
+two threads stay the right V1 scope; the player-facing gaps were identity, not content
+volume (hare = core rabbit, sentinel token, bell = hut, pine/cairn too small, frozen
+cases = locker, four items without icons, upper areas alike). One manifest row added:
+L07 icebound_case. No definition, layout, save or gameplay change.
+
+Method proof (checkpoint B, ac49abe): code-authored 3D-to-pixel renderer
+(`tools/art/pixel3d.py`) on the rime hare: one model, four directions, no mirrored
+light; `asset_check batch` 0 FAIL; rendered playback 31/0. Chosen for all P0 rows.
+Checkpoint C: scree wolf, bellback sentinel, L04-L07, six icons, T05 scree in batch
+`snow_p0_b1`; presentation hooks in art.gd/map_view.gd (content-ID creature, exact-ID
+icon, place pivot, second snow index). import_check exempts opaque ground atlases from
+the alpha assertion (ground cells must be opaque).
+
+Tests: `asset_check batch` 0 FAIL / 8 reviewed WARN; `scripts/test.ps1 -Render -Only
+art-import,snow-content,snow-mountain,snow-gameplay,land-package,rendered-snow-gameplay`:
+art-import 519, snow-content 75, snow-mountain 66, snow-gameplay 48, land-package 22,
+rendered-snow-gameplay 67, all 0 failures (rendered runs alone, sequentially);
+`-Smoke -Only discovery-gameplay,m04-gameplay,interaction-gameplay,map,discoveries`:
+data 96, integration 41 and the rest 0 failures; playback_capture hare 31, wolf 35,
+sentinel 35, 0 failures. Native captures reviewed: bell, scree wolf, Windcut Stair.
+Open: director style acceptance (status candidate), human playtest, T09 seams beyond
+screenshot review, Intel-driver/chunk-stall items unchanged.

@@ -62,6 +62,9 @@ def main() -> None:
             if asset.get("pivot"):
                 entry["pivot"] = asset["pivot"]
             index[asset["index_group"]][asset["name"]] = entry
+        elif asset["kind"] == "tiles":  # ground kind replacing a code-painted placeholder
+            count = asset["size"][0] // asset["cell"][0]
+            index["ground"] = {"atlas": rel, "kinds": {asset["ground_kind"]: [[i, 0, 6 if i == 0 else 2] for i in range(count)]}}
         elif asset["kind"] == "icons":
             sheet = Image.open(source)
             cw, ch = asset["cell"]

@@ -56,6 +56,223 @@
     "attack_right": "idle_right",
     "attack_up": "idle_up"
    }
+  },
+  {
+   "id": "C02",
+   "name": "scree_wolf",
+   "kind": "sheet",
+   "file": "S4_scree_wolf.png",
+   "sha256": "68457537735df156c134f1fb3c0440b210b428e326c7c1837c830454fa14f87f",
+   "size": [
+    924,
+    304
+   ],
+   "runtime": "res://assets/game/snow/p0/scree_wolf.png",
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "body_h": [
+    44,
+    52
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C03",
+   "name": "bellback_sentinel",
+   "kind": "sheet",
+   "file": "S4_bellback_sentinel.png",
+   "sha256": "41efe1a30e3873a8d234bfa64f51777128bfb3aa20338eedc5d834966ee3e37d",
+   "size": [
+    924,
+    304
+   ],
+   "runtime": "res://assets/game/snow/p0/bellback_sentinel.png",
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "body_h": [
+    48,
+    58
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "L04",
+   "name": "fallen_relay_pine",
+   "kind": "sprite",
+   "index_group": "places",
+   "file": "fallen_relay_pine.png",
+   "sha256": "a64b991f7e680857daeeb9e32fe1ef3b945eb189fffa990fd80ec285fed4f988",
+   "size": [
+    96,
+    96
+   ],
+   "runtime": "res://assets/game/snow/p0/places/fallen_relay_pine.png",
+   "pivot": [
+    48,
+    88
+   ],
+   "margin": 2,
+   "body_w": [
+    80,
+    88
+   ]
+  },
+  {
+   "id": "L05",
+   "name": "memorial_cairn",
+   "kind": "sprite",
+   "index_group": "places",
+   "file": "memorial_cairn.png",
+   "sha256": "9fbf96ca495a2da1910898ec746e044d92bd9bdeb136eed72d2171c20d2af7b1",
+   "size": [
+    80,
+    80
+   ],
+   "runtime": "res://assets/game/snow/p0/places/memorial_cairn.png",
+   "pivot": [
+    40,
+    72
+   ],
+   "margin": 2,
+   "body_h": [
+    60,
+    76
+   ]
+  },
+  {
+   "id": "L06",
+   "name": "damaged_bell",
+   "kind": "sprite",
+   "index_group": "places",
+   "file": "damaged_bell.png",
+   "sha256": "9724d6fbaac2bd01df564beeb29f048c7adeb87b137c6b4eb38372ffcee1f885",
+   "size": [
+    96,
+    112
+   ],
+   "runtime": "res://assets/game/snow/p0/places/damaged_bell.png",
+   "pivot": [
+    48,
+    104
+   ],
+   "margin": 2,
+   "body_w": [
+    76,
+    96
+   ]
+  },
+  {
+   "id": "L07",
+   "name": "icebound_case",
+   "kind": "sprite",
+   "index_group": "places",
+   "file": "icebound_case.png",
+   "sha256": "b901487bb17ff86430dc4d6799bc913e21eeadc6128a4648e88c0399fd697ab8",
+   "size": [
+    64,
+    56
+   ],
+   "runtime": "res://assets/game/snow/p0/places/icebound_case.png",
+   "pivot": [
+    32,
+    50
+   ],
+   "margin": 2,
+   "body_w": [
+    36,
+    50
+   ]
+  },
+  {
+   "id": "I01",
+   "name": "regional_items",
+   "kind": "icons",
+   "file": "S5_items.png",
+   "sha256": "2e15c839bf67d1fef6ffdd5b400f1ec85984183cd682f6c103b04a04c1325a15",
+   "size": [
+    96,
+    64
+   ],
+   "runtime": "res://assets/game/snow/p0/icons/S5_items.png",
+   "cell": [
+    32,
+    32
+   ],
+   "margin": 2,
+   "ids": [
+    "snow:resin",
+    "snow:bark_ration",
+    "snow:bronze_scrap",
+    "snow:relay_clasp",
+    "snow:bell_shard",
+    "snow:rime_mantle"
+   ]
+  },
+  {
+   "id": "T05",
+   "name": "frozen_scree",
+   "kind": "tiles",
+   "file": "S2_frozen_scree.png",
+   "sha256": "f2a6b66798ae84fbff0e243a07c2d143213c0e75fe1881b86bec8bc38a10b88f",
+   "size": [
+    120,
+    40
+   ],
+   "runtime": "res://assets/game/snow/p0/frozen_scree.png",
+   "cell": [
+    40,
+    40
+   ],
+   "seamless": "xy",
+   "ground_kind": "frozen"
   }
  ]
 }

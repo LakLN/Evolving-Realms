@@ -54,7 +54,14 @@ assets/game/<land>/                derived runtime PNGs + <land>_index.json (bui
 .venv/Scripts/python.exe tools/art/asset_check.py index                   # live runtime audit
 .\scripts\godot.ps1 --headless --script res://tools/art/import_check.gd ['--' --fragment=res://.tools/art/<batch>.json]
 .\scripts\test.ps1 -Only art-import
+.venv/Scripts/python.exe -I tools/art/snow_p0_author.py [--preview]     # code-authored Snow P0 batch (3D-to-pixel)
+.venv/Scripts/python.exe -I tools/art/build_snow_p0.py                  # batch -> assets/game/snow/p0 + index
+Godot --path . --script res://tools/art/playback_capture.gd '--' --character=<sheet>   # rendered playback proof
 ```
+
+`tools/art/pixel3d.py` is the creature/landmark method chosen by the Snow proof: ellipsoid
+and box models rendered from the fixed camera at native 1x, so a new anatomy is a new
+part list (see `snow_quadrupeds.py`) and every direction stays consistent.
 
 - `batch` FAILs: wrong size/mode, concept-board traits (no zero alpha, soft painted
   alpha, uniform opaque border, painted checkerboard), clipped/empty frames, soft alpha,

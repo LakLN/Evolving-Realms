@@ -1,5 +1,31 @@
 # Snow Mountain V1 - sole master asset manifest (spoilers)
 
+## Production status - batch snow_p0_b1 (2026-11-03, candidate)
+
+All eight P0 production outputs plus one added row are delivered as **candidate** art
+(director style acceptance pending) in
+`assets/sources/EvolvingRealms_SnowMountain_TierA/production/snow_p0_b1/` (`batch.json`,
+immutable originals, sha256), built to `assets/game/snow/p0/` + `snow_p0_index.json`.
+
+- **Method:** code-authored 3D-to-pixel rendering (`tools/art/pixel3d.py`): ellipsoid/box
+  models, fixed three-quarter orthographic camera, upper-left light quantised to the
+  regional ramps, dark selective outline. One model yields all four directions; left is
+  rendered, never mirrored. Rime hare was the proof subject; the same rig made the rest.
+  No image generator, concept board or reference tracing was used.
+- **Delivered:** C01 hare (32 frames, attack_* declared idle aliases), C02 scree wolf
+  (44, redrawn to spec at 44-52 px with outline; S1 frames retired, kept as originals),
+  C03 bellback sentinel (44, ram with curled bronze horns), L04 fallen relay pine, L05
+  memorial cairn, L06 damaged bell, I01 six icons, T05 frozen scree (3 seamless cells,
+  shared edge bands), and **L07 icebound_case** (new row below).
+- **Evidence:** `asset_check.py batch` 0 FAIL (8 reviewed WARNs: declared aliases and
+  three-quarter foot travel in front/back walks); `art-import` 519/0; rendered
+  AnimatedSprite2D playback (`tools/art/playback_capture.gd`) 31/35/35 checks, 0 failures;
+  native captures of bell, wolf and Windcut Stair scree.
+- **Renderer support added (presentation only):** content-ID creature lookup, exact-ID
+  item icons, place pivots, a second snow index merged over S1. Core rabbits unchanged.
+- **Still open:** director style acceptance; T09 transition atlases are rebuilt by code
+  from the new scree but have only had native screenshot review; P1/P2 unchanged.
+
 2026-11-03 systemic slice: layout v4's two frozen supply cases reuse L03's existing
 `relay_locker` placeholder image. Existing place dimming and text show resolution.
 No new production-image order or acceptance claim is added. Consider distinct
@@ -52,6 +78,7 @@ silently become blockers or extra generation orders.
 | Landmarks | L04 fallen_relay_pine | Distinct clasp/search site | Current firewood stand-in is inadequate; concept reference only | No for final V1 | Yes | relay_pine_intact.png 96x96; pivot48,88, body80-88px, >=4px side margin | P0 |
 | Landmarks | L05 memorial_cairn | Intentional authored discovery | Current small windbreak rock stand-in; reference only | No for final V1 | Yes | cairn_intact.png 80x80; pivot40,72, body60-76px; distinct from loose rock | P0 |
 | Landmarks | L06 damaged_bell | Package capstone identity | Current hut is wrong; concept useful | No | Yes | bell_damaged.png 96x112; pivot48,104, width76-96px; cracked bronze bell in timber frame, one state | P0 |
+| Landmarks | L07 icebound_case | Identity of both frozen supply sites (layout v4) | Was the L03 locker image, so cases read as the relay locker | No | Yes (added 2026-11-03: cases must be recognisable as ice-sealed supplies before the heat/force choice) | icebound_case.png 64x56; pivot32,50; body width36-50px; strapped case in ordinary ice, one state | P0 |
 | Creatures | C01 rime_hare | Passive native prey identity | Core rabbit is temporary only; supplied partial side poses are references | No for final V1 | Yes | S4_rime_hare.png 672x304; 8 columns x4 rows, 84x76 cells, pivot42,69, body~32px; 32 frames | P0 |
 | Creatures | C02 scree_wolf | Legible movement/attack in every direction | Reuse valid S1 down idle/walk/attack frames if stylistically compatible | Current missing directions/derived death not final | Yes, completion rather than a new species | S4_scree_wolf.png 924x304; 11x4 cells84x76, pivot42,69, body44-52px; 44 slots, existing validated frames may fill slots | P0 |
 | Creatures | C03 bellback_sentinel | Signature bounded elite | Token unacceptable; received beast silhouette not approved ram identity | No | Yes | S4_bellback_sentinel.png 924x304; 11x4 cells84x76, pivot42,69, body~52px; 44 frames; hoofed winter ram-beast, heavy curved cracked-bell horns | P0 |

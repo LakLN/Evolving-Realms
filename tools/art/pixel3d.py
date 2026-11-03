@@ -38,6 +38,8 @@ def rot(yaw: float = 0.0, pitch: float = 0.0, roll: float = 0.0) -> np.ndarray:
 class Part:
     """Ellipsoid: centre c, radii r, local rotation m, colour ramp (light -> dark)."""
 
+    box = False
+
     def __init__(self, name, c, r, ramp, m=None, flat=False):
         self.name, self.c, self.r = name, np.array(c, float), np.array(r, float)
         self.m = np.eye(3) if m is None else m
@@ -46,11 +48,16 @@ class Part:
     def moved(self, matrix: np.ndarray, origin, offset=(0, 0, 0)) -> "Part":
         """Rigid transform about `origin`, then translate by `offset` (model space)."""
         origin = np.array(origin, float)
-        copy = Part.__new__(Part)
+        copy = type(self).__new__(type(self))
         copy.name, copy.r, copy.ramp, copy.flat = self.name, self.r, self.ramp, self.flat
         copy.c = matrix @ (self.c - origin) + origin + np.array(offset, float)
         copy.m = matrix @ self.m
         return copy
+
+
+class Box(Part):
+    """Oriented box: centre c, half extents r (flat faces for timber, stone, cases)."""
+    box = True
 
 
 def _shift(a, dy, dx, fill):
@@ -80,19 +87,34 @@ def render(parts, size, anchor, yaw="down", outline="#1e1a26", marks=(), lines=T
     for i, part in enumerate(parts):
         m = world @ part.m
         centre = world @ part.c
-        q = ((origin - centre) @ m) / part.r      # local unit-sphere coordinates
+        q = ((origin - centre) @ m) / part.r      # local unit-sphere / unit-cube coordinates
         d = (m.T @ VIEW) / part.r
-        a = d @ d
-        b = 2 * (q @ d)
-        c = (q * q).sum(-1) - 1
-        disc = b * b - 4 * a * c
-        hit = disc >= 0
-        t = np.where(hit, (-b - np.sqrt(np.where(hit, disc, 0))) / (2 * a), np.inf)
-        closer = t < depth
-        if not closer.any():
-            continue
-        local = q + np.where(hit, t, 0)[..., None] * d
-        n = (local / part.r) @ m.T
+        if part.box:  # slab test against [-1, 1]^3; normal = axis of the entry face
+            with np.errstate(divide="ignore", invalid="ignore"):
+                t1, t2 = (-1 - q) / d, (1 - q) / d
+            near, far = np.minimum(t1, t2), np.maximum(t1, t2)
+            entry = near.max(-1)
+            hit = entry <= far.min(-1)
+            t = np.where(hit, entry, np.inf)
+            closer = t < depth
+            if not closer.any():
+                continue
+            axis = near.argmax(-1)
+            local = np.zeros(q.shape)
+            np.put_along_axis(local, axis[..., None], -np.sign(d[axis])[..., None], -1)
+            n = local @ m.T
+        else:
+            a = d @ d
+            b = 2 * (q @ d)
+            c = (q * q).sum(-1) - 1
+            disc = b * b - 4 * a * c
+            hit = disc >= 0
+            t = np.where(hit, (-b - np.sqrt(np.where(hit, disc, 0))) / (2 * a), np.inf)
+            closer = t < depth
+            if not closer.any():
+                continue
+            local = q + np.where(hit, t, 0)[..., None] * d
+            n = (local / part.r) @ m.T
         n /= np.linalg.norm(n, axis=-1, keepdims=True) + 1e-9
         depth = np.where(closer, t, depth)
         index = np.where(closer, i, index)
