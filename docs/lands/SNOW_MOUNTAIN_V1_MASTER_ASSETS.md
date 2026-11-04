@@ -15,6 +15,17 @@ New icons reuse bronze/resin, blue cloth, upper-left illumination and the curren
 native pixel scale. Candidate P0 creatures/landmarks must be reviewed in Godot
 alongside the current HUD; isolated-sheet structure checks do not certify style.
 
+## Readability batch - snow_fauna_b3 (2026-11-04, candidate)
+
+Supersedes b2 at runtime (b1/b2 sources kept). Gameplay captures showed near-white
+coats vanishing on snow: stag now caribou brown, hollow carrier deep blue with
+frost accents, giant slate; stag/tuskback/crawler/lantern/drake/giant enlarged
+(giant limited by its death pose in the 84x76 cell). Kiln (domed brick, chimney,
+fire mouth) and offering bowl (plinth, dish, glass shards) replace boulder-like
+forms; new landmarks: relay_strongbox, ashmaw_nest, singing_ice, prowler_den,
+rune_cairn. Check: 0 failures. Prowler den still reads weakly; final style
+acceptance remains with the director.
+
 ## Roster and exploration batch - snow_fauna_b1 (2026-11-04)
 
 Consolidated production scope before authoring; all assets remain candidate.

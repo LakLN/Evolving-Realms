@@ -36,6 +36,9 @@ func _initialize() -> void:
 	var future: Dictionary = plan.duplicate(true)
 	future.atlas_version = 99
 	check(not Atlas.supported_plan(future), "Unknown future plan version refused")
+	var stored_v5: Dictionary = plan.duplicate(true)
+	stored_v5.layout.version = 5
+	check(Atlas.supported_plan(stored_v5), "Worlds charted with layout v5 keep loading their stored plan")
 	var s := Session.new(store)
 	if not check(s.start_new(world.world_id, 919, plan.land_id, "normal", "turn"), "Start a certified full-region Run: " + s.last_error): return _finish()
 	s.autosave_interval = 0

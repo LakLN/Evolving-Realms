@@ -1,5 +1,41 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Snow Mountain full-region production ? pacing, activities, streaming (2026-11-04)
+
+Branch `feature/snow-full-region` (not merged). Commits a032c96 (streaming),
+30b410e (layout v6 + region_pack), ce3c46a (fauna art b3).
+
+Measured before changing (dev probe `.tools/probe_snow.gd`, rendered disposable Run,
+realistic step pacing): each chunk crossing stalled ~350-480 ms (objects 40-115,
+creatures 50-125, locations 20-45, map painting 50-175 ms; painting was mostly
+building outer neighbour terrain for transition borders). After: crossing work
+~40-60 ms (ledger write ~13 ms stays at first visit), worst idle frame ~37-45 ms.
+Fixes: inline coordinate-hash rolls before ecology lookups; deferred row-sliced
+painting of off-screen chunks with one neighbour warmed per idle frame; pure idle
+prefetch of terrain/objects/v1 homes for the ring two chunks out.
+
+Pacing (reference seed census): basin prey 70 -> 53 (stags only in forest patches);
+Broken Relay hostiles 32 -> 17, shooters only in authored camps; 23 authored homes
+(stair shooters, choir carrier procession, summit guards, lakeshore herd, den cat).
+Five build-dependent sites (strength/patience chest, linen-safe ember hollow,
+searched singing ice answered by a technique, tracker trail, level/ivory toll
+cairn). Art b3: darker coats for stag/carrier/giant, larger big species, real
+kiln/bowl silhouettes and five new landmarks (candidate).
+
+Commands/results:
+- Full default `scripts/test.ps1` after the streaming change: every suite through
+  snow-content passed (data96, integration41, world49, run01-world20, gameplay30,
+  m04-world86, ai-world41, discoveries40, realtime58, snow-mountain66, snow-content114 ...);
+  snow-region then failed on in-progress content edits, fixed and re-run.
+- `scripts/test.ps1 -Render -Only snow-gameplay,snow-content,snow-mountain,art-import,gameplay,map,realtime-gameplay,rendered-snow-region,rendered-gameplay,rendered-realtime,rendered-snow-gameplay`: all 0 failures.
+- `scripts/test.ps1 -Only snow-region`: 87 checks, 0 failures.
+- `asset_check.py batch assets/sources/snow_fauna_b3/batch.json`: 0 failures, 51 warnings.
+- Rendered captures of new creatures and all eight new/changed landmarks inspected.
+
+Gaps: prowler den art is weak; creatures still small at 40 px tiles; no repeatable
+activities (event.repeat capability absent); White Choir and Crown Shelf remain
+sparse by design but need a dedicated encounter beat; danger labels are unchanged.
+
 ## Snow Mountain full-region production ? roster/exploration batch (2026-11-04)
 
 Recovered an interrupted, uncommitted batch (17 tracked files + new pack, layout,

@@ -125,6 +125,19 @@ hash streams, probabilities, budgets or ordering change; compare complete placem
 output against the old predicate order and measure native traversal before claiming
 a performance improvement.
 
+### Layout v6 pacing and activities - 2026-11-04
+
+Layout v6 (atlas plan v2; stored v5 plans still load) changes only area ecology
+membership and authored homes, never species definitions. Intended feel per area:
+basin peaceful with sparse prey; Pitchpine a hunting forest; Mirror Trough an open
+herd shore with neutral crawlers; Broken Relay quiet stretches between three bandit
+camps; Windcut Stair a shooting lane on the stair; White Choir eerie and mostly
+empty, crossed by a slow carrier procession; Crown Shelf few but heavy encounters.
+`region_pack.json` adds five sites, each keyed to a different preparation (Might or
+risk, carried frost linen, searching plus a learned technique, tracker talent or
+perception, level plus hunted ivory). All use existing conditions/outcomes; none
+repeat. Streaming results and measurements: see docs/PROGRESS.md.
+
 ### Current production status and remaining work
 
 Design scope authorized by the brief; batch 1 undergoing validation. P0 art merged
