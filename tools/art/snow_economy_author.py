@@ -1,4 +1,4 @@
-﻿"""Author the regional economy icon batch using the established native pixel rig.
+"""Author the regional economy icon batch using the established native pixel rig.
 
 No source images are edited. Originals and hashes live in a separate batch.
 Run with the project's Python from the repository root.
@@ -69,4 +69,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
