@@ -1,5 +1,20 @@
 # Snow Mountain V1 - sole master asset manifest (spoilers)
 
+## Full-region production additions ? 2026-11-04
+
+The full-region brief authorizes expansion beyond the historical three-species
+manifest below. P0 originals and branch history remain preserved. All additions
+stay in this manifest; no new generation order per individual item.
+
+| ID | Content / native format | Production status |
+|---|---|---|
+| I02 | Nine regional gear/supply icons, 32x32 transparent, 2px margin, centered: Pitchbrand, Relay pike, Rime focus, Carrier coat, Bronze cowl, Trail boots, Ember seal, Pine salve, Trail stew | Delivered candidate batch `assets/sources/snow_economy_b1/batch.json`; exact-ID runtime icons in `assets/game/snow/economy/`; native review pending |
+| C04+ | Additional wildlife, hostile faction and fantasy entity sheets; exact silhouettes/dimensions follow the roster feasibility pass in the package plan | Planned; no final tokens permitted; no art order before roles/habitats are fixed |
+
+New icons reuse bronze/resin, blue cloth, upper-left illumination and the current
+native pixel scale. Candidate P0 creatures/landmarks must be reviewed in Godot
+alongside the current HUD; isolated-sheet structure checks do not certify style.
+
 ## Production status - batch snow_p0_b1 (2026-11-03, candidate)
 
 All eight P0 production outputs plus one added row are delivered as **candidate** art

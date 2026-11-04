@@ -1502,6 +1502,831 @@
      }
     ]
    }
+  },
+  {
+   "content_id": "snow:pitchbrand",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Pitchbrand",
+   "description": "Resin-fed flame on a bronze cage. Fire strikes; reliable burns, but less direct force than a hunting spear.",
+   "dependencies": [
+    {
+     "content_id": "core:status/burn",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "weapon"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "weapon",
+     "stats": {
+      "attack": 4
+     },
+     "damage_elements": [
+      "fire"
+     ],
+     "on_hit": [
+      {
+       "type": "apply_status",
+       "content_id": "core:status/burn",
+       "version": 1,
+       "chance_percent": 75
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:relay_pike",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Relay pike",
+   "description": "A bronze-edged carrier pike. Strong physical blows; costs more Energy to drive its strengthened physical skills.",
+   "dependencies": [],
+   "metadata": {
+    "category": "weapon"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "weapon",
+     "stats": {
+      "attack": 7
+     },
+     "damage_elements": [
+      "metal"
+     ],
+     "skill_modifiers": [
+      {
+       "tags": [
+        "physical"
+       ],
+       "power_percent": 30,
+       "cost_percent": 25
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:rime_focus",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Rime focus",
+   "description": "Bronze and resin hold a winter crystal pattern. Elemental skills reach farther and cost less Energy; a weak ice melee weapon.",
+   "dependencies": [],
+   "metadata": {
+    "category": "weapon"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "weapon",
+     "stats": {
+      "attack": 1
+     },
+     "damage_elements": [
+      "ice"
+     ],
+     "skill_modifiers": [
+      {
+       "tags": [
+        "elemental"
+       ],
+       "power_percent": 35,
+       "cost_percent": -35,
+       "range_add": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:carrier_coat",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Carrier coat",
+   "description": "Layered hide sealed with resin. Resists ice damage; does not stop exposure from storms.",
+   "dependencies": [],
+   "metadata": {
+    "category": "armor"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "armor",
+     "stats": {
+      "defense": 2,
+      "max_hp": 5
+     },
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "ice",
+       "percent": 35
+      },
+      {
+       "type": "resistance",
+       "element": "fire",
+       "percent": -15
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:bronze_cowl",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Bronze cowl",
+   "description": "Bell-bronze plates stitched into a hood. Protects against metal strikes, but conducts lightning.",
+   "dependencies": [],
+   "metadata": {
+    "category": "helmet"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "helmet",
+     "stats": {
+      "defense": 2
+     },
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "metal",
+       "percent": 25
+      },
+      {
+       "type": "resistance",
+       "element": "lightning",
+       "percent": -25
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:trail_boots",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Trail boots",
+   "description": "Resin-sealed hide boots. Durable expedition gear; no movement or weather immunity.",
+   "dependencies": [],
+   "metadata": {
+    "category": "boots"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "boots",
+     "stats": {
+      "defense": 1,
+      "max_hp": 4
+     }
+    }
+   }
+  },
+  {
+   "content_id": "snow:ember_seal",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Ember seal",
+   "description": "A resin-filled bronze seal. Longer burns and fire resistance compete with the clasp for an accessory slot.",
+   "dependencies": [],
+   "metadata": {
+    "category": "accessory"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "accessory",
+     "stats": {
+      "max_hp": 2
+     },
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "fire",
+       "percent": 25
+      },
+      {
+       "type": "status_duration",
+       "status": "core:status/burn",
+       "add": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:pine_salve",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Pine salve",
+   "description": "Resin and crushed herbs seal a wound: restores 12 HP and cleanses harmful statuses.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 10
+   }
+  },
+  {
+   "content_id": "snow:use/pine_salve",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item_use",
+   "name": "Apply pine salve",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:pine_salve",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/bleed",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item_use"
+   },
+   "payload": {
+    "item": {
+     "content_id": "snow:pine_salve",
+     "version": 1
+    },
+    "verb": "Apply",
+    "consume": 1,
+    "effects": [
+     {
+      "type": "heal",
+      "amount": 12
+     },
+     {
+      "type": "cleanse",
+      "harmful": true
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:trail_stew",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Trail stew",
+   "description": "Meat simmered with a bark ration. Restores food and water for a longer expedition.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 10
+   }
+  },
+  {
+   "content_id": "snow:use/trail_stew",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item_use",
+   "name": "Eat trail stew",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:trail_stew",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item_use"
+   },
+   "payload": {
+    "item": {
+     "content_id": "snow:trail_stew",
+     "version": 1
+    },
+    "verb": "Eat",
+    "consume": 1,
+    "effects": [
+     {
+      "type": "sate",
+      "amount": 600
+     },
+     {
+      "type": "quench",
+      "amount": 220
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:recipe/pitchbrand",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Pitchbrand",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:pitchbrand",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "weapon",
+    "inputs": [
+     {
+      "content_id": "snow:resin",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "core:wood",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:pitchbrand",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/relay_pike",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Relay pike",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "core:fang",
+     "version": 1
+    },
+    {
+     "content_id": "snow:relay_pike",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "weapon",
+    "inputs": [
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 3
+     },
+     {
+      "content_id": "core:wood",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "core:fang",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:relay_pike",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/rime_focus",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Rime focus",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "snow:rime_focus",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "weapon",
+    "inputs": [
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "snow:resin",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "core:wood",
+      "version": 1,
+      "quantity": 2
+     }
+    ],
+    "output": {
+     "content_id": "snow:rime_focus",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/carrier_coat",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Carrier coat",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:hide",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:carrier_coat",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "armor",
+    "inputs": [
+     {
+      "content_id": "core:hide",
+      "version": 1,
+      "quantity": 3
+     },
+     {
+      "content_id": "snow:resin",
+      "version": 1,
+      "quantity": 2
+     }
+    ],
+    "output": {
+     "content_id": "snow:carrier_coat",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/bronze_cowl",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Bronze cowl",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_cowl",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "armor",
+    "inputs": [
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "core:hide",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:bronze_cowl",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/trail_boots",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Trail boots",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:hide",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:trail_boots",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "armor",
+    "inputs": [
+     {
+      "content_id": "core:hide",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "snow:resin",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:trail_boots",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/ember_seal",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Ember seal",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:ember_seal",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "trinket",
+    "inputs": [
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "snow:resin",
+      "version": 1,
+      "quantity": 3
+     }
+    ],
+    "output": {
+     "content_id": "snow:ember_seal",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/pine_salve",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Pine salve",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:herb",
+     "version": 1
+    },
+    {
+     "content_id": "snow:pine_salve",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "remedy",
+    "inputs": [
+     {
+      "content_id": "snow:resin",
+      "version": 1,
+      "quantity": 1
+     },
+     {
+      "content_id": "core:herb",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:pine_salve",
+     "version": 1,
+     "quantity": 1
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/trail_stew",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Trail stew",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:raw_meat",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    },
+    {
+     "content_id": "core:fresh_water",
+     "version": 1
+    },
+    {
+     "content_id": "snow:trail_stew",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "food",
+    "inputs": [
+     {
+      "content_id": "core:raw_meat",
+      "version": 1,
+      "quantity": 1
+     },
+     {
+      "content_id": "snow:bark_ration",
+      "version": 1,
+      "quantity": 1
+     },
+     {
+      "content_id": "core:fresh_water",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:trail_stew",
+     "version": 1,
+     "quantity": 2
+    }
+   }
+  },
+  {
+   "content_id": "snow:loot/water_cache_salvage",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "loot_extension",
+   "name": "Carrier cache fittings",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:water_cache",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "loot_extension"
+   },
+   "payload": {
+    "source": {
+     "content_id": "snow:water_cache",
+     "version": 1
+    },
+    "chance_per_10000": 4500,
+    "table": {
+     "guaranteed": [
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 1,
+       "max": 2
+      }
+     ]
+    }
+   }
   }
  ]
 }

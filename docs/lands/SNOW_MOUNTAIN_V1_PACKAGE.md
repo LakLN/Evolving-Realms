@@ -1,5 +1,91 @@
 # Snow Mountain V1 - The Hushed Relay (spoilers)
 
+## Full-region production authorization ? 2026-11-04
+
+The director's Snow Mountain Full Region Production brief supersedes the old
+three-species cap, deferred crafting/roster rules, narrow vertical-slice scope and
+requests for intermediate human playtesting below. The historical design remains
+as the baseline and compatibility record. Production proceeds on
+`feature/snow-full-region`, from master 6e441ea. Existing P0 candidate branch is
+merged with history preserved; candidate status is not silently upgraded to accepted.
+No publication or personal-save access is implied.
+
+### Connected experience and sufficiency
+
+The reference land contains about 110,000 walkable tiles. Three native species,
+seven fixed interactions and two stories are insufficient for that scale. Adding
+more copies of those encounters would amplify repetition. Keep the seven-area
+route structure, original sites and shelter network; build a lower preparation
+loop, distinct middle expeditions and optional upper challenges that repay different
+builds. Do not call the region complete based on a content count or passing suites.
+
+First outing: gather provisions near cover; hunt or evade; salvage carrier fittings;
+craft a useful weapon/remedy; choose forest or shore; discover the relay; return
+with a usable reward. Further outings should change tactics and preparation, rather
+than repeat a larger HP target. Maintain voluntary retreat and several approaches
+to selected rewards. Original independent narrative threads stay playable.
+
+### Research and synthesis (verified facts vs design hypotheses)
+
+- [Grim Dawn combat guide](https://www.grimdawn.com/guide/gameplay/combat/):
+  verified layered defenses and damage-type resistances. Synthesis: equipment can
+  trade resistance against vulnerability and direct attack against skill efficiency;
+  use the existing effects pipeline rather than a second armor model.
+- [UnReal World](https://unrealworld.fi/): developer describes northern wilderness
+  survival as its focus. Hypothesis for this package: preparation and a useful
+  return-home craft make traversal meaningful; do not import its detailed simulation.
+- [Caves of Qud roadmap](https://cavesofqud.com/roadmap/): verified faction/reputation
+  and mutation breadth. Synthesis: a fantasy roster can span wildlife, people and
+  strange entities; implement distinctive roles before a reputation framework.
+- [The Living World of The Witcher, GDC](https://www.gdcvault.com/play/1023867/The-Living-World-of-The):
+  listing verifies the developer session, not detailed quest algorithms. Our design
+  hypothesis is that history, landmarks and rewards should reinforce each other.
+- Valheim and Monster Hunter reference searches were attempted; official mountain
+  update / living-world pages were unavailable (403 or inaccessible). No precise
+  mechanics from those pages are treated as verified. No borrowed characters/art.
+
+### Production batches and capability decisions
+
+1. **Regional preparation economy (in implementation):** Pitchbrand fire weapon;
+   Relay pike physical skill amplifier with higher Energy cost; Rime focus elemental
+   efficiency/range at low melee power; Carrier coat ice resistance/fire weakness;
+   Bronze cowl metal resistance/lightning weakness; Trail boots expedition HP;
+   Ember seal burn duration/fire resistance. Pine salve heals/cleanses; Trail stew
+   restores food/water. Nine recipes consume actual regional/core drops. Bronze
+   fittings are a separately keyed cache loot extension. Nothing requires stations,
+   new attributes, weather immunity or new material simulation. All old definitions
+   remain byte-for-byte equivalent as JSON values.
+2. **Roster and encounter production (not implemented):** expand low-risk wildlife,
+   forest predators, territorial chargers, salvage faction enemies, shell/crystal
+   entities and rare upper threats. Candidate roles include a neutral tusked grazer,
+   antlered prey, a calling predator, a bronze scavenger, a frost-bound revenant,
+   a lightning-vulnerable crystal organism and an elemental prowler. Each requires
+   habitat, readable counterplay, source-to-reward links and dedicated art. These
+   are working roles, not promised names or a quota. New plan ecology must be
+   versioned and must never inject new v1 homes into established land plans.
+3. **Landmark/story/build batch (not implemented):** ordinary field manuals at the
+   relay, hunting and caster opportunities on separate routes, salvage risk/reward
+   and an independent optional mystery. Every opportunity needs actual acquisition,
+   event receipts and reload/Run-isolation checks. Rare rewards may exceed ordinary
+   balance but must have reachable sources. Keep hidden resolutions internal.
+4. **Integrated traversal and revision:** native play through ordinary input, several
+   disposable seeds, equipment/skill paths and retreat routes. Review encounters,
+   resource distance, controls, blizzard readability and streaming. Correct observed
+   repetition and frustration. Only then assemble a complete-playthrough preview.
+
+Shared capability policy: reuse existing charge/call/fear/resistance/on-hit rules
+first. No ranged/burrow/regeneration framework until a chosen creature needs it.
+Terrain/surface chemistry remains unimplemented, rather than implied by prose.
+New plan/terrain algorithms require explicit new versions with legacy paths retained.
+
+### Current production status and remaining work
+
+Design scope authorized by the brief; batch 1 undergoing validation. P0 art merged
+for native review; new gear icons enter the single master manifest. Roster/story
+expansion, full route pacing, new creature art, complete automated playthrough and
+streaming evaluation remain unfinished. Human Playtested and Publish remain NOT
+ASSESSED. The director is not asked to play intermediate builds.
+
 ## Approved systemic vertical slice — 2026-11-03
 
 The director's implementation request authorizes this focused extension. Layout

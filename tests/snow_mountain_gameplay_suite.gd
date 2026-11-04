@@ -193,6 +193,7 @@ func _run() -> void:
 	if app.session != null:
 		await _settle()
 		await _capture("snow-resumed.png")
+		await _economy_tour(app.session)
 		await _content_tour(app.session, plan)
 	_finish()
 
@@ -516,3 +517,25 @@ func _rules_gameplay(s: RefCounted, plan: Dictionary) -> void:
 	await _key(KEY_ENTER)
 	check(s.places.record(s, medicine.instance_id).get("world_state") == "shattered", "Real selector applies force to a second object definition")
 	await _capture("world-rules-shattered.png")
+
+func _economy_tour(s: RefCounted) -> void:
+	var recipe: Dictionary = s._definition("snow:recipe/pitchbrand", 1)
+	var award: Dictionary = preload("res://src/core/inventory.gd").new().award(app.store.content, s.world.world_id, s.run.state.inventory, recipe.payload.inputs, "test:regional-ui")
+	s.run.state.inventory = award.inventory
+	await _key(KEY_G)
+	var row := -1
+	for i in app._craft_rows.size():
+		if app._craft_rows[i].content_id == recipe.content_id: row = i
+	if not check(row >= 0 and app._craft_panel.visible, "Regional recipe appears in the ordinary Craft sheet"): return
+	app._craft_list.select(row)
+	app._craft_list.item_selected.emit(row)
+	await _capture("snow-regional-craft.png")
+	await _key(KEY_U)
+	check(s.run.state.inventory.has("snow:pitchbrand"), "Craft key produces the regional fire weapon")
+	var icons := true
+	for name in ["pitchbrand", "relay_pike", "rime_focus", "carrier_coat", "bronze_cowl", "trail_boots", "ember_seal", "pine_salve", "trail_stew"]:
+		var definition: Dictionary = s._definition("snow:" + name, 1)
+		var texture: Texture2D = app.map_view.art.texture("snow/economy/" + name + ".png")
+		icons = icons and texture != null and app.map_view.art.item_icon(definition.content_id, definition.name, definition) == texture
+	check(icons, "Every regional crafted item has a dedicated production icon")
+	await _key(KEY_ESCAPE)

@@ -1,5 +1,77 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Snow Mountain full-region production ? regional economy batch (2026-11-04)
+
+Director brief authorizes full-region production without intermediate director
+playtests. Branch `feature/snow-full-region` from 6e441ea; merge 353fe2e preserves
+`feature/snow-p0-production` and all candidate-art commits/history. Master remains
+unchanged. Existing untracked assets/sources/README.md and manifest.json untouched.
+No personal saves or player World activation/publication.
+
+Package plan and sole asset manifest now record the expanded scope, research,
+capability decisions, production order and explicit insufficiency of the old
+three-species content for the roughly 110k-walkable-tile reference region. Historical
+scope is retained below the new authorization. This is continuing region production,
+not a claim of a completed region or a new generic-system project.
+
+Implemented 21 append-only definitions in the Snow-only pack: seven gear choices,
+nine recipes, two supplies plus their uses and an independent cache salvage loot
+extension. Resin/hides/bronze now feed elemental fire, physical skill and elemental
+caster weapons; armor/accessories have resistance/vulnerability or burn-duration
+trade-offs. Food addresses hunger/thirst; salve heals and cleanses. Existing craft,
+effects, item-use, skill and world-rule handlers execute all of it. All 34 prior
+Snow definitions compare equal to 6e441ea; duplicate identity audit passes. No
+terrain/layout/spawn/creature-generation version, save contract or gameplay engine
+change. The only new presentation hook loads the regional economy icon index.
+
+Art: preserved P0 branch integrated in this production branch, still candidate.
+Nine new code-authored native icons in a consolidated `snow_economy_b1` batch, original
+models/source PNGs/sha256/provenance retained; no AI provider/image service used.
+Batch check: 0 failures, 9 centered-icon pivot warnings (UI icons do not use feet
+pivots). Real-engine review of fresh snow-arrival, regional-craft, scree-wolf and
+silent-bell captures: usable controls/text and coherent regional palette. New icons
+are smaller than some core icons: cosmetic follow-up, not certified final polish.
+Screenshots remain under ignored .tools/ and are not director spoiler galleries.
+
+Commands/results:
+- `scripts/test.ps1 -Smoke -Only art-import,snow-content,snow-gameplay,interactions,equipment,skills,survival,combat,build-gameplay,rendered-snow-gameplay -Render`:
+  data96, interactions69, integration41, combat75, survival60, equipment68, skills105,
+  build-gameplay26 and snow-content113 all 0 failures. The run then caught a new
+  gameplay-test ordering error (existing tour returns to menu before the crafting
+  check); moved crafting before that tour. Initial development also caught the
+  unsupported salve effect name `dispel`; corrected to supported `cleanse` before
+  successful logic checks. No test removed or weakened.
+- `scripts/test.ps1 -Only art-import,snow-gameplay,rendered-snow-gameplay -Render`:
+  final import PASS, snow-gameplay53/0, art-import573/0, startup PASS,
+  rendered-snow-gameplay73/0, exit0. Real G/U input crafts the regional weapon;
+  all nine exact-ID icon textures are non-null. Existing story/Knowledge choices,
+  cancellation, save/continue and map/journal checks remain passing.
+- `python tools/art/snow_economy_author.py`: nine icons, deterministic originals;
+  `asset_check.py batch assets/sources/snow_economy_b1/batch.json`: 0 failures.
+- JSON baseline/identity comparison and `git diff --check`: PASS.
+
+New logic cases cover missing-material no-op, every recipe via the real action,
+fire-weapon thawing on a real regional supply case, focus power/Energy, supply use,
+and exact saved/reloaded gear and inventory identities. A final focused
+`--economy-only` check additionally verifies that cache loot supplies bronze;
+final `scripts/godot.ps1 --headless --script res://tests/snow_content_suite.gd '--' --economy-only` result: 33 checks / 0 failures, exit0.
+
+Native Snow border median/p95/worst 273.57/286.15/286.15 ms over three crossings:
+streaming remains a material open issue, not fixed or waived. Arrival begins in a
+blizzard with narrow visibility in the reference capture; assess preparation and
+first-route legibility in the complete playthrough. P0 candidate style is reviewed
+for this batch but no director acceptance or human playtest is fabricated.
+
+Remaining: versioned expanded roster/habitats and dedicated creature art, further
+reachable authored discoveries and skill/build opportunities, multi-seed route and
+encounter pacing, streaming improvements and a complete input-driven expedition.
+Current checks use fixtures/controlled relocations and supplied crafting inputs;
+they do not establish that a complete ordinary playthrough feels good. No full
+regression/service/export or new exported-exe old-save campaign was run for this
+content/presentation batch; invariant smoke includes legacy save paths. Region is
+not complete; no intermediate human playtest requested. Continue from this package
+and production branch, without restarting design.
+
 ## Systemic interactions v1 (2026-11-04)
 
 Commit fae6de6; decisions and sources in docs/RPG_FOUNDATION.md ("Systemic

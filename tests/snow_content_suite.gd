@@ -39,6 +39,9 @@ func _initialize() -> void:
 	if not check(not proposal.is_empty() and atlas.activate(proposal, {"by": "content suite"}), "Chart Snow Mountain in one World: " + atlas.last_error):
 		return _finish()
 	var plan: Dictionary = atlas.lands[proposal.land.land_id]
+	if "--economy-only" in OS.get_cmdline_user_args():
+		_regional_crafting(world, other, plan)
+		return _finish()
 	if "--rules-only" in OS.get_cmdline_user_args():
 		_world_rules(world, plan)
 		return _finish()
@@ -49,6 +52,7 @@ func _initialize() -> void:
 	_force_branch(world, plan)
 	_bell(world, plan)
 	_world_rules(world, plan)
+	_regional_crafting(world, other, plan)
 	_finish()
 
 func _finish() -> void:
@@ -361,3 +365,40 @@ func _world_rules(world: Dictionary, plan: Dictionary) -> void:
 	var missing: Array = []
 	var problem: String = preload("res://src/core/world_rules.gd").validate({"version": 99, "material": "ordinary_ice", "fracture_attack": 8, "thaw_fuel": [{"content_id": "core:wood", "version": 1, "quantity": 1}]}, missing)
 	check(problem.is_empty() and not missing.is_empty(), "Unknown rule version remains unsupported rather than running")
+
+func _regional_crafting(world: Dictionary, other: Dictionary, plan: Dictionary) -> void:
+	var s := _session(world, plan, 929)
+	if not check(s != null, "Start a regional crafting expedition"): return
+	var recipes: Array = s.recipes().filter(func(r: Dictionary) -> bool: return str(r.content_id).begins_with("snow:recipe/"))
+	check(recipes.size() == 9 and store.content.load_definition(other.world_id, "snow:pitchbrand", 1).is_empty(), "Nine regional recipes installed only with Snow Mountain")
+	var cache: Dictionary = s._definition("snow:water_cache", 1)
+	var salvage := false
+	for sample in 24:
+		var loot: Array = s.loot_for(cache, "test:regional-cache/" + str(sample))
+		salvage = salvage or loot.any(func(drop: Dictionary) -> bool: return drop.content_id == "snow:bronze_scrap")
+	check(salvage, "Regional supply cache loot actually supplies bronze for crafting")
+	var before: Dictionary = s.run.state.duplicate(true)
+	check(not s.perform_action({"type": "craft", "recipe_id": "snow:recipe/pitchbrand"}) and preload("res://src/acceptance/standalone_check.gd").same(before, s.run.state), "Missing regional materials refuse without any state change")
+	for recipe in recipes:
+		var award: Dictionary = preload("res://src/core/inventory.gd").new().award(store.content, world.world_id, s.run.state.inventory, recipe.payload.inputs, "test:snow-materials/" + recipe.content_id)
+		if not check(not award.is_empty(), "Obtain inputs for " + recipe.name): continue
+		s.run.state.inventory = award.inventory
+		var turn := int(s.run.state.turn)
+		check(s.perform_action({"type": "craft", "recipe_id": recipe.content_id}) and int(s.run.state.turn) == turn + 1 and _count(s, recipe.payload.output.content_id) >= int(recipe.payload.output.quantity), "Craft usable " + recipe.name + " through the real action")
+	check(_equip(s, "snow:pitchbrand"), "Equip regional fire weapon")
+	var supplies := _site(plan, "icebound_provisions")
+	_go(s, supplies)
+	check(s.perform_action({"type": "interact", "instance_id": supplies.instance_id, "interaction": "heat", "heat_source": "flame"}) and _count(s, "snow:bark_ration") == 3, "Crafted Pitchbrand also thaws actual regional supplies")
+	check(_equip(s, "snow:rime_focus"), "Equip regional elemental focus")
+	var frost: Dictionary = s.skill_definition("core:skill/frost", 1)
+	check(int(s.skills.modifiers(s, frost).power_percent) == 35 and int(s.skills.costs(s, frost).energy) == 1, "Regional focus changes Frost power and Energy cost through shared rules")
+	s.stats().hp = 1
+	check(s.perform_action({"type": "use", "content_id": "snow:pine_salve"}) and int(s.stats().hp) > 1 and _count(s, "snow:pine_salve") == 0, "Crafted salve heals and is consumed once")
+	s.stats().hunger = 800
+	s.stats().thirst = 800
+	check(s.perform_action({"type": "use", "content_id": "snow:trail_stew"}) and int(s.stats().hunger) < 300 and int(s.stats().thirst) < 650, "Crafted expedition food addresses food and water")
+	var saved: Dictionary = s.run.state.inventory.duplicate(true)
+	var gear: Dictionary = s.run.state.character.equipment.duplicate(true)
+	check(s.save(), "Save regional crafted equipment and supplies")
+	var resumed := Session.new(store)
+	check(resumed.resume(s.run.run_id) and preload("res://src/acceptance/standalone_check.gd").same(saved, resumed.run.state.inventory) and preload("res://src/acceptance/standalone_check.gd").same(gear, resumed.run.state.character.equipment), "Reload preserves exact regional items and equipment identities")

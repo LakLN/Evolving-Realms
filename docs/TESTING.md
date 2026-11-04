@@ -137,6 +137,9 @@ capability, hidden-choice filtering, once-only receipts, Knowledge/save/load/Run
 isolation and offline diagnostic history. For a short development loop use:
 `scripts/godot.ps1 --headless --script res://tests/snow_content_suite.gd '--' --rules-only`.
 The default suite still runs every prior check plus these cases.
+Regional crafting can be checked with the same command and `--economy-only`:
+real craft/use/equip actions, no-material refusal, ice interaction and saved item
+identity. The default `snow-content` run includes this path too.
 `snow-gameplay` / `rendered-snow-gameplay` now operate the E selector and J reader
 with real keys, check pause/cancel and exercise both material approaches. Native
 captures: `.tools/world-rules-selector.png`, `world-rules-knowledge.png` and

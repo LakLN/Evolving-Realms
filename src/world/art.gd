@@ -28,6 +28,7 @@ const SNOW_S1_INDEX := "res://assets/game/snow/snow_s1_index.json"
 const SNOW_P0_GROUND_SOURCE := 20
 const SNOW_P0_PROP_SOURCE := 21
 const SNOW_P0_INDEX := "res://assets/game/snow/snow_p0_index.json"
+const SNOW_ECONOMY_INDEX := "res://assets/game/snow/snow_economy_index.json"
 static var _shared: RefCounted
 
 var index: Dictionary = {}
@@ -136,6 +137,7 @@ func _paint_snow(built: TileSet) -> void:
 	_add_atlas(built, image, px, SNOW_GROUND_SOURCE, groups)
 	var approved := _load_snow_s1(built)
 	approved.merge(_load_snow_index(built, SNOW_P0_INDEX, SNOW_P0_GROUND_SOURCE, SNOW_P0_PROP_SOURCE), true)
+	approved.merge(_load_snow_index(built, SNOW_ECONOMY_INDEX, SNOW_P0_GROUND_SOURCE, SNOW_P0_PROP_SOURCE), true)
 	for i in SnowArt.EDGES.size():
 		var upper: String = SnowArt.EDGES[i][0]
 		var upper_image: Image = approved.get(upper, SnowArt.paint(upper, 0, px))

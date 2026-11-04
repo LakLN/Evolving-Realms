@@ -1,0 +1,159 @@
+{
+ "schema": "er-asset-batch",
+ "version": 1,
+ "batch": "snow_economy_b1",
+ "package": "snow_mountain",
+ "status": "candidate",
+ "provenance": {
+  "source": "original code-authored models",
+  "date": "2026-11-04",
+  "generator": "pixel3d.py",
+  "notes": "Upper-left light; no AI or external source images."
+ },
+ "assets": [
+  {
+   "id": "I02/pitchbrand",
+   "name": "pitchbrand",
+   "kind": "sprite",
+   "file": "pitchbrand.png",
+   "sha256": "711f468ba7d91153ae7f38e2ee8129239a09fb1a8834c0027c5526f1d43e7b6f",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/relay_pike",
+   "name": "relay_pike",
+   "kind": "sprite",
+   "file": "relay_pike.png",
+   "sha256": "321a12bcb006191c55522103ad6d3cc3a57d0cf0a4785bdfe90006b49ca3801e",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/rime_focus",
+   "name": "rime_focus",
+   "kind": "sprite",
+   "file": "rime_focus.png",
+   "sha256": "9249b5c7f2030e1d77411e55b1eaa187438e04f769a1d37c4efb6b53b4979b40",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/carrier_coat",
+   "name": "carrier_coat",
+   "kind": "sprite",
+   "file": "carrier_coat.png",
+   "sha256": "1df2df2f8342d608aa63521c3edd8b8281e6c9bcf321a188dc867204ad06c772",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/bronze_cowl",
+   "name": "bronze_cowl",
+   "kind": "sprite",
+   "file": "bronze_cowl.png",
+   "sha256": "cc038490a3e8f31450b48ec0f4096e3e3f44afcbcb9f448692177ce64cbef0f1",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/trail_boots",
+   "name": "trail_boots",
+   "kind": "sprite",
+   "file": "trail_boots.png",
+   "sha256": "507d0ee6ce93a4cd36d34c85a72b348f6ac678e315e9e67d63c612ba1a970683",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/ember_seal",
+   "name": "ember_seal",
+   "kind": "sprite",
+   "file": "ember_seal.png",
+   "sha256": "c31c13c987b356af617b2d052675bbdd75ee44ef295c2fd66894c30a6d1efcab",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/pine_salve",
+   "name": "pine_salve",
+   "kind": "sprite",
+   "file": "pine_salve.png",
+   "sha256": "fc06529a3a936def8ea03b4587ea96f88f5f1c5ad66d9fe70713a99ed9b51884",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  },
+  {
+   "id": "I02/trail_stew",
+   "name": "trail_stew",
+   "kind": "sprite",
+   "file": "trail_stew.png",
+   "sha256": "8377e86ff623e0cf3f8123976b54f01f19ab6ba3ef3d259f7c24514e502220aa",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ],
+   "margin": 2
+  }
+ ]
+}

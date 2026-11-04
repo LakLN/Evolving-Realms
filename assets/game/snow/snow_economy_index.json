@@ -1,0 +1,83 @@
+{
+ "version": 1,
+ "batch": "snow_economy_b1",
+ "tile_px": 40,
+ "icons": {
+  "snow_economy_pitchbrand": {
+   "texture": "snow/economy/pitchbrand.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_relay_pike": {
+   "texture": "snow/economy/relay_pike.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_rime_focus": {
+   "texture": "snow/economy/rime_focus.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_carrier_coat": {
+   "texture": "snow/economy/carrier_coat.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_bronze_cowl": {
+   "texture": "snow/economy/bronze_cowl.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_trail_boots": {
+   "texture": "snow/economy/trail_boots.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_ember_seal": {
+   "texture": "snow/economy/ember_seal.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_pine_salve": {
+   "texture": "snow/economy/pine_salve.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "snow_economy_trail_stew": {
+   "texture": "snow/economy/trail_stew.png",
+   "size": [
+    32,
+    32
+   ]
+  }
+ },
+ "mapping": {
+  "item_icons_by_id": {
+   "snow:pitchbrand": "snow_economy_pitchbrand",
+   "snow:relay_pike": "snow_economy_relay_pike",
+   "snow:rime_focus": "snow_economy_rime_focus",
+   "snow:carrier_coat": "snow_economy_carrier_coat",
+   "snow:bronze_cowl": "snow_economy_bronze_cowl",
+   "snow:trail_boots": "snow_economy_trail_boots",
+   "snow:ember_seal": "snow_economy_ember_seal",
+   "snow:pine_salve": "snow_economy_pine_salve",
+   "snow:trail_stew": "snow_economy_trail_stew"
+  }
+ }
+}
