@@ -1,5 +1,31 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## RPG build foundation v1 (2026-11-04)
+
+Commit 8bf45e1; decisions in docs/RPG_FOUNDATION.md. Reviewed progression, talents,
+skills, combat/statuses, equipment, loot, creatures and world rules. Kept the existing
+talent engine, skill books/energy/cooldowns, element/status pipeline, quality tiers and
+loot; the gaps were no build choice on level-up, materials with no use, and weapons
+that were only +Attack.
+Added: Might/Vitality/Spirit attributes (2 points per level, spent in Gear with 1-3 or
+buttons; HUD shows unspent points; derived in CharacterStats; Spirit adds Energy;
+attribute skill power for matching skills, statuses and weapon on-hit); `recipe`
+definitions + atomic craft action + Craft sheet (G); weapon `damage_elements`,
+`on_hit` and existing `skill_modifiers`; new core crafting pack (installed into every
+World) with Fang spear, Tallow torch, Herbwood focus, poultice, roast meat, and recipes
+for existing hide armor and fang charm. HUD shortcut grid shows Craft instead of
+Talent (T and the tab row still open Talent).
+Checks: new `build-gameplay` (attributes via keys, crafting refusal and success,
+unique instances, spear Bleed, torch Burn, focus/Spirit Ember power and cost, Might
+physical power, save/continue identity) 26/0 headless, rendered 29/0 with captures
+build-attributes/craft/might.png reviewed. Smoke + world, interactions, combat,
+survival, equipment, talents, skills, effects, ai-content, ai-world, discoveries,
+land-package, snow-mountain, snow-content, telemetry and the gameplay/UI suites:
+all 0 failures (data 96, integration 41).
+Gaps: no Snow-only resin recipes yet (belong in the Snow package); no skill mastery,
+creature abilities beyond on-hit statuses, crafting stations or recipe discovery; a
+torch does not yet count as a heat source for ice.
+
 ## Modern RPG interface (2026-11-04)
 
 Commits af4075e, e2ad42f, d27e9ef. Replaced the full-width debug text slab with
