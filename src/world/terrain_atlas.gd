@@ -26,6 +26,7 @@ const RIM := 255 # Zone of tiles outside the land mass.
 var _lands: Dictionary = {} # Vector2i slot -> compiled land
 var _plans: Dictionary = {} # land_id -> stored plan
 var _sites: Dictionary = {} # Vector2i chunk -> [site instances]
+var _creature_homes: Dictionary = {} # Authored plan-v2 layer; v1 homes stay separate.
 var _bytes: Dictionary = {} # chunk -> tiles
 var _zones: Dictionary = {} # chunk -> region index per tile (RIM outside the mass)
 var _order: Array = []
@@ -40,6 +41,7 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 	_lands.clear()
 	_plans.clear()
 	_sites.clear()
+	_creature_homes.clear()
 	_bytes.clear()
 	_zones.clear()
 	_order.clear()
@@ -57,8 +59,15 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 			var chunk := TerrainV1.chunk_of(Vector2i(int(site.position.x), int(site.position.y)))
 			if not _sites.has(chunk): _sites[chunk] = []
 			_sites[chunk].append(site)
+		for home in plan.get("creature_homes", []):
+			var chunk := TerrainV1.chunk_of(Vector2i(int(home.position.x), int(home.position.y)))
+			if not _creature_homes.has(chunk): _creature_homes[chunk] = []
+			_creature_homes[chunk].append(home)
 	last_error = ""
 	return true
+
+func creature_homes(chunk: Vector2i) -> Array:
+	return _creature_homes.get(chunk, []).duplicate(true)
 
 func configure(_seed_value: int, _generation_version: int) -> bool:
 	last_error = "Atlas terrain needs its land plans (configure_atlas)"

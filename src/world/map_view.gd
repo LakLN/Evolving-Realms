@@ -695,6 +695,9 @@ func show_events(events: Array) -> void:
 				delay += 0.22
 			"telegraph":
 				# Real time: the attack lands after windup_ms unless the hero leaves reach.
+				if event.get("ranged", false):
+					var target: Dictionary = event.target_position
+					_popup(Vector2i(int(target.x), int(target.y)), "incoming", Color("ffb347"), -0.45, 0.0, 15)
 				var foe: Dictionary = _creatures.get(str(event.attacker), {})
 				if not foe.is_empty():
 					_popup(foe.tile, "!", Color("ffb347"), 0.55, 0.0, 26)

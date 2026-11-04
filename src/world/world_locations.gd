@@ -174,7 +174,7 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 				continue
 			for rule in eligible:
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
+				if terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
 					continue
 				# Four neighbour probes recompute terrain instead of reading chunk bytes.
 				# Test it only for spawn candidates; all rules share this predicate.

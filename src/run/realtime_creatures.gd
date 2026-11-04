@@ -77,11 +77,16 @@ func update(session: RefCounted, now_ms: int) -> Array:
 				moved = true
 			else:
 				timer.next_ms = now_ms + int(rules.think_ms)
-		elif decision.type == "attack":
-			if _adjacent(session, creature) and now_ms >= int(timer.ready_ms) and windups.size() < int(rules.max_windups):
+		elif decision.type in ["attack", "ranged"]:
+			var ranged: bool = decision.type == "ranged"
+			var reaches: bool = session.roster.ranged_reaches(session, creature) if ranged else _adjacent(session, creature)
+			if reaches and now_ms >= int(timer.ready_ms) and windups.size() < int(rules.max_windups):
+				if ranged and not session.roster.begin_ranged(session, creature):
+					timer.next_ms = now_ms + int(rules.think_ms)
+					continue
 				var windup := int(rules.windup_ms) * slow
-				windups[id] = {"until": now_ms + windup, "key": key + "/attack"}
-				events.append({"type": "telegraph", "attacker": id, "name": creature.definition.name, "windup_ms": windup, "position": _point(creature.position)})
+				windups[id] = {"until": now_ms + windup, "key": key + "/attack", "ranged": ranged, "target": session.position}
+				events.append({"type": "telegraph", "attacker": id, "name": creature.definition.name, "windup_ms": windup, "position": _point(creature.position), "ranged": ranged, "target_position": _point(session.position)})
 			else:
 				timer.next_ms = now_ms + 120 # Recovering, or waiting for an attack slot.
 		else:
@@ -96,12 +101,14 @@ func _land(session: RefCounted, creature: Dictionary, timer: Dictionary, now_ms:
 	## End of a wind-up: the blow lands only if the player is still within reach.
 	var id: String = creature.instance_id
 	var key: String = windups[id].key
+	var shot: Dictionary = windups[id]
 	windups.erase(id)
 	var slow := maxi(1, session.statuses.skip_factor(session, id))
 	timer.ready_ms = now_ms + (int(rules.attack_interval_ms) - int(rules.windup_ms)) * slow
 	timer.next_ms = now_ms + 200
 	var stunned: bool = int(creature.stunned_until) > int(session.run.state.turn) or session.statuses.skip_factor(session, id) == 1
-	if creature.dead or stunned or not _adjacent(session, creature):
+	var reaches: bool = session.position == shot.get("target") and session.roster.ranged_reaches(session, creature) if shot.get("ranged", false) else _adjacent(session, creature)
+	if creature.dead or stunned or not reaches:
 		return [{"type": "dodge", "attacker": id, "name": creature.definition.name, "position": _point(session.position)}]
 	return session.roster.creature_strike(session, creature, key)
 

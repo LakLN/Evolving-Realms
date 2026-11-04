@@ -129,7 +129,7 @@ func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray())
 			var point := origin + Vector2i(x, y)
 			for rule in rules:
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000):
+				if terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
 					continue
 				result.append({"instance_id": "crt:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"creature_generation_version": 1}})
 				break
@@ -143,12 +143,16 @@ func chunk_creatures(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray()
 	if bytes.is_empty():
 		bytes = terrain.generate_chunk(chunk)
 	if ledger == null:
-		return generate_chunk(chunk, bytes)
+		return native_chunk(chunk, bytes)
 	var revision: int = ledger.establish(chunk, ledger.revision)
 	if revision < 0:
 		_fail(ledger.last_error)
 		return []
 	return preview_chunk(chunk, revision, bytes)
+
+func native_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray()) -> Array:
+	## Pure native homes for certifiers/tools; never establishes a region.
+	return _with_authored(chunk, generate_chunk(chunk, bytes))
 
 func preview_chunk(chunk: Vector2i, revision: int, bytes: PackedByteArray = PackedByteArray()) -> Array:
 	## Pure: the chunk's homes at an encounter revision. Never writes.
@@ -157,7 +161,21 @@ func preview_chunk(chunk: Vector2i, revision: int, bytes: PackedByteArray = Pack
 	var homes := generate_chunk(chunk, bytes)
 	var result: Array = homes + encounters.generate(terrain, chunk, bytes, revision, homes)
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.instance_id < b.instance_id)
-	return result
+	return _with_authored(chunk, result)
+
+func _with_authored(chunk: Vector2i, homes: Array) -> Array:
+	# Plan-v2 authored encounters are an independent append-only layer. Never replace
+	# a v1 home or an encounter if it already occupies the authored tile.
+	if not terrain.has_method("creature_homes"): return homes
+	var occupied := {}
+	for home in homes: occupied[Vector2i(int(home.position.x), int(home.position.y))] = true
+	for home in terrain.creature_homes(chunk):
+		var tile := Vector2i(int(home.position.x), int(home.position.y))
+		if occupied.has(tile): continue
+		homes.append(home)
+		occupied[tile] = true
+	homes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.instance_id < b.instance_id)
+	return homes
 
 func habitats() -> Array:
 	## Creature definitions that can currently appear (v1 species and encounter species).

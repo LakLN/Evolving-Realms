@@ -154,8 +154,14 @@ func take_turn(session: RefCounted) -> Array:
 		var creature: Dictionary = creatures[id]
 		if int(creature.stunned_until) > int(session.run.state.turn) or session.statuses.blocked(session, id):
 			events.append({"type": "stunned", "target": id, "name": creature.definition.name, "position": _point(creature.position)})
+			if creature.has("aim"): # Binding a shooter spoils its aimed shot.
+				creature.erase("aim")
+				_commit(session, creature)
 			continue # Stunned (skill): no decision this turn.
 		var key := "ai-v1/%d/%d/%s/%d" % [session.world.seed, session.run.seed, id, int(session.run.state.turn)]
+		if creature.has("aim"):
+			events.append_array(release_shot(session, creature, key + "/shot"))
+			continue # A committed shot is this turn's whole action.
 		var decision := decide(session, creature, key)
 		events.append_array(after_decision(session, creature, decision))
 		if decision.type == "move":
@@ -166,7 +172,21 @@ func take_turn(session: RefCounted) -> Array:
 				events.append_array(creature_strike(session, creature, key + "/attack"))
 		elif decision.type == "attack" and _distance(creature.position, session.position) == 1:
 			events.append_array(creature_strike(session, creature, key + "/attack"))
+		elif decision.type == "ranged" and ranged_reaches(session, creature) and begin_ranged(session, creature):
+			# Turn model wind-up: aim at the player's tile now, release next turn.
+			creature.aim = session.position
+			_commit(session, creature)
+			events.append({"type": "telegraph", "attacker": id, "name": creature.definition.name, "windup_ms": 600, "position": _point(creature.position), "ranged": true, "target_position": _point(session.position)})
 	return events
+
+func release_shot(session: RefCounted, creature: Dictionary, key: String) -> Array:
+	## The aimed shot lands only if the player stayed on the aimed tile in clear sight.
+	var aim: Vector2i = creature.aim
+	creature.erase("aim")
+	_commit(session, creature)
+	if session.position != aim or not ranged_reaches(session, creature):
+		return [{"type": "dodge", "attacker": creature.instance_id, "name": creature.definition.name, "position": _point(session.position)}]
+	return creature_strike(session, creature, key)
 
 func after_decision(session: RefCounted, creature: Dictionary, decision: Dictionary) -> Array:
 	## Shared by both time models: record the state; a pack caller that starts hunting
@@ -212,9 +232,24 @@ func decide(session: RefCounted, creature: Dictionary, key: String, move_roll: i
 	var wielded: Array = session._equipped("weapon").get("payload", {}).get("equipment", {}).get("damage_elements", [])
 	context.afraid = traits.fears.any(func(element: String) -> bool: return element in wielded)
 	context.alerted = int(creature.get("alerted_until", 0)) > int(session.run.state.turn)
+	context.ranged = traits.ranged
+	context.ranged_ready = int(creature.get("ranged_ready", 0)) <= int(session.run.state.turn)
+	context.line_clear = context.sees_player
 	if not traits.charge.is_empty() and int(creature.get("charge_ready", 0)) <= int(session.run.state.turn):
 		context.charge = traits.charge
 	return AI.decide(creature, creature.definition, context)
+
+func begin_ranged(session: RefCounted, creature: Dictionary) -> bool:
+	var ranged: Dictionary = Traits.of(creature.definition).ranged
+	if ranged.is_empty() or int(creature.get("ranged_ready", 0)) > int(session.run.state.turn) or not _ensure_materialized(creature): return false
+	creature.ranged_ready = int(session.run.state.turn) + int(ranged.cooldown_turns)
+	_commit(session, creature)
+	return true
+
+func ranged_reaches(session: RefCounted, creature: Dictionary) -> bool:
+	var ranged: Dictionary = Traits.of(creature.definition).ranged
+	var distance := _distance(creature.position, session.position)
+	return not ranged.is_empty() and distance >= int(ranged.min) and distance <= int(ranged.max) and session.line_clear(creature.position, session.position)
 
 func move_creature(session: RefCounted, creature: Dictionary, to: Vector2i) -> bool:
 	if not _ensure_materialized(creature):
@@ -283,9 +318,13 @@ func _apply(creature: Dictionary, mutation: Dictionary) -> bool:
 	creature.loot = mutation.get("loot", [])
 	creature.received = mutation.get("received", [])
 	creature.stunned_until = int(mutation.get("stunned_until", 0)) if Data.integer(mutation.get("stunned_until", 0)) else 0
-	for timer in ["charge_ready", "alerted_until"]:
+	for timer in ["charge_ready", "alerted_until", "ranged_ready"]:
 		if not Data.integer(mutation.get(timer, 0)) or int(mutation.get(timer, 0)) < 0: return false
 		creature[timer] = int(mutation.get(timer, 0))
+	creature.erase("aim")
+	if mutation.has("aim"):
+		if not Data.position(mutation.aim): return false
+		creature.aim = Vector2i(int(mutation.aim.x), int(mutation.aim.y))
 	var statuses: Variant = mutation.get("statuses", [])
 	if not statuses is Array: return false
 	creature.statuses = statuses.duplicate(true)
@@ -304,9 +343,11 @@ func _commit(session: RefCounted, creature: Dictionary) -> void:
 		session.run.state.entity_mutations[creature.instance_id].statuses = creature.statuses.duplicate(true)
 	if int(creature.stunned_until) > 0:
 		session.run.state.entity_mutations[creature.instance_id].stunned_until = int(creature.stunned_until)
-	for timer in ["charge_ready", "alerted_until"]:
+	for timer in ["charge_ready", "alerted_until", "ranged_ready"]:
 		if int(creature.get(timer, 0)) > 0:
 			session.run.state.entity_mutations[creature.instance_id][timer] = int(creature[timer])
+	if creature.has("aim"):
+		session.run.state.entity_mutations[creature.instance_id].aim = _point(creature.aim)
 
 func creature_stats(session: RefCounted, creature: Dictionary) -> Dictionary:
 	return session.character_rules.apply_sources(creature.definition.payload.stats, [session.statuses.stat_modifiers(session, creature.statuses)])

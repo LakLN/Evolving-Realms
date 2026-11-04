@@ -7,7 +7,7 @@ extends RefCounted
 const TerrainAtlas = preload("res://src/world/terrain_atlas.gd")
 const Designer = preload("res://src/world/land_designer.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
-const LAYOUTS := {"landpkg:snow_mountain/layout": "res://content/land_layouts/snow_mountain.json"}
+const LAYOUTS := {"landpkg:snow_mountain/layout": "res://content/land_layouts/snow_mountain.json", "landpkg:snow_mountain/full_region": "res://content/land_layouts/snow_mountain_full.json"}
 const LAYOUT_VERSION := 1
 const TERRAIN_VERSION := 2
 const DESIGNER := "layout-v1"
@@ -60,7 +60,7 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 		return center + Vector2i((rotate(Vector2(float(p[0]), float(p[1])), r) * radius).round())
 	var root: String = designer._root(slot)
 	var name := str(archetype.names[designer.h(slot.x, slot.y, 7104) % archetype.names.size()]).replace("{root}", root)
-	var plan := {"land_id": land_id, "atlas_version": 1, "terrain_version": TERRAIN_VERSION,
+	var plan := {"land_id": land_id, "atlas_version": int(layout.get("atlas_version", 1)), "terrain_version": TERRAIN_VERSION,
 		"layout": {"id": layout.id, "version": int(layout.version), "rotation": r}, "archetype": layout.archetype, "archetype_title": archetype.title,
 		"name": name, "epithet": "the Hushed Crown, a winter relay valley around a silent ice escarpment",
 		"history": "Carriers once rang bronze bells across %s to guide travellers through the whiteouts. The relay fell silent; the pines took it back." % name,
@@ -149,7 +149,22 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 	plan.content_packs = layout.get("content_packs", []).duplicate()
 	if not _place_sites(designer, plan, layout, to_tile):
 		return {}
+	if not _place_creatures(designer, plan, layout, to_tile): return {}
 	return plan
+
+func _place_creatures(designer: RefCounted, plan: Dictionary, layout: Dictionary, to_tile: Callable) -> bool:
+	if not layout.has("creature_homes"): return true
+	var terrain := TerrainAtlas.new()
+	if not terrain.configure_atlas(designer._hash.world_seed, [plan]): return false
+	var taken := {}
+	for site in plan.sites: taken[Vector2i(int(site.position.x), int(site.position.y))] = true
+	plan.creature_homes = []
+	for home in layout.creature_homes:
+		var tile: Vector2i = designer._snap(terrain, to_tile.call(home.at), Vector2i(int(plan.slot.x), int(plan.slot.y)), taken)
+		if tile == Vector2i(2147483647, 0): return false
+		taken[tile] = true
+		plan.creature_homes.append({"instance_id": "crt:atlas/%d_%d/home/%s" % [int(plan.slot.x), int(plan.slot.y), home.id], "content_id": home.content_id, "version": 1, "position": _xy(tile), "origin": "procedural", "metadata": {"authored_creature_version": 1, "land_id": plan.land_id}})
+	return true
 
 func _place_sites(designer: RefCounted, plan: Dictionary, layout: Dictionary, to_tile: Callable) -> bool:
 	## Fixed chain and landmark sites (layout v2): inside a shelter or at a layout point,

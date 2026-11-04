@@ -53,7 +53,7 @@ static func _objects_near(objects: RefCounted, tile: Vector2i, reach: int) -> Di
 static func _homes_near(creatures: RefCounted, tile: Vector2i, reach: int) -> Array:
 	var result: Array = []
 	for chunk in _chunks_around(tile, reach):
-		for home in creatures.generate_chunk(chunk):
+		for home in creatures.native_chunk(chunk):
 			if maxi(absi(int(home.position.x) - tile.x), absi(int(home.position.y) - tile.y)) <= reach: result.append(home)
 	return result
 

@@ -37,6 +37,10 @@ static func record_id(id: String) -> String:
 static func enabled(blueprint: Dictionary) -> bool:
 	return blueprint.get("blueprint", {}).get("metadata", {}).get("world_atlas_version", 0) == ATLAS_VERSION
 
+static func supported_plan(plan: Dictionary) -> bool:
+	var version := int(plan.get("atlas_version", 0))
+	return version == 1 or (version == 2 and int(plan.get("terrain_version", 0)) == 2 and plan.has("geography") and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/full_region" and int(plan.layout.get("version", 0)) == 5)
+
 static func create_world(store: RefCounted, name: String, seed_value: int, approval: Dictionary = {"by": "world-creation"}) -> Dictionary:
 	## A new atlas World with its initial lands (origin + INITIAL_LANDS - 1 expansions).
 	var blueprint: Dictionary = store.create_world(name, seed_value, 1, {"fixed_locations": [], "metadata": {"world_atlas_version": ATLAS_VERSION}})
@@ -80,6 +84,7 @@ func reload() -> bool:
 			var record: Dictionary = registry.load_instance(world.world_id, record_id(land_id))
 			if record.is_empty():
 				return _fail("Missing land record " + land_id)
+			if not supported_plan(record.metadata.plan): return _fail("Unsupported land plan version")
 			lands[land_id] = record.metadata.plan
 			if not _install_packs(record.metadata.plan.get("content_packs", [])): # Idempotent.
 				return false
@@ -229,7 +234,7 @@ func validate(proposal: Dictionary) -> String:
 	var plan: Dictionary = proposal.land
 	for field in ["land_id", "archetype", "name", "slot", "center", "radius", "regions", "roads", "gates", "sites", "kinds", "environment", "ecology", "stream", "rim"]:
 		if not plan.has(field): return "Land plan lacks " + field
-	if int(plan.get("atlas_version", 0)) != ATLAS_VERSION: return "Unsupported land plan version"
+	if not supported_plan(plan): return "Unsupported land plan version"
 	if lands.has(plan.land_id): return "Land %s already exists; established lands are never replaced" % plan.land_id
 	var slot := Vector2i(int(plan.slot.x), int(plan.slot.y))
 	if not land_by_slot(slot).is_empty(): return "Slot %s is already claimed" % str(slot)
@@ -250,6 +255,15 @@ func validate(proposal: Dictionary) -> String:
 		if TerrainAtlas.slot_of(tile) != slot or not generator.walkable(tile): return "Site %s is not on walkable ground of its land" % site.instance_id
 		var definition: Dictionary = registry.load_definition(world.world_id, site.content_id, int(site.version))
 		if definition.is_empty() or definition.status != "active": return "Site content %s@%d is not active in this World" % [site.content_id, int(site.version)]
+	var home_ids := {}
+	var home_tiles := {}
+	for home in plan.get("creature_homes", []):
+		var tile := Vector2i(int(home.position.x), int(home.position.y))
+		if int(plan.atlas_version) != 2 or home_ids.has(home.instance_id) or home_tiles.has(tile) or not str(home.instance_id).begins_with("crt:atlas/") or TerrainAtlas.slot_of(tile) != slot or not generator.walkable(tile): return "Invalid authored creature home"
+		var definition: Dictionary = registry.load_definition(world.world_id, home.content_id, int(home.version))
+		if definition.is_empty() or definition.kind != "creature" or definition.status != "active": return "Authored home needs an active creature"
+		home_ids[home.instance_id] = true
+		home_tiles[tile] = true
 	for gate in plan.gates:
 		var edge := Vector2i(int(gate.position.x), int(gate.position.y))
 		if TerrainAtlas.slot_of(edge) != slot or not (edge.x in [origin.x, origin.x + TerrainAtlas.SLOT - 1] or edge.y in [origin.y, origin.y + TerrainAtlas.SLOT - 1]):

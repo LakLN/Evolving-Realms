@@ -43,6 +43,13 @@ static func _choose(creature: Dictionary, definition: Dictionary, context: Dicti
 			return {"type": "attack", "state": "attack"}
 		return {"type": "wait", "state": "flee"}
 	if spotted and aggressive:
+		var ranged: Dictionary = context.get("ranged", {})
+		if not ranged.is_empty():
+			if distance < int(ranged.min):
+				var retreat := _step(position, context.can_enter, func(tile: Vector2i) -> int: return -_distance(tile, player))
+				if retreat != position: return {"type": "move", "to": retreat, "state": "flee"}
+			elif distance <= int(ranged.max) and context.get("line_clear", false):
+				return {"type": "ranged", "state": "attack"} if context.get("ranged_ready", false) else {"type": "wait", "state": "aim"}
 		if distance == 1:
 			return {"type": "attack", "state": "attack"}
 		var charge: Dictionary = context.get("charge", {})
