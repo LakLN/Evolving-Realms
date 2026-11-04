@@ -11,6 +11,9 @@ RED = ["#d69b78", "#ac6654", "#79443d", "#502e34"]
 BLUE = ["#b0c4dc", "#7c94b8", "#536d94", "#354664", "#242c42"]
 DARK = ["#696674", "#4b4658", "#332f42", "#211e30"]
 FIRE = ["#fff1b0", "#f9b563", "#d97048", "#823e3d"]
+# b3 readability: mid-tone coats that separate from snow (caribou grey-brown, slate).
+STAG = ["#b8a68c", "#8c7761", "#634f40", "#44362d", "#2a2220"]
+SLATE = ["#a9b8c8", "#7d8ea3", "#56667d", "#3a4658", "#252d3a"]
 
 
 def quadruped_model(kind, state, frame):
@@ -53,7 +56,7 @@ def quadruped_model(kind, state, frame):
 
     spec.update(body=torso, head=skull)
     parts, marks = quadruped(spec, state, frame)
-    palette = FROST if kind == "frost_stag" else RED if kind == "ashmaw" else HIDE
+    palette = STAG if kind == "frost_stag" else RED if kind == "ashmaw" else HIDE
     for part in parts:
         if part.name not in ("tusk", "antler", "tine", "horn", "wing_fin"):
             part.ramp = [np.array([int(c[i:i+2], 16) for i in (1, 3, 5)], float) for c in palette]
@@ -64,7 +67,7 @@ def biped(kind, state, frame):
     giant = kind == "hoarfrost_giant"
     empty = kind == "hollow_carrier"
     fire = kind == "cinder_acolyte"
-    pal = FROST if giant or empty else RED if fire else HIDE
+    pal = SLATE if giant else BLUE if empty else RED if fire else HIDE
     phase = frame * math.pi / 2 if state == "walk" else 0
     swing = math.sin(phase) * 24
     attack = ([-25, 55, 12][frame] if state == "attack" else 0)
@@ -83,7 +86,7 @@ def biped(kind, state, frame):
     elif fire:
         parts += [Box("staff", (7, 11, 2), (0.7, 11, 0.7), DARK), Part("flame", (7, 25, 2), (2.2, 4, 2), FIRE)]
     elif empty:
-        parts += [Box("scarf", (0, 19, 3.4), (4, 1, 0.5), BLUE), Box("rag", (-4, 6, -2), (1, 4, 0.4), BLUE)]
+        parts += [Box("scarf", (0, 19, 3.4), (4, 1, 0.5), FROST), Box("rag", (-4, 6, -2), (1, 4, 0.4), FROST)]
     elif giant:
         parts += [Part("beard", (0, 17, 3.4), (2.8, 5, 1.8), FROST), Box("club", (7, 10, 2), (1.3, 10, 1.3), HIDE), Part("ice_head", (7, 21, 2), (3, 4, 3), FROST)]
     parts = [p.moved(rot(pitch=pitch), (0, 10, 0)) for p in parts]
@@ -115,10 +118,10 @@ def crystal(kind, state, frame):
 
 
 SPECS = {
-    "frost_stag": (quadruped_model, 1.55), "tuskback": (quadruped_model, 1.7),
+    "frost_stag": (quadruped_model, 1.75), "tuskback": (quadruped_model, 1.85),
     "pine_prowler": (quadruped_model, 1.6), "relay_cutthroat": (biped, 1.75),
     "relay_slinger": (biped, 1.75), "cinder_acolyte": (biped, 1.65),
-    "hollow_carrier": (biped, 1.8), "glassback_crawler": (crystal, 1.75),
-    "rime_lantern": (crystal, 1.7), "ashmaw": (quadruped_model, 1.9),
-    "hoarfrost_giant": (biped, 2.15),
+    "hollow_carrier": (biped, 1.8), "glassback_crawler": (crystal, 1.9),
+    "rime_lantern": (crystal, 1.85), "ashmaw": (quadruped_model, 2.05),
+    "hoarfrost_giant": (biped, 2.25),
 }

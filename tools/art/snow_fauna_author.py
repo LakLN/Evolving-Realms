@@ -4,6 +4,7 @@ Uses the existing pixel3d art pipeline. Sources refuse changed bytes; correction
 require a new batch. Gameplay never imports this developer tool or needs Python.
 """
 import hashlib
+import math
 import json
 from pathlib import Path
 
@@ -11,13 +12,13 @@ import numpy as np
 from PIL import Image
 
 from pixel3d import Part, Box, render, rot
-from snow_fauna_models import SPECS, FROST, HIDE, BRONZE, BLUE, FIRE, DARK
+from snow_fauna_models import SPECS, FROST, HIDE, BRONZE, BLUE, FIRE, DARK, RED
 from snow_p0_author import sheet, CELL, PIVOT, DIRECTIONS
 from snow_quadrupeds import COLUMNS, COLUMN_NAMES
 from asset_check import grid_frames
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "assets/sources/snow_fauna_b2"
+SOURCE = ROOT / "assets/sources/snow_fauna_b3"
 GAME = ROOT / "assets/game/snow/fauna"
 
 
@@ -89,17 +90,32 @@ def main():
         assets.append({"id": "I03/" + name, "name": name, "kind": "sprite", **write(image, "book_" + name), "pivot": [16, 16]})
         index["icons"]["fauna_book_" + name] = {"texture": "snow/fauna/book_" + name + ".png", "size": [32, 32]}
         index["mapping"]["item_icons_by_id"]["snow:book/" + name] = "fauna_book_" + name
+    # b3: distinct silhouettes per site (b2 kiln/bowl read as plain boulders).
     statics = {
-        "old_kiln": [Part("kiln", (0, 7, 0), (13, 9, 12), DARK), Part("mouth", (0, 5, 10), (6, 4, 1), BRONZE), Part("ash", (0, 0, 10), (9, 1, 5), HIDE)],
-        "glass_bowl": [Part("bowl", (0, 3, 0), (12, 4, 10), DARK), Part("glass", (0, 5, 0), (7, 2, 6), BLUE)],
+        "old_kiln": [Box("base", (0, 2, 0), (12, 2, 11), DARK), Part("dome", (0, 9, 0), (10, 8, 9), RED), Box("chimney", (4, 18, -3), (2, 4, 2), DARK),
+                     Box("mouth", (0, 6, 8.6), (4, 3, 1), FIRE), Box("lintel", (0, 9.6, 8.8), (5, 0.8, 1), DARK), Part("ash", (0, 0.4, 13), (7, 0.8, 3), HIDE)],
+        "glass_bowl": [Box("plinth", (0, 3, 0), (4, 3, 4), DARK), Part("bowl", (0, 8, 0), (11, 3, 10), HIDE), Part("hollow", (0, 10.2, 0), (8, 1, 7), DARK)]
+                      + [Part("shard", (x, 12, z), (1.3, 4, 1.3), BLUE, rot(roll=x * 6, pitch=z * 5)) for x, z in [(-3, 1), (2, -2), (4, 2)]],
         "wind_loom": [Box("pole", (x, 10, 0), (1, 10, 1), HIDE) for x in [-12, 12]] + [Box("cloth", (0, 10, 0), (10, 5, 0.8), BLUE), Box("bar", (0, 16, 0), (13, 0.8, 0.8), HIDE)],
+        "relay_strongbox": [Box("chest", (0, 4, 0), (9, 4, 6), HIDE), Box("lid", (0, 9, 0), (9.4, 1.4, 6.4), HIDE), Box("lock", (0, 6, 6.6), (1.6, 2, 0.6), BRONZE)]
+                           + [Box("band", (x, 6, 0), (0.8, 5.8, 6.7), BRONZE) for x in (-6, 6)] + [Part("rime", (-8, 1, 4), (4, 1.4, 3), FROST)],
+        "ashmaw_nest": [Part("rock", (math.cos(a) * 8, 2, math.sin(a) * 6), (3.2, 2.6, 3), DARK) for a in [i * math.pi / 3 for i in range(6)]]
+                       + [Part("ember", (x, 1.6, z), (2, 1.6, 2), FIRE) for x, z in [(0, 0), (2.5, -1.5), (-2, 1.5)]] + [Part("scale", (-3, 0.6, -3), (2, 0.6, 1.6), RED)],
+        "singing_ice": [Box("slab", (0, 9, 0), (3.2, 9, 1.2), BLUE, rot(roll=-6)), Box("left", (-5, 6, 1), (2, 6, 1.1), FROST, rot(roll=16)),
+                        Box("right", (5, 5, 1), (1.8, 5, 1.1), BLUE, rot(roll=-20)), Box("sliver", (2, 13, 1.5), (0.8, 4, 0.6), FROST, rot(roll=-12)),
+                        Part("drift", (0, 0.6, 3), (10, 1.2, 4), FROST)],
+        "prowler_den": [Part("mound", (0, 5, -3), (11, 5, 6), HIDE), Part("hole", (0, 3, 3), (5, 3.6, 1.6), DARK)]
+                       + [Box("root", (x, 5, 3), (0.9, 5.5, 0.9), BRONZE, rot(roll=x * 14)) for x in (-6, 6)] + [Box("arch", (0, 9.5, 3), (7, 0.9, 0.9), BRONZE),
+                       Part("bone", (6, 0.6, 7), (2.4, 0.6, 0.8), FROST)],
+        "rune_cairn": [Part("stone", (0, y, 0), (w, h, w * 0.85), DARK) for y, w, h in [(3, 9, 3), (8.5, 7, 3), (13, 5, 2.6), (16.6, 3, 1.6)]]
+                      + [Box("rune", (x, 8.5, 6.2), (0.6, 1.6, 0.4), BLUE) for x in (-3, 0, 3)] + [Part("cap", (0, 18.2, 0), (3.2, 1, 2.8), FROST)],
     }
     for name, parts in statics.items():
         image = centered(parts, (64, 56))
         assets.append({"id": "L/" + name, "name": name, "kind": "sprite", **write(image, name), "pivot": [32, 49], "margin": 2})
         index["places"][name] = {"texture": "snow/fauna/" + name + ".png", "size": [64, 56], "pivot": [32, 49]}
         index["mapping"]["places"]["by_id"]["snow:place/" + name] = name
-    batch = {"schema": "er-asset-batch", "version": 1, "batch": "snow_fauna_b2", "package": "snow_mountain_full", "status": "candidate", "provenance": {"source": "original code-authored geometry", "date": "2026-11-04", "generator": "snow_fauna_author.py + pixel3d.py", "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette."}, "assets": assets}
+    batch = {"schema": "er-asset-batch", "version": 1, "batch": "snow_fauna_b3", "package": "snow_mountain_full", "status": "candidate", "provenance": {"source": "original code-authored geometry", "date": "2026-11-04", "generator": "snow_fauna_author.py + pixel3d.py", "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette."}, "assets": assets}
     (SOURCE / "batch.json").write_text(json.dumps(batch, indent=1) + "\n")
     (ROOT / "assets/game/snow/snow_fauna_index.json").write_text(json.dumps(index, indent=1) + "\n")
     print("Full roster, items and landmarks built", flush=True)

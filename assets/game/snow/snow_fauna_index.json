@@ -1214,6 +1214,61 @@
     32,
     49
    ]
+  },
+  "relay_strongbox": {
+   "texture": "snow/fauna/relay_strongbox.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ]
+  },
+  "ashmaw_nest": {
+   "texture": "snow/fauna/ashmaw_nest.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ]
+  },
+  "singing_ice": {
+   "texture": "snow/fauna/singing_ice.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ]
+  },
+  "prowler_den": {
+   "texture": "snow/fauna/prowler_den.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ]
+  },
+  "rune_cairn": {
+   "texture": "snow/fauna/rune_cairn.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ]
   }
  },
  "mapping": {
@@ -1250,7 +1305,12 @@
    "by_id": {
     "snow:place/old_kiln": "old_kiln",
     "snow:place/glass_bowl": "glass_bowl",
-    "snow:place/wind_loom": "wind_loom"
+    "snow:place/wind_loom": "wind_loom",
+    "snow:place/relay_strongbox": "relay_strongbox",
+    "snow:place/ashmaw_nest": "ashmaw_nest",
+    "snow:place/singing_ice": "singing_ice",
+    "snow:place/prowler_den": "prowler_den",
+    "snow:place/rune_cairn": "rune_cairn"
    }
   }
  }
