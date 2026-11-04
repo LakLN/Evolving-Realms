@@ -33,6 +33,7 @@ const TalentRuntime = preload("res://src/core/talent_runtime.gd")
 const StatusRuntime = preload("res://src/run/status_runtime.gd")
 const Skills = preload("res://src/core/skills.gd")
 const SkillActions = preload("res://src/run/skill_actions.gd")
+const Crafting = preload("res://src/core/crafting.gd")
 const SIGHT_RADIUS := 7
 ## Milestone 03 B prototype: a Run created with this time model is played in real time
 ## (see docs/M03_REALTIME_DESIGN.md). It is stored in the immutable spawn JSON; Runs
@@ -110,7 +111,7 @@ var _strike_seq := 0 # Not saved: only distinguishes draw keys within a session.
 
 func _init(data_store: RefCounted) -> void:
 	store = data_store
-	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action, "learn": _learn_action, "skill": _skill_action, "search": _search_action}
+	_action_handlers = {"move": _move_action, "interact": _interact_action, "wait": _wait_action, "attack": _attack_action, "use": _use_action, "rest": _rest_action, "equip": _equip_action, "unequip": _unequip_action, "learn": _learn_action, "skill": _skill_action, "search": _search_action, "craft": _craft_action}
 
 func start_new(world_id: String, run_seed: int, biome: String = "any", mode: String = "normal", time_model: String = "turn") -> bool:
 	if not Data.seed_value(run_seed):
@@ -544,6 +545,39 @@ func _die() -> void:
 func _learn_action(action: Dictionary) -> bool:
 	return skills.learn_action(self, action)
 
+func recipes() -> Array:
+	## Active, valid recipes of this World (latest version each), in content-ID order.
+	var latest := {}
+	for row in store.content.list_definitions(world.world_id):
+		if row.kind == "recipe" and row.status == "active":
+			latest[row.content_id] = int(row.version)
+	var result: Array = []
+	for content_id in latest:
+		var recipe := _definition(content_id, int(latest[content_id]))
+		if not recipe.is_empty() and Crafting.validate(recipe).is_empty():
+			result.append(recipe)
+	return result
+
+func craft_missing(recipe: Dictionary) -> Array:
+	return Crafting.missing(recipe, run.state.inventory)
+
+func _craft_action(action: Dictionary) -> bool:
+	## One action: inputs leave and the output arrives together, or nothing changes.
+	var recipe: Dictionary = {}
+	for candidate in recipes():
+		if candidate.content_id == action.get("recipe_id"):
+			recipe = candidate
+	if recipe.is_empty():
+		return _fail("Unknown recipe (no turn spent)")
+	var count := int(run.state.character.get("crafted", 0))
+	var plan := Crafting.plan(store.content, world.world_id, run.state.inventory, recipe, "run:%s/craft/%d" % [run.run_id, count])
+	if plan.has("error"):
+		return _fail(str(plan.error) + " (no turn spent)")
+	run.state.inventory = plan.inventory
+	run.state.character.crafted = count + 1 # Keeps every crafted instance identity unique.
+	last_result = {"type": "craft", "events": [{"type": "craft", "name": recipe.name, "received": plan.received, "display_received": plan.display_received}]}
+	return true
+
 func _skill_action(action: Dictionary) -> bool:
 	return skills.use_action(self, action)
 
@@ -608,6 +642,33 @@ func use_for(content_id: String) -> Dictionary:
 
 func use_item(content_id: String) -> bool:
 	return perform_action({"type": "use", "content_id": content_id})
+
+func allocate_attribute(id: String) -> bool:
+	## Spend one earned attribute point (no turn; permanent for this Run). Max HP and
+	## Energy gained this way are granted as current values too, like level growth.
+	if run.is_empty() or is_dead():
+		return _fail("No active run")
+	if character_rules.attribute(id).is_empty():
+		return _fail("Unknown attribute")
+	var character: Dictionary = run.state.character
+	if character_rules.attribute_points(character).free < 1:
+		return _fail("No attribute points to spend — gain a level first")
+	var max_before := int(combat_stats().max_hp)
+	var energy_before: Dictionary = {}
+	for resource_id in skill_rules.resource_ids():
+		energy_before[resource_id] = skills.resource_max(self, resource_id)
+	var allocations: Dictionary = character.get("attributes", {})
+	allocations[id] = int(allocations.get(id, 0)) + 1
+	character.attributes = allocations
+	refresh_stats()
+	stats().hp = mini(int(_effective.stats.max_hp), int(stats().hp) + maxi(0, int(_effective.stats.max_hp) - max_before))
+	for resource_id in energy_before:
+		var gained := skills.resource_max(self, resource_id) - int(energy_before[resource_id])
+		if gained > 0:
+			character.resources[resource_id].value = int(character.resources[resource_id].value) + gained
+	dirty = true
+	last_events = [{"type": "attribute", "id": id, "name": character_rules.attribute(id).name, "value": int(allocations[id]), "free": character_rules.attribute_points(character).free}]
+	return true
 
 func set_quick_item(key: String, content_id: String) -> bool:
 	## Hotbar binding saved with the Run (character.quick_items): which usable item Q/Z
@@ -742,11 +803,39 @@ func safe_to_autosave() -> bool:
 func _attack_action(action: Dictionary) -> bool:
 	if not action.get("target_id") is String:
 		return _fail("Attack requires a creature ID")
-	var result := strike(action.target_id)
+	# Basic attacks carry the weapon's damage element and its on-hit statuses.
+	var weapon := _equipped("weapon")
+	var gear: Dictionary = weapon.get("payload", {}).get("equipment", {})
+	var options := {}
+	if not gear.get("damage_elements", []).is_empty():
+		options.elements = gear.damage_elements
+	var result := strike(action.target_id, options)
 	if result.is_empty():
 		return false
+	result.events.append_array(_weapon_on_hit(weapon, action.target_id))
 	last_result = result
 	return true
+
+func _equipped(slot: String) -> Dictionary:
+	var record: Dictionary = run.state.character.equipment.get(slot, {})
+	return {} if record.is_empty() else _definition(record.content_id, int(record.version))
+
+func _weapon_on_hit(weapon: Dictionary, target_id: String) -> Array:
+	## Deterministic chance per strike; power follows the attribute matching the
+	## weapon's element (Might for physical, Spirit for elemental).
+	var creature: Dictionary = roster.creatures.get(target_id, {})
+	var effects: Array = weapon.get("payload", {}).get("equipment", {}).get("on_hit", [])
+	if effects.is_empty() or creature.is_empty() or creature.dead:
+		return []
+	var elements: Array = weapon.payload.equipment.get("damage_elements", ["neutral"])
+	var power := 100 + character_rules.attribute_skill_power(run.state.character, {"payload": {"elements": elements}})
+	var events: Array = []
+	for index in effects.size():
+		var effect: Dictionary = effects[index]
+		var roll := Loot.number("onhit-v1/%d/%d/%s/%d/%d/%d" % [world.seed, run.seed, target_id, int(run.state.turn), _strike_seq, index]) % 100
+		if effect.get("type") == "apply_status" and roll < int(effect.get("chance_percent", 100)):
+			events.append_array(statuses.apply(self, effect, {"content_id": weapon.content_id, "version": int(weapon.version), "actor": "player"}, target_id, power))
+	return events
 
 func strike(target_id: String, options: Dictionary = {}) -> Dictionary:
 	## One player strike (basic attack or a skill): roster resolution with loot, talent

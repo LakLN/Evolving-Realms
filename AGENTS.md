@@ -55,3 +55,4 @@ Atlas terrain/plan changes need a new terrain_version/atlas_version; never alter
 Lands are added only through propose -> validate -> explicit approval -> activate.
 Read docs/AI_STUDIO.md for the Content Package workflow, roles, gates, spoilers, research,
 world design, secrets/knowledge, selective redesign and telemetry policy.
+Read docs/RPG_FOUNDATION.md before changing attributes, skill power, weapon properties or crafting.

@@ -25,6 +25,20 @@
       ]
     }
   },
+  "attributes": {
+    "_note": "Classless build choice: every level beyond 1 grants points_per_level free points, spent once per Run (no respec). Attributes only feed derived values: stats (grants, like track growth), skill resources and skill power for matching skills. Effective values stay derived in CharacterStats.",
+    "points_per_level": 2,
+    "list": [
+      {"id": "might", "name": "Might", "short": "MIG", "description": "+1 Attack per point. Physical skills (neutral, metal, earth) gain 4% power per point.",
+        "grants": [{"stat": "attack", "amount": 1, "every": 1}],
+        "skill_power": {"percent": 4, "elements": ["neutral", "metal", "earth"]}},
+      {"id": "vitality", "name": "Vitality", "short": "VIT", "description": "+4 Max HP per point and +1 Defense every 2 points.",
+        "grants": [{"stat": "max_hp", "amount": 4, "every": 1}, {"stat": "defense", "amount": 1, "every": 2}]},
+      {"id": "spirit", "name": "Spirit", "short": "SPI", "description": "+3 max Energy per point. Elemental skills, healing and the statuses they apply gain 6% power per point.",
+        "resources": [{"resource": "energy", "amount": 3}],
+        "skill_power": {"percent": 6, "elements": ["fire", "water", "wood", "wind", "lightning", "ice", "light", "dark"], "effects": ["heal", "restore"]}}
+    ]
+  },
   "starting_items": [
     {"content_id": "core:wooden_club", "version": 1, "quality": "pho_thong", "equip": true}
   ]

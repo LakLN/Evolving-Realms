@@ -45,6 +45,21 @@ func load_rules(quality_rules: RefCounted, path: String = PATH) -> bool:
 	for item in parsed.get("starting_items", []):
 		if not item is Dictionary or not Data.identifier(item.get("content_id")) or not Data.integer(item.get("version")) or (item.has("quality") and not quality.has(item.quality)):
 			return _fail("Invalid starting item")
+	var attributes: Variant = parsed.get("attributes", {"points_per_level": 0, "list": []})
+	if not attributes is Dictionary or not Data.integer(attributes.get("points_per_level")) or attributes.points_per_level < 0 or attributes.points_per_level > 10 or not attributes.get("list") is Array:
+		return _fail("Attributes need points_per_level 0..10 and a list")
+	for attribute in attributes.list:
+		if not attribute is Dictionary or not attribute.get("id") is String or attribute.id.is_empty() or not attribute.get("name") is String:
+			return _fail("Attributes need an id and name")
+		for step in attribute.get("grants", []):
+			if not step is Dictionary or not parsed.stats.has(step.get("stat")) or not Data.integer(step.get("amount")) or not Data.integer(step.get("every")) or step.every < 1:
+				return _fail("Attribute %s: grants need known stat, integer amount, every >= 1" % attribute.id)
+		for grant in attribute.get("resources", []):
+			if not grant is Dictionary or not grant.get("resource") is String or not Data.integer(grant.get("amount")):
+				return _fail("Attribute %s: resource grants need resource and amount" % attribute.id)
+		if attribute.has("skill_power") and (not attribute.skill_power is Dictionary or not Data.integer(attribute.skill_power.get("percent")) or absi(int(attribute.skill_power.percent)) > 100):
+			return _fail("Attribute %s: skill_power percent must be -100..100" % attribute.id)
+	parsed.attributes = attributes
 	rules = parsed
 	last_error = ""
 	return true
@@ -68,6 +83,8 @@ func normalize(character: Dictionary) -> Dictionary:
 	for track_id in rules.tracks:
 		if not result.progression.has(track_id):
 			result.progression[track_id] = {"xp": 0, "level": 1}
+	if not result.has("attributes"):
+		result.attributes = {} # Older Runs: every earned point is still free to spend.
 	return result
 
 func validate(character: Dictionary) -> String:
@@ -77,6 +94,13 @@ func validate(character: Dictionary) -> String:
 		var record: Variant = character.equipment[slot]
 		if slot not in slot_ids() or not record is Dictionary or not Data.identifier(record.get("content_id")) or not Data.integer(record.get("version")) or not Data.identifier(record.get("instance_id")) or not record.get("metadata", {}) is Dictionary:
 			return "Invalid equipped item in slot " + str(slot)
+	if not character.get("attributes", {}) is Dictionary:
+		return "Character attributes must be an object"
+	for id in character.get("attributes", {}):
+		if attribute(id).is_empty() or not Data.integer(character.attributes[id]) or character.attributes[id] < 0:
+			return "Invalid attribute allocation " + str(id)
+	if attribute_points(character).free < 0:
+		return "More attribute points spent than earned"
 	for track_id in character.progression:
 		var track: Variant = character.progression[track_id]
 		if not track is Dictionary or not Data.integer(track.get("xp")) or track.xp < 0 or not Data.integer(track.get("level")) or track.level < 1:
@@ -85,6 +109,51 @@ func validate(character: Dictionary) -> String:
 
 func level(character: Dictionary, track_id: String = "adventurer") -> int:
 	return int(character.get("progression", {}).get(track_id, {}).get("level", 1))
+
+func attribute(id: String) -> Dictionary:
+	for entry in rules.get("attributes", {}).get("list", []):
+		if entry.id == id:
+			return entry
+	return {}
+
+func attribute_points(character: Dictionary) -> Dictionary:
+	## Points are earned by adventurer level and stored only as spent allocations.
+	var earned := (level(character) - 1) * int(rules.get("attributes", {}).get("points_per_level", 0))
+	var spent := 0
+	for id in character.get("attributes", {}):
+		spent += int(character.attributes[id])
+	return {"earned": earned, "spent": spent, "free": earned - spent}
+
+func attribute_resource(character: Dictionary, resource_id: String) -> int:
+	var total := 0
+	for entry in rules.get("attributes", {}).get("list", []):
+		for grant in entry.get("resources", []):
+			if grant.resource == resource_id:
+				total += int(grant.amount) * int(character.get("attributes", {}).get(entry.id, 0))
+	return total
+
+func attribute_skill_power(character: Dictionary, definition: Dictionary) -> int:
+	## Percent power a skill gains from attributes whose elements or effect types match.
+	var payload: Dictionary = definition.get("payload", {})
+	var elements: Array = payload.get("elements", ["neutral"])
+	var effects: Array = payload.get("effects", []).map(func(effect: Dictionary) -> String: return str(effect.get("type", "")))
+	var total := 0
+	for entry in rules.get("attributes", {}).get("list", []):
+		var power: Dictionary = entry.get("skill_power", {})
+		if power.is_empty():
+			continue
+		var matched: bool = elements.any(func(element: String) -> bool: return element in power.get("elements", [])) or effects.any(func(effect: String) -> bool: return effect in power.get("effects", []))
+		if matched:
+			total += int(power.percent) * int(character.get("attributes", {}).get(entry.id, 0))
+	return total
+
+func _attribute_flat(character: Dictionary) -> Dictionary:
+	var flat := {}
+	for entry in rules.get("attributes", {}).get("list", []):
+		var points := int(character.get("attributes", {}).get(entry.id, 0))
+		for step in entry.get("grants", []):
+			flat[step.stat] = int(flat.get(step.stat, 0)) + int(step.amount) * (points / int(step.every))
+	return flat
 
 func xp_to_next(track_id: String, at_level: int) -> int:
 	var curve: Dictionary = rules.tracks[track_id].xp_curve
@@ -143,7 +212,7 @@ static func apply_sources(base: Dictionary, sources: Array) -> Dictionary:
 	return result
 
 func effective(base_stats: Dictionary, character: Dictionary, definition_for: Callable, sources: Array = []) -> Dictionary:
-	## {stats: {stat: total}, breakdown: {stat: {base, growth, gear, talent, percent}}}.
+	## {stats: {stat: total}, breakdown: {stat: {base, growth, attribute, gear, talent, percent}}}.
 	## sources: further derived modifiers {flat, percent} (talents). breakdown.talent is
 	## exactly what the sources add on top of base + growth + gear.
 	var growth := {}
@@ -170,13 +239,14 @@ func effective(base_stats: Dictionary, character: Dictionary, definition_for: Ca
 			extra_flat[stat] = int(extra_flat.get(stat, 0)) + int(source.flat[stat])
 		for stat in source.get("percent", {}):
 			extra_percent[stat] = int(extra_percent.get(stat, 0)) + int(source.percent[stat])
+	var attributes := _attribute_flat(character)
 	var totals := {}
 	var breakdown := {}
 	for stat in rules.stats:
-		var raw := int(base_stats.get(stat, 0)) + int(growth.get(stat, 0)) + int(flat.get(stat, 0))
+		var raw := int(base_stats.get(stat, 0)) + int(growth.get(stat, 0)) + int(attributes.get(stat, 0)) + int(flat.get(stat, 0))
 		var without := _total(stat, raw, int(percent.get(stat, 0)))
 		totals[stat] = _total(stat, raw + int(extra_flat.get(stat, 0)), int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0)))
-		breakdown[stat] = {"base": int(base_stats.get(stat, 0)), "growth": int(growth.get(stat, 0)), "gear": without - int(base_stats.get(stat, 0)) - int(growth.get(stat, 0)), "talent": totals[stat] - without, "percent": int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0))}
+		breakdown[stat] = {"base": int(base_stats.get(stat, 0)), "growth": int(growth.get(stat, 0)), "attribute": int(attributes.get(stat, 0)), "gear": without - int(base_stats.get(stat, 0)) - int(growth.get(stat, 0)) - int(attributes.get(stat, 0)), "talent": totals[stat] - without, "percent": int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0))}
 	return {"stats": totals, "breakdown": breakdown}
 
 func _total(stat: String, raw: int, percent: int) -> int:

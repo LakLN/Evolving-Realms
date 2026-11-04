@@ -113,6 +113,7 @@ func modifiers(session: RefCounted, definition: Dictionary) -> Dictionary:
 	for slot in session.run.state.character.equipment:
 		var record: Dictionary = session.run.state.character.equipment[slot]
 		sources.append_array(session._definition(record.content_id, int(record.version)).get("payload", {}).get("equipment", {}).get("skill_modifiers", []))
+	result.power_percent += session.character_rules.attribute_skill_power(session.run.state.character, definition) # Might / Spirit.
 	var tags: Array = definition.payload.get("tags", [])
 	for modifier in sources:
 		var tagged: Array = modifier.get("tags", [])
@@ -140,7 +141,8 @@ func resource(session: RefCounted, id: String) -> int:
 	return mini(int(session.run.state.character.resources[id].value), resource_max(session, id))
 
 func resource_max(session: RefCounted, id: String) -> int:
-	return session.skill_rules.max_resource(id, session.character_rules.level(session.run.state.character))
+	var character: Dictionary = session.run.state.character
+	return session.skill_rules.max_resource(id, session.character_rules.level(character)) + session.character_rules.attribute_resource(character, id)
 
 func use_check(session: RefCounted, definition: Dictionary) -> String:
 	## First reason the skill cannot be used now ("" = usable, target aside).

@@ -85,6 +85,12 @@ var _talent_rank: Label
 var _talent_name: Label
 var _talent_text: Label
 var _talent_line: Label
+var _attribute_box: VBoxContainer
+var _craft_panel: PanelContainer
+var _craft_list: ItemList
+var _craft_detail: Label
+var _craft_button: Button
+var _craft_rows: Array = []
 var _talent_header: VBoxContainer
 var _talent_close: Button
 var _energy_bar: ProgressBar
@@ -134,6 +140,7 @@ func _ready() -> void:
 	_build_character(frame)
 	_build_talent_panel(frame)
 	_build_skills(frame)
+	_build_crafting(frame)
 	_build_discovery_panel(frame)
 	_build_death_screen(frame)
 	_world_map = WorldMap.new()
@@ -295,6 +302,9 @@ func _build_character(parent: Control) -> void:
 	var shell := _shell(parent, "CHARACTER & GEAR", "character")
 	_character_panel = shell.panel
 	var left := _shell_column(shell.body, 1.0)
+	_attribute_box = VBoxContainer.new()
+	_attribute_box.add_theme_constant_override("separation", 4)
+	left.add_child(_attribute_box)
 	_character_summary = _label(left, "", 16)
 	_character_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_talent_line = _label(left, "", 15)
@@ -318,9 +328,9 @@ func _build_character(parent: Control) -> void:
 ## visible on the left and bottom (the world is paused meanwhile).
 const SHELL_LEFT := 352
 const SHELL_BOTTOM := 88
-const SHELL_TABS := [["Bag", "I", "inventory"], ["Gear", "C", "character"], ["Skills", "K", "skills"], ["Talent", "T", "talent"],
+const SHELL_TABS := [["Bag", "I", "inventory"], ["Craft", "G", "craft"], ["Gear", "C", "character"], ["Skills", "K", "skills"], ["Talent", "T", "talent"],
 	["Lore", "J", "knowledge"], ["Map", "M", "map"], ["Log", "L", "log"], ["Help", "H", "help"]]
-const PANEL_KEYS := {KEY_I: "inventory", KEY_C: "character", KEY_K: "skills", KEY_T: "talent", KEY_J: "knowledge", KEY_L: "log", KEY_H: "help", KEY_F1: "help"}
+const PANEL_KEYS := {KEY_G: "craft", KEY_I: "inventory", KEY_C: "character", KEY_K: "skills", KEY_T: "talent", KEY_J: "knowledge", KEY_L: "log", KEY_H: "help", KEY_F1: "help"}
 
 func _shell(parent: Control, title: String, tab: String) -> Dictionary:
 	## One paused panel frame for every player sheet: title, tab row, two-column body.
@@ -385,6 +395,7 @@ func _current_panel() -> String:
 	if _inventory_panel.visible: return "inventory"
 	if _character_panel.visible: return "character"
 	if _skills_panel.visible: return "skills"
+	if _craft_panel.visible: return "craft"
 	if _talent_panel.visible: return "talent"
 	if _discovery_panel.visible: return _discovery_mode
 	if _world_map.map_open: return "map"
@@ -392,6 +403,7 @@ func _current_panel() -> String:
 
 func _close_panels() -> void:
 	_inventory_panel.hide()
+	_craft_panel.hide()
 	_character_panel.hide()
 	_skills_panel.hide()
 	_talent_panel.hide()
@@ -420,10 +432,11 @@ func _open_panel(name: String) -> void:
 		"map": _world_map.open_map()
 		"help": _show_help()
 		"log": _show_log()
+		"craft": _toggle_crafting()
 
 func _panel_open() -> bool:
 	if _discovery_panel != null and _discovery_panel.visible: return true
-	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or (_world_map != null and _world_map.map_open) or not _targeting.is_empty()
+	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or (_craft_panel != null and _craft_panel.visible) or (_world_map != null and _world_map.map_open) or not _targeting.is_empty()
 
 func _build_discovery_panel(parent: Control) -> void:
 	## Shared paused reader: Knowledge, Help, Log and the interaction approach selector.
@@ -462,7 +475,7 @@ func _show_help() -> void:
 	var sections := [
 		["Moving and acting", ("Hold WASD / arrows: move (diagonals allowed)\nF: attack the target   \"!\" over a creature: a blow is coming, step away\n" if _realtime != null else "WASD / arrows: move one tile (walking into a creature attacks)\nF: attack the target   Tab: next adjacent target   Space: wait a turn\n") + "E: interact with what the prompt names (choices open when there are several)\nX: search the surroundings   R: rest (stops when danger appears)"],
 		["Hotbar", "1–9: skills, in the order you learned them. Click a slot or press its number.\nCreature or tile skills ask for a target: Tab / WASD to choose, Enter or F to use, Esc to cancel.\nPassive and triggered skills (PAS / TRI) work on their own and cannot be pressed.\nA dark slot is recharging; a dim slot cannot be used yet (hover for the reason).\nQ / Z: quick items. In the Bag, select a usable item and press Q or Z to place it."],
-		["Panels (the world pauses)", "I Bag   C Gear   K Skills   T Talent   J Lore (Knowledge)   M Map and journal\nL Message log   H / F1 Help   N Minimap on/off   Ctrl+S Save   Esc Close / save and menu"],
+		["Panels (the world pauses)", "I Bag   G Craft   C Gear (spend attribute points with 1-3)   K Skills   T Talent   J Lore (Knowledge)   M Map and journal\nL Message log   H / F1 Help   N Minimap on/off   Ctrl+S Save   Esc Close / save and menu"],
 		["Reading the world", "Rings under creatures: red hostile, amber neutral (fights back), green passive.\nYou can see the land around you, but seeing is not knowing: the map, journal and Lore record only what you have passed close by, discovered or confirmed yourself. A landmark seen from afar keeps its story until you reach it.\nBlizzards shrink sight to a small circle. A red frame on the region panel means you are exposed: shelter beside pines or rocks, or under a roof."],
 	]
 	for section in sections:
@@ -562,8 +575,9 @@ func _refresh_character(selected_slot: String = "") -> void:
 	for stat in session.character_rules.rules.stats:
 		var part: Dictionary = effective.breakdown[stat]
 		var talent := " %s %d talent" % ["+" if int(part.talent) >= 0 else "-", absi(int(part.talent))] if int(part.talent) != 0 else ""
-		lines.append("%s %d  = %d base + %d level + %d gear%s%s" % [session.character_rules.rules.stats[stat].name, effective.stats[stat], part.base, part.growth, part.gear, talent, " (incl. %+d%%)" % part.percent if part.percent != 0 else ""])
+		lines.append("%s %d  = %d base + %d level + %d gear%s%s%s" % [session.character_rules.rules.stats[stat].name, effective.stats[stat], part.base, part.growth, part.gear, " + %d attributes" % int(part.get("attribute", 0)) if int(part.get("attribute", 0)) != 0 else "", talent, " (incl. %+d%%)" % part.percent if part.percent != 0 else ""])
 	_character_summary.text = "\n".join(lines)
+	_refresh_attributes()
 	_talent_line.text = talent_summary()
 	var held: Array = character.talents
 	_talent_line.modulate = session.talent_rules.color(held[0].rank) if not held.is_empty() else Color("b8b8b8")
@@ -586,6 +600,44 @@ func _refresh_character(selected_slot: String = "") -> void:
 	_slot_list.select(index)
 	_show_slot(index)
 
+func _refresh_attributes() -> void:
+	## Attribute rows with a spend button while points are free (keys 1-3 in this sheet).
+	for child in _attribute_box.get_children():
+		_attribute_box.remove_child(child)
+		child.queue_free()
+	var character: Dictionary = session.run.state.character
+	var points: Dictionary = session.character_rules.attribute_points(character)
+	var heading := _label(_attribute_box, "Attributes  —  %d point%s to spend" % [points.free, "" if points.free == 1 else "s"] if points.free > 0 else "Attributes", 17)
+	heading.add_theme_color_override("font_color", FantasyTheme.GOLD)
+	var index := 0
+	for entry in session.character_rules.rules.attributes.list:
+		index += 1
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+		_attribute_box.add_child(row)
+		var name := _label(row, "%s  %d" % [entry.name, int(character.get("attributes", {}).get(entry.id, 0))], 16)
+		name.custom_minimum_size.x = 120
+		var id: String = entry.id
+		var spend := _button(row, "+ [%d]" % index, func() -> void: _spend_attribute(id))
+		spend.focus_mode = Control.FOCUS_NONE
+		spend.disabled = points.free < 1
+		spend.tooltip_text = entry.get("description", "")
+		var hint := _label(row, entry.get("description", ""), 13)
+		hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hint.modulate = Color(1, 1, 1, 0.75)
+
+func _spend_attribute(id: String) -> void:
+	if session == null or session.is_dead():
+		return
+	if session.allocate_attribute(id):
+		var event: Dictionary = session.last_events[0]
+		_say("%s rises to %d.%s" % [event.name, int(event.value), " %d point%s left." % [int(event.free), "" if int(event.free) == 1 else "s"] if int(event.free) > 0 else ""])
+	else:
+		_say(session.last_error)
+	_refresh_character(_slot_ids[maxi(0, _slot_list.get_selected_items()[0] if not _slot_list.get_selected_items().is_empty() else 0)])
+	_update_info()
+
 func _show_slot(index: int) -> void:
 	var slot: String = _slot_ids[index]
 	var record: Dictionary = session.run.state.character.equipment.get(slot, {})
@@ -599,6 +651,16 @@ func gear_text(definition: Dictionary, metadata: Dictionary) -> String:
 		parts.append("%s %+d" % [session.character_rules.rules.stats.get(stat, {}).get("name", stat), int(bonus.flat[stat])])
 	for stat in bonus.percent:
 		parts.append("%s %+d%%" % [session.character_rules.rules.stats.get(stat, {}).get("name", stat), int(bonus.percent[stat])])
+	var gear: Dictionary = definition.payload.equipment
+	for element in gear.get("damage_elements", []):
+		parts.append("%s damage" % str(element).capitalize())
+	for effect in gear.get("on_hit", []):
+		parts.append("%d%% %s on hit" % [int(effect.get("chance_percent", 100)), session._definition(effect.content_id, int(effect.version)).get("name", effect.content_id)])
+	for modifier in gear.get("skill_modifiers", []):
+		var tags := "/".join(modifier.get("tags", ["all"]))
+		for key in [["power_percent", "power"], ["cost_percent", "cost"], ["range_add", "range"]]:
+			if int(modifier.get(key[0], 0)) != 0:
+				parts.append("%s skills %s %+d%s" % [tags, key[1], int(modifier[key[0]]), "" if key[0] == "range_add" else "%"])
 	var tier: String = bonus.quality
 	var grade := "" if tier.is_empty() else "%s (%d/10, gear stats %+d%%)  " % [session.quality.tier(tier).name, session.quality.rank(tier), session.quality.bonus_percent(tier)]
 	var requirement: String = session.character_rules.requirement_error(definition, session.run.state.character)
@@ -777,6 +839,86 @@ func _build_skills(parent: Control) -> void:
 	_skill_use_button = _button(right, "Use selected [U / Enter]", func() -> void: _use_selected_skill())
 	_skill_use_button.focus_mode = Control.FOCUS_NONE
 	_skills_panel.hide()
+
+func _build_crafting(parent: Control) -> void:
+	## G: recipes from gathered and hunted materials; U / Enter crafts (one action).
+	var shell := _shell(parent, "CRAFTING", "craft")
+	_craft_panel = shell.panel
+	_craft_list = ItemList.new()
+	_craft_list.custom_minimum_size = Vector2(300, 0)
+	_craft_list.fixed_icon_size = Vector2i(28, 28)
+	_craft_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_craft_list.item_selected.connect(_show_recipe)
+	_craft_list.item_activated.connect(func(_index: int) -> void: _craft_selected())
+	shell.body.add_child(_craft_list)
+	var right := _shell_column(shell.body, 1.0)
+	_craft_detail = _label(right, "", 16)
+	_craft_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_craft_button = _button(right, "Craft [U / Enter]", _craft_selected)
+	_craft_button.focus_mode = Control.FOCUS_NONE
+	_craft_panel.hide()
+
+func _toggle_crafting() -> void:
+	if session == null or _menu.visible or session.is_dead():
+		return
+	var open := not _craft_panel.visible
+	_close_panels()
+	if open:
+		_craft_panel.show()
+		_refresh_crafting()
+		_craft_list.grab_focus()
+
+func _refresh_crafting(selected: String = "") -> void:
+	_craft_rows = session.recipes()
+	# Craftable recipes first, then by category and name.
+	_craft_rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ready_a: bool = session.craft_missing(a).is_empty()
+		var ready_b: bool = session.craft_missing(b).is_empty()
+		return ready_a and not ready_b if ready_a != ready_b else str(a.payload.category) + str(a.name) < str(b.payload.category) + str(b.name))
+	_craft_list.clear()
+	var index := 0
+	for recipe in _craft_rows:
+		var ready: bool = session.craft_missing(recipe).is_empty()
+		var output: Dictionary = session._definition(recipe.payload.output.content_id, int(recipe.payload.output.version))
+		_craft_list.add_item("%s%s   [%s]" % [recipe.name, " x%d" % int(recipe.payload.output.quantity) if int(recipe.payload.output.quantity) > 1 else "", "ready" if ready else recipe.payload.category])
+		var icon: Texture2D = Art.shared().item_icon(output.get("content_id", ""), output.get("name", ""), output) if Art.shared().ready() else null
+		if icon != null:
+			_craft_list.set_item_icon(_craft_list.item_count - 1, icon)
+		if not ready:
+			_craft_list.set_item_custom_fg_color(_craft_list.item_count - 1, Color("8f8676"))
+		if recipe.content_id == selected:
+			index = _craft_list.item_count - 1
+	if _craft_rows.is_empty():
+		_craft_detail.text = "No recipes known in this World."
+		_craft_button.disabled = true
+		return
+	_craft_list.select(index)
+	_show_recipe(index)
+
+func _show_recipe(index: int) -> void:
+	var recipe: Dictionary = _craft_rows[index]
+	var output: Dictionary = session._definition(recipe.payload.output.content_id, int(recipe.payload.output.version))
+	var lines := PackedStringArray([str(output.get("name", "?")) + (" x%d" % int(recipe.payload.output.quantity) if int(recipe.payload.output.quantity) > 1 else ""), str(output.get("description", ""))])
+	if output.get("payload", {}).has("equipment"):
+		lines.append(gear_text(output, {"quality": recipe.payload.output.get("quality", "")} if recipe.payload.output.has("quality") else {}))
+	lines.append("")
+	lines.append("Materials:")
+	for item in recipe.payload.inputs:
+		var have := int(session.run.state.inventory.get(item.content_id, {}).get("quantity", 0))
+		lines.append("  %s  %d / %d%s" % [session._definition(item.content_id, int(item.version)).get("name", item.content_id), have, int(item.quantity), "" if have >= int(item.quantity) else "  (missing)"])
+	var ready: bool = session.craft_missing(recipe).is_empty()
+	lines.append("\nCrafting takes one action." if ready else "\nGather or hunt the missing materials.")
+	_craft_detail.text = "\n".join(lines)
+	_craft_button.disabled = not ready
+
+func _craft_selected() -> void:
+	var picked := _craft_list.get_selected_items()
+	if session == null or session.is_dead() or picked.is_empty() or picked[0] >= _craft_rows.size():
+		return
+	var recipe_id: String = _craft_rows[picked[0]].content_id
+	_after_action(session.perform_action({"type": "craft", "recipe_id": recipe_id}))
+	if _craft_panel.visible:
+		_refresh_crafting(recipe_id)
 
 func _toggle_skills() -> void:
 	if session == null or _menu.visible or session.is_dead():
@@ -1564,7 +1706,9 @@ func _update_info() -> void:
 	_update_developer_overlay()
 	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
 	var character: Dictionary = session.run.state.character
-	_hp_label.text = "Lv %d   ATK %d   DEF %d" % [session.character_rules.level(character), stats.attack, stats.defense]
+	var free_points: int = session.character_rules.attribute_points(character).free
+	_hp_label.text = "Lv %d   ATK %d   DEF %d%s" % [session.character_rules.level(character), stats.attack, stats.defense, "   +%d pts" % free_points if free_points > 0 else ""]
+	_hp_label.tooltip_text = "%d attribute point%s to spend: Gear (C)" % [free_points, "" if free_points == 1 else "s"] if free_points > 0 else ""
 	var track_id: String = session.character_rules.rules.tracks.keys()[0]
 	var track: Dictionary = character.progression[track_id]
 	_hud.xp_bar.max_value = maxi(1, session.character_rules.xp_to_next(track_id, int(track.level)))
@@ -1738,6 +1882,11 @@ func describe_events(events: Array) -> String:
 				parts.append("%s%s%s." % [event.name, " → " + event.target if not str(event.target).is_empty() else "", ": " + event.summary if not str(event.summary).is_empty() else ""])
 			"learn":
 				parts.append("Learned %s!%s" % [event.name, " The book is used up." if event.consumed else " The book remains."])
+			"craft":
+				var made := PackedStringArray()
+				for item in event.get("display_received", event.received):
+					made.append(_receipt_text(item))
+				parts.append("Crafted %s." % ", ".join(made))
 			"stunned":
 				parts.append("%s is bound and cannot act." % event.name)
 			"status_apply":
@@ -1764,7 +1913,8 @@ func describe_events(events: Array) -> String:
 				if not event.get("quiet", false):
 					parts.append("[%s] %s: %s." % [event.rank, event.name, event.summary if not str(event.summary).is_empty() else "activated"])
 			"level_up":
-				parts.append("LEVEL UP! %s level %d." % [event.name, event.level])
+				var gained := int(session.character_rules.rules.attributes.points_per_level) if session != null else 0
+				parts.append("LEVEL UP! %s level %d.%s" % [event.name, event.level, " +%d attribute points: open Gear (C) to spend them." % gained if gained > 0 else ""])
 			"use":
 				var effects := PackedStringArray()
 				for change in event.changes:
@@ -1900,6 +2050,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_show_help()
 	elif event.keycode == KEY_L or event.physical_keycode == KEY_L:
 		_show_log()
+	elif event.keycode == KEY_G or event.physical_keycode == KEY_G:
+		_toggle_crafting()
 	elif event.keycode == KEY_Q or event.physical_keycode == KEY_Q:
 		_use_quick_item("q")
 	elif event.keycode == KEY_Z or event.physical_keycode == KEY_Z:
@@ -1974,6 +2126,17 @@ func _input(event: InputEvent) -> void:
 			_close_talent()
 		get_viewport().set_input_as_handled() # Modal: no movement or other commands.
 		return
+	if _craft_panel != null and _craft_panel.visible and event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_ESCAPE or event.physical_keycode == KEY_ESCAPE:
+			_close_panels()
+		elif _is_save_shortcut(event):
+			_save_game()
+		elif event.keycode in [KEY_U, KEY_ENTER, KEY_KP_ENTER] or event.physical_keycode in [KEY_U, KEY_ENTER, KEY_KP_ENTER]:
+			_craft_selected()
+		else:
+			return
+		get_viewport().set_input_as_handled()
+		return
 	if _character_panel != null and _character_panel.visible and event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode in [KEY_C, KEY_ESCAPE] or event.physical_keycode in [KEY_C, KEY_ESCAPE]:
 			_toggle_character()
@@ -1983,6 +2146,9 @@ func _input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 		elif event.keycode == KEY_U or event.physical_keycode == KEY_U:
 			_unequip_selected()
+			get_viewport().set_input_as_handled()
+		elif event.physical_keycode >= KEY_1 and event.physical_keycode < KEY_1 + session.character_rules.rules.attributes.list.size():
+			_spend_attribute(session.character_rules.rules.attributes.list[event.physical_keycode - KEY_1].id)
 			get_viewport().set_input_as_handled()
 		return
 	if _inventory_panel == null or not _inventory_panel.visible or not event is InputEventKey or not event.pressed or event.echo:

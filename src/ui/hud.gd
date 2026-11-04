@@ -15,7 +15,7 @@ const FEED_WIDTH := 320.0
 const MAX_FEED := 3
 const LOG_SIZE := 80
 const DISPOSITION_COLORS := {"hostile": Color("e0564b"), "neutral": Color("e0b34b"), "passive": Color("7fd17a")}
-const COMMANDS := [["Bag", "I", "inventory"], ["Gear", "C", "character"], ["Skills", "K", "skills"], ["Talent", "T", "talent"],
+const COMMANDS := [["Bag", "I", "inventory"], ["Gear", "C", "character"], ["Skills", "K", "skills"], ["Craft", "G", "craft"],
 	["Lore", "J", "knowledge"], ["Map", "M", "map"], ["Help", "H", "help"], ["Menu", "Esc", "menu"]]
 
 signal skill_pressed(index: int)
@@ -339,7 +339,7 @@ func _build_menu_bar() -> void:
 	for entry in COMMANDS:
 		var button := Button.new()
 		button.text = "%s %s" % [entry[0], entry[1]]
-		button.tooltip_text = {"inventory": "Inventory: items, use, equip, learn, quick slots", "character": "Character: stats, level and equipped gear", "skills": "Skills: learned skills, costs and cooldowns", "talent": "Talent awakened in this Run", "knowledge": "Knowledge confirmed in this Run", "map": "World map and journal", "help": "Controls and how the screen works", "menu": "Save and return to the main menu"}[entry[2]]
+		button.tooltip_text = {"inventory": "Inventory: items, use, equip, learn, quick slots", "character": "Character: stats, level and equipped gear", "skills": "Skills: learned skills, costs and cooldowns", "talent": "Talent awakened in this Run", "craft": "Crafting: turn materials into gear, remedies and food", "knowledge": "Knowledge confirmed in this Run", "map": "World map and journal", "help": "Controls and how the screen works", "menu": "Save and return to the main menu"}[entry[2]]
 		button.focus_mode = Control.FOCUS_NONE
 		button.custom_minimum_size = Vector2(56, 28)
 		button.add_theme_font_size_override("font_size", 13)
