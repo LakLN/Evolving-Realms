@@ -1,5 +1,32 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Gameplay UI readability review (2026-11-04)
+
+User-authorized presentation-only review. Captured the native Snow Mountain real
+scene with a UUID disposable DB under `user://snow_gameplay/`; no personal save
+opened. Before: `.tools/ui-readability-before.png`. After:
+`.tools/ui-readability-after.png`; long weather wrap:
+`.tools/ui-readability-weather.png` (local ignored artifacts).
+
+- Split HUD identity, coordinates/biome and time/exploration/chunk counters into
+  three rows within the existing top panel; the chunk count no longer clips.
+- Wrap region/weather text instead of truncating long exposure/location warnings.
+  Removed ellipsis on this wrapped Label after native review found it collapsed
+  the line. Gameplay, content, balance, persistence and coordinates unchanged.
+- Added two layout regressions to the existing snow gameplay suite: text fits the
+  HUD, and region/weather has visible height inside the logical UI canvas.
+- Validation: baseline `scripts/godot.ps1 --script
+  res://tests/snow_mountain_gameplay_suite.gd`: 63/0 native. Final command:
+  `scripts/test.ps1 -Render -Only snow-gameplay,rendered-snow-gameplay`.
+  Intermediate checks exposed a test-coordinate error (physical root vs logical
+  canvas, fixed) and one native streaming timing failure (781.9 vs 311.9 ms).
+  Final run: import/startup pass, headless 46/0, native OpenGL 65/0; streaming
+  timing check passed at 291.4 vs 305.2 ms. Native screenshots reviewed for normal
+  HUD, two-line blizzard warning and modal panels. `git diff --check` passed.
+- Gaps: unusually long World names still ellipsize; broad UI redesign/cosmetics
+  remain deferred. No full regression, service, export or old-save exe checks:
+  this is a small presentation change. Next: user review of the captured UI.
+
 ## Milestone 05 — Snow Mountain Stage D: S1 art, native life, two chains (2026-11-01)
 
 Same branch/worktree, on explicit user request for Stage D. No merge, no export, no

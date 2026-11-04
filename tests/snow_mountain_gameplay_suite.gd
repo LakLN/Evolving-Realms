@@ -78,6 +78,14 @@ func _run() -> void:
 	check(kinds.has("snow") and not kinds.has("meadow") and art.ground_source("snow") == art.SNOW_S1_GROUND_SOURCE and art.placeholder_kinds == ["frozen"], "Basin draws approved Batch S1 snow; only frozen ground is still a placeholder: %s" % str(kinds.keys()))
 	check(art.prop_source("pine") == art.SNOW_S1_PROP_SOURCE and art.prop_source("rock_snow") == art.SNOW_S1_PROP_SOURCE and art.frames("snow_wolf") != null, "S1 pine, windbreak rock and snow wolf frames are loaded")
 	await _capture("snow-arrival.png")
+	var info: Label = app._info
+	var font := info.get_theme_font("font")
+	var font_size := info.get_theme_font_size("font_size")
+	var info_fits := info.get_line_count() == 3 and info.get_line_height() * 3 <= info.size.y
+	for line in info.text.split("\n"):
+		info_fits = info_fits and font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= info.size.x
+	check(info_fits, "HUD identity, coordinates and counters fit without clipping")
+	check(app._region_hint.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and app._region_hint.size.y >= app._region_hint.get_line_height() and app._region_hint.get_global_rect().end.y <= app.size.y, "Region/weather has visible wrapped lines inside the UI canvas")
 	# Escarpment: a cliff face seen from the south of its rim.
 	var esc := Vector2i(int(plan.geography.escarpment.center.x), int(plan.geography.escarpment.center.y))
 	var face := _walkable_from(s, esc, Vector2i(int(plan.slot.x), int(plan.slot.y)))

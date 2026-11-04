@@ -271,7 +271,7 @@ func _build_hud(parent: Control) -> void:
 	top.add_child(row)
 	_info = _label(row, "", 17)
 	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Long coordinates/counters are trimmed instead of pushing the buttons off-screen.
+	# Keep identity, position and counters on separate lines beside the HUD controls.
 	_info.clip_text = true
 	_info.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	var health := VBoxContainer.new()
@@ -322,7 +322,7 @@ func _build_hud(parent: Control) -> void:
 	_interaction_hint = _label(column, "", 17)
 	_target_hint = _label(column, "", 17)
 	_region_hint = _label(column, "", 16) # Structured World: region and leads (empty otherwise).
-	_region_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_region_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_region_hint.mouse_filter = Control.MOUSE_FILTER_PASS
 	_region_hint.add_theme_color_override("font_color", Color("cfe3b0"))
 	_controls_hint = _label(column, CONTROLS_TURN, 15)
@@ -1425,7 +1425,7 @@ static func _short_title(title: String) -> String:
 	return title.get_slice(" - ", 1) if title.contains(" - ") else title
 
 func _update_info() -> void:
-	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s | Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s\n  Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
 	_region_hint.text = region_text()
 	_region_hint.tooltip_text = _region_hint.text
 	if _realtime != null: # Real time: `turn` counts world seconds.
