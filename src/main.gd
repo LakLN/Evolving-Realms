@@ -85,6 +85,8 @@ var _talent_rank: Label
 var _talent_name: Label
 var _talent_text: Label
 var _talent_line: Label
+var _talent_header: VBoxContainer
+var _talent_close: Button
 var _energy_bar: ProgressBar
 var _energy_label: Label
 var _skills_panel: PanelContainer
@@ -255,7 +257,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills (1-9 use)  Ctrl+S: save  Esc: menu", 14).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills  1-9: hotbar  Q/Z: quick items  J: lore  M: map  L: log  H: help  Ctrl+S: save  Esc: menu", 14).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 func _build_hud(parent: Control) -> void:
 	## Layout lives in src/ui/hud.gd; these aliases keep main.gd the owner of the text.
@@ -315,7 +317,7 @@ func _build_character(parent: Control) -> void:
 ## Player sheets fill the right of the screen; vitals, messages and the hotbar stay
 ## visible on the left and bottom (the world is paused meanwhile).
 const SHELL_LEFT := 352
-const SHELL_BOTTOM := 76
+const SHELL_BOTTOM := 88
 const SHELL_TABS := [["Bag", "I", "inventory"], ["Gear", "C", "character"], ["Skills", "K", "skills"], ["Talent", "T", "talent"],
 	["Lore", "J", "knowledge"], ["Map", "M", "map"], ["Log", "L", "log"], ["Help", "H", "help"]]
 const PANEL_KEYS := {KEY_I: "inventory", KEY_C: "character", KEY_K: "skills", KEY_T: "talent", KEY_J: "knowledge", KEY_L: "log", KEY_H: "help", KEY_F1: "help"}
@@ -453,7 +455,6 @@ func _show_knowledge() -> void:
 		_label(_discovery_column, "%s / %s" % [entry.category, entry.title], 19)
 		var body := _label(_discovery_column, entry.text, 17)
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_button(_discovery_column, "Close [J / Esc]", _close_discovery_panel).grab_focus()
 
 func _show_help() -> void:
 	_clear_discovery_panel("help")
@@ -467,7 +468,6 @@ func _show_help() -> void:
 	for section in sections:
 		_label(_discovery_column, section[0], 18).add_theme_color_override("font_color", FantasyTheme.GOLD)
 		_label(_discovery_column, section[1], 15).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_button(_discovery_column, "Close [H / Esc]", _close_discovery_panel).grab_focus()
 
 func _show_log() -> void:
 	_clear_discovery_panel("log")
@@ -479,7 +479,6 @@ func _show_log() -> void:
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		if index < _hud.messages.size() - 1:
 			line.modulate = Color(1, 1, 1, 0.78)
-	_button(_discovery_column, "Close [L / Esc]", _close_discovery_panel).grab_focus()
 
 func _show_interactions() -> bool:
 	var rows: Array = []
@@ -656,6 +655,9 @@ func _build_talent_panel(parent: Control) -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	_talent_panel.add_child(column)
+	_talent_header = VBoxContainer.new() # Tab row when T opens it as a sheet.
+	column.add_child(_talent_header)
+	_shell_header(_talent_header, "TALENT", "talent")
 	_talent_title = _label(column, "", 18)
 	_talent_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_talent_title.modulate = Color("c9c0a0")
@@ -666,8 +668,8 @@ func _build_talent_panel(parent: Control) -> void:
 	_talent_text = _label(column, "", 15)
 	_talent_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_talent_text.custom_minimum_size.x = 616
-	var close := _button(column, "Continue [Enter]", _close_talent)
-	close.focus_mode = Control.FOCUS_NONE
+	_talent_close = _button(column, "Continue [Enter]", _close_talent)
+	_talent_close.focus_mode = Control.FOCUS_NONE
 	_talent_panel.hide()
 
 func show_talent(awakening: bool) -> void:
@@ -675,6 +677,14 @@ func show_talent(awakening: bool) -> void:
 	_character_panel.hide()
 	var held: Array = session.run.state.character.talents
 	_talent_title.text = "TALENT AWAKENED" if awakening else "TALENT"
+	# The awakening is a centred reveal; T shows the same record as a tabbed sheet.
+	if awakening:
+		_talent_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER, Control.PRESET_MODE_MINSIZE)
+	else:
+		_place_sheet(_talent_panel)
+	_talent_header.visible = not awakening
+	_talent_title.visible = awakening
+	_talent_close.visible = awakening
 	_rainbow = _rainbow.filter(func(entry: Array) -> bool: return entry[0] != _talent_rank)
 	if held.is_empty():
 		_talent_rank.text = "—"

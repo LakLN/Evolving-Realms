@@ -36,6 +36,7 @@ func _run() -> void:
 	await process_frame
 	if not check(app.session != null and app._talent_panel.visible, "Start a run (talent revealed)"):
 		return _finish()
+	await _capture("ui-awakening.png")
 	await _key(KEY_ENTER)
 	var session: RefCounted = app.session
 	session.autosave_interval = 0
@@ -75,6 +76,9 @@ func _run() -> void:
 	await _key(KEY_K)
 	check(app._skills_panel.visible and not app._character_panel.visible and app._skill_list.item_count == 3, "K switches to Skills")
 	await _capture("ui-skills.png")
+	await _key(KEY_T)
+	check(app._talent_panel.visible and app._talent_header.visible and not app._skills_panel.visible and app.get_viewport_rect().encloses(app._talent_panel.get_global_rect()), "T switches to the Talent sheet with the shared tab row")
+	await _capture("ui-talent.png")
 	await _key(KEY_H)
 	check(app._discovery_panel.visible and app._discovery_mode == "help" and not app._skills_panel.visible, "H opens Help from a panel")
 	await _capture("ui-help.png")
