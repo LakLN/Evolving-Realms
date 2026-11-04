@@ -25,6 +25,8 @@ var map_view: Node2D
 var _world_map: WorldMap
 var _menu: Control
 var _hud: Control
+var _developer_overlay: PanelContainer
+var _developer_text: Label
 var _discovery_panel: PanelContainer
 var _discovery_column: VBoxContainer
 var _discovery_mode := ""
@@ -271,7 +273,7 @@ func _build_hud(parent: Control) -> void:
 	top.add_child(row)
 	_info = _label(row, "", 17)
 	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Keep identity, position and counters on separate lines beside the HUD controls.
+	# Keep World identity and save state here; diagnostics belong to the F3 overlay.
 	_info.clip_text = true
 	_info.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	var health := VBoxContainer.new()
@@ -327,7 +329,19 @@ func _build_hud(parent: Control) -> void:
 	_region_hint.add_theme_color_override("font_color", Color("cfe3b0"))
 	_controls_hint = _label(column, CONTROLS_TURN, 15)
 	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
+	_developer_overlay = PanelContainer.new()
+	_developer_overlay.position = Vector2(12, 100)
+	_developer_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud.add_child(_developer_overlay)
+	_developer_text = _label(_developer_overlay, "", 14)
+	_developer_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_developer_overlay.hide()
 	_hud.hide()
+
+func _update_developer_overlay() -> void:
+	if session == null or not _developer_overlay.visible:
+		return
+	_developer_text.text = "Developer [F3] | FPS %d\nTile (%d, %d) | %s\nChunks %d | Sight %d | Visible %d\nRun %s\n%s %d | Explored %d" % [Engine.get_frames_per_second(), session.position.x, session.position.y, session.terrain.biome_at(session.position), session.cache.chunks.size(), session.sight_radius(), session.visible.size(), str(session.run.run_id).left(8), "Time (s)" if session.realtime else "Turn", session.run.state.turn, session.explored.size()]
 
 func _build_character(parent: Control) -> void:
 	_character_panel = PanelContainer.new()
@@ -1307,6 +1321,7 @@ func _enter_map(active_session: RefCounted) -> void:
 	map_view.smooth_steps = _realtime != null
 	_controls_hint.text = CONTROLS_REALTIME if _realtime != null else CONTROLS_TURN
 	session = active_session
+	_developer_overlay.hide() # Opt-in for each entry; never stored in a Run.
 	_target_id = ""
 	_death_panel.hide()
 	_menu.hide()
@@ -1425,11 +1440,10 @@ static func _short_title(title: String) -> String:
 	return title.get_slice(" - ", 1) if title.contains(" - ") else title
 
 func _update_info() -> void:
-	_info.text = "  %s  /  Run %s%s\n  Tile (%d, %d) | %s\n  Turn %d | Explored %d | Chunks %d" % [session.world.name, str(session.run.run_id).left(8), " * unsaved" if session.dirty else "", session.position.x, session.position.y, session.terrain.biome_at(session.position), session.run.state.turn, session.explored.size(), session.cache.chunks.size()]
+	_info.text = "  %s%s%s" % [session.world.name, " * unsaved" if session.dirty else "", " | resting" if session.resting else ""]
 	_region_hint.text = region_text()
 	_region_hint.tooltip_text = _region_hint.text
-	if _realtime != null: # Real time: `turn` counts world seconds.
-		_info.text = _info.text.replace("Turn %d" % session.run.state.turn, "Time %d s%s" % [session.run.state.turn, " | resting" if session.resting else ""])
+	_update_developer_overlay()
 	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
 	_hp_label.text = "Lv %d  HP %d/%d  ATK %d DEF %d" % [session.character_rules.level(session.run.state.character), stats.hp, stats.max_hp, stats.attack, stats.defense]
 	_hp_bar.max_value = int(stats.max_hp)
@@ -1760,6 +1774,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_F3 or event.physical_keycode == KEY_F3) and session != null and not _menu.visible:
+		_developer_overlay.visible = not _developer_overlay.visible
+		_update_developer_overlay()
+		get_viewport().set_input_as_handled()
+		return
 	if _discovery_panel != null and _discovery_panel.visible and event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_ESCAPE or (_discovery_mode == "knowledge" and event.keycode == KEY_J):
 			_close_discovery_panel()
@@ -1830,6 +1849,7 @@ static func _is_save_shortcut(event: InputEventKey) -> bool:
 	return event.ctrl_pressed and (event.keycode == KEY_S or event.physical_keycode == KEY_S)
 
 func _process(delta: float) -> void:
+	_update_developer_overlay()
 	for entry in _rainbow:
 		if not is_instance_valid(entry[0]) or session == null:
 			continue

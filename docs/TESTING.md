@@ -49,7 +49,7 @@ issues in the backlog below instead.
 
 - Skills panel leaves empty space when few skills are learned.
 - Exceptionally long World names still use ellipsis in the HUD identity row;
-  coordinates and counters have their own rows.
+  coordinates and counters are available in the F3 developer overlay.
 - Rank, quality and talent colors are placeholders.
 - Long combat/status notices use ellipsis with full text on hover; a scrollable event
   history and less overlap between the skills sheet and bottom HUD remain cosmetic work.

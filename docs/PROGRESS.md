@@ -1,5 +1,27 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Toggleable developer overlay (2026-11-04)
+
+F3 was unused. Added a compact PanelContainer/Label using the existing HUD theme;
+both ignore mouse input, and the overlay is excluded from modal/pause checks.
+Hidden on startup and every Run entry/Continue; transient UI only, no save field.
+Displays engine FPS, global tile coordinates, current biome, cached chunk count,
+sight radius, visible tile count, short Run ID, turn/time and explored count.
+Updates each frame only while enabled. F3 also works while a panel/map is open
+without changing its state; menu key flow is unchanged.
+Moved diagnostic identity/position/counters out of permanent HUD; retained World
+name, unsaved/resting state, vitals and contextual weather/interaction information.
+No visibility, mechanics, content, art, branch or personal-save changes.
+
+Ran `scripts/test.ps1 -Render -Only gameplay,rendered-gameplay,snow-gameplay`:
+import/startup pass; gameplay 29/0, snow-gameplay 46/0, native gameplay 32/0.
+Coverage: hidden default, F3 on/off including inventory, diagnostic values and
+movement refresh, non-modal/mouse-ignore flags, existing movement/save/menu/load.
+Reviewed `.tools/developer-overlay.png` (UUID disposable DB); FPS is the engine's
+sampling value and may be low during initial scene/chunk loading. `git diff --check`
+passes. No full regression. Next: optional user review; modern HUD and visibility
+redesign remain separate work.
+
 ## Small maintenance: deterministic scene fixtures (2026-11-04)
 
 Follow-up B/C audit: inspected `assets/game/sprites/crab.png`, the art audit and

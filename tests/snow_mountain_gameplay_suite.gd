@@ -81,10 +81,10 @@ func _run() -> void:
 	var info: Label = app._info
 	var font := info.get_theme_font("font")
 	var font_size := info.get_theme_font_size("font_size")
-	var info_fits := info.get_line_count() == 3 and info.get_line_height() * 3 <= info.size.y
+	var info_fits := info.get_line_height() * info.get_line_count() <= info.size.y
 	for line in info.text.split("\n"):
 		info_fits = info_fits and font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x <= info.size.x
-	check(info_fits, "HUD identity, coordinates and counters fit without clipping")
+	check(info_fits and not info.text.contains("Chunks") and not info.text.contains("Run "), "HUD identity fits; diagnostics live in the developer overlay")
 	check(app._region_hint.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and app._region_hint.size.y >= app._region_hint.get_line_height() and app._region_hint.get_global_rect().end.y <= app.size.y, "Region/weather has visible wrapped lines inside the UI canvas")
 	# Escarpment: a cliff face seen from the south of its rim.
 	var esc := Vector2i(int(plan.geography.escarpment.center.x), int(plan.geography.escarpment.center.y))

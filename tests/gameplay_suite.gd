@@ -48,6 +48,10 @@ func _run() -> void:
 		return
 	var run_id: String = app.session.run.run_id
 	var start: Vector2i = app.session.position
+	check(not app._developer_overlay.visible, "Developer overlay is hidden by default")
+	await _key(KEY_F3)
+	check(app._developer_overlay.visible and not app._panel_open() and app._developer_overlay.mouse_filter == Control.MOUSE_FILTER_IGNORE and app._developer_text.mouse_filter == Control.MOUSE_FILTER_IGNORE, "F3 opens a non-modal, mouse-transparent overlay")
+	check(app._developer_text.text.contains("FPS") and app._developer_text.text.contains("Sight %d" % app.session.sight_radius()) and app._developer_text.text.contains(run_id.left(8)) and app._developer_text.text.contains("Chunks 9"), "Overlay displays current diagnostics")
 	check(app.map_view.chunk_nodes.size() == 9, "Actual map renders nine streamed chunks")
 	var entry: Dictionary = app.map_view.chunk_nodes[Terrain.chunk_of(start)]
 	# Fog is one soft texture over the cached chunks (Visual Prototype); fog_at reads it back.
@@ -63,6 +67,14 @@ func _run() -> void:
 	var keys := {Vector2i.UP: KEY_W, Vector2i.RIGHT: KEY_RIGHT, Vector2i.DOWN: KEY_S, Vector2i.LEFT: KEY_LEFT}
 	await _key(keys[direction])
 	check(app.session.position == start + direction and int(app.session.run.state.turn) == 1, "Real WASD/arrow keyboard event moves exactly one tile/turn")
+	await process_frame
+	check(app._developer_text.text.contains("Tile (%d, %d)" % [app.session.position.x, app.session.position.y]) and app._developer_text.text.contains("Turn 1"), "Overlay updates after movement without blocking controls")
+	await _screenshot("developer-overlay.png")
+	await _key(KEY_I)
+	check(app._inventory_panel.visible, "Inventory shortcut works with the overlay enabled")
+	await _key(KEY_F3)
+	check(not app._developer_overlay.visible and app._inventory_panel.visible, "F3 hides overlay without closing the active panel")
+	await _key(KEY_ESCAPE)
 	check(app.map_view.camera.get_screen_center_position().distance_to(app.map_view._player.global_position) < 1.0, "Camera follows rendered player")
 	var route := WorldTests.path_to_distant_chunk(app.session.terrain, app.session.position)
 	var rendered_path_ok := not route.is_empty()
@@ -95,6 +107,7 @@ func _run() -> void:
 	app._resume.pressed.emit()
 	await process_frame
 	check(app.session.position == saved_position and app.session.explored == saved_explored and int(app.session.run.state.turn) == saved_turn, "Continue button restores exact position, turns and explored fog")
+	check(not app._developer_overlay.visible, "Continue leaves developer overlay disabled")
 	app._return_to_menu()
 	app._run_seed.text = "202"
 	app._biome.select(2) # beach
