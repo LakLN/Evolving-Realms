@@ -1,5 +1,25 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Small maintenance: deterministic scene fixtures (2026-11-04)
+
+Tests only. M04 menu test seeds the global RNG immediately before New Adventure,
+making World/Run draws reproducible; per-land Run seed remains 31. This also fixes
+the random coastal sampling fixture behind the reported `ocean, road` ground
+classification failure; ground expectations are unchanged (no accepting roads or
+ocean as proof of land-specific ground). No production spawn/generator changes.
+Idle-death test now asserts the adjacent-wolf fixture exists, clears inherited
+recovery progress and waits up to 10 gameplay seconds with a 15-second wall-clock
+guard, instead of assuming 300 rendered frames advance enough simulation time.
+Death and death-panel assertions remain mandatory.
+
+Ran `scripts/test.ps1 -Render -Only m04-gameplay,realtime-gameplay,rendered-m04-gameplay,rendered-realtime`:
+import/startup pass; realtime-gameplay 17/0, m04-gameplay 23/0,
+rendered-realtime 19/0, rendered-m04-gameplay 31/0. `git diff --check` pass.
+Disposable UUID databases only; no full regression, gameplay edits, branch switch,
+Snow P0 merge, archived Run 01/save/build access. HEAD began at 0f7f84d; only this
+agent in the session tree, no Godot process before checks; untracked art untouched.
+One headless/native pass verifies the fixed fixtures, not a broad soak test.
+
 ## Modern UI/UX foundation (2026-11-04)
 
 Documentation-only, bounded director request. One specification:

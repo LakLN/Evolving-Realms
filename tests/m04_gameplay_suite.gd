@@ -34,6 +34,7 @@ func _run() -> void:
 	root.add_child(app)
 	await process_frame
 	check(app._persistent_world().is_empty() and app._atlas_line.text.contains("No persistent world"), "Fresh save: the menu offers New Adventure and explains the first charting")
+	seed(4242) # Reproduce the menu's World/Run draws instead of OS-random geography.
 	app._adventure.pressed.emit()
 	for _frame in 900:
 		await process_frame

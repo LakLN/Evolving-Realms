@@ -109,11 +109,13 @@ func _run() -> void:
 	check(app.session != null and app._realtime != null, "Continue resumes the Run in real time")
 	# 7. Death while idle shows the death screen.
 	_isolate()
-	if not _wolf(1).is_empty():
+	if check(not _wolf(1).is_empty(), "Adjacent wolf fixture exists for idle death"):
 		app.session.stats().hp = 1
-		for _frame in 300:
+		app.session.stats().recovery = 0 # Do not inherit a nearly-complete heal from the fight.
+		var deadline: int = app._realtime.now_ms + 10000
+		var wall_deadline := Time.get_ticks_msec() + 15000
+		while not app.session.is_dead() and app._realtime.now_ms < deadline and Time.get_ticks_msec() < wall_deadline:
 			await process_frame
-			if app.session.is_dead(): break
 		await process_frame
 		check(app.session.is_dead() and app._death_panel.visible, "A wolf kills the idle hero and the death screen appears")
 	_finish()
