@@ -58,6 +58,9 @@ var _skill_slots: Array = []
 var _item_slots: Dictionary = {}
 var _region_style: StyleBoxFlat
 var _slot_poll := 0.0
+var _vitals_style: StyleBoxFlat
+var _last_hp := -1
+var _hurt := 0.0
 
 func build() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -133,6 +136,7 @@ func _build_vitals() -> void:
 	panel.custom_minimum_size = Vector2(290, 0)
 	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(panel)
+	_vitals_style = panel.get_theme_stylebox("panel")
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 4)
 	panel.add_child(column)
@@ -227,6 +231,7 @@ func _build_feed() -> void:
 func _feed_label() -> Label:
 	var panel := _panel(0.72, Color(0, 0, 0, 0), 6)
 	_feed.add_child(panel)
+	panel.get_theme_stylebox("panel").set_border_width_all(2)
 	var label := _text(panel, 15)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.max_lines_visible = 5
@@ -368,11 +373,21 @@ func say(text: String, replace: bool = false) -> void:
 		older.text = notice.text
 		older.get_parent().modulate.a = 0.8
 		older.tooltip_text = notice.text
+		older.get_parent().get_theme_stylebox("panel").border_color = _tone(notice.text)
 		_feed_entries.insert(_feed_entries.size() - 1, {"label": older, "panel": older.get_parent(), "until": mini(int(newest.until), Time.get_ticks_msec() + 2500)})
 	notice.text = text
 	notice.tooltip_text = text
+	newest.panel.get_theme_stylebox("panel").border_color = _tone(text)
 	newest.panel.modulate.a = 1.0
 	newest.until = Time.get_ticks_msec() + int(clampf(2.5 + text.length() / 28.0, 3.5, 12.0) * 1000.0)
+
+static func _tone(text: String) -> Color:
+	## Message frame: gold for discoveries and learning, amber for refusals and failures.
+	if text.begins_with("DISCOVERED") or text.contains("Knowledge learned") or text.begins_with("LAND:") or text.begins_with("LEVEL UP") or text.begins_with("Learned "):
+		return FantasyTheme.GOLD
+	if text.contains("no turn spent") or text.contains("failed") or text.contains("Cannot") or text.contains("Not enough") or text.contains("is empty"):
+		return Color("e0904b")
+	return Color(0, 0, 0, 0)
 
 func _fade_feed() -> void:
 	var now := Time.get_ticks_msec()
@@ -455,10 +470,23 @@ func _process(delta: float) -> void:
 	if not visible:
 		return
 	_fade_feed()
+	_vital_feedback(delta)
 	_slot_poll -= delta
 	if _slot_poll <= 0.0 and session != null and not session.run.is_empty():
 		_slot_poll = 0.25 # Real-time cooldowns tick without an event.
 		refresh_slots()
+
+func _vital_feedback(delta: float) -> void:
+	## A red flash on the vitals frame when HP drops; the HP bar pulses below 30%.
+	var hp := int(hp_bar.value)
+	if _last_hp >= 0 and hp < _last_hp:
+		_hurt = 0.5
+	_last_hp = hp
+	_hurt = maxf(0.0, _hurt - delta)
+	_vitals_style.border_color = FantasyTheme.GOLD_DIM.lerp(Color("ff5a4a"), clampf(_hurt * 2.0, 0.0, 1.0))
+	_vitals_style.set_border_width_all(2 if _hurt > 0.0 else 1)
+	var low := hp_bar.max_value > 0 and hp > 0 and float(hp) / hp_bar.max_value < 0.3
+	hp_bar.modulate = Color(1, 1, 1).lerp(Color(1.6, 0.8, 0.8), 0.5 + 0.5 * sin(Time.get_ticks_msec() / 160.0)) if low else Color.WHITE
 
 func refresh_slots() -> void:
 	if session == null or session.run.is_empty():

@@ -1676,7 +1676,9 @@ func _rest() -> void:
 	var summary: Dictionary = session.last_result
 	_after_action(true)
 	var why: String = {"rested": "", "healed": " Fully healed.", "danger": " Interrupted: danger in sight!", "attacked": " Interrupted: you were attacked!", "needs": "", "died": ""}[summary.reason]
-	_say(("Rested %d turn%s (%+d HP).%s %s" % [summary.turns, "" if summary.turns == 1 else "s", summary.hp_gained, why, _notice.text]).strip_edges(), true)
+	# Fold this rest's own event text into one message (never an older message).
+	var told := describe_events(session.last_events)
+	_say(("Rested %d turn%s (%+d HP).%s %s" % [summary.turns, "" if summary.turns == 1 else "s", summary.hp_gained, why, told]).strip_edges(), not told.is_empty())
 
 func _after_action(accepted: bool, quiet: String = "") -> void:
 	## Shared feedback for every turn-spending action.
@@ -1826,7 +1828,8 @@ func _interact() -> void:
 		for item in session.last_result.received:
 			received.append(_receipt_text(item))
 		_after_action(true)
-		_say(("Received: " + ", ".join(received) + " " + _notice.text).strip_edges(), true)
+		var told := describe_events(session.last_events)
+		_say(("Received: " + ", ".join(received) + " " + told).strip_edges(), not told.is_empty())
 	else:
 		_after_action(false)
 
