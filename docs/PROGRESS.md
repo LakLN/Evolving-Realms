@@ -1,5 +1,26 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Systemic interactions v1 (2026-11-04)
+
+Commit fae6de6; decisions and sources in docs/RPG_FOUNDATION.md ("Systemic
+interactions v1", "Producing content with these parts"). Research verified: GDC 2017
+Breath of the Wild chemistry rules (elements change materials and each other;
+materials do not), Caves of Qud parts/events composition; DOS2 surfaces noted only.
+Implemented: carried heat sources for ordinary ice (fuel / fire weapon / fire skill
+Energy) with a selector choice per source and carried-flame Knowledge; creature trait
+parts in content/creature_traits.json (fear of wielded element, resist/weak modifiers,
+charge with cooldown, pack call alerts) handled generically in AI/roster/effects,
+assigned to established v1 creatures by overlay, persisted timers, both time models;
+trait names in the target frame; charge/howl messages.
+Checks: new systems-gameplay 20/0 (rendered 21/0, systems-wary-wolf.png); snow-content
+84/0 (+9 carried-flame checks on real Snow objects in a separate Run); smoke + combat,
+survival, interactions, effects, talents, ai-world, telemetry, snow-mountain,
+snow-gameplay, realtime, m03/m04, gameplay, build, ui, discovery suites all 0
+failures; rendered snow-gameplay 65/0, realtime 19/0. Reviewed world-rules-selector.png
+(fixed doubled verb wording afterwards; suites rerun 0 failures).
+Gaps: no terrain/surface state; only ice responds to heat; traits cover four handlers;
+fear checks the weapon element only (not active fire statuses or skills).
+
 ## RPG build foundation v1 (2026-11-04)
 
 Commit 8bf45e1; decisions in docs/RPG_FOUNDATION.md. Reviewed progression, talents,
