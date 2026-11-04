@@ -20,18 +20,21 @@ func _initialize() -> void:
 		if arg.begins_with("--fragment="):
 			_merge_fragment(art, arg.trim_prefix("--fragment="))
 	var textures := {}
+	var opaque := {} # ground atlases: cells are fully opaque by rule (ART_BIBLE 5)
 	for group in ["objects", "places", "icons"]:
 		for name in art.index.get(group, {}):
 			var entry: Dictionary = art.index[group][name]
 			textures[entry.texture] = entry.get("size", [])
 	for name in art.index.characters:
 		textures[art.index.characters[name].sheet] = []
-	for table in [art.index, art.snow_s1]:
+	var p0: Variant = JSON.parse_string(FileAccess.get_file_as_string(Art.SNOW_P0_INDEX)) if FileAccess.file_exists(Art.SNOW_P0_INDEX) else {}
+	for table in [art.index, art.snow_s1, p0 if p0 is Dictionary else {}]:
 		for group in ["ground", "props", "decor"]:
 			if table.get(group, {}).has("atlas"):
 				textures[table[group].atlas] = []
+				if group == "ground": opaque[table[group].atlas] = true
 	for relative in textures:
-		_check_texture(art, relative, textures[relative])
+		_check_texture(art, relative, textures[relative], opaque.has(relative))
 	for name in art.index.characters:
 		_check_frames(art, name)
 	_finish()
@@ -45,7 +48,7 @@ func _merge_fragment(art: RefCounted, path: String) -> void:
 		art.index[group].merge(parsed.get(group, {}), true)
 	print("Merged fragment %s: %s" % [path, str(parsed.keys())])
 
-func _check_texture(art: RefCounted, relative: String, size: Array) -> void:
+func _check_texture(art: RefCounted, relative: String, size: Array, may_be_opaque := false) -> void:
 	var path: String = Art.ROOT + relative
 	var texture: Texture2D = art.texture(relative)
 	if not check(texture != null, "imports as Texture2D: " + relative):
@@ -53,7 +56,7 @@ func _check_texture(art: RefCounted, relative: String, size: Array) -> void:
 	if not size.is_empty():
 		check(Vector2i(texture.get_size()) == Vector2i(int(size[0]), int(size[1])), "%s is %s as indexed (%s)" % [relative, str(size), str(texture.get_size())])
 	var image := texture.get_image()
-	check(image != null and image.detect_alpha() != Image.ALPHA_NONE, "keeps an alpha channel: " + relative)
+	check(image != null and (may_be_opaque or image.detect_alpha() != Image.ALPHA_NONE), "keeps an alpha channel: " + relative)
 	var config := ConfigFile.new()
 	if check(config.load(path + ".import") == OK, ".import exists: " + relative):
 		check(int(config.get_value("params", "compress/mode", -1)) == 0, "lossless compression (compress/mode=0): " + relative)

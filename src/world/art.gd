@@ -24,6 +24,10 @@ const SNOW_OVERLAY_SOURCE := 14 # + index into SnowArt.EDGES
 const SNOW_S1_GROUND_SOURCE := 18
 const SNOW_S1_PROP_SOURCE := 19
 const SNOW_S1_INDEX := "res://assets/game/snow/snow_s1_index.json"
+## Snow P0 production batch (tools/art/build_snow_p0.py), merged over S1 when present.
+const SNOW_P0_GROUND_SOURCE := 20
+const SNOW_P0_PROP_SOURCE := 21
+const SNOW_P0_INDEX := "res://assets/game/snow/snow_p0_index.json"
 static var _shared: RefCounted
 
 var index: Dictionary = {}
@@ -131,6 +135,7 @@ func _paint_snow(built: TileSet) -> void:
 		row += 1
 	_add_atlas(built, image, px, SNOW_GROUND_SOURCE, groups)
 	var approved := _load_snow_s1(built)
+	approved.merge(_load_snow_index(built, SNOW_P0_INDEX, SNOW_P0_GROUND_SOURCE, SNOW_P0_PROP_SOURCE), true)
 	for i in SnowArt.EDGES.size():
 		var upper: String = SnowArt.EDGES[i][0]
 		var upper_image: Image = approved.get(upper, SnowArt.paint(upper, 0, px))
@@ -146,28 +151,33 @@ func _load_snow_s1(built: TileSet) -> Dictionary:
 	## Approved Batch S1 art (tools/art/build_snow_s1.py) replaces placeholder kinds,
 	## pines and snow-land rocks, and adds snow objects, places and the snow wolf.
 	## Returns kind -> base tile image (upper textures for the edge overlays).
-	var file := FileAccess.open(SNOW_S1_INDEX, FileAccess.READ)
+	return _load_snow_index(built, SNOW_S1_INDEX, SNOW_S1_GROUND_SOURCE, SNOW_S1_PROP_SOURCE)
+
+func _load_snow_index(built: TileSet, path: String, ground_id: int, prop_id: int) -> Dictionary:
+	## One snow art index: optional ground kinds/props on their own TileSet sources, plus
+	## objects, places, characters, icons and mapping tables merged over earlier ones.
+	var file := FileAccess.open(path, FileAccess.READ)
 	var parsed: Variant = JSON.parse_string(file.get_as_text()) if file != null else null
 	if not parsed is Dictionary or int(parsed.get("version", 0)) != 1 or int(parsed.get("tile_px", 0)) != px:
 		return {}
-	snow_s1 = parsed
+	if path == SNOW_S1_INDEX: snow_s1 = parsed
 	var bases := {}
-	var ground_image := _image(parsed.ground.atlas)
+	var ground_image := _image(parsed.ground.atlas) if parsed.has("ground") else null
 	if ground_image != null:
 		var groups: Array = []
 		for kind in parsed.ground.kinds:
 			ground[kind] = []
 			for entry in parsed.ground.kinds[kind]:
 				ground[kind].append([Vector2i(int(entry[0]), int(entry[1])), int(entry[2])])
-			ground_sources[kind] = SNOW_S1_GROUND_SOURCE
+			ground_sources[kind] = ground_id
 			placeholder_kinds.erase(kind)
 			groups.append(ground[kind])
 			var first: Array = parsed.ground.kinds[kind][0]
 			bases[kind] = ground_image.get_region(Rect2i(Vector2i(int(first[0]), int(first[1])) * px, Vector2i(px, px)))
-		_add_atlas(built, ground_image, px, SNOW_S1_GROUND_SOURCE, groups)
-	var source := _atlas(parsed.props.atlas, int(parsed.props.cell))
+		_add_atlas(built, ground_image, px, ground_id, groups)
+	var source := _atlas(parsed.props.atlas, int(parsed.props.cell)) if parsed.has("props") else TileSetAtlasSource.new()
 	if source.texture != null:
-		built.add_source(source, SNOW_S1_PROP_SOURCE)
+		built.add_source(source, prop_id)
 		for kind in parsed.props:
 			if not parsed.props[kind] is Array: continue
 			props[kind] = []
@@ -175,8 +185,8 @@ func _load_snow_s1(built: TileSet) -> Dictionary:
 				var coords := Vector2i(int(entry[0]), 0)
 				if not source.has_tile(coords): source.create_tile(coords)
 				props[kind].append([coords, int(entry[1])])
-			prop_sources[kind] = SNOW_S1_PROP_SOURCE
-	for group in ["objects", "places", "characters"]:
+			prop_sources[kind] = prop_id
+	for group in ["objects", "places", "characters", "icons"]:
 		if not index.has(group): index[group] = {}
 		index[group].merge(parsed.get(group, {}), true)
 	var mapping: Dictionary = index.get("mapping", {})
@@ -320,7 +330,11 @@ func anchor(name: String) -> Vector2:
 	return Vector2(spec.anchor[0], spec.anchor[1]) if spec.has("anchor") else Vector2.ZERO
 
 func creature_sheet(definition: Dictionary) -> String:
-	return str(index.get("mapping", {}).get("creatures", {}).get(definition.get("payload", {}).get("visual", ""), ""))
+	## Exact content ID first (a native species keeps its look without restyling the
+	## shared visual, e.g. the rime hare vs core rabbits), then the payload visual.
+	var mapping: Dictionary = index.get("mapping", {})
+	var exact: String = str(mapping.get("creatures_by_id", {}).get(definition.get("content_id", ""), ""))
+	return exact if not exact.is_empty() else str(mapping.get("creatures", {}).get(definition.get("payload", {}).get("visual", ""), ""))
 
 func object_sprite(definition: Dictionary, opened: bool) -> Texture2D:
 	var map: Dictionary = index.get("mapping", {}).get("objects", {})
@@ -336,9 +350,22 @@ func place_sprite(definition: Dictionary) -> Texture2D:
 	var name: String = map.get("by_id", {}).get(definition.get("content_id", ""), map.get("by_visual", {}).get(payload.get("visual", ""), map.get("by_category", {}).get(payload.get("category", ""), map.get("default", ""))))
 	return _single("places", name)
 
+func place_pivot(definition: Dictionary) -> Vector2:
+	## Declared ground-contact point inside the place image, or (-1, -1) for the legacy
+	## bottom-centred placement.
+	var map: Dictionary = index.get("mapping", {}).get("places", {})
+	var payload: Dictionary = definition.get("payload", {})
+	var name: String = map.get("by_id", {}).get(definition.get("content_id", ""), map.get("by_visual", {}).get(payload.get("visual", ""), ""))
+	var pivot: Variant = index.get("places", {}).get(name, {}).get("pivot")
+	return Vector2(pivot[0], pivot[1]) if pivot is Array and pivot.size() == 2 else Vector2(-1, -1)
+
 func item_icon(content_id: String, name: String, definition: Dictionary = {}) -> Texture2D:
-	## Equipment slot, then skill book, then a keyword of the id (namespace skipped) or name.
+	## Exact content ID, then equipment slot, skill book, then a keyword of the id
+	## (namespace skipped) or name.
 	var mapping: Dictionary = index.get("mapping", {})
+	if mapping.get("item_icons_by_id", {}).has(content_id):
+		var exact := icon(mapping.item_icons_by_id[content_id])
+		if exact != null: return exact
 	var payload: Dictionary = definition.get("payload", {})
 	if payload.get("equipment") is Dictionary and mapping.get("slot_icons", {}).has(payload.equipment.get("slot", "")):
 		return icon(mapping.slot_icons[payload.equipment.slot])

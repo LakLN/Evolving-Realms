@@ -75,7 +75,7 @@ func _run() -> void:
 	await _settle()
 	var kinds := _drawn_kinds()
 	var art: RefCounted = app.map_view.art
-	check(kinds.has("snow") and not kinds.has("meadow") and art.ground_source("snow") == art.SNOW_S1_GROUND_SOURCE and art.placeholder_kinds == ["frozen"], "Basin draws approved Batch S1 snow; only frozen ground is still a placeholder: %s" % str(kinds.keys()))
+	check(kinds.has("snow") and not kinds.has("meadow") and art.ground_source("snow") == art.SNOW_S1_GROUND_SOURCE and art.ground_source("frozen") == art.SNOW_P0_GROUND_SOURCE and art.placeholder_kinds.is_empty(), "Basin draws approved Batch S1 snow; frozen scree comes from the P0 batch, no placeholder ground left: %s" % str(kinds.keys()))
 	check(art.prop_source("pine") == art.SNOW_S1_PROP_SOURCE and art.prop_source("rock_snow") == art.SNOW_S1_PROP_SOURCE and art.frames("snow_wolf") != null, "S1 pine, windbreak rock and snow wolf frames are loaded")
 	await _capture("snow-arrival.png")
 	var info: Label = app._info
@@ -252,10 +252,27 @@ func _content_tour(s: RefCounted, plan: Dictionary) -> void:
 		s._reveal()
 		app.map_view.refresh()
 		await _settle()
-		var drawn: bool = app.map_view._creatures.values().any(func(e: Dictionary) -> bool: return e.sprite != null and app.map_view.art.creature_sheet(e.creature.definition) == "snow_wolf")
-		check(drawn, "The scree wolf is drawn with the S1 snow wolf sheet")
+		var drawn: bool = app.map_view._creatures.values().any(func(e: Dictionary) -> bool: return e.sprite != null and app.map_view.art.creature_sheet(e.creature.definition) == "scree_wolf")
+		check(drawn, "The scree wolf is drawn with its redrawn P0 sheet")
 		await _capture("snow-scree-wolf.png")
 		s.roster.creatures.clear()
+	# Snow P0 art: native species resolve by content ID; shared visuals stay untouched.
+	var art: RefCounted = app.map_view.art
+	check(art.creature_sheet(s._definition("snow:rime_hare", 1)) == "rime_hare" and art.creature_sheet(s._definition("core:rabbit", 1)) == "rabbit", "The rime hare has its own sheet; core rabbits keep theirs")
+	check(art.creature_sheet(s._definition("snow:bellback_sentinel", 1)) == "bellback_sentinel", "The bellback sentinel has a real sheet instead of a token")
+	var p0_places := {"snow:place/fallen_relay_pine": "fallen_relay_pine", "snow:place/summit_bell": "damaged_bell", "snow:place/icebound_provisions": "icebound_case", "snow:place/frozen_medicine": "icebound_case"}
+	var placed := true
+	for id in p0_places:
+		var place_def: Dictionary = s._definition(id, 1)
+		placed = placed and art.place_sprite(place_def) == art.texture("snow/p0/places/%s.png" % p0_places[id]) and art.place_pivot(place_def).x > 0
+	var cairn_def: Dictionary = s._definition("snow:place/bell_cairn", 2)
+	placed = placed and art.place_sprite(cairn_def) == art.texture("snow/p0/places/memorial_cairn.png") and art.place_pivot(s._definition("snow:place/lee_shelter", 1)).x < 0
+	check(placed, "Story sites and frozen cases draw their P0 landmarks with pivots; S1 sites keep legacy placement")
+	var icons_ok := true
+	for item in ["resin", "bark_ration", "bronze_scrap", "relay_clasp", "bell_shard", "rime_mantle"]:
+		var item_def: Dictionary = s._definition("snow:" + item, 1)
+		icons_ok = icons_ok and art.item_icon("snow:" + item, str(item_def.get("name", "")), item_def) == art.texture("snow/p0/icons/snow_%s.png" % item)
+	check(icons_ok, "All six Snow items show their exact icons, wearables included")
 	var bell := _site(plan, "summit_bell")
 	_near_site(s, bell)
 	await _settle()
