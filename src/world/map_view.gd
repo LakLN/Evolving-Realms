@@ -667,7 +667,7 @@ func _draw_places() -> void:
 			var size := sprite.get_size()
 			var pivot: Vector2 = art.place_pivot(definition)
 			var at := _feet(tile) - pivot if pivot.x >= 0 else Vector2(point.x - size.x / 2, point.y + px * 0.75 - size.y)
-			_object_layer.draw_texture(sprite, at, Color(0.58, 0.58, 0.64) if done else Color.WHITE)
+			_object_layer.draw_texture(sprite, at, Color(0.58, 0.58, 0.64) if done else (Color(0.8, 0.82, 0.88) if state == "recovering" else Color.WHITE))
 		else:
 			var colors := {"ruin": Color("c9b48a"), "shrine": Color("8fd0a8"), "vein": Color("9fd8ff"), "vent": Color("b6c46a"), "spring_site": Color("6fb9e8")}
 			var color: Color = colors.get(definition.payload.get("visual", ""), Color("e2a8ff"))

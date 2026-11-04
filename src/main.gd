@@ -1780,9 +1780,14 @@ func place_hint(place: Dictionary) -> String:
 	var definition: Dictionary = session.locations.definition_for(place)
 	var next: Dictionary = session.places.next_interaction(session, place)
 	if next.is_empty():
+		if session.places.state(session, place) == "recovering":
+			return "%s — recovering; come back later." % definition.name
 		return "%s — nothing more to do here." % definition.name
 	var needs: Array = session.places.unmet(session, session.locations.event(next.event).payload.get("conditions", []))
-	return "E: %s — %s%s" % [next.get("verb", "Explore"), definition.name, "  (needs %s)" % ", ".join(needs) if not needs.is_empty() else ""]
+	var left := ""
+	if next.has("repeat") and int(next.repeat.get("times", 0)) > 0:
+		left = "  [%d left]" % (int(next.repeat.times) - session.places.uses(session, place.instance_id, next.id))
+	return "E: %s — %s%s%s" % [next.get("verb", "Explore"), definition.name, left, "  (needs %s)" % ", ".join(needs) if not needs.is_empty() else ""]
 
 func current_target() -> Dictionary:
 	## Selected adjacent creature; falls back to the first valid one (ID order).

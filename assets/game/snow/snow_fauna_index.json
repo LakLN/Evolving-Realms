@@ -5,13 +5,13 @@
   "frost_stag": {
    "sheet": "snow/fauna/frost_stag.png",
    "frame": [
-    84,
-    76
+    104,
+    92
    ],
    "columns": 11,
    "anchor": [
-    42,
-    69
+    52,
+    84
    ],
    "anims": {
     "idle_down": [
@@ -103,13 +103,13 @@
   "tuskback": {
    "sheet": "snow/fauna/tuskback.png",
    "frame": [
-    84,
-    76
+    104,
+    92
    ],
    "columns": 11,
    "anchor": [
-    42,
-    69
+    52,
+    84
    ],
    "anims": {
     "idle_down": [
@@ -201,13 +201,13 @@
   "pine_prowler": {
    "sheet": "snow/fauna/pine_prowler.png",
    "frame": [
-    84,
-    76
+    104,
+    92
    ],
    "columns": 11,
    "anchor": [
-    42,
-    69
+    52,
+    84
    ],
    "anims": {
     "idle_down": [
@@ -593,13 +593,13 @@
   "hollow_carrier": {
    "sheet": "snow/fauna/hollow_carrier.png",
    "frame": [
-    84,
-    76
+    104,
+    92
    ],
    "columns": 11,
    "anchor": [
-    42,
-    69
+    52,
+    84
    ],
    "anims": {
     "idle_down": [
@@ -887,13 +887,13 @@
   "ashmaw": {
    "sheet": "snow/fauna/ashmaw.png",
    "frame": [
-    84,
-    76
+    140,
+    124
    ],
    "columns": 11,
    "anchor": [
-    42,
-    69
+    70,
+    115
    ],
    "anims": {
     "idle_down": [
@@ -985,13 +985,111 @@
   "hoarfrost_giant": {
    "sheet": "snow/fauna/hoarfrost_giant.png",
    "frame": [
-    84,
-    76
+    140,
+    124
    ],
    "columns": 11,
    "anchor": [
-    42,
-    69
+    70,
+    115
+   ],
+   "anims": {
+    "idle_down": [
+     0
+    ],
+    "walk_down": [
+     1,
+     2,
+     3,
+     4
+    ],
+    "attack_down": [
+     5,
+     6,
+     7
+    ],
+    "hit_down": [
+     8
+    ],
+    "death_down": [
+     9,
+     10
+    ],
+    "idle_left": [
+     11
+    ],
+    "walk_left": [
+     12,
+     13,
+     14,
+     15
+    ],
+    "attack_left": [
+     16,
+     17,
+     18
+    ],
+    "hit_left": [
+     19
+    ],
+    "death_left": [
+     20,
+     21
+    ],
+    "idle_right": [
+     22
+    ],
+    "walk_right": [
+     23,
+     24,
+     25,
+     26
+    ],
+    "attack_right": [
+     27,
+     28,
+     29
+    ],
+    "hit_right": [
+     30
+    ],
+    "death_right": [
+     31,
+     32
+    ],
+    "idle_up": [
+     33
+    ],
+    "walk_up": [
+     34,
+     35,
+     36,
+     37
+    ],
+    "attack_up": [
+     38,
+     39,
+     40
+    ],
+    "hit_up": [
+     41
+    ],
+    "death_up": [
+     42,
+     43
+    ]
+   }
+  },
+  "elder_bellback": {
+   "sheet": "snow/fauna/elder_bellback.png",
+   "frame": [
+    140,
+    124
+   ],
+   "columns": 11,
+   "anchor": [
+    70,
+    115
    ],
    "anims": {
     "idle_down": [
@@ -1159,6 +1257,41 @@
     32
    ]
   },
+  "fauna_trough_char": {
+   "texture": "snow/fauna/trough_char.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "fauna_elder_horn": {
+   "texture": "snow/fauna/elder_horn.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "fauna_choir_lens": {
+   "texture": "snow/fauna/choir_lens.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "fauna_relay_crown": {
+   "texture": "snow/fauna/relay_crown.png",
+   "size": [
+    32,
+    32
+   ]
+  },
+  "fauna_bellhorn_hammer": {
+   "texture": "snow/fauna/bellhorn_hammer.png",
+   "size": [
+    32,
+    32
+   ]
+  },
   "fauna_book_glass_lance": {
    "texture": "snow/fauna/book_glass_lance.png",
    "size": [
@@ -1185,89 +1318,166 @@
   "old_kiln": {
    "texture": "snow/fauna/old_kiln.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
    ]
   },
   "glass_bowl": {
    "texture": "snow/fauna/glass_bowl.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
    ]
   },
   "wind_loom": {
    "texture": "snow/fauna/wind_loom.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
    ]
   },
   "relay_strongbox": {
    "texture": "snow/fauna/relay_strongbox.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
    ]
   },
   "ashmaw_nest": {
    "texture": "snow/fauna/ashmaw_nest.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
    ]
   },
   "singing_ice": {
    "texture": "snow/fauna/singing_ice.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
    ]
   },
   "prowler_den": {
    "texture": "snow/fauna/prowler_den.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
+   ]
+  },
+  "fishing_hole": {
+   "texture": "snow/fauna/fishing_hole.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "hare_run": {
+   "texture": "snow/fauna/hare_run.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "warm_spring": {
+   "texture": "snow/fauna/warm_spring.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "bandit_stash": {
+   "texture": "snow/fauna/bandit_stash.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "rime_ledge": {
+   "texture": "snow/fauna/rime_ledge.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "choir_hollow": {
+   "texture": "snow/fauna/choir_hollow.png",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ]
+  },
+  "crown_beacon": {
+   "texture": "snow/fauna/crown_beacon.png",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
    ]
   },
   "rune_cairn": {
    "texture": "snow/fauna/rune_cairn.png",
    "size": [
-    64,
-    56
+    80,
+    70
    ],
    "pivot": [
-    32,
-    49
+    40,
+    62
    ]
   }
  },
@@ -1283,7 +1493,8 @@
    "snow:glassback_crawler": "glassback_crawler",
    "snow:rime_lantern": "rime_lantern",
    "snow:ashmaw": "ashmaw",
-   "snow:hoarfrost_giant": "hoarfrost_giant"
+   "snow:hoarfrost_giant": "hoarfrost_giant",
+   "snow:elder_bellback": "elder_bellback"
   },
   "item_icons_by_id": {
    "snow:ivory_tusk": "fauna_ivory_tusk",
@@ -1297,6 +1508,11 @@
    "snow:kiln_maul": "fauna_kiln_maul",
    "snow:glass_charm": "fauna_glass_charm",
    "snow:marrow_tonic": "fauna_marrow_tonic",
+   "snow:trough_char": "fauna_trough_char",
+   "snow:elder_horn": "fauna_elder_horn",
+   "snow:choir_lens": "fauna_choir_lens",
+   "snow:relay_crown": "fauna_relay_crown",
+   "snow:bellhorn_hammer": "fauna_bellhorn_hammer",
    "snow:book/glass_lance": "fauna_book_glass_lance",
    "snow:book/rime_stitch": "fauna_book_rime_stitch",
    "snow:book/kiln_breath": "fauna_book_kiln_breath"
@@ -1310,6 +1526,13 @@
     "snow:place/ashmaw_nest": "ashmaw_nest",
     "snow:place/singing_ice": "singing_ice",
     "snow:place/prowler_den": "prowler_den",
+    "snow:place/fishing_hole": "fishing_hole",
+    "snow:place/hare_run": "hare_run",
+    "snow:place/warm_spring": "warm_spring",
+    "snow:place/bandit_stash": "bandit_stash",
+    "snow:place/rime_ledge": "rime_ledge",
+    "snow:place/choir_hollow": "choir_hollow",
+    "snow:place/crown_beacon": "crown_beacon",
     "snow:place/rune_cairn": "rune_cairn"
    }
   }

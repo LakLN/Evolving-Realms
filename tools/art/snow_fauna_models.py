@@ -2,7 +2,7 @@
 import math
 import numpy as np
 from pixel3d import Part, Box, rot
-from snow_quadrupeds import wolf_spec, ram_spec, quadruped
+from snow_quadrupeds import wolf_spec, ram_spec, quadruped, RAM
 
 FROST = ["#eef4fc", "#c0d9ec", "#85a9cc", "#577391", "#35465e"]
 HIDE = ["#c3b6a0", "#9a8670", "#705e50", "#4b3d38", "#30282c"]
@@ -14,6 +14,15 @@ FIRE = ["#fff1b0", "#f9b563", "#d97048", "#823e3d"]
 # b3 readability: mid-tone coats that separate from snow (caribou grey-brown, slate).
 STAG = ["#b8a68c", "#8c7761", "#634f40", "#44362d", "#2a2220"]
 SLATE = ["#a9b8c8", "#7d8ea3", "#56667d", "#3a4658", "#252d3a"]
+# b4: the crown elder, a summit-grey bellback with rime along its spine.
+ELDER_FUR = ["#b9bcc2", "#93979f", "#6d717b", "#4d505a", "#33353d"]
+ELDER_DARK = ["#5c5862", "#45414b", "#302d36", "#211f27"]
+PINE = ["#86a88f", "#5f8070", "#415f54", "#2b443d"]
+MOSS = ["#d9d58a", "#aeb064", "#7f8648", "#565d34"]
+
+
+def _ramp(hexes):
+    return [np.array([int(c[i:i+2], 16) for i in (1, 3, 5)], float) for c in hexes]
 
 
 def quadruped_model(kind, state, frame):
@@ -60,6 +69,19 @@ def quadruped_model(kind, state, frame):
     for part in parts:
         if part.name not in ("tusk", "antler", "tine", "horn", "wing_fin"):
             part.ramp = [np.array([int(c[i:i+2], 16) for i in (1, 3, 5)], float) for c in palette]
+    return parts, marks
+
+
+def elder_model(kind, state, frame):
+    spec = ram_spec()
+    base = spec["body"]
+    spec.update(body=lambda: base() + [Part("rime", (0, 18.4, z), (0.9, 2.4, 0.9), FROST, rot(pitch=-18)) for z in (-6.5, -3.0, 0.5, 4.0)])
+    parts, marks = quadruped(spec, state, frame)
+    for part in parts:
+        if part.name in ("fleece", "chest", "rump", "thigh", "neck", "brow"):
+            part.ramp = _ramp(ELDER_FUR)
+        elif part.name in ("tail", "mane", "skull", "muzzle", "beard", "jaw", "shin", "ear"):
+            part.ramp = _ramp(ELDER_DARK)
     return parts, marks
 
 
@@ -117,11 +139,15 @@ def crystal(kind, state, frame):
     return parts, []
 
 
+# b4 scales: people about hero height, beasts a tile and a half long, large species in
+# larger cells (CELLS) instead of being shrunk to fit the shared 84x76 cell.
 SPECS = {
-    "frost_stag": (quadruped_model, 1.75), "tuskback": (quadruped_model, 1.85),
-    "pine_prowler": (quadruped_model, 1.6), "relay_cutthroat": (biped, 1.75),
-    "relay_slinger": (biped, 1.75), "cinder_acolyte": (biped, 1.65),
-    "hollow_carrier": (biped, 1.8), "glassback_crawler": (crystal, 1.9),
-    "rime_lantern": (crystal, 1.85), "ashmaw": (quadruped_model, 2.05),
-    "hoarfrost_giant": (biped, 2.25),
+    "frost_stag": (quadruped_model, 1.95), "tuskback": (quadruped_model, 2.3),
+    "pine_prowler": (quadruped_model, 1.85), "relay_cutthroat": (biped, 2.05),
+    "relay_slinger": (biped, 2.05), "cinder_acolyte": (biped, 1.95),
+    "hollow_carrier": (biped, 2.25), "glassback_crawler": (crystal, 2.15),
+    "rime_lantern": (crystal, 1.95), "ashmaw": (quadruped_model, 2.75),
+    "hoarfrost_giant": (biped, 3.6), "elder_bellback": (elder_model, 3.1),
 }
+MEDIUM, LARGE = ((104, 92), (52, 84)), ((140, 124), (70, 115))
+CELLS = {"frost_stag": MEDIUM, "pine_prowler": MEDIUM, "tuskback": MEDIUM, "hollow_carrier": MEDIUM, "ashmaw": LARGE, "hoarfrost_giant": LARGE, "elder_bellback": LARGE}

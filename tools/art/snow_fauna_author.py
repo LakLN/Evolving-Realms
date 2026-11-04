@@ -12,13 +12,13 @@ import numpy as np
 from PIL import Image
 
 from pixel3d import Part, Box, render, rot
-from snow_fauna_models import SPECS, FROST, HIDE, BRONZE, BLUE, FIRE, DARK, RED
+from snow_fauna_models import SPECS, CELLS, FROST, HIDE, BRONZE, BLUE, FIRE, DARK, RED, SLATE, PINE, MOSS
 from snow_p0_author import sheet, CELL, PIVOT, DIRECTIONS
 from snow_quadrupeds import COLUMNS, COLUMN_NAMES
 from asset_check import grid_frames
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "assets/sources/snow_fauna_b3"
+SOURCE = ROOT / "assets/sources/snow_fauna_b4"
 GAME = ROOT / "assets/game/snow/fauna"
 
 
@@ -37,6 +37,15 @@ def icons():
         "kiln_maul": shaft + [Box("head", (0, 7, 0), (6, 3, 3), BRONZE), Part("core", (0, 7, 3), (2, 2, 1), FIRE)],
         "glass_charm": [Part("ring", (0, 0, 0), (6, 6, 2), BRONZE), Part("gem", (0, 0, 2.5), (3, 4, 1), BLUE)],
         "marrow_tonic": [Part("bottle", (0, -1, 0), (5, 6, 4), BLUE), Box("neck", (0, 6, 0), (2, 3, 2), FROST), Box("cork", (0, 9, 0), (2.2, 1, 2.2), HIDE)],
+        # b4: living-region rewards.
+        "trough_char": [Part("body", (0, 0, 0), (8, 3, 2), FROST, rot(roll=-15)), Part("back", (0, 1.4, 0), (6.5, 1.6, 1.8), BLUE, rot(roll=-15)),
+                        Box("tail", (-9, 2.5, 0), (2, 2.5, 0.6), BLUE, rot(roll=-15)), Part("eye", (6, 1, 1.6), (0.7, 0.7, 0.5), DARK)],
+        "elder_horn": [Part("horn", (math.cos(a) * 5, math.sin(a) * 5, 0), (2.4 - i * 0.2, 2.4 - i * 0.2, 2), BRONZE) for i, a in enumerate([math.radians(200 + k * 40) for k in range(8)])],
+        "choir_lens": [Part("rim", (math.cos(a) * 6, math.sin(a) * 6, 0), (1.3, 1.3, 1.3), BRONZE) for a in [k * math.pi / 6 for k in range(12)]]
+                      + [Part("glass", (0, 0, 0), (5.4, 5.4, 0.8), BLUE), Part("glint", (-2, 2, 0.9), (1.4, 1.4, 0.3), FROST)],
+        "relay_crown": [Part("band", (math.cos(a) * 7, 0, math.sin(a) * 4), (1.6, 1.8, 1.4), BRONZE) for a in [k * math.pi / 7 for k in range(14)]]
+                       + [Part("point", (x, 3, 4), (1.1, 2.4, 0.8), BRONZE) for x in (-4, 0, 4)] + [Part("ember", (0, 0.5, 4.6), (1.4, 1.4, 0.6), FIRE)],
+        "bellhorn_hammer": shaft + [Box("head", (0, 7, 0), (5, 2.6, 2.6), SLATE), Part("horn", (5.5, 8.5, 0), (1.8, 2.6, 1.6), BRONZE, rot(roll=-35)), Box("cap", (-5.4, 7, 0), (0.8, 2.8, 2.8), BRONZE)],
     }
 
 
@@ -69,13 +78,14 @@ def main():
 
     for i, (name, (model, scale)) in enumerate(SPECS.items(), 4):
         posed = lambda state, frame, n=name, m=model: m(n, state, frame)
-        image = sheet(posed, COLUMNS, scale, fit="centre")
-        asset = {"id": "C%02d" % i, "name": name, "kind": "sheet", **write(image, name), "cell": list(CELL), "pivot": list(PIVOT), "rows": DIRECTIONS, "columns": COLUMN_NAMES}
+        cell, pivot = CELLS.get(name, (CELL, PIVOT))
+        image = sheet(posed, COLUMNS, scale, fit="centre", cell_size=cell, pivot=pivot)
+        asset = {"id": "C%02d" % i, "name": name, "kind": "sheet", **write(image, name), "cell": list(cell), "pivot": list(pivot), "rows": DIRECTIONS, "columns": COLUMN_NAMES}
         assets.append(asset)
-        index["characters"][name] = {"sheet": "snow/fauna/" + name + ".png", "frame": list(CELL), "columns": 11, "anchor": list(PIVOT), "anims": grid_frames(asset)}
+        index["characters"][name] = {"sheet": "snow/fauna/" + name + ".png", "frame": list(cell), "columns": 11, "anchor": list(pivot), "anims": grid_frames(asset)}
         index["mapping"]["creatures_by_id"]["snow:" + name] = name
         print("Authored", name, flush=True)
-    icon_sheet = Image.new("RGBA", (32 * 4, 32 * 3))
+    icon_sheet = Image.new("RGBA", (32 * 4, 32 * 4))
     for i, (name, parts) in enumerate(icons().items()):
         image = centered(parts)
         icon_sheet.alpha_composite(image, (i % 4 * 32, i // 4 * 32))
@@ -104,18 +114,46 @@ def main():
         "singing_ice": [Box("slab", (0, 9, 0), (3.2, 9, 1.2), BLUE, rot(roll=-6)), Box("left", (-5, 6, 1), (2, 6, 1.1), FROST, rot(roll=16)),
                         Box("right", (5, 5, 1), (1.8, 5, 1.1), BLUE, rot(roll=-20)), Box("sliver", (2, 13, 1.5), (0.8, 4, 0.6), FROST, rot(roll=-12)),
                         Part("drift", (0, 0.6, 3), (10, 1.2, 4), FROST)],
-        "prowler_den": [Part("mound", (0, 5, -3), (11, 5, 6), HIDE), Part("hole", (0, 3, 3), (5, 3.6, 1.6), DARK)]
-                       + [Box("root", (x, 5, 3), (0.9, 5.5, 0.9), BRONZE, rot(roll=x * 14)) for x in (-6, 6)] + [Box("arch", (0, 9.5, 3), (7, 0.9, 0.9), BRONZE),
-                       Part("bone", (6, 0.6, 7), (2.4, 0.6, 0.8), FROST)],
+        # b4 den: a dark hollow under a pine on a snowy hummock (b3 read as a flat disc).
+        "prowler_den": [Part("hummock", (0, 6, -2), (12, 7, 7), DARK), Part("snowcap", (0, 11.5, -3), (11, 3.2, 6), FROST),
+                        Part("hollow", (0, 5, 4.6), (5.6, 4.8, 1.4), ["#1b1720", "#14111a"]), Part("lip", (0, 9.6, 4.4), (6.2, 1.2, 1.4), FROST),
+                        Box("trunk", (2, 17, -4), (1.4, 6, 1.4), HIDE)] + [Part("crown", (2, 19 + k * 3.2, -4), (5 - k * 1.3, 2.4, 5 - k * 1.3), PINE) for k in range(4)]
+                       + [Box("root", (x, 5.5, 5.2), (0.7, 4.2, 0.7), ["#6b4a34", "#4a3324", "#2e2018"], rot(roll=x * 11)) for x in (-5.5, -2.5, 2.5, 5.5)]
+                       + [Box("claw", (x, 7, 6.5), (0.25, 1.8, 0.3), RED, rot(roll=14)) for x in (-8.4, -7.6, -6.8)]
+                       + [Part("bone", (5, 0.8, 8.5), (2.6, 0.6, 0.8), FROST, rot(yaw=30)), Part("skull", (8, 1, 8), (1.3, 1.1, 1.2), FROST)],
+        "fishing_hole": [Part("ice", (0, 0.3, 0), (13, 0.6, 9), BLUE), Part("hole", (0, 0.7, 1), (4.2, 0.4, 3), ["#2b4a6c", "#1d3350", "#132238"])]
+                        + [Part("stone", (math.cos(a) * 6.2, 1.1, 1 + math.sin(a) * 4.6), (1.4, 1.0, 1.2), DARK) for a in [k * math.pi / 4 for k in range(8)]]
+                        + [Box("pole", (7, 6, -2), (0.5, 7, 0.5), HIDE, rot(roll=30)), Box("line", (2.6, 5.6, 0), (0.15, 5, 0.15), FROST), Part("char", (-8, 1.4, 5), (3.2, 1, 1.2), FROST, rot(yaw=25))],
+        "hare_run": [Part("bush", (x, 4, z), (4.2, 4, 3.6), PINE) for x, z in [(-9, -2), (9, -3)]] + [Part("snow", (x, 7.5, z), (3, 1.2, 2.6), FROST) for x, z in [(-9, -2), (9, -3)]]
+                    + [Box("stake", (x, 2.2, 3), (0.5, 2.4, 0.5), HIDE) for x in (-4, 0, 4)] + [Box("cord", (0, 4, 3), (4.6, 0.2, 0.2), BRONZE)]
+                    + [Part("track", (x, 0.3, 6 + (k % 2)), (0.9, 0.2, 1.3), DARK) for k, x in enumerate((-8, -5, -2, 1, 4, 7))],
+        "warm_spring": [Part("rim", (math.cos(a) * 8, 1.4, math.sin(a) * 5.5), (2.2, 1.6, 2), DARK) for a in [k * math.pi / 5 for k in range(10)]]
+                       + [Part("water", (0, 1.2, 0), (7.5, 0.6, 5), ["#a8e0e8", "#6fc0d0", "#4498ae"]), Part("moss", (-6, 1.6, 5), (3.2, 0.8, 2), MOSS), Part("moss2", (7, 1.6, -3), (2.6, 0.8, 1.8), MOSS)]
+                       + [Part("steam", (x, y, z), (s, s, s), ["#ffffff", "#eef4fc", "#d8e6f2"]) for x, y, z, s in [(-2, 6, 0, 2.2), (2, 9, -1, 1.8), (-1, 12.5, -2, 1.5), (1.5, 15.5, -2, 1.1)]],
+        "bandit_stash": [Part("ash", (-5, 0.4, 2), (5, 0.6, 3.6), DARK)] + [Part("ring", (-5 + math.cos(a) * 4.6, 1, 2 + math.sin(a) * 3.4), (1.2, 1, 1), HIDE) for a in [k * math.pi / 4 for k in range(8)]]
+                        + [Box("stick", (-5, 1.6, 2), (3, 0.4, 0.4), ["#3a2a22", "#231914"], rot(yaw=a)) for a in (20, 100)]
+                        + [Box("slab", (6, 2, 0), (5, 1, 4), DARK, rot(roll=-14)), Part("prop", (2, 0.8, 1), (1.2, 1, 1.2), HIDE), Part("coin", (5, 1.2, 4.2), (0.9, 0.3, 0.9), BRONZE), Box("rag", (8, 0.8, 4.5), (1.6, 0.3, 1.2), BLUE)],
+        "rime_ledge": [Part("rock", (0, 6, -2), (11, 6, 5), DARK), Part("cap", (0, 11.5, -2), (8, 1.4, 4), FROST)]
+                      + [Box("beard", (x, 6 + (k % 3), 3.2), (0.6, 2.6 + (k % 2), 0.6), FROST if k % 2 else BLUE, rot(roll=-55 + (k % 3) * 6)) for k, x in enumerate((-7, -4.5, -2, 0.5, 3, 5.5, 8))],
+        "choir_hollow": [Part("dome", (0, 9, -2), (12, 10, 7), FROST), Part("side", (-10, 4, 1), (5, 4, 4), FROST), Part("side2", (10, 3.5, 0), (4.5, 3.5, 4), FROST),
+                         Part("mouth", (0, 6, 4.4), (5, 5.6, 1.6), ["#26304a", "#1a2136", "#111626"]), Part("glow", (0, 5, 5.4), (2.2, 2.4, 0.6), BLUE), Part("lip", (0, 11.6, 4), (6, 1.3, 1.6), FROST)]
+                        + [Box("spire", (x, 16 + k, -4 + k), (0.9, 6 - k, 0.9), BLUE, rot(roll=x * 2.5)) for k, x in enumerate((-7, 6, -3))]
+                        + [Box("pole", (-13, 8, 3), (0.5, 8, 0.5), HIDE), Box("cloth", (-10.5, 13, 3), (2.4, 2.2, 0.3), BLUE, rot(roll=-8))],
+        "crown_beacon": [Box("step", (0, 1.5 + k * 3, -k * 1.5), (11 - k * 2.5, 1.5, 6 - k), DARK) for k in range(3)]
+                        + [Box("post", (0, 11, -3), (1.6, 2, 1.6), DARK), Part("bowl", (0, 14.5, -3), (6, 2.4, 4.4), BRONZE), Part("crack", (2, 14.8, 1.2), (0.4, 2, 0.3), DARK),
+                           Part("coals", (0, 16.4, -3), (4.4, 0.9, 3.2), ["#5b3a34", "#3a2628", "#241819"]), Part("rime", (-8, 2.2, 4), (3, 1, 2.4), FROST)],
+
         "rune_cairn": [Part("stone", (0, y, 0), (w, h, w * 0.85), DARK) for y, w, h in [(3, 9, 3), (8.5, 7, 3), (13, 5, 2.6), (16.6, 3, 1.6)]]
                       + [Box("rune", (x, 8.5, 6.2), (0.6, 1.6, 0.4), BLUE) for x in (-3, 0, 3)] + [Part("cap", (0, 18.2, 0), (3.2, 1, 2.8), FROST)],
     }
+    landmarks = {"choir_hollow", "crown_beacon"}  # b4: larger set pieces
     for name, parts in statics.items():
-        image = centered(parts, (64, 56))
-        assets.append({"id": "L/" + name, "name": name, "kind": "sprite", **write(image, name), "pivot": [32, 49], "margin": 2})
-        index["places"][name] = {"texture": "snow/fauna/" + name + ".png", "size": [64, 56], "pivot": [32, 49]}
+        size, pivot = ((100, 88), [50, 79]) if name in landmarks else ((80, 70), [40, 62])  # b4: read at 40px tiles
+        image = centered(parts, size)
+        assets.append({"id": "L/" + name, "name": name, "kind": "sprite", **write(image, name), "pivot": pivot, "margin": 2})
+        index["places"][name] = {"texture": "snow/fauna/" + name + ".png", "size": list(size), "pivot": pivot}
         index["mapping"]["places"]["by_id"]["snow:place/" + name] = name
-    batch = {"schema": "er-asset-batch", "version": 1, "batch": "snow_fauna_b3", "package": "snow_mountain_full", "status": "candidate", "provenance": {"source": "original code-authored geometry", "date": "2026-11-04", "generator": "snow_fauna_author.py + pixel3d.py", "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette."}, "assets": assets}
+    batch = {"schema": "er-asset-batch", "version": 1, "batch": "snow_fauna_b4", "package": "snow_mountain_full", "status": "candidate", "provenance": {"source": "original code-authored geometry", "date": "2026-11-04", "generator": "snow_fauna_author.py + pixel3d.py", "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette. b4: larger cells for large species, people and beasts rescaled to the hero, the crown elder, a new den and living-region landmarks/rewards."}, "assets": assets}
     (SOURCE / "batch.json").write_text(json.dumps(batch, indent=1) + "\n")
     (ROOT / "assets/game/snow/snow_fauna_index.json").write_text(json.dumps(index, indent=1) + "\n")
     print("Full roster, items and landmarks built", flush=True)

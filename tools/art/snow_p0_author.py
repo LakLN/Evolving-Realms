@@ -94,39 +94,40 @@ HARE_SCALE = 1.35  # model units -> runtime pixels (body ~30 px, small-prey clas
 HARE_COLUMNS = [("idle", 0), ("walk", 0), ("walk", 1), ("walk", 2), ("walk", 3), ("hit", 0), ("death", 0), ("death", 1)]
 
 
-def _lowest(model, state, frame, direction, scale):
+def _lowest(model, state, frame, direction, scale, cell=CELL, pivot=PIVOT):
     """Lowest opaque row relative to the pivot, measured on an unclipped tall canvas."""
     parts, marks = model(state, frame)
-    tall = render(parts, (CELL[0], CELL[1] + 40), PIVOT, direction, marks=marks, scale=scale)
-    return int(np.nonzero(tall[..., 3].any(1))[0].max()) - PIVOT[1]
+    tall = render(parts, (cell[0], cell[1] + 40), pivot, direction, marks=marks, scale=scale)
+    return int(np.nonzero(tall[..., 3].any(1))[0].max()) - pivot[1]
 
 
-def sheet(model, columns, scale=1.0, fit="idle"):
+def sheet(model, columns, scale=1.0, fit="idle", cell_size=CELL, pivot=PIVOT):
     """fit "idle": the idle frame's nearest foot sits 1 px under the pivot row (hare).
     fit "centre": the row's whole standing foot range (idle/walk/attack/hit) is centred
     on the pivot, because three-quarter strides toward the camera project lower.
-    Every frame of a row shares one offset, so steps and hops keep their motion."""
-    w, h = CELL
+    Every frame of a row shares one offset, so steps and hops keep their motion.
+    cell_size/pivot default to the shared 84x76 cell; large species pass a bigger one."""
+    w, h = cell_size
     out = np.zeros((h * 4, w * len(columns), 4), np.uint8)
     for row, direction in enumerate(DIRECTIONS):
         if fit == "idle":  # measured on the cell itself, exactly as the accepted C01 bytes were made
             parts, marks = model(*columns[0])
-            idle = render(parts, CELL, PIVOT, direction, marks=marks, scale=scale)
-            offset = int(np.nonzero(idle[..., 3].any(1))[0].max()) - PIVOT[1] - 1
+            idle = render(parts, cell_size, pivot, direction, marks=marks, scale=scale)
+            offset = int(np.nonzero(idle[..., 3].any(1))[0].max()) - pivot[1] - 1
         else:
-            lows = [_lowest(model, s, f, direction, scale) for s, f in columns if s != "death"]
+            lows = [_lowest(model, s, f, direction, scale, cell_size, pivot) for s, f in columns if s != "death"]
             offset = round((min(lows) + max(lows)) / 2)
-        anchor = (PIVOT[0], PIVOT[1] - offset)
+        anchor = (pivot[0], pivot[1] - offset)
         for col, (state, frame) in enumerate(columns):
             parts, marks = model(state, frame)
-            cell = render(parts, CELL, anchor, direction, marks=marks, scale=scale)
+            cell = render(parts, cell_size, anchor, direction, marks=marks, scale=scale)
             ground = anchor
             for _ in range((4 if fit == "idle" else 8) if state == "death" else 0):  # a lying body rests on the ground point
                 low = int(np.nonzero(cell[..., 3].any(1))[0].max())  # may be clipped: iterate
-                if low <= PIVOT[1] + 1:
+                if low <= pivot[1] + 1:
                     break
-                ground = (ground[0], ground[1] - (low - PIVOT[1] - 1))
-                cell = render(parts, CELL, ground, direction, marks=marks, scale=scale)
+                ground = (ground[0], ground[1] - (low - pivot[1] - 1))
+                cell = render(parts, cell_size, ground, direction, marks=marks, scale=scale)
             out[row * h:(row + 1) * h, col * w:(col + 1) * w] = cell
     return Image.fromarray(out, "RGBA")
 

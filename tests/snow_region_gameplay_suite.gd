@@ -39,6 +39,7 @@ func _run() -> void:
 		for x in 16:
 			for home in s.roster.layer.native_chunk(first + Vector2i(x, y)):
 				if not samples.has(home.content_id): samples[home.content_id] = home
+	s.run.state.turn = _weather_turn(s, "calm") # Review creatures in clear air, not at the storm's sight edge.
 	var visuals: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/game/snow/snow_fauna_index.json"))
 	for id in visuals.mapping.creatures_by_id:
 		var definition: Dictionary = s._definition(id, 1)
@@ -77,7 +78,11 @@ func _run() -> void:
 	await _key(KEY_ESCAPE)
 	check(not app._skills_panel.visible, "Critical panel controls still close normally")
 	# Native landmark review uses actual resolved place definitions and terrain.
-	for name in ["glass_bowl", "old_kiln", "wind_loom", "relay_strongbox", "ashmaw_nest", "singing_ice", "prowler_den", "rune_cairn"]:
+	var calm := _weather_turn(s, "calm")
+	var storm := _weather_turn(s, "blizzard")
+	for name in ["glass_bowl", "old_kiln", "wind_loom", "relay_strongbox", "ashmaw_nest", "singing_ice", "prowler_den", "rune_cairn",
+			"fishing_hole", "hare_run", "warm_spring", "bandit_stash", "rime_ledge", "crown_beacon", "choir_hollow"]:
+		s.run.state.turn = storm if name == "choir_hollow" else calm # The hollow opens only in the whiteout.
 		var site: Dictionary = plan.sites.filter(func(p: Dictionary) -> bool: return str(p.instance_id).ends_with("/" + name))[0]
 		var at := Vector2i(int(site.position.x), int(site.position.y))
 		for d in [Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP]:
@@ -88,7 +93,29 @@ func _run() -> void:
 		app.map_view.refresh()
 		app._update_info()
 		await _capture("snow-region-" + name + ".png")
+	check(s.places.discovered(s, plan.sites.filter(func(p: Dictionary) -> bool: return str(p.instance_id).ends_with("/choir_hollow"))[0].instance_id), "The choir hollow is found during a blizzard")
+	# Recurring activity through the real E input and hint line.
+	var hole: Dictionary = plan.sites.filter(func(p: Dictionary) -> bool: return str(p.instance_id).ends_with("/fishing_hole"))[0]
+	s.run.state.turn = calm
+	var spot := Vector2i(int(hole.position.x), int(hole.position.y))
+	for d in [Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP]:
+		if s.terrain.walkable(spot + d):
+			_move_fixture(s, spot + d)
+			break
+	s.places.tick(s)
+	app.map_view.refresh()
+	app._update_info()
+	var place: Dictionary = s.locations.find(hole.instance_id)
+	check("[8 left]" in app.place_hint(place), "Hint shows the remaining uses: " + app.place_hint(place))
+	await _key(KEY_E)
+	check(s.places.uses(s, hole.instance_id, "fish") == 1 and "recovering" in app.place_hint(place), "E fishes once; the hint then says the hole is recovering")
+	await _capture("snow-region-fishing-recovering.png")
 	_finish()
+
+func _weather_turn(s: RefCounted, wanted: String) -> int:
+	for t in range(1, 3000):
+		if [t, t + 4].all(func(u: int) -> bool: return str(s.environment.weather(s, u).get("id", "calm")) == wanted): return t
+	return 1
 
 func _move_fixture(s: RefCounted, tile: Vector2i) -> void:
 	s.position = tile
@@ -97,6 +124,7 @@ func _move_fixture(s: RefCounted, tile: Vector2i) -> void:
 	s.objects.follow(tile)
 	s.locations.follow(tile, s.cache.chunks)
 	s.roster.follow(tile, s.cache.chunks)
+	s.roster.refresh(s)
 	s._reveal()
 	s.dirty = true
 
