@@ -328,7 +328,7 @@ func _build_hud(parent: Control) -> void:
 	_region_hint.mouse_filter = Control.MOUSE_FILTER_PASS
 	_region_hint.add_theme_color_override("font_color", Color("cfe3b0"))
 	_controls_hint = _label(column, CONTROLS_TURN, 15)
-	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Black: unexplored, dim: remembered.", 15)
+	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Blizzards limit sight; the map records what you pass.", 15)
 	_developer_overlay = PanelContainer.new()
 	_developer_overlay.position = Vector2(12, 100)
 	_developer_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE

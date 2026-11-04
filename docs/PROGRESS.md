@@ -1,5 +1,27 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Presentation visibility: clear outdoor view (2026-11-04)
+
+Slice 2 of UI_UX_FOUNDATION, renderer only (`map_view.gd`). In calm weather the camera
+view + 3 tiles is drawn without fog; creatures and perceivable objects there are drawn,
+and unconditional `visible`-mode landmarks too. When weather shortens sight (blizzard)
+the old sight circle is drawn. Session `visible`/`explored`, discovery, targeting, AI,
+rest/autosave, fog masks and saves are unchanged; minimap still shows explored tiles
+only. Hidden objects keep the perception gate; conditional/hidden places stay undrawn
+until discovered. HUD legend no longer says "Black: unexplored".
+`gameplay` fog assertion updated: +12 tiles is clear but not sighted/explored, +26
+tiles (past the view) is still opaque.
+
+Ran `scripts/test.ps1 -Render -Only gameplay,snow-gameplay,discovery-gameplay,
+talent-gameplay,rendered-gameplay,rendered-snow-gameplay`: all headless PASS (30, 46,
+6, 16); rendered-snow 13/65 failed while a foreign Godot process ran, then 65/0 alone;
+rendered-gameplay 33/0. Re-run after the legend edit: gameplay 30/0; snow-gameplay
+once 1 failure "World clock pauses while selecting" (real-time race: `before` is read
+before the E press), 46/0 on rerun; pre-existing test flake, logged not fixed.
+Reviewed captures developer-overlay.png and snow-scree-wolf.png.
+Known gap: unconditional landmarks render before their discovery event at sight 7.
+Next: compact HUD + skill strip (slice 1), the bottom text slab still covers ~25%.
+
 ## Toggleable developer overlay (2026-11-04)
 
 F3 was unused. Added a compact PanelContainer/Label using the existing HUD theme;

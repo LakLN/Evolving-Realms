@@ -57,8 +57,10 @@ func _run() -> void:
 	# Fog is one soft texture over the cached chunks (Visual Prototype); fog_at reads it back.
 	check(entry.ground is TileMapLayer and app.map_view._fog.texture != null, "Terrain uses TileMapLayer and fog is rendered")
 	check(app.map_view.fog_at(start) == -1, "Current tile has no fog overlay")
-	var far := start + Vector2i(15, 0)
-	check(app.map_view.fog_at(far) == 6, "Unseen tile is opaque fog in renderer")
+	var near := start + Vector2i(12, 0)
+	check(app.map_view.fog_at(near) == -1 and not app.session.visible.has(near) and not app.session.explored.has(near), "Calm outdoor camera view is drawn clear without recording sight or exploration")
+	var far := start + Vector2i(26, 0)
+	check(app.map_view.fog_at(far) == 6, "Unseen tile beyond the camera view is opaque fog in renderer")
 	var direction := Vector2i.ZERO
 	for candidate in Spawn.DIRECTIONS:
 		if app.session.terrain.walkable(start + candidate):

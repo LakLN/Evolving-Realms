@@ -22,6 +22,12 @@ var player_step_time := STEP_TIME
 var _player_tween_origin := Vector2i.ZERO
 const FOG_UNSEEN := Color(0.02, 0.03, 0.05, 1.0)
 const FOG_REMEMBERED := Color(0.03, 0.05, 0.09, 0.58)
+## Presentation visibility (UI_UX_FOUNDATION): in calm outdoor weather the camera view
+## plus this margin (tiles) is drawn clear, so the fog edge stays off screen. Purely
+## visual: session sight, exploration, discovery, targeting and AI ranges are unchanged.
+const VIEW_MARGIN := 3
+## Tiles drawn clear this refresh; empty when weather limits sight (then session.visible).
+var _view_rect := Rect2i()
 var session: RefCounted
 ## Selected combat target, highlighted on the map.
 var target_id := ""
@@ -202,6 +208,7 @@ func refresh() -> void:
 		chunk_nodes[chunk].root.position = Vector2(chunk * Terrain.CHUNK_SIZE - _origin) * px
 	if added > 0 and OS.get_cmdline_user_args().has("--profile-streaming"):
 		print("PROFILE presentation chunks=%d ms=%.2f" % [added, (Time.get_ticks_usec() - profile_start) / 1000.0])
+	_update_view()
 	_update_fog()
 	_update_player()
 	_sync_creatures()
@@ -322,6 +329,18 @@ func _add_chunk(chunk: Vector2i) -> void:
 				# Flat flowers/shells/mushrooms: dressing only, never on blockers.
 				decor.set_cell(local, Art.DECOR_SOURCE, Art.pick(art.decor[kind], Art.tile_roll(global_tile, 4)))
 
+func _update_view() -> void:
+	## Weather that shortens sight (blizzards) keeps the mechanical sight circle on screen.
+	_view_rect = Rect2i()
+	if session.sight_radius() < session.SIGHT_RADIUS:
+		return
+	var half := Vector2i((get_viewport_rect().size / (camera.zoom if camera != null else Vector2.ONE) / (2.0 * px)).ceil()) + Vector2i.ONE * VIEW_MARGIN
+	_view_rect = Rect2i(session.position - half, half * 2 + Vector2i.ONE)
+
+func shown(tile: Vector2i) -> bool:
+	## Drawn in clear view: never records exploration or discovery.
+	return _view_rect.has_point(tile) if _view_rect.size != Vector2i.ZERO else session.visible.has(tile)
+
 func _update_fog() -> void:
 	## One texel per tile over the nine cached chunks, linearly filtered for soft edges.
 	var start: Vector2i = _origin - Vector2i.ONE * Terrain.CHUNK_SIZE
@@ -329,7 +348,7 @@ func _update_fog() -> void:
 	for y in side:
 		for x in side:
 			var tile := start + Vector2i(x, y)
-			_fog_image.set_pixel(x, y, Color(FOG_REMEMBERED, 0.0) if session.visible.has(tile) else (FOG_REMEMBERED if session.explored.has(tile) else FOG_UNSEEN))
+			_fog_image.set_pixel(x, y, Color(FOG_REMEMBERED, 0.0) if shown(tile) else (FOG_REMEMBERED if session.explored.has(tile) else FOG_UNSEEN))
 	_fog_texture.update(_fog_image)
 	_fog.position = Vector2(-Terrain.CHUNK_SIZE, -Terrain.CHUNK_SIZE) * px
 	_fog.scale = Vector2(px, px)
@@ -412,7 +431,7 @@ func _draw_shadow(node: Node2D, radius: float) -> void:
 # ------------------------------------------------------------------ creatures
 
 func _sync_creatures() -> void:
-	## Creatures in current sight get a node; moves tween, deaths play out then vanish.
+	## Creatures in clear view get a node; moves tween, deaths play out then vanish.
 	var seen := {}
 	if session.roster != null:
 		for creature in session.roster.creatures.values():
@@ -421,7 +440,7 @@ func _sync_creatures() -> void:
 				if _creatures.has(id):
 					_kill_creature(id)
 				continue
-			if not session.visible.has(creature.position):
+			if not shown(creature.position):
 				continue
 			seen[id] = true
 			if not _creatures.has(id):
@@ -521,7 +540,7 @@ func _draw_objects() -> void:
 	for objects in session.objects.chunks.values():
 		for instance in objects:
 			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
-			if not session.explored.has(tile) or not session.perceives(instance):
+			if not (session.explored.has(tile) or shown(tile)) or not session.perceives(instance):
 				continue
 			var definition: Dictionary = session.objects.definition_for(instance)
 			var consumed: bool = session.is_consumed(instance.instance_id)
@@ -562,18 +581,19 @@ func _draw_select(layer: Node2D, point: Vector2, color: Color) -> void:
 		layer.draw_line(c, c - Vector2(0, corner.y * h * 0.4), color, 2.0)
 
 func _draw_places() -> void:
-	## Only places this Run has discovered (never hidden ones); resolved ones dimmed.
+	## Only places this Run has discovered, plus unconditional "visible" landmarks in clear
+	## view (they would be discovered on sight anyway); resolved ones dimmed.
 	if session.locations == null:
 		return
 	var targets: Array = session.places.targets(session)
 	for place in session.locations.loaded():
 		var tile := Vector2i(int(place.position.x), int(place.position.y))
-		if not session.explored.has(tile) or not session.places.discovered(session, place.instance_id):
+		var definition: Dictionary = session.locations.definition_for(place)
+		if not (session.explored.has(tile) and session.places.discovered(session, place.instance_id)) and not (shown(tile) and _landmark(definition)):
 			continue
 		var state: String = session.places.state(session, place)
 		var done: bool = state in ["resolved", "unavailable"]
 		var point := _point(tile)
-		var definition: Dictionary = session.locations.definition_for(place)
 		var sprite: Texture2D = art.place_sprite(definition) if art.ready() else null
 		if sprite != null:
 			var size := sprite.get_size()
@@ -587,6 +607,10 @@ func _draw_places() -> void:
 			_object_layer.draw_colored_polygon(PackedVector2Array([point + Vector2(0, -r), point + Vector2(r, 0), point + Vector2(0, r), point + Vector2(-r, 0)]), color)
 		if not targets.is_empty() and targets[0].instance_id == place.instance_id:
 			_draw_select(_object_layer, point, Color("f8df8b"))
+
+static func _landmark(definition: Dictionary) -> bool:
+	var rule: Dictionary = definition.get("payload", {}).get("discovery", {"mode": "visible"})
+	return rule.get("mode") == "visible" and rule.get("conditions", []).is_empty()
 
 func _draw_marks() -> void:
 	## HP bars over wounded creatures in sight.
@@ -618,7 +642,7 @@ func _draw_sensed() -> void:
 	for objects in session.objects.chunks.values():
 		for instance in objects:
 			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
-			if session.visible.has(tile) or not session.senses(tile) or session.is_consumed(instance.instance_id) or not session.perceives(instance):
+			if shown(tile) or not session.senses(tile) or session.is_consumed(instance.instance_id) or not session.perceives(instance):
 				continue
 			var point := _point(tile)
 			var hidden: bool = session.objects.definition_for(instance).payload.get("hidden", false)
