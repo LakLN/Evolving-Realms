@@ -139,6 +139,11 @@ def main():
                          Part("mouth", (0, 6, 4.4), (5, 5.6, 1.6), ["#26304a", "#1a2136", "#111626"]), Part("glow", (0, 5, 5.4), (2.2, 2.4, 0.6), BLUE), Part("lip", (0, 11.6, 4), (6, 1.3, 1.6), FROST)]
                         + [Box("spire", (x, 16 + k, -4 + k), (0.9, 6 - k, 0.9), BLUE, rot(roll=x * 2.5)) for k, x in enumerate((-7, 6, -3))]
                         + [Box("pole", (-13, 8, 3), (0.5, 8, 0.5), HIDE), Box("cloth", (-10.5, 13, 3), (2.4, 2.2, 0.3), BLUE, rot(roll=-8))],
+        "sunken_sledge": [Part("ice", (0, 0.3, 0), (13, 0.6, 9), BLUE), Part("crack", (-4, 0.7, 2), (5, 0.3, 0.6), FROST, rot(yaw=30)), Box("bed", (1, 1.6, 0), (7, 1, 3.4), HIDE, rot(roll=-12))]
+                         + [Box("runner", (1, 3 + k * 0.2, z), (8, 0.5, 0.5), BRONZE, rot(roll=-12)) for k, z in enumerate((-3.6, 3.6))]
+                         + [Part("load", (2, 3.6, 0), (4.4, 2, 2.8), BLUE), Box("lash", (2, 3.8, 0), (0.4, 2.2, 3), HIDE), Part("rime", (-6, 1.2, 4), (3, 0.8, 2), FROST)],
+        "snowbloom": [Part("bank", (0, 2, -1), (10, 2.4, 6), FROST)] + [Part("leaf", (x, 4.2, z), (1.8, 0.6, 1.2), PINE, rot(yaw=x * 20)) for x, z in [(-6, 1), (-3, 3), (0, 0), (3, 3), (6, 1), (-1, 4.5), (4, -1)]]
+                     + [Part("bloom", (x, 5, z), (1, 1, 1), ["#ffffff", "#e6ecfa", "#b8c4e4"]) for x, z in [(-6, 1), (-3, 3), (0, 0), (3, 3), (6, 1)]] + [Part("heart", (x, 5.6, z + 0.4), (0.4, 0.4, 0.4), MOSS) for x, z in [(-3, 3), (3, 3), (0, 0)]],
         "crown_beacon": [Box("step", (0, 1.5 + k * 3, -k * 1.5), (11 - k * 2.5, 1.5, 6 - k), DARK) for k in range(3)]
                         + [Box("post", (0, 11, -3), (1.6, 2, 1.6), DARK), Part("bowl", (0, 14.5, -3), (6, 2.4, 4.4), BRONZE), Part("crack", (2, 14.8, 1.2), (0.4, 2, 0.3), DARK),
                            Part("coals", (0, 16.4, -3), (4.4, 0.9, 3.2), ["#5b3a34", "#3a2628", "#241819"]), Part("rime", (-8, 2.2, 4), (3, 1, 2.4), FROST)],

@@ -160,8 +160,8 @@ drawn or targetable.
 
 - One place per chunk; no interiors/dungeons; chains limited to ordered steps of one place.
 - Places are non-blocking markers; no terrain change (needs a terrain overlay capability).
-- No time/weather triggers, repeatable/respawning events or random ambient events
-  (`event.repeat`, `location.trigger.timer` would be new capabilities).
+- No timer triggers or random ambient events (`location.trigger.timer` would be a new
+  capability). Recurring interactions and weather conditions exist since 2026-11-04 (below).
 - Sense-radius talent markers do not show places yet.
 - Authored place sets added later need a new layer tag to keep established regions intact.
 
@@ -186,3 +186,21 @@ confirmed Knowledge; Escape cancels either panel. Character `knowledge` stores
 versioned full fact text and unlock turn, separately from journal/atlas records.
 Only successful material interaction unlocks a scoped fact; trying works before
 learning it. No new top-level Run field or SQL migration.
+
+## Recurring interactions and weather (event.repeat, 2026-11-04)
+
+Interaction field `repeat: {"every": 10..5000, "times"?: 2..50}`: once resolved, the
+interaction is offered again `every` turns (real-time: seconds) after its latest use, at
+most `times` uses in all (omitted: unlimited). Not allowed with `exclusive`, world
+methods or `discover` triggers. The resolved record keeps the latest use and adds
+`count` (absent = 1, so every older record reads unchanged; `count` < 2 is refused as
+corrupt). The first use keeps the original roll key; use n adds `/r<n>` to the chance/loot
+key and award source, so each use rolls independently but stays fixed for the Run.
+State `recovering` (between uses) sits between interactable and resolved; E refuses with
+"has not recovered yet" and spends no turn. The hint shows `[n left]`; the journal
+replays the latest use. No new top-level Run field, no SQL migration.
+
+Condition `{"type": "weather", "values": ["blizzard" | ... | "calm"]}` reads the land's
+scheduled weather at the player (EnvironmentRuntime; never stored, so reloading cannot
+reroll it). It works in discovery, event and reveal conditions, e.g. a place that can be
+found only during a blizzard, or an activity closed in a storm.

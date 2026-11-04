@@ -322,7 +322,7 @@
         -0.3,
         -0.48
       ],
-      "danger": 1,
+      "danger": 2,
       "exposure": "open",
       "opportunity": "an abandoned roofed outpost where the forest meets the pass road",
       "ground": "frozen",
@@ -862,7 +862,9 @@
     {"id": "bandit_stash", "content_id": "snow:place/bandit_stash", "at": [-0.375, -0.405], "area": "broken_relay", "reason": "the camp stash, restocked while the camp is held"},
     {"id": "rime_ledge", "content_id": "snow:place/rime_ledge", "at": [0.575, -0.585], "area": "windcut_stair", "reason": "storm rime that forms only in a blizzard"},
     {"id": "choir_hollow", "content_id": "snow:place/choir_hollow", "at": [-0.02, -0.665], "area": "white_choir", "reason": "a hollow that opens only in the whiteout"},
-    {"id": "crown_beacon", "content_id": "snow:place/crown_beacon", "at": [-0.37, -0.85], "area": "crown_shelf", "reason": "the relay beacon, rebuilt across calm and storm"}
+    {"id": "crown_beacon", "content_id": "snow:place/crown_beacon", "at": [-0.37, -0.85], "area": "crown_shelf", "reason": "the relay beacon, rebuilt across calm and storm"},
+    {"id": "sunken_sledge", "content_id": "snow:place/sunken_sledge", "at": [0.57, 0.2], "area": "mirror_trough", "reason": "a sledge frozen into the lake: heat or force"},
+    {"id": "snowbloom", "content_id": "snow:place/snowbloom", "at": [0.22, 0.6], "area": "leefoot_basin", "reason": "herbs that regrow in the lee, picked in calm weather"}
   ],
   "atlas_version": 2,
   "creature_homes": [

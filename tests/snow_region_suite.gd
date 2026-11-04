@@ -139,7 +139,7 @@ func _legacy() -> void:
 
 func _sites(s: RefCounted, plan: Dictionary) -> void:
 	var report: Dictionary = Survey.survey(s.terrain, plan, s.position)
-	check(plan.sites.size() == 25 and plan.sites.all(func(site: Dictionary) -> bool: return report.reached_set.has(Vector2i(int(site.position.x), int(site.position.y)))), "Every original and new authored site is reachable from the certified start")
+	check(plan.sites.size() == 27 and plan.sites.all(func(site: Dictionary) -> bool: return report.reached_set.has(Vector2i(int(site.position.x), int(site.position.y)))), "Every original and new authored site is reachable from the certified start")
 	check(plan.creature_homes.all(func(home: Dictionary) -> bool: return report.reached_set.has(Vector2i(int(home.position.x), int(home.position.y)))), "All authored encounter homes are on the reachable land")
 
 func _site(plan: Dictionary, name: String) -> Dictionary:
@@ -328,6 +328,20 @@ func _living(world_id: String, plan: Dictionary) -> void:
 	s.run.state.turn = _weather_turn(s, "blizzard", int(s.run.state.turn))
 	check(_act(s, beacon, "vigil") and s.run.state.inventory.has("snow:relay_crown"), "Beacon: keeping it through a storm earns the keepers' crown")
 	check(_act(s, beacon, "rekindle") and not _act(s, beacon, "rekindle"), "Beacon: feeding it with resin recovers between uses")
+	# Thin areas: a sledge in the lake ice (existing heat/force rules) and regrowing herbs.
+	var sledge := _site(plan, "sunken_sledge")
+	_go(s, sledge)
+	check(s.places.discovered(s, sledge.instance_id) and not _act(s, sledge, "heat"), "Sunken sledge: thawing needs resin and wood")
+	_award(s, [{"content_id": "snow:resin", "version": 1, "quantity": 1}, {"content_id": "core:wood", "version": 1, "quantity": 1}], "thaw fuel")
+	var linen := int(s.run.state.inventory.get("snow:frost_linen", {}).get("quantity", 0))
+	check(_act(s, sledge, "heat") and int(s.run.state.inventory["snow:frost_linen"].quantity) == linen + 2 and not _act(s, sledge, "force"), "Sunken sledge: a fire frees the whole load and excludes breaking it")
+	var bloom := _site(plan, "snowbloom")
+	_go(s, bloom)
+	s.run.state.turn = _weather_turn(s, "blizzard", int(s.run.state.turn))
+	check(not _act(s, bloom, "pick"), "Snowbloom: buried in a blizzard")
+	s.run.state.turn = _weather_turn(s, "calm", int(s.run.state.turn))
+	var herbs := int(s.run.state.inventory.get("core:herb", {}).get("quantity", 0))
+	check(_act(s, bloom, "pick") and int(s.run.state.inventory["core:herb"].quantity) >= herbs + 2 and not _act(s, bloom, "pick"), "Snowbloom: herbs in calm weather, then it regrows")
 	var saved: Dictionary = s.run.state.duplicate(true)
 	check(s.save(), "Save the living-region Run")
 	var resumed := Session.new(store)

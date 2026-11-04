@@ -81,7 +81,7 @@ func _run() -> void:
 	var calm := _weather_turn(s, "calm")
 	var storm := _weather_turn(s, "blizzard")
 	for name in ["glass_bowl", "old_kiln", "wind_loom", "relay_strongbox", "ashmaw_nest", "singing_ice", "prowler_den", "rune_cairn",
-			"fishing_hole", "hare_run", "warm_spring", "bandit_stash", "rime_ledge", "crown_beacon", "choir_hollow"]:
+			"fishing_hole", "hare_run", "warm_spring", "bandit_stash", "rime_ledge", "crown_beacon", "sunken_sledge", "snowbloom", "choir_hollow"]:
 		s.run.state.turn = storm if name == "choir_hollow" else calm # The hollow opens only in the whiteout.
 		var site: Dictionary = plan.sites.filter(func(p: Dictionary) -> bool: return str(p.instance_id).ends_with("/" + name))[0]
 		var at := Vector2i(int(site.position.x), int(site.position.y))

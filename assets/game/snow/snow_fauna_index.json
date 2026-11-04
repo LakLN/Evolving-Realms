@@ -1458,6 +1458,28 @@
     79
    ]
   },
+  "sunken_sledge": {
+   "texture": "snow/fauna/sunken_sledge.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "snowbloom": {
+   "texture": "snow/fauna/snowbloom.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
   "crown_beacon": {
    "texture": "snow/fauna/crown_beacon.png",
    "size": [
@@ -1532,6 +1554,8 @@
     "snow:place/bandit_stash": "bandit_stash",
     "snow:place/rime_ledge": "rime_ledge",
     "snow:place/choir_hollow": "choir_hollow",
+    "snow:place/sunken_sledge": "sunken_sledge",
+    "snow:place/snowbloom": "snowbloom",
     "snow:place/crown_beacon": "crown_beacon",
     "snow:place/rune_cairn": "rune_cairn"
    }

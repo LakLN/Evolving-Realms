@@ -755,6 +755,38 @@
    "margin": 2
   },
   {
+   "id": "L/sunken_sledge",
+   "name": "sunken_sledge",
+   "kind": "sprite",
+   "file": "sunken_sledge.png",
+   "sha256": "97dde5f4c33dffba07cde5f3b85b0a720e8fae93773ac4032bdbe644c36d9602",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/snowbloom",
+   "name": "snowbloom",
+   "kind": "sprite",
+   "file": "snowbloom.png",
+   "sha256": "2f1f2987d00587ae2eba9d987f27926a41516e7d9081cb49a2d5717269d326c0",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
    "id": "L/crown_beacon",
    "name": "crown_beacon",
    "kind": "sprite",

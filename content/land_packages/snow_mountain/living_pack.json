@@ -1383,6 +1383,312 @@
      }
     ]
    }
+  },
+  {
+   "content_id": "snow:event/sledge_heat",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Sunken sledge / heat",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:frost_linen",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:coin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "The lake ice softens around the sledge. Its load comes up whole.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:frost_linen",
+        "version": 1,
+        "quantity": 2
+       },
+       {
+        "content_id": "snow:bronze_scrap",
+        "version": 1,
+        "quantity": 3
+       },
+       {
+        "content_id": "core:coin",
+        "version": 1,
+        "quantity": 5
+       },
+       {
+        "content_id": "snow:bark_ration",
+        "version": 1,
+        "quantity": 2
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/sledge_force",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Sunken sledge / force",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:frost_linen",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:coin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "You break the sledge out of the lake ice. Some of the load goes down with the shards.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:frost_linen",
+        "version": 1,
+        "quantity": 2
+       },
+       {
+        "content_id": "snow:bronze_scrap",
+        "version": 1,
+        "quantity": 3
+       },
+       {
+        "content_id": "core:coin",
+        "version": 1,
+        "quantity": 5
+       },
+       {
+        "content_id": "snow:bark_ration",
+        "version": 1,
+        "quantity": 2
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/sunken_sledge",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Sunken sledge",
+   "description": "A carriers' sledge that went through the lake ice and froze in, runners up. Its load is still lashed on.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/sledge_heat",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/sledge_force",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "supplies"
+   },
+   "payload": {
+    "category": "supplies",
+    "visual": "sunken_sledge",
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "discovery": {
+     "mode": "proximity",
+     "radius": 4
+    },
+    "world_properties": {
+     "version": 1,
+     "material": "ordinary_ice",
+     "fracture_attack": 10,
+     "thaw_fuel": [
+      {
+       "content_id": "snow:resin",
+       "version": 1,
+       "quantity": 1
+      },
+      {
+       "content_id": "core:wood",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "interactions": [
+     {
+      "id": "heat",
+      "verb": "Thaw the sledge free",
+      "world_method": "heat",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/sledge_heat",
+       "version": 1
+      }
+     },
+     {
+      "id": "force",
+      "verb": "Break the sledge out",
+      "world_method": "force",
+      "exclusive": true,
+      "event": {
+       "content_id": "snow:event/sledge_force",
+       "version": 1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/snowbloom",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Snowbloom",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:herb",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "calm"
+      ]
+     }
+    ],
+    "message": "You pick the white-flowered herbs that push up through the lee snow, leaving the roots to regrow.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:herb",
+        "version": 1,
+        "quantity": 2
+       }
+      ]
+     },
+     {
+      "type": "chance",
+      "chance_per_10000": 4000,
+      "message": "A few more grow under the drift.",
+      "outcomes": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "core:herb",
+          "version": 1,
+          "quantity": 1
+         }
+        ]
+       }
+      ],
+      "otherwise": []
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/snowbloom",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Snowbloom patch",
+   "description": "Low white flowers on a sheltered bank, the only green in the basin.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/snowbloom",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "resource_site"
+   },
+   "payload": {
+    "category": "resource_site",
+    "visual": "snowbloom",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "pick",
+      "verb": "Pick snowbloom",
+      "event": {
+       "content_id": "snow:event/snowbloom",
+       "version": 1
+      },
+      "repeat": {
+       "every": 100,
+       "times": 5
+      }
+     }
+    ]
+   }
   }
  ]
 }

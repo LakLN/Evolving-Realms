@@ -139,3 +139,19 @@ species) + encounter homes `enc:v1/...` from activated `encounter` definitions a
 revision the chunk was established at (World region ledger). Roster, AI, combat, loot,
 statuses and persistence are shared, with no species-specific code. See
 [AI_WORLD_AND_ENCOUNTERS.md](AI_WORLD_AND_ENCOUNTERS.md).
+
+## Dynamic authored homes (layout v7, 2026-11-04)
+
+Authored plan homes may carry metadata (copied from the layout by LayoutDesigner;
+procedural v1 homes never do):
+
+- `weather: [ids]`: the creature is present only while the land's scheduled weather is
+  one of them. Untouched individuals are derived data and simply vanish when it ends; a
+  wounded one keeps its Run mutation and returns with the next such weather.
+- `returns: {every >= 50, times 1..5}`: after an individual's death a new one (instance
+  `<home>/r<n>`, own loot key) takes the home `every` turns later, at most `times`
+  times, and never appears inside ACTIVE_RADIUS of the player. Only these homes store
+  `died_turn` in their death mutation; other kills are saved exactly as before.
+
+`CreatureRoster.refresh` resolves presence after places each turn/pulse and when a Run
+loads; it is a pure function of the plan, the weather schedule and Run state.
