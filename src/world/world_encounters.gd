@@ -133,6 +133,11 @@ func generate(terrain: RefCounted, chunk: Vector2i, bytes: PackedByteArray, at_r
 	var order_stream := Loot.number("encounters-v1/order")
 	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
 	var candidates: Array = []
+	var seeds := PackedInt64Array()
+	var chances := PackedInt32Array()
+	for rule in eligible:
+		seeds.append(terrain.stream_seed(rule.stream))
+		chances.append(int(rule.definition.payload.per_10000))
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
@@ -140,9 +145,11 @@ func generate(terrain: RefCounted, chunk: Vector2i, bytes: PackedByteArray, at_r
 			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
 			if habitat.is_empty() or occupied.has(point):
 				continue
-			for rule in eligible:
+			# Pure predicates: rolling first (rule order kept) selects the same rule.
+			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
+				var rule: Dictionary = eligible[i]
 				var p: Dictionary = rule.definition.payload
-				if not (habitat in p.biomes or (adaptive and terrain.ecology_hosts(ground, point, str(p.creature.content_id)))) or terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(p.per_10000) or not _tile_allows(terrain, chunk, bytes, point, p):
+				if not (habitat in p.biomes or (adaptive and terrain.ecology_hosts(ground, point, str(p.creature.content_id)))) or not _tile_allows(terrain, chunk, bytes, point, p):
 					continue
 				candidates.append({"point": point, "local": Vector2i(x, y), "rule": rule, "order": terrain.coordinate_hash(point.x, point.y, order_stream)})
 				break

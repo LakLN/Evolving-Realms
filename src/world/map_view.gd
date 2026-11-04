@@ -116,6 +116,10 @@ func _ready() -> void:
 	camera.enabled = true
 
 func _process(delta: float) -> void:
+	if session != null:
+		# Off-screen streamed chunks, a few rows per frame; once all are drawn, let the
+		# session prepare the next ring of chunks (pure, one unit per frame).
+		if paint_pending() == 0 and session.has_method("prefetch_step"): session.prefetch_step()
 	if session == null or not session.has_method("environment_status"):
 		return
 	_weather_time += delta
@@ -204,6 +208,9 @@ func refresh() -> void:
 		if not chunk_nodes.has(chunk):
 			_add_chunk(chunk)
 			added += 1
+		# Chunks a step from the hero's view paint at once; farther ones in idle frames.
+		if chunk_nodes[chunk].has("bytes") and _near_view(chunk):
+			_paint_chunk(chunk)
 		# Chunk-local cells avoid TileMapLayer's serialized coordinate limits.
 		chunk_nodes[chunk].root.position = Vector2(chunk * Terrain.CHUNK_SIZE - _origin) * px
 	if added > 0 and OS.get_cmdline_user_args().has("--profile-streaming"):
@@ -261,15 +268,63 @@ func _add_chunk(chunk: Vector2i) -> void:
 	var ground := TileMapLayer.new()
 	ground.tile_set = _tiles
 	root.add_child(ground)
-	var entry := {"root": root, "ground": ground}
-	chunk_nodes[chunk] = entry
-	var bytes: PackedByteArray = session.cache.chunks[chunk]
+	chunk_nodes[chunk] = {"root": root, "ground": ground, "bytes": session.cache.chunks[chunk]}
+
+const PAINT_MARGIN := 24 # Tiles beyond the hero within which a chunk must be painted now.
+
+func _near_view(chunk: Vector2i) -> bool:
+	var base: Vector2i = chunk * Terrain.CHUNK_SIZE
+	var p: Vector2i = session.position
+	var dx := maxi(0, maxi(base.x - p.x, p.x - (base.x + Terrain.CHUNK_SIZE - 1)))
+	var dy := maxi(0, maxi(base.y - p.y, p.y - (base.y + Terrain.CHUNK_SIZE - 1)))
+	return maxi(dx, dy) <= PAINT_MARGIN
+
+const PAINT_ROWS := 6 # Rows of deferred chunks painted per idle frame.
+
+func paint_pending(rows: int = PAINT_ROWS) -> int:
+	## Presentation only: paint up to `rows` deferred chunk rows; returns chunks pending.
+	var left := 0
+	for chunk in chunk_nodes:
+		if not chunk_nodes[chunk].has("bytes"): continue
+		if rows > 0 and not chunk_nodes[chunk].has("kinds") and _warm_neighbour(chunk): rows = 0
+		if rows > 0: rows -= _paint_chunk(chunk, rows)
+		if chunk_nodes[chunk].has("bytes"): left += 1
+	return left
+
+func _warm_neighbour(chunk: Vector2i) -> bool:
+	## A chunk's transition border reads its neighbours' tiles; build at most one
+	## missing neighbour per idle frame instead of all of them inside one prepare.
+	if not session.terrain.has_method("warm"): return false
+	for y in range(chunk.y - 1, chunk.y + 2):
+		for x in range(chunk.x - 1, chunk.x + 2):
+			if session.terrain.warm(Vector2i(x, y)): return true
+	return false
+
+func _paint_chunk(chunk: Vector2i, rows: int = Terrain.CHUNK_SIZE) -> int:
+	## Paint up to `rows` more rows of a streamed chunk (layers and ground kinds are
+	## prepared once); returns the rows painted. Output is identical to one pass.
+	var entry: Dictionary = chunk_nodes[chunk]
+	var bytes: PackedByteArray = entry.bytes
+	var ground: TileMapLayer = entry.ground
 	if not art.ready():
+		entry.erase("bytes")
 		for y in Terrain.CHUNK_SIZE:
 			for x in Terrain.CHUNK_SIZE:
 				var raw: int = bytes[y * Terrain.CHUNK_SIZE + x]
 				ground.set_cell(Vector2i(x, y), 0, Vector2i(PALETTE_OF.get(raw, raw), 0))
-		return
+		return Terrain.CHUNK_SIZE
+	if not entry.has("kinds"): _prepare_chunk(chunk, entry)
+	var start: int = entry.row
+	var stop := mini(Terrain.CHUNK_SIZE, start + rows)
+	_paint_rows(chunk, entry, start, stop)
+	entry.row = stop
+	if stop >= Terrain.CHUNK_SIZE:
+		for key in ["bytes", "kinds", "row", "overlays", "decor"]: entry.erase(key)
+	return stop - start
+
+func _prepare_chunk(chunk: Vector2i, entry: Dictionary) -> void:
+	var root: Node2D = entry.root
+	var bytes: PackedByteArray = entry.bytes
 	var overlays: Array = []
 	for i in art.overlay_specs.size():
 		var layer := TileMapLayer.new()
@@ -295,8 +350,21 @@ func _add_chunk(chunk: Vector2i) -> void:
 			var inside := x > 0 and y > 0 and x <= Terrain.CHUNK_SIZE and y <= Terrain.CHUNK_SIZE
 			var value: int = bytes[(y - 1) * Terrain.CHUNK_SIZE + x - 1] if inside else -1
 			kinds[y * side + x] = _kind_of(value, global_tile) if inside else _kind(global_tile)
-	var offsets := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(-1, -1)]
-	for y in Terrain.CHUNK_SIZE:
+	entry.merge({"kinds": kinds, "row": 0, "overlays": overlays, "decor": decor})
+
+const OFFSETS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(-1, -1)]
+
+func _paint_rows(chunk: Vector2i, entry: Dictionary, start: int, stop: int) -> void:
+	var bytes: PackedByteArray = entry.bytes
+	var kinds: PackedStringArray = entry.kinds
+	var ground: TileMapLayer = entry.ground
+	var overlays: Array = entry.overlays
+	var decor: TileMapLayer = entry.decor
+	var props: TileMapLayer = entry.props
+	var side := Terrain.CHUNK_SIZE + 2
+	var base: Vector2i = chunk * Terrain.CHUNK_SIZE
+	var offsets := OFFSETS
+	for y in range(start, stop):
 		for x in Terrain.CHUNK_SIZE:
 			var local := Vector2i(x, y)
 			var global_tile := base + local

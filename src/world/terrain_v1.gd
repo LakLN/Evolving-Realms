@@ -34,6 +34,23 @@ func coordinate_hash(x: int, y: int, stream: int) -> int:
 	value = ((value ^ (value >> 13)) * 1103515245 + 12345) & 0xffffffff
 	return (value ^ (value >> 16)) & 0x7fffffff
 
+func stream_seed(stream: int) -> int:
+	## Seed/stream part of coordinate_hash. Hot placement loops XOR in the x/y parts and
+	## inline the same mixing (see roll_rules) instead of one call per tile and rule.
+	return (world_seed & 0xffffffff) ^ ((stream * 83492791) & 0xffffffff)
+
+static func roll_rules(seeds: PackedInt64Array, chances: PackedInt32Array, x: int, y: int) -> PackedInt32Array:
+	## Indexes of rules whose coordinate_hash(x, y, stream) % 10000 < chance, in order.
+	## Exactly coordinate_hash's arithmetic; most tiles return an empty array.
+	var xy := ((x * 73856093) & 0xffffffff) ^ ((y * 19349663) & 0xffffffff)
+	var hits := PackedInt32Array()
+	for i in seeds.size():
+		var value: int = seeds[i] ^ xy
+		value = ((value ^ (value >> 13)) * 1103515245 + 12345) & 0xffffffff
+		if ((value ^ (value >> 16)) & 0x7fffffff) % 10000 < chances[i]:
+			hits.append(i)
+	return hits
+
 func _noise(tile: Vector2i, scale: int, stream: int) -> int:
 	var cell := Vector2i(floori(float(tile.x) / scale), floori(float(tile.y) / scale))
 	var tx := int(posmod(tile.x, scale) * 1024 / scale)

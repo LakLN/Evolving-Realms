@@ -1088,6 +1088,21 @@ func _move_action(action: Dictionary) -> bool:
 	last_result = {"type": "move", "position": run.state.character.position.duplicate(true)}
 	return true
 
+func prefetch_step() -> bool:
+	## Idle streaming (presentation loop): at most one pure unit of work for the ring
+	## of chunks two away, so the next crossing finds terrain/objects/homes ready.
+	## Never establishes regions, writes data or changes any generated result.
+	if run.is_empty() or cache == null: return false
+	var c: Vector2i = cache.center
+	for y in range(c.y - 2, c.y + 3):
+		for x in range(c.x - 2, c.x + 3):
+			var chunk := Vector2i(x, y)
+			if maxi(absi(x - c.x), absi(y - c.y)) < 2: continue
+			if terrain.has_method("warm") and terrain.warm(chunk): return true
+			if objects.prefetch(chunk): return true
+			if roster.layer.prefetch(chunk): return true
+	return false
+
 func relocate(target: Vector2i) -> bool:
 	## Move the player to a validated walkable tile (a step or a skill), streaming chunks.
 	var profile: bool = OS.get_cmdline_user_args().has("--profile-streaming") and cache.center != Terrain.chunk_of(target)

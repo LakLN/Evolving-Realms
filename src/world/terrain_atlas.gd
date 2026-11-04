@@ -149,6 +149,12 @@ func art_kind_at(tile: Vector2i) -> String:
 	var value := tile_at(tile)
 	return Surfaces.ART_KIND[_ground(tile)] if Surfaces.opaque(value) and not value in Surfaces.WALLS else Surfaces.ART_KIND.get(value, "veil")
 
+func warm(chunk: Vector2i) -> bool:
+	## Presentation idle work: build a chunk into the cache; false if it already was.
+	if _bytes.has(chunk): return false
+	_chunk_bytes(chunk)
+	return true
+
 func generate_chunk(chunk: Vector2i) -> PackedByteArray:
 	return _chunk_bytes(chunk).duplicate()
 

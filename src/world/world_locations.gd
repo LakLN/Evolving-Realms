@@ -165,6 +165,11 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 	var order_stream := Loot.number("locations-v1/order")
 	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
 	var best := {}
+	var seeds := PackedInt64Array()
+	var chances := PackedInt32Array()
+	for rule in eligible:
+		seeds.append(terrain.stream_seed(rule.stream))
+		chances.append(int(rule.definition.payload.spawn.per_10000))
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
@@ -172,9 +177,10 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
 			if habitat.is_empty() or occupied.has(point):
 				continue
-			for rule in eligible:
+			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
+				var rule: Dictionary = eligible[i]
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
+				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
 					continue
 				# Four neighbour probes recompute terrain instead of reading chunk bytes.
 				# Test it only for spawn candidates; all rules share this predicate.

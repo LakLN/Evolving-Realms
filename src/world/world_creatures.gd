@@ -22,6 +22,8 @@ var rules: Array = []
 var encounters := Encounters.new()
 var ledger: RefCounted = null
 var last_error := ""
+const HOME_CACHE := 64
+var _homes: Dictionary = {} # chunk -> v1 homes; cleared whenever configure() changes inputs.
 
 func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted, region_ledger: RefCounted = null) -> bool:
 	world = blueprint
@@ -33,6 +35,7 @@ func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted
 		return _fail(pack.last_error)
 	definitions.clear()
 	rules.clear()
+	_homes.clear()
 	var headers: Array = registry.list_definitions(world.world_id)
 	if not registry.last_error.is_empty():
 		return _fail(registry.last_error)
@@ -115,11 +118,18 @@ func validate(definition: Dictionary) -> bool:
 func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray()) -> Array:
 	## Home placements on walkable tiles of the species' spawn biomes, one per tile,
 	## at most MAX_PER_CHUNK per chunk (lowest IDs kept), sorted by ID.
+	if _homes.has(chunk):
+		return _homes[chunk].duplicate(true) # Pure in chunk (terrain + rules fixed at configure).
 	if bytes.is_empty():
 		bytes = terrain.generate_chunk(chunk)
 	var origin := chunk * Terrain.CHUNK_SIZE
 	var result: Array = []
 	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
+	var seeds := PackedInt64Array()
+	var chances := PackedInt32Array()
+	for rule in rules:
+		seeds.append(terrain.stream_seed(rule.stream))
+		chances.append(int(rule.definition.payload.spawn.per_10000))
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
@@ -127,14 +137,25 @@ func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray())
 			if habitat.is_empty():
 				continue
 			var point := origin + Vector2i(x, y)
-			for rule in rules:
+			# Same coordinate_hash rolls, in rule order, then the habitat/ecology test.
+			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
+				var rule: Dictionary = rules[i]
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= int(spawn.per_10000) or not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
+				if not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
 					continue
 				result.append({"instance_id": "crt:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"creature_generation_version": 1}})
 				break
 	result.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.instance_id < b.instance_id)
-	return result.slice(0, MAX_PER_CHUNK)
+	result = result.slice(0, MAX_PER_CHUNK)
+	if _homes.size() >= HOME_CACHE: _homes.erase(_homes.keys()[0])
+	_homes[chunk] = result.duplicate(true)
+	return result
+
+func prefetch(chunk: Vector2i) -> bool:
+	## Idle streaming: compute a chunk's v1 homes ahead (never establishes a region).
+	if _homes.has(chunk): return false
+	generate_chunk(chunk)
+	return true
 
 func chunk_creatures(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray()) -> Array:
 	## Homes a Run sees in this chunk: v1 plus encounters of the revision the chunk was

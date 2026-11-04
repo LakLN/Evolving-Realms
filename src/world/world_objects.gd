@@ -17,6 +17,7 @@ var rules: Array = []
 var chunks: Dictionary = {}
 var center := Vector2i(2147483647, 2147483647)
 var last_error := ""
+var _ahead: Dictionary = {} # chunk -> objects prepared in idle time; dropped on any write.
 
 func configure(blueprint: Dictionary, generator: RefCounted, content: RefCounted, cache: RefCounted) -> bool:
 	regions = Regions.new(generator) if Structured.enabled(blueprint) else null
@@ -111,6 +112,8 @@ func follow(tile: Vector2i) -> bool:
 			var chunk := Vector2i(x, y)
 			if chunks.has(chunk):
 				next[chunk] = chunks[chunk]
+			elif _ahead.has(chunk):
+				next[chunk] = _ahead[chunk]
 			else:
 				var objects := generate_chunk(chunk)
 				if not last_error.is_empty():
@@ -118,6 +121,17 @@ func follow(tile: Vector2i) -> bool:
 				next[chunk] = objects
 	chunks = next
 	center = next_center
+	for chunk in _ahead.keys():
+		if chunks.has(chunk) or maxi(absi(chunk.x - center.x), absi(chunk.y - center.y)) > 2: _ahead.erase(chunk)
+	return true
+
+func prefetch(chunk: Vector2i) -> bool:
+	## Idle streaming: generate a chunk before follow() needs it. Same pure result as
+	## generate_chunk at load time; any World write (materialize) discards prefetches.
+	if chunks.has(chunk) or _ahead.has(chunk): return false
+	var objects := generate_chunk(chunk)
+	if last_error.is_empty(): _ahead[chunk] = objects
+	last_error = ""
 	return true
 
 func generate_chunk(chunk: Vector2i) -> Array:
@@ -160,6 +174,13 @@ func generate_chunk(chunk: Vector2i) -> Array:
 	if bytes.is_empty():
 		bytes = terrain.generate_chunk(chunk)
 	var adaptive: bool = terrain.has_method("ecology_hosts") # Atlas lands: adapted ecology.
+	var seeds := PackedInt64Array()
+	var chances := PackedInt32Array()
+	for rule in rules:
+		var chance := int(rule.definition.payload.spawn.per_10000)
+		if regions != null and rule.definition.content_id.begins_with("m03:resource/"): chance = chance * regional_percent / 100
+		seeds.append(terrain.stream_seed(rule.stream))
+		chances.append(chance)
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var point := origin + Vector2i(x, y)
@@ -167,13 +188,12 @@ func generate_chunk(chunk: Vector2i) -> Array:
 			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
 			if habitat.is_empty() or occupied.has(point) or reserved.has(point):
 				continue
-			for rule in rules:
+			# Most placement rolls fail. Test the same deterministic rolls (rule order kept)
+			# before querying area ecology; accepted placements stay identical.
+			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
+				var rule: Dictionary = rules[i]
 				var spawn: Dictionary = rule.definition.payload.spawn
-				var chance := int(spawn.per_10000)
-				if regions != null and rule.definition.content_id.begins_with("m03:resource/"): chance = chance * regional_percent / 100
-				# Most placement rolls fail. Test the same deterministic roll before
-				# querying area ecology; rule order and accepted placements stay identical.
-				if terrain.coordinate_hash(point.x, point.y, rule.stream) % 10000 >= chance or not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
+				if not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
 					continue
 				result.append({"instance_id": "proc:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"object_generation_version": 1}})
 				break
@@ -191,6 +211,7 @@ func find(instance_id: String) -> Dictionary:
 	return {}
 
 func materialize(instance: Dictionary) -> bool:
+	_ahead.clear() # Persisted instances feed generate_chunk; never serve a stale prefetch.
 	if not _valid_instance(instance):
 		return false
 	var existing: Dictionary = registry.load_instance(world.world_id, instance.instance_id)
