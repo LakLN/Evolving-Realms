@@ -14,7 +14,14 @@ const Loot = preload("res://src/core/loot_table.gd")
 const Inventory = preload("res://src/core/inventory.gd")
 const ACTIVE_RADIUS := 12
 const SAFE_RADIUS := 6 # No creature homes this close to the Run's spawn.
+## Dynamic authored homes (layout v7 plan metadata, 2026-11-04), resolved by refresh():
+##   weather [ids]  present only while the land's weather is one of them; an untouched
+##                  one is simply absent, a wounded one keeps its Run state for the next.
+##   returns {every, times}  `every` turns after its death a new individual takes the
+##                  home (instance id "<home>/r<n>", own loot), at most `times` times,
+##                  and never inside the active radius. Death turns are Run state.
 var layer: RefCounted
+var dynamic: Array = []
 var creatures: Dictionary = {}
 var chunks: Dictionary = {}
 var center := Vector2i(2147483647, 2147483647)
@@ -59,6 +66,7 @@ func follow(tile: Vector2i, terrain_chunks: Dictionary) -> bool:
 				return _fail(layer.last_error)
 	chunks = loaded
 	center = next
+	dynamic = []
 	for id in creatures.keys():
 		# Untouched creatures are derived data; touched ones stay as Run state.
 		if not creatures[id].mutated and not chunks.has(Terrain.chunk_of(creatures[id].home)):
@@ -66,13 +74,60 @@ func follow(tile: Vector2i, terrain_chunks: Dictionary) -> bool:
 	for chunk in chunks:
 		for instance in chunks[chunk]:
 			var home := Vector2i(int(instance.position.x), int(instance.position.y))
-			if creatures.has(instance.instance_id) or maxi(absi(home.x - spawn.x), absi(home.y - spawn.y)) <= SAFE_RADIUS:
+			if maxi(absi(home.x - spawn.x), absi(home.y - spawn.y)) <= SAFE_RADIUS:
+				continue
+			var meta: Dictionary = instance.get("metadata", {})
+			if meta.has("weather") or meta.has("returns"):
+				dynamic.append(instance) # Presence decided per turn by refresh().
+				continue
+			if creatures.has(instance.instance_id):
 				continue
 			var creature := _runtime(instance)
 			if creature.is_empty():
 				return false
 			creatures[instance.instance_id] = creature
 	return true
+
+func refresh(session: RefCounted) -> void:
+	## Weather-bound and returning homes in the loaded chunks; pure in Run state.
+	var weather := ""
+	for instance in dynamic:
+		var meta: Dictionary = instance.metadata
+		var id := _current(session, instance)
+		var present := not id.is_empty()
+		if present and meta.has("weather"):
+			if weather.is_empty(): weather = session.places.weather_id(session)
+			present = weather in meta.weather
+		if not present:
+			if not id.is_empty() and creatures.has(id) and not creatures[id].dead: creatures.erase(id)
+			continue
+		if creatures.has(id): continue
+		var copy: Dictionary = instance.duplicate(true)
+		copy.instance_id = id
+		var creature := _runtime(copy)
+		if creature.is_empty(): continue
+		var mutation: Variant = session.run.state.entity_mutations.get(id)
+		if mutation is Dictionary and mutation.has("creature") and not _apply(creature, mutation): continue
+		creatures[id] = creature
+
+func _current(session: RefCounted, instance: Dictionary) -> String:
+	## The home's individual for now: "" once every allowed individual is dead, or while
+	## the next one has not yet arrived.
+	var returns: Dictionary = instance.metadata.get("returns", {})
+	var times := int(returns.get("times", 0))
+	var mutations: Dictionary = session.run.state.entity_mutations
+	var index := 0
+	while index < times and mutations.get(generation(instance.instance_id, index), {}).get("dead", false): index += 1
+	var id := generation(instance.instance_id, index)
+	if mutations.get(id, {}).get("dead", false): return id if creatures.has(id) else ""
+	if index > 0 and not creatures.has(id) and not mutations.has(id):
+		var home := Vector2i(int(instance.position.x), int(instance.position.y))
+		if int(session.run.state.turn) < int(mutations.get(generation(instance.instance_id, index - 1), {}).get("died_turn", 0)) + int(returns.every): return ""
+		if maxi(absi(home.x - session.position.x), absi(home.y - session.position.y)) <= ACTIVE_RADIUS: return ""
+	return id
+
+static func generation(home_id: String, index: int) -> String:
+	return home_id if index == 0 else "%s/r%d" % [home_id, index]
 
 func living_at(tile: Vector2i) -> Dictionary:
 	for creature in creatures.values():
@@ -318,6 +373,9 @@ func _apply(creature: Dictionary, mutation: Dictionary) -> bool:
 	creature.loot = mutation.get("loot", [])
 	creature.received = mutation.get("received", [])
 	creature.stunned_until = int(mutation.get("stunned_until", 0)) if Data.integer(mutation.get("stunned_until", 0)) else 0
+	if mutation.has("died_turn"):
+		if not Data.integer(mutation.died_turn) or int(mutation.died_turn) < 0: return false
+		creature.died_turn = int(mutation.died_turn)
 	for timer in ["charge_ready", "alerted_until", "ranged_ready"]:
 		if not Data.integer(mutation.get(timer, 0)) or int(mutation.get(timer, 0)) < 0: return false
 		creature[timer] = int(mutation.get(timer, 0))
@@ -348,6 +406,10 @@ func _commit(session: RefCounted, creature: Dictionary) -> void:
 			session.run.state.entity_mutations[creature.instance_id][timer] = int(creature[timer])
 	if creature.has("aim"):
 		session.run.state.entity_mutations[creature.instance_id].aim = _point(creature.aim)
+	if creature.dead and creature.instance.get("metadata", {}).has("returns"):
+		# Kept from the first commit after death: returning homes count from it.
+		creature.died_turn = int(creature.get("died_turn", session.run.state.turn))
+		session.run.state.entity_mutations[creature.instance_id].died_turn = creature.died_turn
 
 func creature_stats(session: RefCounted, creature: Dictionary) -> Dictionary:
 	return session.character_rules.apply_sources(creature.definition.payload.stats, [session.statuses.stat_modifiers(session, creature.statuses)])

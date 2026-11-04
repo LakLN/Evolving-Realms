@@ -5,6 +5,10 @@ extends RefCounted
 ##   {"location": 1, "discovered": true, "discovered_turn": 12,
 ##    "resolved": {"<interaction>": {"turn": 14, "received": [...]}}}
 ## Everything is planned on copies first; refusals change nothing and spend no turn.
+## Recurring interactions (event.repeat, 2026-11-04): `repeat {every, times?}` makes a
+## resolved interaction available again `every` turns after its last use, at most
+## `times` uses in all (omitted: no limit). The record keeps the latest use plus
+## `count` (absent = 1, so older records read unchanged); each use rolls with its own key.
 const Data = preload("res://src/data/json_data.gd")
 const Events = preload("res://src/core/world_events.gd")
 const Skills = preload("res://src/core/skills.gd")
@@ -15,7 +19,7 @@ const WorldRules = preload("res://src/core/world_rules.gd")
 const Knowledge = preload("res://src/run/player_knowledge.gd")
 const Telemetry = preload("res://src/run/interaction_telemetry.gd")
 const SEARCH_RADIUS := 2
-const STATES := ["undiscovered", "discovered", "interactable", "resolved", "unavailable"]
+const STATES := ["undiscovered", "discovered", "interactable", "recovering", "resolved", "unavailable"]
 var layer: RefCounted
 
 func record(session: RefCounted, instance_id: String) -> Dictionary:
@@ -33,6 +37,8 @@ func validate(session: RefCounted) -> String:
 		var mutation: Variant = session.run.state.entity_mutations[id]
 		if not mutation is Dictionary or not mutation.has("location"): continue
 		if not mutation.get("discovered") is bool or not mutation.get("resolved", {}) is Dictionary: return "Corrupt location state in save: " + str(id)
+		for entry in mutation.get("resolved", {}).values():
+			if not entry is Dictionary or (entry.has("count") and (not Data.integer(entry.count) or int(entry.count) < 2)): return "Corrupt location state in save: " + str(id)
 		if mutation.has("world_rule_version") and (mutation.world_rule_version != 1 or mutation.get("world_state") not in ["thawed", "shattered"]): return "Unsupported world rule state: " + str(id)
 	return ""
 
@@ -43,7 +49,8 @@ func available(session: RefCounted, instance: Dictionary, trigger: String = "") 
 	var exclusive_taken: bool = definition.payload.interactions.any(func(i: Dictionary) -> bool: return i.get("exclusive", false) and resolved.has(i.id))
 	var result: Array = []
 	for interaction in definition.payload.interactions:
-		if resolved.has(interaction.id) or (not trigger.is_empty() and interaction.get("trigger", "interact") != trigger): continue
+		if resolved.has(interaction.id) and wait(session, interaction, resolved[interaction.id]) != 0: continue
+		if not trigger.is_empty() and interaction.get("trigger", "interact") != trigger: continue
 		if interaction.has("after") and not resolved.has(interaction.after): continue
 		if interaction.get("exclusive", false) and exclusive_taken: continue
 		if not unmet(session, interaction.get("reveal_conditions", [])).is_empty(): continue
@@ -56,6 +63,8 @@ func state(session: RefCounted, instance: Dictionary) -> String:
 	var definition: Dictionary = layer.definition_for(instance)
 	var resolved: Dictionary = record(session, instance.instance_id).get("resolved", {})
 	var remaining := available(session, instance)
+	if remaining.is_empty() and definition.payload.interactions.any(func(i: Dictionary) -> bool: return resolved.has(i.id) and wait(session, i, resolved[i.id]) > 0):
+		return "recovering"
 	if remaining.is_empty():
 		# Everything done, or the rest was forfeited by an exclusive choice.
 		return "resolved" if resolved.size() == definition.payload.interactions.size() else "unavailable"
@@ -63,6 +72,21 @@ func state(session: RefCounted, instance: Dictionary) -> String:
 		if interaction.get("trigger", "interact") == "interact" and unmet(session, layer.event(interaction.event).payload.get("conditions", [])).is_empty():
 			return "interactable"
 	return "discovered"
+
+func wait(session: RefCounted, interaction: Dictionary, entry: Variant) -> int:
+	## A resolved interaction: 0 when it can be used again, the turns left while it
+	## recovers, -1 when spent (one-time, or its `times` are used up).
+	if not interaction.has("repeat") or not entry is Dictionary: return -1
+	var times := int(interaction.repeat.get("times", 0))
+	if times > 0 and int(entry.get("count", 1)) >= times: return -1
+	return maxi(0, int(entry.get("turn", 0)) + int(interaction.repeat.every) - int(session.run.state.turn))
+
+func uses(session: RefCounted, instance_id: String, interaction_id: String) -> int:
+	var entry: Variant = record(session, instance_id).get("resolved", {}).get(interaction_id)
+	return int(entry.get("count", 1)) if entry is Dictionary else 0
+
+func weather_id(session: RefCounted) -> String:
+	return str(session.environment.weather(session).get("id", "calm")) if session.get("environment") != null else "calm"
 
 func unmet(session: RefCounted, conditions: Array) -> Array:
 	var view: Dictionary = session.skills.character_view(session)
@@ -80,6 +104,8 @@ func _met(session: RefCounted, condition: Dictionary, view: Dictionary) -> bool:
 			return session.run.state.character.get("statuses", []).any(func(s: Variant) -> bool: return s is Dictionary and s.get("id") == condition.status)
 		"biome":
 			return session.terrain.biome_at(session.position) in condition.values
+		"weather":
+			return weather_id(session) in condition.values
 		"any_of":
 			return condition.conditions.any(func(inner: Dictionary) -> bool: return _met(session, inner, view))
 	return condition.get("type") in Skills.CONDITIONS and session.skill_rules.met(condition, view)
@@ -185,6 +211,8 @@ func interact(session: RefCounted, instance_id: String, wanted: String = "", hea
 	var interaction := next_interaction(session, instance, wanted)
 	var definition: Dictionary = layer.definition_for(instance)
 	if interaction.is_empty():
+		if state(session, instance) == "recovering":
+			return _refuse(session, "%s has not recovered yet — come back later (no turn spent)" % definition.name)
 		return _refuse(session, "%s holds nothing more for you (%s) — no turn spent" % [definition.name, state(session, instance)])
 	var outcome := resolve(session, instance, interaction, heat_source)
 	if outcome.has("error"):
@@ -216,7 +244,8 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary,
 		if removal.is_empty():
 			return {"error": "%s: needs %s x%d" % [interaction.get("verb", "Explore"), str(session._definition(item.content_id, int(item.version)).get("name", item.content_id)), int(item.get("quantity", 1))]}
 		inventory = removal.inventory
-	var key := _roll_key(session, event, instance.instance_id, interaction.id)
+	var use := uses(session, instance.instance_id, interaction.id) + 1 # 1 for a first (or only) use.
+	var key := _roll_key(session, event, instance.instance_id, interaction.id, use)
 	# `chance` branches resolve first (fixed per Run and place); nothing else changes.
 	var resolved: Dictionary = Events.effective(p.outcomes, key)
 	var outcomes: Array = resolved.outcomes
@@ -229,7 +258,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary,
 			grants.append_array(Loot.new().roll(outcome.table, "%s/%d" % [key, index]))
 	var award := {"inventory": inventory, "received": [], "display_received": []}
 	if not grants.is_empty():
-		award = tools.award(session.store.content, session.world.world_id, inventory, grants, "run:%s/location/%s/%s" % [session.run.run_id, instance.instance_id, interaction.id])
+		award = tools.award(session.store.content, session.world.world_id, inventory, grants, "run:%s/location/%s/%s%s" % [session.run.run_id, instance.instance_id, interaction.id, "" if use == 1 else "/r%d" % use])
 		if award.is_empty():
 			return {"error": tools.last_error}
 	var trial: Dictionary = session.stats().duplicate(true)
@@ -253,6 +282,7 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary,
 		mutation = {"location": 1, "discovered": true, "discovered_turn": int(session.run.state.turn), "resolved": {}}
 	mutation.discovered = true
 	mutation.resolved[interaction.id] = {"turn": int(session.run.state.turn), "event": {"content_id": event.content_id, "version": int(event.version)}, "received": award.received.duplicate(true)}
+	if use > 1: mutation.resolved[interaction.id].count = use
 	session.run.state.entity_mutations[instance.instance_id] = mutation
 	session.dirty = true
 	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", ""), layer.clue(instance, true)] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
@@ -277,8 +307,9 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary,
 	session.refresh_stats()
 	return {"events": events, "received": award.display_received}
 
-func _roll_key(session: RefCounted, event: Dictionary, instance_id: String, interaction_id: String) -> String:
-	return "location-v1/%d/%d/%d/%s@%d/%s/%s" % [int(session.world.seed), int(session.world.generation_version), int(session.run.seed), event.content_id, int(event.version), instance_id, interaction_id]
+func _roll_key(session: RefCounted, event: Dictionary, instance_id: String, interaction_id: String, use: int = 1) -> String:
+	## A first use keeps the original key; later uses of a recurring interaction add /r<n>.
+	return "location-v1/%d/%d/%d/%s@%d/%s/%s%s" % [int(session.world.seed), int(session.world.generation_version), int(session.run.seed), event.content_id, int(event.version), instance_id, interaction_id, "" if use == 1 else "/r%d" % use]
 
 func notes(session: RefCounted) -> Array:
 	## Journal: what this Run's resolved places told the player, newest first. Rebuilt from
@@ -299,7 +330,7 @@ func notes(session: RefCounted) -> Array:
 			var event := _pinned(session, entry.event)
 			if event.is_empty(): continue
 			var p: Dictionary = event.payload
-			var text := " ".join([p.get("message", "")] + Events.effective(p.get("outcomes", []), _roll_key(session, event, str(id), str(interaction_id))).notes).strip_edges()
+			var text := " ".join([p.get("message", "")] + Events.effective(p.get("outcomes", []), _roll_key(session, event, str(id), str(interaction_id), int(entry.get("count", 1)))).notes).strip_edges()
 			if text.is_empty(): continue
 			var verb := str(interaction_id)
 			for interaction in place.get("payload", {}).get("interactions", []):

@@ -32,13 +32,15 @@ func _initialize() -> void:
 	var proposal: Dictionary = atlas.propose_layout_land("landpkg:snow_mountain/full_region")
 	if not check(not proposal.is_empty() and atlas.activate(proposal, {"by": "disposable region suite"}), "Validate and activate full-region plan: " + atlas.last_error): return _finish()
 	var plan: Dictionary = proposal.land
-	check(int(plan.atlas_version) == 2 and int(plan.layout.version) == 6 and int(plan.terrain_version) == 2, "New plan version; frozen terrain algorithm unchanged")
+	check(int(plan.atlas_version) == 2 and int(plan.layout.version) == 7 and int(plan.terrain_version) == 2, "New plan version; frozen terrain algorithm unchanged")
 	var future: Dictionary = plan.duplicate(true)
 	future.atlas_version = 99
 	check(not Atlas.supported_plan(future), "Unknown future plan version refused")
 	var stored_v5: Dictionary = plan.duplicate(true)
 	stored_v5.layout.version = 5
 	check(Atlas.supported_plan(stored_v5), "Worlds charted with layout v5 keep loading their stored plan")
+	stored_v5.layout.version = 6
+	check(Atlas.supported_plan(stored_v5), "Worlds charted with layout v6 keep loading their stored plan")
 	var s := Session.new(store)
 	if not check(s.start_new(world.world_id, 919, plan.land_id, "normal", "turn"), "Start a certified full-region Run: " + s.last_error): return _finish()
 	s.autosave_interval = 0
@@ -48,6 +50,7 @@ func _initialize() -> void:
 	_sites(s, plan)
 	_rewards(s, plan)
 	_activities(world.world_id, plan)
+	_living(world.world_id, plan)
 	_ranged(s, plan)
 	var saved: Dictionary = s.run.state.duplicate(true)
 	check(s.save(), "Save encounter cooldowns, loot and exploration choices")
@@ -136,7 +139,7 @@ func _legacy() -> void:
 
 func _sites(s: RefCounted, plan: Dictionary) -> void:
 	var report: Dictionary = Survey.survey(s.terrain, plan, s.position)
-	check(plan.sites.size() == 18 and plan.sites.all(func(site: Dictionary) -> bool: return report.reached_set.has(Vector2i(int(site.position.x), int(site.position.y)))), "Every original and new authored site is reachable from the certified start")
+	check(plan.sites.size() == 25 and plan.sites.all(func(site: Dictionary) -> bool: return report.reached_set.has(Vector2i(int(site.position.x), int(site.position.y)))), "Every original and new authored site is reachable from the certified start")
 	check(plan.creature_homes.all(func(home: Dictionary) -> bool: return report.reached_set.has(Vector2i(int(home.position.x), int(home.position.y)))), "All authored encounter homes are on the reachable land")
 
 func _site(plan: Dictionary, name: String) -> Dictionary:
@@ -230,6 +233,116 @@ func _activities(world_id: String, plan: Dictionary) -> void:
 	check(not _act(s, cairn, "tribute"), "Toll cairn: the toll needs ivory from hunting")
 	_award(s, [{"content_id": "snow:ivory_tusk", "version": 1, "quantity": 2}], "ivory toll")
 	check(_act(s, cairn, "tribute") and s.run.state.inventory.has("snow:rime_mantle") and not s.run.state.inventory.has("snow:ivory_tusk"), "Toll cairn: two tusks buy the frost mantle")
+
+func _weather_turn(s: RefCounted, wanted: String, from: int) -> int:
+	## First turn >= from whose weather (and the next few turns') is `wanted`.
+	for t in range(from, from + 3000):
+		if [t, t + 4].all(func(u: int) -> bool: return str(s.environment.weather(s, u).get("id", "calm")) == wanted): return t
+	return -1
+
+func _living(world_id: String, plan: Dictionary) -> void:
+	# Layout v7: recurring and weather-bound activities, dynamic homes, the beacon chain.
+	var s := Session.new(store)
+	if not check(s.start_new(world_id, 922, plan.land_id, "normal", "turn"), "Fresh Run for the living region: " + s.last_error): return
+	s.autosave_interval = 0
+	var hole := _site(plan, "fishing_hole")
+	_go(s, hole)
+	var storm := _weather_turn(s, "blizzard", 1)
+	var calm := _weather_turn(s, "calm", 1)
+	if not check(storm > 0 and calm > 0, "The land's schedule has calm and storm windows"): return
+	s.run.state.turn = storm
+	var before: Dictionary = s.run.state.duplicate(true)
+	check(not _act(s, hole, "fish") and "calm weather" in s.last_error and Same.same(before, s.run.state), "Fishing hole: closed in a blizzard, no turn spent")
+	s.run.state.turn = calm
+	check(_act(s, hole, "fish") and s.places.uses(s, hole.instance_id, "fish") == 1, "Fishing hole: fish in calm weather")
+	before = s.run.state.duplicate(true)
+	check(not _act(s, hole, "fish") and "not recovered" in s.last_error and s.places.state(s, s.locations.find(hole.instance_id)) == "recovering" and Same.same(before, s.run.state), "Fishing hole: recovering after use; retry spends nothing")
+	var keys := {}
+	for use in range(2, 9):
+		s.run.state.turn = _weather_turn(s, "calm", int(s.run.state.turn) + 60)
+		check(_act(s, hole, "fish") and s.places.uses(s, hole.instance_id, "fish") == use, "Fishing hole: use %d after it recovers" % use)
+		keys[s.places._roll_key(s, s.locations.event({"content_id": "snow:event/ice_fishing", "version": 1}), hole.instance_id, "fish", use)] = true
+	s.run.state.turn = _weather_turn(s, "calm", int(s.run.state.turn) + 200)
+	check(keys.size() == 7 and s.places.state(s, s.locations.find(hole.instance_id)) == "resolved" and not _act(s, hole, "fish"), "Fishing hole: each use rolls its own key; spent after eight")
+	check(s.places.notes(s).filter(func(n: Dictionary) -> bool: return n.target == hole.instance_id).size() == 1, "Journal keeps one entry for the recurring place, replayed from its latest use")
+	var hollow := _site(plan, "choir_hollow")
+	s.run.state.turn = calm
+	_go(s, hollow)
+	check(not s.places.discovered(s, hollow.instance_id), "Choir hollow: invisible in calm weather even beside it")
+	s.run.state.turn = storm
+	s.places.tick(s)
+	check(s.places.discovered(s, hollow.instance_id), "Choir hollow: opens in the whiteout")
+	check(_act(s, hollow, "shelter") and not _act(s, hollow, "shelter"), "Choir hollow: shelter, then it recovers")
+	check(_act(s, hollow, "listen") and not _act(s, hollow, "answer"), "Choir hollow: listening reveals the answer, which needs stormglass")
+	_award(s, [{"content_id": "snow:stormglass", "version": 1, "quantity": 1}], "glass for the choir")
+	check(_act(s, hollow, "answer") and s.run.state.inventory.has("snow:choir_lens"), "Choir hollow: stormglass becomes the whiteout lens")
+	s.run.state.turn = _weather_turn(s, "blizzard", storm + 60)
+	check(_act(s, hollow, "shelter"), "Choir hollow: shelter again in a later storm")
+	var lantern_id := "crt:atlas/%d_%d/home/storm_lantern_1" % [int(plan.slot.x), int(plan.slot.y)]
+	s.roster.follow(s.position + Vector2i(64, 0), s.cache.chunks)
+	s.roster.follow(s.position, s.cache.chunks)
+	s.roster.refresh(s)
+	check(s.roster.creatures.has(lantern_id), "Storm lanterns walk the bowl in a blizzard")
+	s.run.state.turn = _weather_turn(s, "calm", int(s.run.state.turn))
+	s.roster.refresh(s)
+	check(not s.roster.creatures.has(lantern_id), "Storm lanterns are gone in calm weather")
+	# Returning herd: a new stag takes the home after its death, limited, never in view.
+	var herd := "crt:atlas/%d_%d/home/herd_0" % [int(plan.slot.x), int(plan.slot.y)]
+	var home := Vector2i.ZERO
+	for h in plan.creature_homes:
+		if h.instance_id == herd: home = Vector2i(int(h.position.x), int(h.position.y))
+	_go(s, {"position": {"x": home.x, "y": home.y - 1}})
+	s.roster.refresh(s)
+	for index in 3:
+		var id: String = s.roster.generation(herd, index)
+		if not check(s.roster.creatures.has(id), "Herd home holds individual %d" % index): return
+		var stag: Dictionary = s.roster.creatures[id]
+		stag.dead = true
+		stag.hp = 0
+		check(s.roster._ensure_materialized(stag), "Materialize herd individual %d" % index)
+		s.roster._commit(s, stag)
+		var died := int(s.run.state.entity_mutations[id].died_turn)
+		s.run.state.turn = died + 299
+		_go(s, {"position": {"x": home.x + 30, "y": home.y}})
+		s.roster.refresh(s)
+		check(not s.roster.creatures.has(s.roster.generation(herd, index + 1)), "No replacement before the herd returns (%d)" % index)
+		s.run.state.turn = died + 300
+		_go(s, {"position": {"x": home.x, "y": home.y - 1}})
+		s.roster.refresh(s)
+		check(not s.roster.creatures.has(s.roster.generation(herd, index + 1)), "A replacement never appears inside the active radius (%d)" % index)
+		_go(s, {"position": {"x": home.x + 30, "y": home.y}})
+		s.roster.refresh(s)
+		check(index == 2 or s.roster.creatures.has(s.roster.generation(herd, index + 1)), "A new individual takes the home while you are away (%d)" % index)
+	check(not s.roster.creatures.keys().any(func(id: String) -> bool: return id.begins_with(herd) and not s.roster.creatures[id].dead), "The herd is hunted out after its returns are spent")
+	# The beacon: bronze, an ember heart in calm, a storm vigil, then a recurring fire.
+	var beacon := _site(plan, "crown_beacon")
+	_go(s, beacon)
+	check(not _act(s, beacon, "clear"), "Beacon: needs bronze to mend")
+	_award(s, [{"content_id": "snow:bronze_scrap", "version": 1, "quantity": 2}, {"content_id": "snow:ember_heart", "version": 1, "quantity": 1}, {"content_id": "snow:resin", "version": 1, "quantity": 2}], "beacon materials")
+	check(_act(s, beacon, "clear"), "Beacon: the bowl is mended")
+	s.run.state.turn = _weather_turn(s, "blizzard", int(s.run.state.turn))
+	check(not _act(s, beacon, "kindle"), "Beacon: will not light in the gale")
+	s.run.state.turn = _weather_turn(s, "calm", int(s.run.state.turn))
+	check(_act(s, beacon, "kindle") and not s.run.state.inventory.has("snow:ember_heart"), "Beacon: an ember heart lights it in calm air")
+	check(not _act(s, beacon, "vigil"), "Beacon: the vigil waits for a storm")
+	s.run.state.turn = _weather_turn(s, "blizzard", int(s.run.state.turn))
+	check(_act(s, beacon, "vigil") and s.run.state.inventory.has("snow:relay_crown"), "Beacon: keeping it through a storm earns the keepers' crown")
+	check(_act(s, beacon, "rekindle") and not _act(s, beacon, "rekindle"), "Beacon: feeding it with resin recovers between uses")
+	var saved: Dictionary = s.run.state.duplicate(true)
+	check(s.save(), "Save the living-region Run")
+	var resumed := Session.new(store)
+	check(resumed.resume(s.run.run_id) and Same.same(saved.entity_mutations, resumed.run.state.entity_mutations) and resumed.places.uses(resumed, hole.instance_id, "fish") == 8, "Reload keeps use counts, recovery and returned individuals")
+	# Validation: recurrence and weather are data with explicit limits.
+	var fish_place: Dictionary = s.locations.definitions["snow:place/fishing_hole@1"].duplicate(true)
+	check(s.locations.classify(fish_place, store.content, s.world.world_id, {}, s.skill_rules).problem.is_empty(), "The authored recurring place validates")
+	for broken in [{"every": 5}, {"every": 60, "times": 1}, {"every": 60, "extra": 1}]:
+		var copy: Dictionary = fish_place.duplicate(true)
+		copy.payload.interactions[0].repeat = broken
+		var verdict: Dictionary = s.locations.classify(copy, store.content, s.world.world_id, {}, s.skill_rules)
+		check(not verdict.problem.is_empty() or not verdict.missing.is_empty(), "Malformed repeat refused: " + str(broken))
+	var exclusive: Dictionary = fish_place.duplicate(true)
+	exclusive.payload.interactions[0].exclusive = true
+	check(not s.locations.classify(exclusive, store.content, s.world.world_id, {}, s.skill_rules).problem.is_empty(), "A recurring choice cannot be exclusive")
 
 func _ranged(s: RefCounted, plan: Dictionary) -> void:
 	# A real authored slinger, on open terrain near its home; no synthetic species.

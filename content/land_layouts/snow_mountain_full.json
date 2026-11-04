@@ -1,9 +1,9 @@
 {
   "layout_version": 1,
   "id": "landpkg:snow_mountain/full_region",
-  "version": 6,
+  "version": 7,
   "archetype": "frost_highlands",
-  "notes": "Full region production plan v6 / atlas plan v2. Geometry, terrain algorithm v2, old site pins and certified starts retained from layout v4. v5 added area ecology and six sites; v6 paces encounters (quieter basin prey, Broken Relay danger concentrated in authored camps, set groups on the upper routes, a lakeshore herd) and adds five build-dependent sites. Stored v5 plans remain self-contained and unchanged.",
+  "notes": "Full region production plan v7 / atlas plan v2. Geometry, terrain algorithm v2, old site pins and certified starts retained from layout v4. v5 added area ecology and six sites; v6 paces encounters (quieter basin prey, Broken Relay danger concentrated in authored camps, set groups on the upper routes, a lakeshore herd) and adds five build-dependent sites. v7 makes the region live: recurring and weather-bound activities, storm-only creatures in the White Choir, returning herds and camps, the Crown Shelf beacon and its elder. Stored v5/v6 plans remain self-contained and unchanged.",
   "radius": 184,
   "coast": {
     "min": 1.02,
@@ -722,7 +722,8 @@
   "content_packs": [
     "res://content/land_packages/snow_mountain/content_pack.json",
     "res://content/land_packages/snow_mountain/fauna_pack.json",
-    "res://content/land_packages/snow_mountain/region_pack.json"
+    "res://content/land_packages/snow_mountain/region_pack.json",
+    "res://content/land_packages/snow_mountain/living_pack.json"
   ],
   "sites": [
     {
@@ -854,7 +855,14 @@
     {"id": "ashmaw_nest", "content_id": "snow:place/ashmaw_nest", "at": [0.42, -0.52], "area": "windcut_stair", "reason": "ember-stones beside a neutral drake; frost linen makes it safe"},
     {"id": "singing_ice", "content_id": "snow:place/singing_ice", "at": [0.12, -0.78], "area": "white_choir", "reason": "found by searching; a learned technique answers it"},
     {"id": "prowler_den", "content_id": "snow:place/prowler_den", "at": [-0.56, 0.0], "area": "pitchpine_reach", "reason": "a lair to loot; trackers read more"},
-    {"id": "rune_cairn", "content_id": "snow:place/rune_cairn", "at": [-0.12, -0.9], "area": "crown_shelf", "reason": "experienced travellers read it; hunters pay its toll"}
+    {"id": "rune_cairn", "content_id": "snow:place/rune_cairn", "at": [-0.12, -0.9], "area": "crown_shelf", "reason": "experienced travellers read it; hunters pay its toll"},
+    {"id": "fishing_hole", "content_id": "snow:place/fishing_hole", "at": [0.47, 0.05], "area": "mirror_trough", "reason": "fish through the lake ice in calm weather"},
+    {"id": "hare_run", "content_id": "snow:place/hare_run", "at": [-0.2, 0.6], "area": "leefoot_basin", "reason": "recurring snares; trackers take more"},
+    {"id": "warm_spring", "content_id": "snow:place/warm_spring", "at": [-0.42, 0.15], "area": "pitchpine_reach", "reason": "a recurring place to recover between hunts"},
+    {"id": "bandit_stash", "content_id": "snow:place/bandit_stash", "at": [-0.375, -0.405], "area": "broken_relay", "reason": "the camp stash, restocked while the camp is held"},
+    {"id": "rime_ledge", "content_id": "snow:place/rime_ledge", "at": [0.575, -0.585], "area": "windcut_stair", "reason": "storm rime that forms only in a blizzard"},
+    {"id": "choir_hollow", "content_id": "snow:place/choir_hollow", "at": [-0.02, -0.665], "area": "white_choir", "reason": "a hollow that opens only in the whiteout"},
+    {"id": "crown_beacon", "content_id": "snow:place/crown_beacon", "at": [-0.37, -0.85], "area": "crown_shelf", "reason": "the relay beacon, rebuilt across calm and storm"}
   ],
   "atlas_version": 2,
   "creature_homes": [
@@ -864,71 +872,26 @@
     {"id": "stair_0", "content_id": "snow:relay_slinger", "at": [0.46, -0.49]},
     {"id": "stair_1", "content_id": "snow:relay_slinger", "at": [0.477, -0.49]},
     {"id": "nest_drake", "content_id": "snow:ashmaw", "at": [0.42, -0.537]},
-    {"id": "choir_0", "content_id": "snow:hollow_carrier", "at": [0.07, -0.68]},
-    {"id": "choir_1", "content_id": "snow:hollow_carrier", "at": [0.087, -0.675]},
-    {"id": "choir_2", "content_id": "snow:hollow_carrier", "at": [0.104, -0.67]},
+    {"id": "choir_0", "content_id": "snow:hollow_carrier", "at": [0.07, -0.68], "weather": ["blizzard"]},
+    {"id": "choir_1", "content_id": "snow:hollow_carrier", "at": [0.087, -0.675], "weather": ["blizzard"]},
+    {"id": "choir_2", "content_id": "snow:hollow_carrier", "at": [0.104, -0.67], "weather": ["blizzard"]},
     {"id": "cairn_guard", "content_id": "snow:bellback_sentinel", "at": [-0.13, -0.88]},
     {"id": "summit_lantern", "content_id": "snow:rime_lantern", "at": [-0.23, -0.87]},
-    {"id": "herd_0", "content_id": "snow:frost_stag", "at": [0.36, 0.2]},
-    {"id": "herd_1", "content_id": "snow:frost_stag", "at": [0.377, 0.21]},
-    {"id": "herd_2", "content_id": "snow:frost_stag", "at": [0.392, 0.2]},
-    {"id": "herd_3", "content_id": "snow:frost_stag", "at": [0.37, 0.226]},
-    {"id": "den_prowler", "content_id": "snow:pine_prowler", "at": [-0.545, 0.016]},
-    {
-      "id": "relay_0",
-      "content_id": "snow:relay_cutthroat",
-      "at": [
-        -0.36,
-        -0.39
-      ]
-    },
-    {
-      "id": "relay_1",
-      "content_id": "snow:relay_cutthroat",
-      "at": [
-        -0.343,
-        -0.39
-      ]
-    },
-    {
-      "id": "relay_2",
-      "content_id": "snow:relay_slinger",
-      "at": [
-        -0.36,
-        -0.373
-      ]
-    },
-    {
-      "id": "kiln_0",
-      "content_id": "snow:cinder_acolyte",
-      "at": [
-        0.52,
-        -0.39
-      ]
-    },
-    {
-      "id": "kiln_1",
-      "content_id": "snow:relay_slinger",
-      "at": [
-        0.537,
-        -0.39
-      ]
-    },
-    {
-      "id": "glass_0",
-      "content_id": "snow:glassback_crawler",
-      "at": [
-        0.65,
-        -0.04
-      ]
-    },
-    {
-      "id": "glass_1",
-      "content_id": "snow:rime_lantern",
-      "at": [
-        0.667,
-        -0.04
-      ]
-    }
+    {"id": "herd_0", "content_id": "snow:frost_stag", "at": [0.36, 0.2], "returns": {"every": 300, "times": 2}},
+    {"id": "herd_1", "content_id": "snow:frost_stag", "at": [0.377, 0.21], "returns": {"every": 300, "times": 2}},
+    {"id": "herd_2", "content_id": "snow:frost_stag", "at": [0.392, 0.2], "returns": {"every": 300, "times": 2}},
+    {"id": "herd_3", "content_id": "snow:frost_stag", "at": [0.37, 0.226], "returns": {"every": 300, "times": 2}},
+    {"id": "den_prowler", "content_id": "snow:pine_prowler", "at": [-0.545, 0.016], "returns": {"every": 500, "times": 1}},
+    {"id": "relay_0", "content_id": "snow:relay_cutthroat", "at": [-0.36, -0.39], "returns": {"every": 400, "times": 2}},
+    {"id": "relay_1", "content_id": "snow:relay_cutthroat", "at": [-0.343, -0.39], "returns": {"every": 400, "times": 2}},
+    {"id": "relay_2", "content_id": "snow:relay_slinger", "at": [-0.36, -0.373], "returns": {"every": 400, "times": 2}},
+    {"id": "kiln_0", "content_id": "snow:cinder_acolyte", "at": [0.52, -0.39]},
+    {"id": "kiln_1", "content_id": "snow:relay_slinger", "at": [0.537, -0.39]},
+    {"id": "glass_0", "content_id": "snow:glassback_crawler", "at": [0.65, -0.04]},
+    {"id": "glass_1", "content_id": "snow:rime_lantern", "at": [0.667, -0.04]},
+    {"id": "storm_lantern_0", "content_id": "snow:rime_lantern", "at": [0, -0.705], "weather": ["blizzard"]},
+    {"id": "storm_lantern_1", "content_id": "snow:rime_lantern", "at": [0.03, -0.64], "weather": ["blizzard"]},
+    {"id": "storm_lantern_2", "content_id": "snow:rime_lantern", "at": [-0.06, -0.69], "weather": ["blizzard"]},
+    {"id": "crown_elder", "content_id": "snow:elder_bellback", "at": [-0.35, -0.82]}
   ]
 }

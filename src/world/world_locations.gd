@@ -69,7 +69,16 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 		if not interaction is Dictionary or not interaction.get("id") is String or not RegEx.create_from_string("^[a-z][a-z0-9_]{0,31}$").search(interaction.id) or interaction.id in ids:
 			return {"problem": "Interaction needs a unique lower-case id", "missing": missing}
 		for key in interaction:
-			if key not in ["id", "verb", "trigger", "event", "after", "exclusive", "world_method", "reveal_conditions"]: missing.append("parameter.location_interaction." + str(key))
+			if key not in ["id", "verb", "trigger", "event", "after", "exclusive", "world_method", "reveal_conditions", "repeat"]: missing.append("parameter.location_interaction." + str(key))
+		if interaction.has("repeat"):
+			# event.repeat: recurs `every` turns after its last use, at most `times` uses.
+			var repeat: Variant = interaction.repeat
+			if not repeat is Dictionary or not Events._between(repeat.get("every"), 10, 5000) or (repeat.has("times") and not Events._between(repeat.times, 2, 50)):
+				return {"problem": "Interaction repeat needs every 10..5000 and optional times 2..50", "missing": missing}
+			for key in repeat:
+				if key not in ["every", "times"]: missing.append("parameter.location_repeat." + str(key))
+			if interaction.get("exclusive", false) or interaction.has("world_method") or interaction.get("trigger", "interact") == "discover":
+				return {"problem": "Recurring interactions cannot be exclusive, world methods or discover triggers", "missing": missing}
 		if interaction.has("world_method"):
 			if not p.has("world_properties"): return {"problem": "World method needs object properties", "missing": missing}
 			if interaction.world_method not in ["heat", "force"]: missing.append("world_rule.method." + str(interaction.world_method))

@@ -163,7 +163,15 @@ func _place_creatures(designer: RefCounted, plan: Dictionary, layout: Dictionary
 		var tile: Vector2i = designer._snap(terrain, to_tile.call(home.at), Vector2i(int(plan.slot.x), int(plan.slot.y)), taken)
 		if tile == Vector2i(2147483647, 0): return false
 		taken[tile] = true
-		plan.creature_homes.append({"instance_id": "crt:atlas/%d_%d/home/%s" % [int(plan.slot.x), int(plan.slot.y), home.id], "content_id": home.content_id, "version": 1, "position": _xy(tile), "origin": "procedural", "metadata": {"authored_creature_version": 1, "land_id": plan.land_id}})
+		var meta := {"authored_creature_version": 1, "land_id": plan.land_id}
+		# Layout v7: weather-bound and returning homes (CreatureRoster.refresh).
+		if home.has("weather"):
+			if not home.weather is Array or home.weather.is_empty(): return false
+			meta.weather = home.weather.duplicate()
+		if home.has("returns"):
+			if not home.returns is Dictionary or int(home.returns.get("every", 0)) < 50 or int(home.returns.get("times", 0)) not in range(1, 6): return false
+			meta.returns = {"every": int(home.returns.every), "times": int(home.returns.times)}
+		plan.creature_homes.append({"instance_id": "crt:atlas/%d_%d/home/%s" % [int(plan.slot.x), int(plan.slot.y), home.id], "content_id": home.content_id, "version": 1, "position": _xy(tile), "origin": "procedural", "metadata": meta})
 	return true
 
 func _place_sites(designer: RefCounted, plan: Dictionary, layout: Dictionary, to_tile: Callable) -> bool:

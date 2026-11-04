@@ -20,7 +20,8 @@ const OUTCOMES := {"grant_items": ["items"], "loot": ["table"], "apply_status": 
 ## differs between Runs. Branches hold ordinary outcomes only (no nested chance).
 const MAX_BRANCH := 6
 ## Location-only conditions; every other known type is a skill condition.
-const LOCAL_CONDITIONS := {"perception": [], "status": ["status"], "biome": ["values"], "any_of": ["conditions"]}
+## `weather` (2026-11-04): the land's scheduled weather id at the player, or "calm".
+const LOCAL_CONDITIONS := {"perception": [], "status": ["status"], "biome": ["values"], "any_of": ["conditions"], "weather": ["values"]}
 
 static func check_conditions(conditions: Variant, context: Dictionary, skills: RefCounted, missing: Array) -> String:
 	if not conditions is Array or conditions.size() > 8:
@@ -36,6 +37,8 @@ static func check_conditions(conditions: Variant, context: Dictionary, skills: R
 					if not Data.identifier(condition.get("status")): return "Status condition needs a status ID"
 				"biome":
 					if not condition.get("values") is Array or condition.values.is_empty() or not condition.values.all(func(b: Variant) -> bool: return b in Surfaces.HABITATS): return "Biome condition needs forest/beach/meadow values"
+				"weather":
+					if not condition.get("values") is Array or condition.values.is_empty() or condition.values.size() > 4 or not condition.values.all(func(w: Variant) -> bool: return w is String and RegEx.create_from_string("^[a-z][a-z0-9_]{0,31}$").search(w) != null): return "Weather condition needs 1..4 weather ids (or calm)"
 				"any_of":
 					if not condition.get("conditions") is Array or condition.conditions.is_empty(): return "any_of needs conditions"
 					var nested := check_conditions(condition.conditions, context, skills, missing)
@@ -148,5 +151,6 @@ static func describe_condition(condition: Dictionary) -> String:
 		"perception": return "spiritual perception"
 		"status": return "under " + str(condition.status).get_slice("/", 1).capitalize()
 		"biome": return "in " + "/".join(condition.values)
+		"weather": return " or ".join(condition.values.map(func(w: String) -> String: return "calm weather" if w == "calm" else "a " + w.replace("_", " ")))
 		"any_of": return "one of (" + " or ".join(condition.conditions.map(func(c: Dictionary) -> String: return describe_condition(c))) + ")"
 	return Skills.describe(condition)

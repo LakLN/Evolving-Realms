@@ -39,7 +39,7 @@ static func enabled(blueprint: Dictionary) -> bool:
 
 static func supported_plan(plan: Dictionary) -> bool:
 	var version := int(plan.get("atlas_version", 0))
-	return version == 1 or (version == 2 and int(plan.get("terrain_version", 0)) == 2 and plan.has("geography") and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/full_region" and int(plan.layout.get("version", 0)) in [5, 6])
+	return version == 1 or (version == 2 and int(plan.get("terrain_version", 0)) == 2 and plan.has("geography") and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/full_region" and int(plan.layout.get("version", 0)) in [5, 6, 7])
 
 static func create_world(store: RefCounted, name: String, seed_value: int, approval: Dictionary = {"by": "world-creation"}) -> Dictionary:
 	## A new atlas World with its initial lands (origin + INITIAL_LANDS - 1 expansions).

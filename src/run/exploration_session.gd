@@ -302,6 +302,7 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	roster = next_roster
 	locations = next_locations
 	places.layer = next_locations
+	roster.refresh(self) # Weather-bound / returning homes (needs places + environment).
 	survival = rules
 	uses = next_uses
 	quality = tiers
@@ -417,6 +418,7 @@ func perform_action(action: Dictionary) -> bool:
 			last_events.append_array(places.tick(self)) # Discoveries and "enter" events.
 			last_events.append_array(atlas_knowledge.update(self, last_events))
 			if int(stats().hp) > 0:
+				roster.refresh(self)
 				last_events.append_array(roster.take_turn(self))
 	last_events.append_array(statuses.finish_turn(self))
 	last_error = ""
@@ -478,6 +480,7 @@ func pulse() -> Array:
 			last_events.append_array(_talent_tick()) # on_turn, and on_explore for tiles found this second.
 			_new_tiles = 0
 			last_events.append_array(places.tick(self))
+			roster.refresh(self)
 	last_events.append_array(statuses.finish_turn(self))
 	if resting:
 		var stop := ""

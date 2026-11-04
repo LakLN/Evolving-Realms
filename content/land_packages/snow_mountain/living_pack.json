@@ -1,0 +1,1388 @@
+{
+ "pack_version": 1,
+ "notes": "Layout v7 living region: recurring and weather-bound activities (event.repeat, weather condition), the White Choir hollow, the Crown Shelf beacon and its elder. Installed only by the full-region layout v7; earlier packs untouched.",
+ "definitions": [
+  {
+   "content_id": "snow:trough_char",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Trough char",
+   "description": "A fat silver char from under the Mirror Trough ice. Eaten raw in the cold, or better cooked.",
+   "dependencies": [],
+   "metadata": {
+    "category": "food"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:use/trough_char",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item_use",
+   "name": "Eat trough char",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:trough_char",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item_use"
+   },
+   "payload": {
+    "item": {
+     "content_id": "snow:trough_char",
+     "version": 1
+    },
+    "verb": "Eat",
+    "consume": 1,
+    "effects": [
+     {
+      "type": "sate",
+      "amount": 90
+     },
+     {
+      "type": "quench",
+      "amount": 10
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:elder_horn",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Elder bell-horn",
+   "description": "A horn from the crown elder, ringed like cast bronze. It still hums when struck.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 5
+   }
+  },
+  {
+   "content_id": "snow:choir_lens",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Whiteout lens",
+   "description": "A disc of stormglass the choir tuned. Through it the blizzard has edges. Ice and lightning slide off; elemental techniques reach further.",
+   "dependencies": [],
+   "metadata": {
+    "category": "accessory"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "accessory",
+     "stats": {
+      "max_hp": 3
+     },
+     "skill_modifiers": [
+      {
+       "tags": [
+        "elemental"
+       ],
+       "power_percent": 15,
+       "range_add": 1
+      }
+     ],
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "ice",
+       "percent": 40
+      },
+      {
+       "type": "resistance",
+       "element": "lightning",
+       "percent": 25
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:relay_crown",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Beacon-keeper's crown",
+   "description": "The relay keepers' bronze circlet, warm from the beacon. Worn by whoever held the light through a storm.",
+   "dependencies": [],
+   "metadata": {
+    "category": "helmet"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "helmet",
+     "stats": {
+      "defense": 3,
+      "max_hp": 6
+     },
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "ice",
+       "percent": 30
+      },
+      {
+       "type": "resistance",
+       "element": "metal",
+       "percent": 20
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:bellhorn_hammer",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Bellhorn hammer",
+   "description": "A bronze-shod hammer set with the elder's horn. Its blows ring, and what they ring through staggers.",
+   "dependencies": [
+    {
+     "content_id": "core:status/stun",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "weapon",
+     "stats": {
+      "attack": 10,
+      "defense": 1
+     },
+     "damage_elements": [
+      "metal"
+     ],
+     "on_hit": [
+      {
+       "type": "apply_status",
+       "content_id": "core:status/stun",
+       "version": 1,
+       "chance_percent": 20
+      }
+     ],
+     "skill_modifiers": [
+      {
+       "tags": [
+        "physical"
+       ],
+       "power_percent": 20
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/bellhorn_hammer",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Bellhorn hammer",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:elder_horn",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bellhorn_hammer",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "weapon",
+    "inputs": [
+     {
+      "content_id": "snow:elder_horn",
+      "version": 1,
+      "quantity": 1
+     },
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 3
+     },
+     {
+      "content_id": "core:wood",
+      "version": 1,
+      "quantity": 2
+     }
+    ],
+    "output": {
+     "content_id": "snow:bellhorn_hammer",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:elder_bellback",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Crown elder",
+   "description": "The oldest bellback, grey as the summit stone. Its horns ring before it charges. It keeps the beacon road and does not forget a trespasser.",
+   "metadata": {
+    "category": "guardian"
+   },
+   "dependencies": [
+    {
+     "content_id": "snow:elder_horn",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:ancient_marrow",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bell_shard",
+     "version": 1
+    }
+   ],
+   "payload": {
+    "visual": "elder_bellback",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 96,
+     "attack": 12,
+     "defense": 5
+    },
+    "movement": {
+     "biomes": [
+      "snowfield"
+     ],
+     "leash": 7,
+     "move_per_10000": 6000
+    },
+    "ai": {
+     "detect_radius": 5,
+     "wander_per_10000": 1200,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 5,
+     "priority": 5,
+     "ecology_only": true
+    },
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:elder_horn",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      },
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 3,
+       "max": 5
+      },
+      {
+       "content_id": "snow:ancient_marrow",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ],
+     "rolls": 1,
+     "entries": [
+      {
+       "content_id": "snow:bell_shard",
+       "version": 1,
+       "min": 1,
+       "max": 1,
+       "weight": 1
+      },
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 1,
+       "max": 2,
+       "weight": 1
+      }
+     ]
+    },
+    "traits": [
+     "charger",
+     "thick_coat"
+    ],
+    "elements": [
+     "metal"
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/ice_fishing",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Fishing through the ice",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:trough_char",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "neutral",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "calm"
+      ]
+     }
+    ],
+    "message": "You break the skin of new ice and let a line down into the dark water.",
+    "outcomes": [
+     {
+      "type": "chance",
+      "chance_per_10000": 6500,
+      "message": "A silver char takes the line, then another.",
+      "outcomes": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "snow:trough_char",
+          "version": 1,
+          "quantity": 2
+         }
+        ]
+       }
+      ],
+      "otherwise_message": "Nothing bites. The hole skins over while you wait.",
+      "otherwise": []
+     },
+     {
+      "type": "xp",
+      "amount": 3
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/fishing_hole",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Carriers' fishing hole",
+   "description": "A ring of stones on the lake ice where the carriers fished. The hole freezes over and must be broken again each time.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/ice_fishing",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "resource_site"
+   },
+   "payload": {
+    "category": "resource_site",
+    "visual": "fishing_hole",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "fish",
+      "verb": "Fish through the ice",
+      "event": {
+       "content_id": "snow:event/ice_fishing",
+       "version": 1
+      },
+      "repeat": {
+       "every": 60,
+       "times": 8
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/hare_snare",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Snares on the hare run",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:raw_meat",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "neutral",
+    "message": "You reset the old carriers' snares along the hare run.",
+    "outcomes": [
+     {
+      "type": "chance",
+      "chance_per_10000": 5500,
+      "message": "One snare holds a hare.",
+      "outcomes": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "core:raw_meat",
+          "version": 1,
+          "quantity": 1
+         },
+         {
+          "content_id": "core:hide",
+          "version": 1,
+          "quantity": 1
+         }
+        ]
+       }
+      ],
+      "otherwise_message": "The snares are sprung and empty; something clever passed this way.",
+      "otherwise": []
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/hare_track",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Reading the run",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:raw_meat",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "conditions": [
+     {
+      "type": "any_of",
+      "conditions": [
+       {
+        "type": "talent",
+        "values": [
+         "core:talent/beast_hunter"
+        ]
+       },
+       {
+        "type": "perception"
+       }
+      ]
+     }
+    ],
+    "message": "You read where the hares bed down and take two before they scatter.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:raw_meat",
+        "version": 1,
+        "quantity": 2
+       },
+       {
+        "content_id": "core:hide",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 6
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/hare_run",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Hare run",
+   "description": "A trampled lane through the basin pines, strung with old carriers' snares.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/hare_snare",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/hare_track",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "resource_site"
+   },
+   "payload": {
+    "category": "resource_site",
+    "visual": "hare_run",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "snare",
+      "verb": "Check the snares",
+      "event": {
+       "content_id": "snow:event/hare_snare",
+       "version": 1
+      },
+      "repeat": {
+       "every": 90,
+       "times": 6
+      }
+     },
+     {
+      "id": "track",
+      "verb": "Read the run",
+      "event": {
+       "content_id": "snow:event/hare_track",
+       "version": 1
+      },
+      "repeat": {
+       "every": 150,
+       "times": 4
+      },
+      "reveal_conditions": [
+       {
+        "type": "any_of",
+        "conditions": [
+         {
+          "type": "talent",
+          "values": [
+           "core:talent/beast_hunter"
+          ]
+         },
+         {
+          "type": "perception"
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/warm_spring",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The warm spring",
+   "description": "",
+   "dependencies": [],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "message": "Steam rolls off the pool. The cold lets go of your hands and your wounds stop stinging.",
+    "outcomes": [
+     {
+      "type": "heal",
+      "amount": 8
+     },
+     {
+      "type": "cleanse",
+      "harmful": true
+     },
+     {
+      "type": "quench",
+      "amount": 30
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/warm_spring",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Steaming spring",
+   "description": "A pool that never freezes, ringed with yellow moss under the pines.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/warm_spring",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "resource_site"
+   },
+   "payload": {
+    "category": "resource_site",
+    "visual": "warm_spring",
+    "discovery": {
+     "mode": "visible",
+     "radius": 4
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "bathe",
+      "verb": "Warm yourself",
+      "event": {
+       "content_id": "snow:event/warm_spring",
+       "version": 1
+      },
+      "repeat": {
+       "every": 120
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/camp_stash",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The cutthroats' stash",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:coin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:frost_linen",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "neutral",
+    "message": "You lift the slab over the cutthroats' stash hole.",
+    "outcomes": [
+     {
+      "type": "chance",
+      "chance_per_10000": 7000,
+      "message": "Someone has filled it again: coin, bronze and a fold of linen taken from a traveller.",
+      "outcomes": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "core:coin",
+          "version": 1,
+          "quantity": 3
+         },
+         {
+          "content_id": "snow:bronze_scrap",
+          "version": 1,
+          "quantity": 1
+         },
+         {
+          "content_id": "snow:frost_linen",
+          "version": 1,
+          "quantity": 1
+         }
+        ]
+       }
+      ],
+      "otherwise_message": "Picked clean. Whoever stocks it has not been back.",
+      "otherwise": []
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/bandit_stash",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Stash under the slab",
+   "description": "A flat stone by the cutthroats' fire pit, scraped where it has been lifted many times.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/camp_stash",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "cache"
+   },
+   "payload": {
+    "category": "cache",
+    "visual": "bandit_stash",
+    "discovery": {
+     "mode": "proximity",
+     "radius": 2
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "lift",
+      "verb": "Lift the slab",
+      "event": {
+       "content_id": "snow:event/camp_stash",
+       "version": 1
+      },
+      "repeat": {
+       "every": 400,
+       "times": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/storm_rime",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Storm rime",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "neutral",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "blizzard"
+      ]
+     }
+    ],
+    "message": "In the gale the ledge grows beards of hard rime. You chip a clear piece free while the wind cuts at you.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:stormglass",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "damage",
+      "amount": 2
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/rime_ledge",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Rime-bearded ledge",
+   "description": "A shoulder of rock on the stair where the storm wind breaks. In calm weather it is bare.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/storm_rime",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "resource_site"
+   },
+   "payload": {
+    "category": "resource_site",
+    "visual": "rime_ledge",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "chip",
+      "verb": "Chip storm rime",
+      "event": {
+       "content_id": "snow:event/storm_rime",
+       "version": 1
+      },
+      "repeat": {
+       "every": 150,
+       "times": 4
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/choir_shelter",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Out of the wind",
+   "description": "",
+   "dependencies": [],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "blizzard"
+      ]
+     }
+    ],
+    "message": "Inside the hollow the storm is only a sound. You catch your breath among the frozen voices.",
+    "outcomes": [
+     {
+      "type": "heal",
+      "amount": 5
+     },
+     {
+      "type": "cleanse",
+      "harmful": true
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/choir_listen",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The whiteout choir",
+   "description": "",
+   "dependencies": [],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "neutral",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "blizzard"
+      ]
+     }
+    ],
+    "message": "The singing is the carriers' road-calls, caught in the ice and played back by the wind: names, warnings, the beacon count. One voice keeps asking for a lens to see the road.",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 25
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/choir_answer",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Tuning the lens",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:choir_lens",
+     "version": 1
+    },
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "blizzard"
+      ]
+     }
+    ],
+    "cost": {
+     "items": [
+      {
+       "content_id": "snow:stormglass",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "message": "You hold the stormglass up to the loudest voice. It rings, clouds, then clears into a lens. Through it the whiteout has edges.",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:choir_lens",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 40
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/choir_hollow",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Choir hollow",
+   "description": "A hollow in the drifts that the wind keeps open, full of something like singing.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/choir_shelter",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/choir_listen",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/choir_answer",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "anomaly"
+   },
+   "payload": {
+    "category": "anomaly",
+    "visual": "choir_hollow",
+    "discovery": {
+     "mode": "hidden",
+     "radius": 4,
+     "conditions": [
+      {
+       "type": "weather",
+       "values": [
+        "blizzard"
+       ]
+      }
+     ]
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "shelter",
+      "verb": "Shelter from the storm",
+      "event": {
+       "content_id": "snow:event/choir_shelter",
+       "version": 1
+      },
+      "repeat": {
+       "every": 60
+      }
+     },
+     {
+      "id": "listen",
+      "verb": "Listen to the voices",
+      "event": {
+       "content_id": "snow:event/choir_listen",
+       "version": 1
+      }
+     },
+     {
+      "id": "answer",
+      "verb": "Offer stormglass to the choir",
+      "event": {
+       "content_id": "snow:event/choir_answer",
+       "version": 1
+      },
+      "after": "listen"
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/beacon_clear",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Re-seating the collar",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "neutral",
+    "cost": {
+     "items": [
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "quantity": 2
+      }
+     ]
+    },
+    "message": "You pound bronze into the split collar until the fire bowl sits true again. It needs a heart that will burn in this cold.",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 20
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/beacon_kindle",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Kindling the beacon",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:status/regeneration",
+     "version": 1
+    },
+    {
+     "content_id": "snow:ember_heart",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "calm"
+      ]
+     }
+    ],
+    "cost": {
+     "items": [
+      {
+       "content_id": "snow:ember_heart",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "message": "The ember heart catches. For the first time in years the relay beacon burns on the crown. It will not last a storm unless someone keeps it.",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 40
+     },
+     {
+      "type": "apply_status",
+      "content_id": "core:status/regeneration",
+      "version": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/beacon_vigil",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The storm vigil",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:relay_crown",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "conditions": [
+     {
+      "type": "weather",
+      "values": [
+       "blizzard"
+      ]
+     }
+    ],
+    "message": "You keep the beacon through the gale, feeding it and shielding it with your body. When the storm thins, the light is still there. In the ash of the bowl lies the keepers' circlet.",
+    "outcomes": [
+     {
+      "type": "damage",
+      "amount": 4
+     },
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:relay_crown",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 90
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/beacon_rekindle",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "By the beacon",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:status/ward",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "tone": "boon",
+    "cost": {
+     "items": [
+      {
+       "content_id": "snow:resin",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    },
+    "message": "Resin spits on the coals and the beacon flares. Its warmth reaches your bones.",
+    "outcomes": [
+     {
+      "type": "heal",
+      "amount": 10
+     },
+     {
+      "type": "apply_status",
+      "content_id": "core:status/ward",
+      "version": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/crown_beacon",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Relay beacon",
+   "description": "The carriers' signal fire on the crown: a split bronze bowl on a stone stair, cold for years.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/beacon_clear",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/beacon_kindle",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/beacon_vigil",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/beacon_rekindle",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "ruin"
+   },
+   "payload": {
+    "category": "ruin",
+    "visual": "crown_beacon",
+    "discovery": {
+     "mode": "visible",
+     "radius": 4
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "clear",
+      "verb": "Mend the fire bowl",
+      "event": {
+       "content_id": "snow:event/beacon_clear",
+       "version": 1
+      }
+     },
+     {
+      "id": "kindle",
+      "verb": "Kindle the beacon",
+      "event": {
+       "content_id": "snow:event/beacon_kindle",
+       "version": 1
+      },
+      "after": "clear"
+     },
+     {
+      "id": "vigil",
+      "verb": "Keep the beacon through a storm",
+      "event": {
+       "content_id": "snow:event/beacon_vigil",
+       "version": 1
+      },
+      "after": "kindle"
+     },
+     {
+      "id": "rekindle",
+      "verb": "Feed the beacon",
+      "event": {
+       "content_id": "snow:event/beacon_rekindle",
+       "version": 1
+      },
+      "after": "vigil",
+      "repeat": {
+       "every": 150
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

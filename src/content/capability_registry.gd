@@ -36,6 +36,7 @@ static func all_supported() -> Array:
 	for mode in Locations.DISCOVERY: result.append("location.discovery." + mode)
 	for trigger in Locations.TRIGGERS: result.append("location.trigger." + trigger)
 	for condition in Events.LOCAL_CONDITIONS: result.append("location.condition." + condition)
+	result.append("event.repeat")
 	for outcome in Events.OUTCOMES: result.append("event.outcome." + outcome)
 	return result
 
