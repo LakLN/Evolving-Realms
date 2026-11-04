@@ -2,6 +2,24 @@
 
 ## Small maintenance: deterministic scene fixtures (2026-11-04)
 
+Follow-up B/C audit: inspected `assets/game/sprites/crab.png`, the art audit and
+`build_assets.py`. Ran `.venv/Scripts/python.exe tools/art/asset_check.py index`:
+0 failures, 1 known defect, 52 warnings. `crab#7` still reaches x=63 in its 64x56
+cell. Deferred source recrop/rebuild to the next art pass: moving/deleting edge
+pixels would not establish that the clipped claw is restored. No asset/validator
+change; import check for an asset correction was therefore not needed.
+
+Rehashed all 10 current untracked source files against matching paths in
+`assets/sources/EvolvingRealms_SnowMountain_TierA`. Eight PNGs were byte-identical:
+seven under `assets/sources/references/` (S2_frozen_scree, S4_bellback_sentinel,
+S4_rime_hare, S5_items, bell_damaged, cairn_intact, relay_pine_intact, each with
+`_reference.png`) and `assets/sources/source/original_generated_sheet.png`.
+Searched scripts/tools/src/content/docs and both manifests for duplicate paths and
+source filenames: only the TierA original is referenced by the art example.
+Removed those eight untracked copies after rechecking hashes and root containment;
+kept all TierA originals. Root README.md and manifest.json have different SHA-256
+values, so preserved them. No tracked assets deleted; cleanup needs no game test.
+
 Tests only. M04 menu test seeds the global RNG immediately before New Adventure,
 making World/Run draws reproducible; per-land Run seed remains 31. This also fixes
 the random coastal sampling fixture behind the reported `ocean, road` ground
