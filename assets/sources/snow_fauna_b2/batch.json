@@ -1,0 +1,555 @@
+{
+ "schema": "er-asset-batch",
+ "version": 1,
+ "batch": "snow_fauna_b2",
+ "package": "snow_mountain_full",
+ "status": "candidate",
+ "provenance": {
+  "source": "original code-authored geometry",
+  "date": "2026-11-04",
+  "generator": "snow_fauna_author.py + pixel3d.py",
+  "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette."
+ },
+ "assets": [
+  {
+   "id": "C04",
+   "name": "frost_stag",
+   "kind": "sheet",
+   "file": "frost_stag.png",
+   "sha256": "18f716db98e2656f11235cb2dd636005cbb2e468eff05152149767e16c783e57",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C05",
+   "name": "tuskback",
+   "kind": "sheet",
+   "file": "tuskback.png",
+   "sha256": "c0c4c8f6348d52597944984bd529f194b7a4b4b5d054b5eafcecf609345323da",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C06",
+   "name": "pine_prowler",
+   "kind": "sheet",
+   "file": "pine_prowler.png",
+   "sha256": "07ea5855cdc2a710f7c42e48fca214729ed498c7864f0ae40f5732129748a0f8",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C07",
+   "name": "relay_cutthroat",
+   "kind": "sheet",
+   "file": "relay_cutthroat.png",
+   "sha256": "b38f6c7c907745907871151e2eec698b94ccc187154bedc012f7e8a3ad4fc38a",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C08",
+   "name": "relay_slinger",
+   "kind": "sheet",
+   "file": "relay_slinger.png",
+   "sha256": "493448d45c0f4cacf6b6b779f4e99a46c4748cb8c8fe2774d6a5d42420cc7a4d",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C09",
+   "name": "cinder_acolyte",
+   "kind": "sheet",
+   "file": "cinder_acolyte.png",
+   "sha256": "4742c03112855fdfe089c90325b1c19311fd1032c7f01797354508cd4c323d13",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C10",
+   "name": "hollow_carrier",
+   "kind": "sheet",
+   "file": "hollow_carrier.png",
+   "sha256": "9debab61708a1e129e7e71b3994906fb0acd781223ae9950c62343b19e62390a",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C11",
+   "name": "glassback_crawler",
+   "kind": "sheet",
+   "file": "glassback_crawler.png",
+   "sha256": "a487a5c154612ea18164e89dd3b1fe8c1c0c1599872006c0f9fb18d145a57ea0",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C12",
+   "name": "rime_lantern",
+   "kind": "sheet",
+   "file": "rime_lantern.png",
+   "sha256": "b05f806c7b366981adc5406f021cbbb552c228af3e68f3579128e1644cb41c59",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C13",
+   "name": "ashmaw",
+   "kind": "sheet",
+   "file": "ashmaw.png",
+   "sha256": "5d6aa34ca66ab236e7d25fc01546b1f01e6e2b034845518f3fbf5a95db691110",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C14",
+   "name": "hoarfrost_giant",
+   "kind": "sheet",
+   "file": "hoarfrost_giant.png",
+   "sha256": "a847414778da0288909b47dac47b33975d8c39388b5602a6e2572bf09ee51312",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "I03",
+   "name": "fauna_items",
+   "kind": "icons",
+   "file": "item_sheet.png",
+   "sha256": "6c5425668af3974a937b0d691beee5667c5367c4fe98d2f6f34cb9527b429d76",
+   "size": [
+    128,
+    96
+   ],
+   "cell": [
+    32,
+    32
+   ],
+   "margin": 2,
+   "ids": [
+    "snow:ivory_tusk",
+    "snow:stormglass",
+    "snow:frost_linen",
+    "snow:ember_heart",
+    "snow:ancient_marrow",
+    "snow:tusk_glaive",
+    "snow:glass_rod",
+    "snow:rimeweave",
+    "snow:kiln_maul",
+    "snow:glass_charm",
+    "snow:marrow_tonic"
+   ]
+  },
+  {
+   "id": "I03/glass_lance",
+   "name": "glass_lance",
+   "kind": "sprite",
+   "file": "book_glass_lance.png",
+   "sha256": "6923260200e8d9cbfcfd04fc1f68a06f0309513b491c7d677d4a196ab075589d",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": "I03/rime_stitch",
+   "name": "rime_stitch",
+   "kind": "sprite",
+   "file": "book_rime_stitch.png",
+   "sha256": "1f8bb529549460178f16deeb8dcb8ca01b2bd457f452016a4fe2e67006b3e5ce",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": "I03/kiln_breath",
+   "name": "kiln_breath",
+   "kind": "sprite",
+   "file": "book_kiln_breath.png",
+   "sha256": "34e5b27d59c916e8ef58d290a70c61bead7efdce219fd64df75512ce8324f287",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": "L/old_kiln",
+   "name": "old_kiln",
+   "kind": "sprite",
+   "file": "old_kiln.png",
+   "sha256": "aa5ac3db87cd053c4b27f0f5f8ebf7bef580c36d5e421f1feb1e155945b6be72",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/glass_bowl",
+   "name": "glass_bowl",
+   "kind": "sprite",
+   "file": "glass_bowl.png",
+   "sha256": "2c148c318f885f71809ad1f607ac8f6a4645d20408c4b741259f4b9e21f72fc7",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/wind_loom",
+   "name": "wind_loom",
+   "kind": "sprite",
+   "file": "wind_loom.png",
+   "sha256": "aa52254ba7b54555175a9492c180e727cdccc9bd182e4eb2215235b6015b723b",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    49
+   ],
+   "margin": 2
+  }
+ ]
+}

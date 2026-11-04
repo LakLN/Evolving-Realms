@@ -15,6 +15,27 @@ New icons reuse bronze/resin, blue cloth, upper-left illumination and the curren
 native pixel scale. Candidate P0 creatures/landmarks must be reviewed in Godot
 alongside the current HUD; isolated-sheet structure checks do not certify style.
 
+## Roster and exploration batch - snow_fauna_b1 (2026-11-04)
+
+Consolidated production scope before authoring; all assets remain candidate.
+All creature sheets use 84x76 cells, pivot (42,69), 11 columns (idle, walk1-4,
+attack1-3, hit, death1-2) and down/left/right/up rows. Reuse the existing pixel3d
+lighting/palettes/rig; author distinct models and all directions. No generic tokens.
+
+| IDs | Native subjects / shape | Runtime |
+|---|---|---|
+| C04-C06 | Frost stag (antlers), Tuskback (tusks/low boar), Pine prowler (long feline tail) | snow/fauna/<content suffix>.png |
+| C07-C09 | Relay cutthroat (hood/blade), Relay slinger (sling), Cinder acolyte (mask/staff) | same |
+| C10-C12 | Hollow carrier (empty frost coat), Glassback crawler (six legs/crystal shell), Rime lantern (pronged floating crystal) | same |
+| C13-C14 | Ashmaw (ground drake/wing fins), Hoarfrost giant (large biped/ice beard) | same |
+| I03 | Ivory tusk, stormglass, frost linen, ember heart, ancient marrow; tusk glaive, glass rod, rimeweave, kiln maul, glass charm, marrow tonic; three technique manuals | 32x32 transparent icons, >=2px margin, centered |
+| L08-L13 | Field satchel, hunter camp, glass bowl, kiln, wind loom, concealed drift cache | Reuse fitting S1/P0 objects/landmark forms; no extra state art promised |
+
+Sources/provenance/batch hashes: assets/sources/snow_fauna_b1/. Derived runtime
+assets and exact-ID mappings: assets/game/snow/fauna/ and snow_fauna_index.json.
+Review normal gameplay scale, enemy windups and snow/taiga contrast in native
+captures. No per-frame animation audit is required for this content batch.
+
 ## Production status - batch snow_p0_b1 (2026-11-03, candidate)
 
 All eight P0 production outputs plus one added row are delivered as **candidate** art
