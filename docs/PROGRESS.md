@@ -1,5 +1,39 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Modern RPG interface (2026-11-04)
+
+Commits af4075e, e2ad42f, d27e9ef. Replaced the full-width debug text slab with
+`src/ui/hud.gd`: vitals top-left (level, XP bar, HP/energy bars, hunger/thirst,
+status chips), adjacent-target frame top-centre, region/weather/lead block under the
+minimap (frame turns amber/red for incoming weather/exposure, long description in the
+tooltip), one contextual prompt above a hotbar, fading toast feed bottom-left with a
+message log (L), panel shortcut grid bottom-right. Hotbar: slots 1-9 = learned skills
+in learning order through `begin_skill` (icon, energy cost, cooldown overlay, dim with
+the reason in the tooltip; passive/triggered labelled, not pressable); Q/Z quick items
+use the real `use` action and are assigned in the Bag (Q/Z or buttons), stored as
+optional `character.quick_items` via `session.set_quick_item` (no turn, dirty flag).
+Sheets share a tabbed frame on the right; I/C/K/T/J/L/H switch between them; T keeps
+the centred awakening reveal at Run start. New keys: H/F1 help, L log, Q/Z.
+Feedback: red vitals flash on HP loss, HP pulse below 30%, gold/amber toast frames.
+Fixed stale-message merging in rest/harvest text. Gameplay, combat, saves unchanged.
+
+Checks: new `ui-gameplay` suite (real keys/clicks: edge layout outside the central
+60%, learn via Bag, Q assignment + use, hotbar click uses Iron Guard, cooldown overlay,
+panel switching, target frame, log, quick slot survives Continue). Ran with `-Only`:
+gameplay 30, interaction-gameplay 17, combat-gameplay 20, survival-gameplay 10,
+equipment-gameplay 15, talent-gameplay 16, skill-gameplay 21, effect-gameplay 9,
+ui-gameplay 24, discovery-gameplay 6, map 22, realtime-gameplay 17, m03-integration
+28, m04-gameplay 23, snow-gameplay 46, data 96, integration 41, all 0 failures.
+Rendered: rendered-ui 33/0, rendered-snow-gameplay 65/0, rendered-discoveries 7/0,
+rendered-combat 23/0, rendered-survival 12/0. Standalone acceptance write/crash/verify
+on a disposable DB: 30/0, crash as designed, 8/0. Reviewed captures ui-*.png,
+snow-choir-blizzard, snow-relay-ledger, world-rules-selector/knowledge, m02a-combat,
+m02a-death, m02b-rest. Updated layout assertions in 7 existing suites (geometry of
+the removed top/bottom bars) without dropping their intent.
+Gaps: no item/skill drag-and-drop or reassignment of skill slots (order = learning
+order); no controller navigation or UI scale option; main menu screen not restyled;
+skill icons reuse the closest generic icon; world map (M) keeps its own layout.
+
 ## Presentation visibility: clear outdoor view (2026-11-04)
 
 Slice 2 of UI_UX_FOUNDATION, renderer only (`map_view.gd`). In calm weather the camera

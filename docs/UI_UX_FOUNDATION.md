@@ -1,6 +1,14 @@
 # Modern UI/UX foundation
 
 2026-11-04. Design and implementation handoff; no runtime change in this commit.
+
+**Status (later 2026-11-04):** implemented. `src/ui/hud.gd` owns the edge HUD (vitals,
+target frame, region/weather column, prompt, hotbar with 9 skill slots + Q/Z quick
+items, fading message feed, panel shortcuts); main.gd keeps action handlers and text.
+Sheets (Bag, Gear, Skills, Talent, Lore, Help, Log) share one tabbed frame on the right
+while vitals, messages and hotbar stay visible. Presentation visibility shipped in
+832f347. Deviations from the table below: item quick slots exist (Q/Z, saved as
+`character.quick_items`); panels are a right-hand sheet rather than a centred shell.
 Scope: a unified interface for the existing local game. Preserve action handlers,
 Run saves, content identities, discovery gates and both time models.
 

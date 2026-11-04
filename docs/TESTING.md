@@ -16,7 +16,8 @@ No test is deleted: every existing suite stays in the full regression.
 real acceptance flow: save, abrupt kill, reload without duplicates; legacy saves).
 `import` and `startup` always run. Names for `-Only` are the check names printed by the
 runner (e.g. `skills`, `talent-gameplay`, `rendered-skills`). Run a UI/gameplay suite or
-take a screenshot only when the UI changed significantly.
+take a screenshot only when the UI changed significantly. HUD, hotbar and panel
+sheets: `ui-gameplay`; `-Render -Only rendered-ui` writes `.tools/ui-*.png` captures.
 
 ## Invariants that are never skipped
 
