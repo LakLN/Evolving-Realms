@@ -37,7 +37,7 @@ func _run() -> void:
 	if not check(app.session != null, "Start a run from the menu"):
 		return _finish()
 	app.session.autosave_interval = 0
-	check(app._hp_label.text.begins_with("Lv 1  HP 30/30  ATK 7 DEF 1"), "HUD shows level and effective stats with the starting club")
+	check(app._hp_label.text.begins_with("Lv 1   ATK 7   DEF 1"), "HUD shows level and effective stats with the starting club")
 	await _key(KEY_C)
 	check(app._character_panel.visible and app._slot_list.get_item_text(0).contains("[Phổ Thông] Wooden club") and app._slot_list.get_item_custom_fg_color(0) == app.session.quality.color("pho_thong"), "C opens the gear panel: weapon slot shows the Common club in its quality color")
 	check(app._character_summary.text.contains("Attack 7  = 5 base + 0 level + 2 gear") and app._character_summary.text.contains("Level 1"), "Panel shows level/XP and the base + level + gear breakdown")
@@ -66,7 +66,7 @@ func _run() -> void:
 	check(app._slot_list.get_item_text(0).contains("[Hiếm Có] Traveler's blade"), "Gear panel shows the new weapon")
 	await _capture("m02c-character.png")
 	var panel_rect: Rect2 = app._character_panel.get_global_rect()
-	check(panel_rect.position.y >= 86 and panel_rect.end.y <= app.get_viewport_rect().size.y - 100 and panel_rect.end.x < app.get_viewport_rect().size.x / 2.0, "Gear panel fits between the HUD bars on the left side")
+	check(app.get_viewport_rect().encloses(panel_rect) and panel_rect.end.y <= app._hud.hotbar.get_global_rect().position.y and panel_rect.position.x >= app._hp_bar.get_global_rect().end.x, "Gear sheet fits beside the vitals and above the hotbar")
 	app._slot_list.select(0)
 	app._show_slot(0)
 	await _key(KEY_U)

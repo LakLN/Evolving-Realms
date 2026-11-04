@@ -23,13 +23,15 @@ const EDGE_LABELS := 1
 const ZOOM_MAX := 24.0
 const ZOOM_START := 8.0
 const MINIMAP_TILE := 7.0
-const MINIMAP_SIZE := Vector2(198, 150)
-const MINIMAP_MARGIN := 12.0
+const MINIMAP_SIZE := Vector2(200, 150)
+const MINIMAP_MARGIN := 16.0
 
 signal waypoint_changed(waypoint: Dictionary)
 var session: RefCounted
 var map_open := false
 var minimap_visible := true
+## True while a player sheet covers the right side (main.gd); the minimap steps aside.
+var suppressed := false
 var _camera_center := Vector2.ZERO
 var _zoom := ZOOM_START
 var _map_rect := Rect2()
@@ -260,7 +262,7 @@ func _draw() -> void:
 		return
 	if map_open:
 		_draw_world_map()
-	elif minimap_visible:
+	elif minimap_visible and not suppressed:
 		_draw_minimap()
 
 func _draw_world_map() -> void:
@@ -359,7 +361,7 @@ func _draw_waypoint() -> void:
 		_draw_edge_indicator(Vector2(tile) + Vector2(0.5, 0.5), _map_rect, Color("f1bd56"), "Waypoint", _zoom)
 
 func _draw_minimap() -> void:
-	_minimap_rect = Rect2(Vector2(size.x - MINIMAP_SIZE.x - MINIMAP_MARGIN, 100), MINIMAP_SIZE)
+	_minimap_rect = Rect2(Vector2(size.x - MINIMAP_SIZE.x - MINIMAP_MARGIN, MINIMAP_MARGIN), MINIMAP_SIZE)
 	draw_rect(_minimap_rect, Color("18140f", 0.96))
 	draw_rect(_minimap_rect, Color("8a6c3c"), false, 2.0)
 	_draw_text(_minimap_rect.position + Vector2(8, 19), "LOCAL MAP  [N]", 13, Color("e6c47b"))

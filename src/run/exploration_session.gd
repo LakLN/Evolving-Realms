@@ -609,6 +609,22 @@ func use_for(content_id: String) -> Dictionary:
 func use_item(content_id: String) -> bool:
 	return perform_action({"type": "use", "content_id": content_id})
 
+func set_quick_item(key: String, content_id: String) -> bool:
+	## Hotbar binding saved with the Run (character.quick_items): which usable item Q/Z
+	## use. A UI preference, not an action: no turn, no inventory change. "" clears.
+	if not key in ["q", "z"]:
+		return _fail("Unknown quick slot")
+	if not content_id.is_empty() and use_for(content_id).is_empty():
+		return _fail("Only usable items (food, drink, remedies) fit a quick slot")
+	var slots: Dictionary = run.state.character.get("quick_items", {})
+	if content_id.is_empty():
+		slots.erase(key)
+	else:
+		slots[key] = content_id
+	run.state.character.quick_items = slots
+	dirty = true
+	return true
+
 func _use_action(action: Dictionary) -> bool:
 	## Validate and plan everything first; only then change stats and inventory.
 	if not action.get("content_id") is String or not run.state.inventory.has(action.content_id):

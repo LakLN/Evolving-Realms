@@ -37,10 +37,10 @@ func _run() -> void:
 		return _finish()
 	app.session.autosave_interval = 0
 	check(app._survival_label.text.begins_with("Hunger 0%  Thirst 0%"), "HUD shows hunger and thirst")
-	var top_row: Control = app._info.get_parent()
-	var last_button: Control = top_row.get_child(top_row.get_child_count() - 1)
+	var vitals: Control = app._survival_label.get_parent().get_parent().get_parent()
+	var last_button: Control = app._hud.menu_bar.get_child(app._hud.menu_bar.get_child_count() - 1)
 	await process_frame
-	check(last_button.get_global_rect().end.x <= app.get_viewport_rect().size.x + 0.5 and top_row.get_global_rect().end.y <= 90, "Top HUD with survival line fits, Menu button fully visible")
+	check(last_button.get_global_rect().end.x <= app.get_viewport_rect().size.x + 0.5 and vitals.get_global_rect().end.y <= 144 and app._survival_label.get_global_rect().end.x <= vitals.get_global_rect().end.x, "Vitals with the survival line stay in the top-left corner; Menu button fully visible")
 	var stats: Dictionary = app.session.stats()
 	stats.hunger = 640
 	stats.hp = 20

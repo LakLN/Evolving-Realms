@@ -43,13 +43,13 @@ func _run() -> void:
 	session.reload_talents()
 	app._update_info()
 	check(app._energy_label.text == "EN 20/20" and app._energy_bar.value == 20, "HUD shows the energy bar with its numbers")
-	var menu_button: Rect2 = app._hud.get_child(0).get_child(0).get_child(app._hud.get_child(0).get_child(0).get_child_count() - 1).get_global_rect()
-	check(menu_button.end.x <= app.get_viewport_rect().size.x + 0.5 and app._hud.get_child(0).get_global_rect().end.y <= 100, "HUD top bar still fits (Menu button visible)")
+	var menu_button: Rect2 = app._hud.menu_bar.get_child(app._hud.menu_bar.get_child_count() - 1).get_global_rect()
+	check(menu_button.end.x <= app.get_viewport_rect().size.x + 0.5 and menu_button.end.y <= app.get_viewport_rect().size.y + 0.5, "HUD panel shortcuts fit (Menu button visible)")
 	app._info.text = "  Long realm name / Run 12345678 * unsaved\n  Tile (-1000000, -1000000) | meadow | Turn 123456 | Explored 123456 | Chunks 9"
 	await process_frame
 	await process_frame
-	menu_button = app._hud.get_child(0).get_child(0).get_child(app._hud.get_child(0).get_child(0).get_child_count() - 1).get_global_rect()
-	check(menu_button.end.x <= app.get_viewport_rect().size.x + 0.5, "Regression: a very long HUD info line is trimmed; the Menu button stays on screen")
+	menu_button = app._hud.menu_bar.get_child(app._hud.menu_bar.get_child_count() - 1).get_global_rect()
+	check(menu_button.end.x <= app.get_viewport_rect().size.x + 0.5 and app._hud.region_panel.get_global_rect().end.x <= app.get_viewport_rect().size.x + 0.5, "Regression: a very long HUD info line stays in its column; the Menu button stays on screen")
 	app._update_info()
 	var award := Inventory.new().award(app.store.content, session.world.world_id, session.run.state.inventory, [{"content_id": "core:book/power_strike", "version": 1, "quantity": 1}, {"content_id": "core:book/stone_throw", "version": 1, "quantity": 1}, {"content_id": "core:book/iron_guard", "version": 1, "quantity": 1}, {"content_id": "core:book/swift_step", "version": 1, "quantity": 1}, {"content_id": "core:book/mend", "version": 1, "quantity": 1}, {"content_id": "core:stone", "version": 1, "quantity": 3}], "test:ui-books")
 	session.run.state.inventory = award.inventory
@@ -77,7 +77,7 @@ func _run() -> void:
 	check(int(session.run.state.turn) == turn, "Movement pauses while the skills panel is open")
 	await _capture("m02e-skills.png")
 	var panel: Rect2 = app._skills_panel.get_global_rect()
-	check(panel.position.y >= 86 and panel.end.y <= app.get_viewport_rect().size.y - 100, "Skills panel fits between the HUD bars")
+	check(app.get_viewport_rect().encloses(panel) and panel.end.y <= app._hud.hotbar.get_global_rect().position.y and panel.position.x >= app._hp_bar.get_global_rect().end.x, "Skills sheet fits beside the vitals and above the hotbar")
 	await _key(KEY_ESCAPE)
 	var defense := int(session.combat_stats().defense)
 	await _key(KEY_3)

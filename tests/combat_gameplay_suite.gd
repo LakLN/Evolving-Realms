@@ -37,10 +37,10 @@ func _run() -> void:
 	await process_frame
 	if not check(app.session != null, "Menu starts a normal forest run"):
 		return _finish()
-	check(app._hp_label.text.begins_with("Lv 1  HP 30/30  ATK 7 DEF 1") and app._hp_bar.max_value == 30 and app._hp_bar.value == 30, "HUD shows level, HP 30/30 and effective ATK (5 base + 2 starting club)")
-	var top_row: Control = app._info.get_parent()
-	var last_button: Control = top_row.get_child(top_row.get_child_count() - 1)
-	check(top_row.get_global_rect().end.x <= app.get_viewport_rect().size.x + 0.5 and last_button.get_global_rect().end.x <= app.get_viewport_rect().size.x + 0.5, "Top HUD (info, HP, buttons) fits on screen")
+	check(app._hp_label.text.begins_with("Lv 1   ATK 7   DEF 1") and app._hud.hp_text.text == "HP 30 / 30" and app._hp_bar.max_value == 30 and app._hp_bar.value == 30, "HUD shows level, HP 30/30 and effective ATK (5 base + 2 starting club)")
+	var shortcuts: Control = app._hud.menu_bar
+	var last_button: Control = shortcuts.get_child(shortcuts.get_child_count() - 1)
+	check(app.get_viewport_rect().encloses(app._hud.hotbar.get_global_rect()) and last_button.get_global_rect().end.x <= app.get_viewport_rect().size.x + 0.5 and last_button.get_global_rect().end.y <= app.get_viewport_rect().size.y + 0.5, "HUD hotbar and panel shortcuts (Menu last) fit on screen")
 	var turn := int(app.session.run.state.turn)
 	await _key(KEY_SPACE)
 	check(int(app.session.run.state.turn) == turn + 1, "Space waits exactly one turn")

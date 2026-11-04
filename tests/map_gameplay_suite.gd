@@ -79,7 +79,7 @@ func run_test() -> void:
 	world_map._gui_input(press)
 	check(world_map.waypoint() == {"x": target_tile.x, "y": target_tile.y}, "Clicking an explored map coordinate places a waypoint")
 	check(session.dirty, "Waypoint changes mark the Run as unsaved")
-	check(app._info.text.contains("* unsaved"), "HUD reports the waypoint as an unsaved Run change")
+	check(app._info.text.contains("Unsaved"), "HUD reports the waypoint as an unsaved Run change")
 	check(session.save(), "Save Run with waypoint")
 	var saved: Dictionary = app.store.load_run(session.run.run_id)
 	var saved_waypoint: Dictionary = saved.get("state", {}).get("map_waypoint", {})

@@ -13,9 +13,8 @@ const WorldMap = preload("res://src/ui/world_map.gd")
 const Realtime = preload("res://src/run/realtime_controller.gd")
 const Structured = preload("res://src/world/structured_world.gd")
 const Atlas = preload("res://src/world/world_atlas.gd")
+const Hud = preload("res://src/ui/hud.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
-const CONTROLS_TURN := "WASD: move (bump = attack) | E: interact | X: search | F: attack | Tab: target | Space: wait | R: rest | I: items | C: gear | T: talent | K: skills | M: map | N: minimap"
-const CONTROLS_REALTIME := "Hold WASD: move | F: attack | \"!\": step away to dodge | E | X | R: rest | 1-9 | I C T K | M: map | N: minimap"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
 var database_path := DEFAULT_DATABASE
@@ -24,7 +23,7 @@ var session: RefCounted
 var map_view: Node2D
 var _world_map: WorldMap
 var _menu: Control
-var _hud: Control
+var _hud: Hud
 var _developer_overlay: PanelContainer
 var _developer_text: Label
 var _discovery_panel: PanelContainer
@@ -44,7 +43,6 @@ var _region_hint: Label
 ## (each read loads discovered site records); distances are recomputed from this cache.
 var _leads: Array = []
 var _frontiers: Array = []
-var _controls_hint: Label
 ## M03 B prototype: gameplay clock of a real-time Run (null for turn Runs).
 var _realtime: RefCounted
 var _create_world: Button
@@ -260,83 +258,31 @@ func _build_menu(parent: Control) -> void:
 	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills (1-9 use)  Ctrl+S: save  Esc: menu", 14).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 func _build_hud(parent: Control) -> void:
-	_hud = Control.new()
-	_hud.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	## Layout lives in src/ui/hud.gd; these aliases keep main.gd the owner of the text.
+	_hud = Hud.new()
 	parent.add_child(_hud)
-	var top := PanelContainer.new()
-	top.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	top.offset_bottom = 86
-	_hud.add_child(top)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
-	top.add_child(row)
-	_info = _label(row, "", 17)
-	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# Keep World identity and save state here; diagnostics belong to the F3 overlay.
-	_info.clip_text = true
-	_info.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	var health := VBoxContainer.new()
-	health.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_child(health)
-	_hp_label = _label(health, "HP", 15)
-	_hp_bar = ProgressBar.new()
-	_hp_bar.custom_minimum_size = Vector2(130, 14)
-	_hp_bar.show_percentage = false
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = Color("c9483f")
-	_hp_bar.add_theme_stylebox_override("fill", fill)
-	health.add_child(_hp_bar)
-	_energy_bar = ProgressBar.new()
-	_energy_bar.custom_minimum_size = Vector2(130, 12)
-	_energy_bar.show_percentage = false
-	var energy_fill := StyleBoxFlat.new()
-	energy_fill.bg_color = Color("3b7fc4")
-	_energy_bar.add_theme_stylebox_override("fill", energy_fill)
-	health.add_child(_energy_bar)
-	_energy_label = Label.new()
-	_energy_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_energy_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_energy_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_energy_label.add_theme_font_size_override("font_size", 10)
-	_energy_bar.add_child(_energy_label)
-	_survival_label = _label(health, "", 13)
-	_button(row, "Inventory [I]", _toggle_inventory).focus_mode = Control.FOCUS_NONE
-	_button(row, "Save [Ctrl+S]", _save_game).focus_mode = Control.FOCUS_NONE
-	var menu_button := _button(row, "Menu [Esc]", _return_to_menu)
-	menu_button.focus_mode = Control.FOCUS_NONE
-	menu_button.tooltip_text = "Save and return to the menu"
-	var bottom := PanelContainer.new()
-	bottom.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	bottom.offset_top = -100
-	bottom.grow_vertical = Control.GROW_DIRECTION_BEGIN # Taller hint text grows upward, never off-screen.
-	_hud.add_child(bottom)
-	var column := VBoxContainer.new()
-	bottom.add_child(column)
-	_notice = _label(column, "", 17)
-	_notice.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	# Place messages carry clues (M05 chains): wrap up to three lines instead of cutting.
-	_notice.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_notice.max_lines_visible = 3
-	_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_notice.mouse_filter = Control.MOUSE_FILTER_PASS
-	_notice.mouse_entered.connect(func() -> void: _notice.tooltip_text = _notice.text)
-	_interaction_hint = _label(column, "", 17)
-	_target_hint = _label(column, "", 17)
-	_region_hint = _label(column, "", 16) # Structured World: region and leads (empty otherwise).
-	_region_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_region_hint.mouse_filter = Control.MOUSE_FILTER_PASS
-	_region_hint.add_theme_color_override("font_color", Color("cfe3b0"))
-	_controls_hint = _label(column, CONTROLS_TURN, 15)
-	_label(column, "Red ring: hostile  /  Amber: neutral (fights back)  /  Green: passive.  Blizzards limit sight; the map records what you pass.", 15)
-	_developer_overlay = PanelContainer.new()
-	_developer_overlay.position = Vector2(12, 100)
-	_developer_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hud.add_child(_developer_overlay)
-	_developer_text = _label(_developer_overlay, "", 14)
-	_developer_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_developer_overlay.hide()
-	_hud.hide()
+	_hud.build()
+	_hud.describe_skill = skill_lines
+	_hud.skill_pressed.connect(func(index: int) -> void:
+		if session != null and not _panel_open() and not session.is_dead(): begin_skill(index))
+	_hud.item_pressed.connect(_use_quick_item)
+	_hud.command.connect(_open_panel)
+	_info = _hud.info
+	_region_hint = _hud.region
+	_notice = _hud.notice
+	_interaction_hint = _hud.interaction
+	_target_hint = _hud.target
+	_hp_label = _hud.hp_label
+	_hp_bar = _hud.hp_bar
+	_energy_bar = _hud.energy_bar
+	_energy_label = _hud.energy_label
+	_survival_label = _hud.survival
+	_developer_overlay = _hud.developer_overlay
+	_developer_text = _hud.developer_text
+
+func _say(text: String, replace: bool = false) -> void:
+	## Every player-facing message: a fading toast in the feed, kept in the log (L).
+	_hud.say(text, replace)
 
 func _update_developer_overlay() -> void:
 	if session == null or not _developer_overlay.visible:
@@ -344,45 +290,143 @@ func _update_developer_overlay() -> void:
 	_developer_text.text = "Developer [F3] | FPS %d\nTile (%d, %d) | %s\nChunks %d | Sight %d | Visible %d\nRun %s\n%s %d | Explored %d" % [Engine.get_frames_per_second(), session.position.x, session.position.y, session.terrain.biome_at(session.position), session.cache.chunks.size(), session.sight_radius(), session.visible.size(), str(session.run.run_id).left(8), "Time (s)" if session.realtime else "Turn", session.run.state.turn, session.explored.size()]
 
 func _build_character(parent: Control) -> void:
-	_character_panel = PanelContainer.new()
-	_character_panel.anchor_top = 0.5
-	_character_panel.anchor_bottom = 0.5
-	_character_panel.offset_left = 20
-	_character_panel.offset_right = 395
-	_character_panel.offset_top = -268 # Starts right under the top HUD.
-	_character_panel.offset_bottom = 175 # Ends above the bottom notice lines.
-	parent.add_child(_character_panel)
-	var column := _scroll_column(_character_panel, 8)
-	_label(column, "CHARACTER & GEAR", 22)
-	_character_summary = _label(column, "", 15)
+	var shell := _shell(parent, "CHARACTER & GEAR", "character")
+	_character_panel = shell.panel
+	var left := _shell_column(shell.body, 1.0)
+	_character_summary = _label(left, "", 16)
 	_character_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_talent_line = _label(column, "", 14)
+	_talent_line = _label(left, "", 15)
 	_talent_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var right := _shell_column(shell.body, 1.0)
+	_label(right, "Equipped", 15).add_theme_color_override("font_color", FantasyTheme.GOLD)
 	_slot_list = ItemList.new()
-	_slot_list.custom_minimum_size = Vector2(355, 140)
-	_slot_list.fixed_icon_size = Vector2i(22, 22)
+	_slot_list.custom_minimum_size = Vector2(0, 200)
+	_slot_list.fixed_icon_size = Vector2i(24, 24)
 	_slot_list.item_selected.connect(_show_slot)
 	_slot_list.item_activated.connect(func(_index: int) -> void: _unequip_selected())
-	column.add_child(_slot_list)
-	_slot_detail = _label(column, "", 14)
+	right.add_child(_slot_list)
+	_slot_detail = _label(right, "", 15)
 	_slot_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_slot_detail.custom_minimum_size.y = 24
-	_unequip_button = _button(column, "Unequip selected [U / Enter]", _unequip_selected)
+	_slot_detail.custom_minimum_size.y = 60
+	_unequip_button = _button(right, "Unequip selected [U / Enter]", _unequip_selected)
 	_unequip_button.focus_mode = Control.FOCUS_NONE
-	_button(column, "Close [C / Esc]", _toggle_character)
 	_character_panel.hide()
+
+## Player sheets fill the right of the screen; vitals, messages and the hotbar stay
+## visible on the left and bottom (the world is paused meanwhile).
+const SHELL_LEFT := 352
+const SHELL_BOTTOM := 76
+const SHELL_TABS := [["Bag", "I", "inventory"], ["Gear", "C", "character"], ["Skills", "K", "skills"], ["Talent", "T", "talent"],
+	["Lore", "J", "knowledge"], ["Map", "M", "map"], ["Log", "L", "log"], ["Help", "H", "help"]]
+const PANEL_KEYS := {KEY_I: "inventory", KEY_C: "character", KEY_K: "skills", KEY_T: "talent", KEY_J: "knowledge", KEY_L: "log", KEY_H: "help", KEY_F1: "help"}
+
+func _shell(parent: Control, title: String, tab: String) -> Dictionary:
+	## One paused panel frame for every player sheet: title, tab row, two-column body.
+	var panel := PanelContainer.new()
+	_place_sheet(panel)
+	parent.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	panel.add_child(column)
+	_shell_header(column, title, tab)
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 16)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(body)
+	return {"panel": panel, "body": body}
+
+func _place_sheet(panel: Control) -> void:
+	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	panel.offset_left = SHELL_LEFT
+	panel.offset_top = Hud.EDGE
+	panel.offset_right = -Hud.EDGE
+	panel.offset_bottom = -SHELL_BOTTOM
+
+func _shell_header(parent: Control, title: String, tab: String) -> void:
+	var header := HBoxContainer.new()
+	parent.add_child(header)
+	var heading := _label(header, title, 22)
+	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_theme_color_override("font_color", FantasyTheme.GOLD)
+	var close := _button(header, "Close  Esc", _close_panels)
+	close.focus_mode = Control.FOCUS_NONE
+	close.add_theme_font_size_override("font_size", 13)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 4)
+	parent.add_child(tabs)
+	for entry in SHELL_TABS:
+		var name: String = entry[2]
+		var button := _button(tabs, "%s %s" % [entry[0], entry[1]], func() -> void: _open_panel(name))
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.focus_mode = Control.FOCUS_NONE
+		button.add_theme_font_size_override("font_size", 13)
+		if name == tab:
+			button.add_theme_stylebox_override("normal", FantasyTheme.box(Color("6e5029"), FantasyTheme.GOLD, 2, 5, 6))
+		else:
+			button.add_theme_stylebox_override("normal", FantasyTheme.box(Color("2a1f15"), FantasyTheme.GOLD_DIM, 1, 5, 6))
+	parent.add_child(HSeparator.new())
+
+func _shell_column(body: Control, ratio: float) -> VBoxContainer:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_stretch_ratio = ratio
+	body.add_child(scroll)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
+	return column
+
+func _current_panel() -> String:
+	if _inventory_panel.visible: return "inventory"
+	if _character_panel.visible: return "character"
+	if _skills_panel.visible: return "skills"
+	if _talent_panel.visible: return "talent"
+	if _discovery_panel.visible: return _discovery_mode
+	if _world_map.map_open: return "map"
+	return ""
+
+func _close_panels() -> void:
+	_inventory_panel.hide()
+	_character_panel.hide()
+	_skills_panel.hide()
+	_talent_panel.hide()
+	_discovery_panel.hide()
+	if _world_map.map_open:
+		_world_map.close_map()
+	get_viewport().gui_release_focus()
+	_hold_delay = 0.2
+
+func _open_panel(name: String) -> void:
+	## Tabs, HUD shortcuts and panel keys: one panel at a time, all paused.
+	if session == null or _menu.visible or session.is_dead():
+		return
+	if name == "menu":
+		_return_to_menu()
+		return
+	if not _targeting.is_empty():
+		_cancel_targeting()
+	_close_panels()
+	match name:
+		"inventory": _toggle_inventory()
+		"character": _toggle_character()
+		"skills": _toggle_skills()
+		"talent": show_talent(false)
+		"knowledge": _show_knowledge()
+		"map": _world_map.open_map()
+		"help": _show_help()
+		"log": _show_log()
 
 func _panel_open() -> bool:
 	if _discovery_panel != null and _discovery_panel.visible: return true
 	return (_inventory_panel != null and _inventory_panel.visible) or (_character_panel != null and _character_panel.visible) or (_talent_panel != null and _talent_panel.visible) or (_skills_panel != null and _skills_panel.visible) or (_world_map != null and _world_map.map_open) or not _targeting.is_empty()
 
 func _build_discovery_panel(parent: Control) -> void:
+	## Shared paused reader: Knowledge, Help, Log and the interaction approach selector.
 	_discovery_panel = PanelContainer.new()
-	_discovery_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	_discovery_panel.offset_left = -340
-	_discovery_panel.offset_right = 340
-	_discovery_panel.offset_top = -240
-	_discovery_panel.offset_bottom = 240
+	_place_sheet(_discovery_panel)
 	parent.add_child(_discovery_panel)
 	_discovery_column = _scroll_column(_discovery_panel, 10)
 	_discovery_panel.hide()
@@ -401,7 +445,8 @@ func _close_discovery_panel() -> void:
 
 func _show_knowledge() -> void:
 	_clear_discovery_panel("knowledge")
-	_label(_discovery_column, "KNOWLEDGE — confirmed this Run", 22)
+	_shell_header(_discovery_column, "KNOWLEDGE", "knowledge")
+	_label(_discovery_column, "Facts confirmed by your own experience in this Run. Rumours and documents live in the Map journal (M).", 15).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var entries: Array = preload("res://src/run/player_knowledge.gd").entries(session)
 	if entries.is_empty(): _label(_discovery_column, "No confirmed entries yet. Learn through experience.", 16)
 	for entry in entries:
@@ -409,6 +454,32 @@ func _show_knowledge() -> void:
 		var body := _label(_discovery_column, entry.text, 17)
 		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_button(_discovery_column, "Close [J / Esc]", _close_discovery_panel).grab_focus()
+
+func _show_help() -> void:
+	_clear_discovery_panel("help")
+	_shell_header(_discovery_column, "HELP", "help")
+	var sections := [
+		["Moving and acting", ("Hold WASD / arrows: move (diagonals allowed)\nF: attack the target   \"!\" over a creature: a blow is coming, step away\n" if _realtime != null else "WASD / arrows: move one tile (walking into a creature attacks)\nF: attack the target   Tab: next adjacent target   Space: wait a turn\n") + "E: interact with what the prompt names (choices open when there are several)\nX: search the surroundings   R: rest (stops when danger appears)"],
+		["Hotbar", "1–9: skills, in the order you learned them. Click a slot or press its number.\nCreature or tile skills ask for a target: Tab / WASD to choose, Enter or F to use, Esc to cancel.\nPassive and triggered skills (PAS / TRI) work on their own and cannot be pressed.\nA dark slot is recharging; a dim slot cannot be used yet (hover for the reason).\nQ / Z: quick items. In the Bag, select a usable item and press Q or Z to place it."],
+		["Panels (the world pauses)", "I Bag   C Gear   K Skills   T Talent   J Lore (Knowledge)   M Map and journal\nL Message log   H / F1 Help   N Minimap on/off   Ctrl+S Save   Esc Close / save and menu"],
+		["Reading the world", "Rings under creatures: red hostile, amber neutral (fights back), green passive.\nYou can see the land around you, but seeing is not knowing: the map, journal and Lore record only what you have passed close by, discovered or confirmed yourself. A landmark seen from afar keeps its story until you reach it.\nBlizzards shrink sight to a small circle. A red frame on the region panel means you are exposed: shelter beside pines or rocks, or under a roof."],
+	]
+	for section in sections:
+		_label(_discovery_column, section[0], 18).add_theme_color_override("font_color", FantasyTheme.GOLD)
+		_label(_discovery_column, section[1], 15).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_button(_discovery_column, "Close [H / Esc]", _close_discovery_panel).grab_focus()
+
+func _show_log() -> void:
+	_clear_discovery_panel("log")
+	_shell_header(_discovery_column, "MESSAGE LOG", "log")
+	if _hud.messages.is_empty():
+		_label(_discovery_column, "No messages yet.", 16)
+	for index in range(_hud.messages.size() - 1, -1, -1): # Newest first.
+		var line := _label(_discovery_column, str(_hud.messages[index]), 15)
+		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if index < _hud.messages.size() - 1:
+			line.modulate = Color(1, 1, 1, 0.78)
+	_button(_discovery_column, "Close [L / Esc]", _close_discovery_panel).grab_focus()
 
 func _show_interactions() -> bool:
 	var rows: Array = []
@@ -544,31 +615,29 @@ func _unequip_selected() -> void:
 		_refresh_character(slot)
 
 func _build_inventory(parent: Control) -> void:
-	_inventory_panel = PanelContainer.new()
-	_inventory_panel.anchor_left = 1.0
-	_inventory_panel.anchor_right = 1.0
-	_inventory_panel.anchor_top = 0.5
-	_inventory_panel.anchor_bottom = 0.5
-	_inventory_panel.offset_left = -395
-	_inventory_panel.offset_right = -20
-	_inventory_panel.offset_top = -268 # Starts right under the top HUD.
-	_inventory_panel.offset_bottom = 175 # Ends above the bottom notice lines.
-	parent.add_child(_inventory_panel)
-	var column := _scroll_column(_inventory_panel, 10)
-	_label(column, "INVENTORY", 24)
+	var shell := _shell(parent, "INVENTORY", "inventory")
+	_inventory_panel = shell.panel
 	_inventory_list = ItemList.new()
-	_inventory_list.custom_minimum_size = Vector2(365, 150)
-	_inventory_list.fixed_icon_size = Vector2i(24, 24)
+	_inventory_list.custom_minimum_size = Vector2(330, 0)
+	_inventory_list.fixed_icon_size = Vector2i(28, 28)
 	_inventory_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_inventory_list.item_selected.connect(_show_inventory_item)
-	column.add_child(_inventory_list)
-	_inventory_detail = _label(column, "", 16)
+	_inventory_list.item_activated.connect(func(_index: int) -> void: _use_selected())
+	shell.body.add_child(_inventory_list)
+	var right := _shell_column(shell.body, 1.0)
+	_inventory_detail = _label(right, "", 16)
 	_inventory_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inventory_detail.custom_minimum_size.y = 130
-	_inventory_list.item_activated.connect(func(_index: int) -> void: _use_selected())
-	_use_button = _button(column, "Use selected [U / Enter]", _use_selected)
+	_use_button = _button(right, "Use selected [U / Enter]", _use_selected)
 	_use_button.focus_mode = Control.FOCUS_NONE
-	_button(column, "Close [I / Esc]", _toggle_inventory)
+	var quick := HBoxContainer.new()
+	quick.add_theme_constant_override("separation", 8)
+	right.add_child(quick)
+	for key in Hud.ITEM_KEYS:
+		var button := _button(quick, "Quick slot %s" % key.to_upper(), func() -> void: _assign_quick(key))
+		button.focus_mode = Control.FOCUS_NONE
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.tooltip_text = "Place the selected usable item on hotbar key %s (press again to clear)" % key.to_upper()
 	_inventory_panel.hide()
 
 func _build_talent_panel(parent: Control) -> void:
@@ -680,29 +749,23 @@ func _scroll_column(panel: PanelContainer, separation: int) -> VBoxContainer:
 
 func _build_skills(parent: Control) -> void:
 	## K: learned skills with costs, cooldowns, conditions; U / Enter / 1-9 use one.
-	_skills_panel = PanelContainer.new()
-	_skills_panel.anchor_top = 0.5
-	_skills_panel.anchor_bottom = 0.5
-	_skills_panel.offset_left = 20
-	_skills_panel.offset_right = 415
-	_skills_panel.offset_top = -268
-	_skills_panel.offset_bottom = 175 # Ends above the bottom notice lines.
-	parent.add_child(_skills_panel)
-	var column := _scroll_column(_skills_panel, 8)
-	_label(column, "SKILLS", 22)
-	_skills_summary = _label(column, "", 15)
+	var shell := _shell(parent, "SKILLS", "skills")
+	_skills_panel = shell.panel
+	var left := _shell_column(shell.body, 1.0)
+	_skills_summary = _label(left, "", 15)
 	_skills_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_skill_list = ItemList.new()
-	_skill_list.custom_minimum_size = Vector2(375, 120)
+	_skill_list.custom_minimum_size = Vector2(0, 300)
+	_skill_list.fixed_icon_size = Vector2i(24, 24)
 	_skill_list.item_selected.connect(_show_skill)
 	_skill_list.item_activated.connect(func(index: int) -> void: begin_skill(index))
-	column.add_child(_skill_list)
-	_skill_detail = _label(column, "", 13)
+	left.add_child(_skill_list)
+	_label(left, "Hotbar keys 1–9 follow this learning order.", 14).modulate = Color(1, 1, 1, 0.7)
+	var right := _shell_column(shell.body, 1.0)
+	_skill_detail = _label(right, "", 15)
 	_skill_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_skill_detail.custom_minimum_size = Vector2(375, 110)
-	_skill_use_button = _button(column, "Use selected [U / Enter]", func() -> void: _use_selected_skill())
+	_skill_use_button = _button(right, "Use selected [U / Enter]", func() -> void: _use_selected_skill())
 	_skill_use_button.focus_mode = Control.FOCUS_NONE
-	_button(column, "Close [K / Esc]", _toggle_skills)
 	_skills_panel.hide()
 
 func _toggle_skills() -> void:
@@ -847,7 +910,7 @@ func begin_skill(index: int) -> void:
 	var definition: Dictionary = session.skill_definition(record.content_id, int(record.version))
 	var problem: String = session.skills.use_check(session, definition)
 	if not problem.is_empty():
-		_notice.text = problem + " (no turn spent)."
+		_say(problem + " (no turn spent).")
 		return
 	var kind: String = definition.payload.use.target.kind
 	_skills_panel.hide()
@@ -857,7 +920,7 @@ func begin_skill(index: int) -> void:
 		return
 	var options: Array = session.skills.targets(session, definition)
 	if options.is_empty():
-		_notice.text = "%s: no valid %s within %d tiles in sight (no turn spent)." % [definition.name, "target" if kind == "creature" else "free tile in a straight line", session.skills.reach(session, definition)]
+		_say("%s: no valid %s within %d tiles in sight (no turn spent)." % [definition.name, "target" if kind == "creature" else "free tile in a straight line", session.skills.reach(session, definition)])
 		return
 	var start := 0
 	for i in options.size():
@@ -873,10 +936,12 @@ func _show_targeting() -> void:
 	var tiles: Array = _targeting.options.map(func(entry: Dictionary) -> Vector2i: return entry.position if _targeting.kind == "creature" else entry.tile)
 	map_view.skill_marks = {"tiles": tiles, "selected": tiles[_targeting.index]}
 	map_view.refresh()
+	var again: bool = _hud.pinned # A Tab/direction change rewrites the same message.
+	_hud.pinned = true
 	if _targeting.kind == "creature":
-		_notice.text = "%s → %s (HP %d/%d). Tab: next target (%d valid) | Enter / F: use | Esc: cancel" % [definition.name, option.definition.name, option.hp, option.max_hp, _targeting.options.size()]
+		_say("%s → %s (HP %d/%d). Tab: next target (%d valid) | Enter / F: use | Esc: cancel" % [definition.name, option.definition.name, option.hp, option.max_hp, _targeting.options.size()], again)
 	else:
-		_notice.text = "%s → tile (%d, %d). WASD: direction | Enter: go | Esc: cancel" % [definition.name, option.tile.x, option.tile.y]
+		_say("%s → tile (%d, %d). WASD: direction | Enter: go | Esc: cancel" % [definition.name, option.tile.x, option.tile.y], again)
 
 func _confirm_targeting() -> void:
 	var definition: Dictionary = _targeting.skill
@@ -892,6 +957,8 @@ func _confirm_targeting() -> void:
 
 func _cancel_targeting() -> void:
 	_targeting = {}
+	if _hud != null:
+		_hud.pinned = false
 	if map_view != null:
 		map_view.skill_marks = {}
 		if session != null:
@@ -901,7 +968,7 @@ func _targeting_input(event: InputEventKey) -> void:
 	var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
 	if key == KEY_ESCAPE:
 		_cancel_targeting()
-		_notice.text = "Skill cancelled (no turn spent)."
+		_say("Skill cancelled (no turn spent).")
 	elif key in [KEY_ENTER, KEY_KP_ENTER] or (key == KEY_F and _targeting.kind == "creature"):
 		_confirm_targeting()
 	elif key == KEY_TAB and _targeting.kind == "creature":
@@ -981,11 +1048,11 @@ func _reload_after_death() -> void:
 		return
 	var next := Session.new(store)
 	if not next.resume(session.run.run_id):
-		_notice.text = next.last_error
+		_say(next.last_error)
 		return
 	_death_panel.hide()
 	_enter_map(next)
-	_notice.text = "Loaded your last save."
+	_say("Loaded your last save.")
 
 func _toggle_inventory() -> void:
 	if session == null or _menu.visible or session.is_dead():
@@ -1001,6 +1068,31 @@ func _toggle_inventory() -> void:
 	else:
 		get_viewport().gui_release_focus()
 
+func _use_quick_item(key: String) -> void:
+	if session == null or _menu.visible or _panel_open() or session.is_dead():
+		return
+	var content_id := str(session.run.state.character.get("quick_items", {}).get(key, ""))
+	if content_id.is_empty():
+		_say("Quick slot %s is empty: open the Bag (I), select a usable item and press %s." % [key.to_upper(), key.to_upper()])
+		return
+	_after_action(session.use_item(content_id))
+
+func _assign_quick(key: String) -> void:
+	var content_id := selected_item_id()
+	if session == null or content_id.is_empty():
+		return
+	var current := str(session.run.state.character.get("quick_items", {}).get(key, ""))
+	var name: String = _inventory_rows[_inventory_list.get_selected_items()[0]].name
+	if current == content_id:
+		session.set_quick_item(key, "")
+		_say("Quick slot %s cleared." % key.to_upper())
+	elif session.set_quick_item(key, content_id):
+		_say("%s placed on quick slot %s." % [name, key.to_upper()])
+	else:
+		_say(session.last_error)
+	_refresh_inventory(content_id)
+	_update_info()
+
 func _refresh_inventory(selected: String = "") -> void:
 	_inventory_rows = session.inventory_rows()
 	_inventory_list.clear()
@@ -1011,6 +1103,9 @@ func _refresh_inventory(selected: String = "") -> void:
 		var gear: bool = item.definition.payload.has("equipment")
 		var book: bool = item.definition.payload.has("skill_book")
 		var tag := "   [gear]" if gear else ("   [book]" if book else ("   [usable]" if usable else ""))
+		for key in session.run.state.character.get("quick_items", {}):
+			if session.run.state.character.quick_items[key] == item.content_id:
+				tag += "  [%s]" % key.to_upper()
 		_inventory_list.add_item("%s%s%s" % [item_label(item.definition, item.metadata), "" if gear else "  x%d" % item.quantity, tag])
 		_inventory_list.set_item_tooltip(_inventory_list.item_count - 1, "%s / %s" % [item.name, item.type])
 		var icon: Texture2D = Art.shared().item_icon(item.content_id, item.name, item.definition) if Art.shared().ready() else null
@@ -1048,10 +1143,8 @@ func _use_selected() -> void:
 
 func _show_inventory_item(index: int) -> void:
 	var item: Dictionary = _inventory_rows[index]
-	var stacking := "Stackable / limit %d per stack" % item.stack_limit if item.stackable else "Non-stackable / %d individual items" % item.quantity
-	_inventory_detail.text = "%s\n%s / v%d / Quantity: %d\n%s\n%s" % [item.name, item.type, item.version, item.quantity, stacking, item.description]
-	if not item.stackable and not item.slots.is_empty():
-		_inventory_detail.text += "\nItem ID: " + str(item.slots[0].instance_id).left(22) + "..."
+	var stacking := "stacks to %d" % item.stack_limit if item.stackable else "each one kept separately"
+	_inventory_detail.text = "%s\n%s · Quantity %d · %s\n\n%s" % [item.name, str(item.type).capitalize(), item.quantity, stacking, item.description]
 	if item.definition.payload.has("equipment"):
 		_inventory_detail.text = "%s\n%s\n%s" % [item_label(item.definition, item.metadata), gear_text(item.definition, item.metadata), item.description]
 		var comparison: Dictionary = session.compare_equipment(item.content_id, item.instance_id)
@@ -1178,7 +1271,7 @@ func _start_adventure(world: Dictionary, land_id: String) -> void:
 	_refresh_worlds(world.world_id)
 	var arrival := describe_events(next.last_events)
 	_enter_map(next)
-	_notice.text = (arrival + " " + _notice.text).strip_edges()
+	_say((arrival + " " + _notice.text).strip_edges(), true)
 
 func _on_chart_land(layout_id: String = "") -> void:
 	## Development: propose -> validate -> (click again to approve) -> activate.
@@ -1319,8 +1412,9 @@ func _enter_map(active_session: RefCounted) -> void:
 		active_session.action_completed.connect(func(action: Dictionary, _result: Dictionary) -> void:
 			if _realtime != null: _realtime.note_action(str(action.get("type", ""))))
 	map_view.smooth_steps = _realtime != null
-	_controls_hint.text = CONTROLS_REALTIME if _realtime != null else CONTROLS_TURN
 	session = active_session
+	_hud.session = session
+	_hud.pinned = false
 	_developer_overlay.hide() # Opt-in for each entry; never stored in a Run.
 	_target_id = ""
 	_death_panel.hide()
@@ -1333,9 +1427,7 @@ func _enter_map(active_session: RefCounted) -> void:
 	_hold_delay = 0.2
 	_discard_on_exit = false
 	_update_info()
-	_notice.text = "Explore freely. Save with Ctrl+S; Esc saves and returns to the menu."
-	if _realtime != null:
-		_notice.text = "REAL TIME: hold WASD to move, F to attack. \"!\" = a blow is coming: step away. Panels and the map pause."
+	_say("Explore freely. H: controls and help. Esc saves and returns to the menu." if _realtime == null else "REAL TIME: hold WASD to move, F to attack. \"!\" = a blow is coming: step away. Panels and the map pause. H: help.")
 	get_viewport().gui_release_focus()
 	_talent_panel.hide()
 	_skills_panel.hide()
@@ -1408,20 +1500,24 @@ func weather_text(status: Dictionary) -> String:
 	return text + " · %d%s left" % [int(status.remaining), unit]
 
 func region_text() -> String:
-	## HUD line: current region, then the nearest unfinished lead or a region bearing.
+	## HUD block under the minimap: weather/hazard lines first (never cut off), then
+	## land > region with danger, then the nearest unfinished lead or a region bearing.
+	## The region's long description lives in the tooltip, not on screen.
 	var region: Dictionary = session.world_region()
 	if region.is_empty():
 		return ""
-	var text := "Region: %s (danger %d, %s)" % [region.name, int(region.danger), region.opportunity]
+	var lines := PackedStringArray()
+	var place := "Region: %s · danger %d" % [region.name, int(region.danger)]
 	if region.has("land_name"): # Atlas World: weather where you stand first, then land > region.
-		text = "%s › %s (danger %d, %s)" % [region.land_name, region.name, int(region.danger), region.opportunity]
+		place = "%s › %s · danger %d" % [region.land_name, region.name, int(region.danger)]
 		var status: Dictionary = session.environment_status()
-		if not str(status.get("weather", "")).is_empty():
-			text = weather_text(status) + "  |  " + text # First: it must never be cut off.
-		elif not str(status.get("incoming", "")).is_empty():
-			text = "⚠ %s coming in %d%s — find cover  |  %s" % [status.incoming, int(status.incoming_in), "s" if session.realtime else " turns", text]
 		if not str(status.get("hazard", "")).is_empty():
-			text = "⚠ " + status.hazard + "  |  " + text
+			lines.append("⚠ " + status.hazard)
+		if not str(status.get("weather", "")).is_empty():
+			lines.append(weather_text(status))
+		elif not str(status.get("incoming", "")).is_empty():
+			lines.append("⚠ %s coming in %d%s — find cover" % [status.incoming, int(status.incoming_in), "s" if session.realtime else " turns"])
+	lines.append(place)
 	var best: Dictionary = {}
 	var best_distance := 2147483647
 	for lead in _leads:
@@ -1430,65 +1526,91 @@ func region_text() -> String:
 			best = lead
 			best_distance = distance
 	if not best.is_empty():
-		text += "  |  Lead: %s, %d tiles %s%s" % [_short_title(str(best.metadata.get("title", best.role))), best_distance, _bearing(best.position), "" if best.knowledge == "lead" else " (found)"]
+		lines.append("Lead: %s, %d tiles %s%s" % [_short_title(str(best.metadata.get("title", best.role))), best_distance, _bearing(best.position), "" if best.knowledge == "lead" else " (found)"])
 	elif not _frontiers.is_empty():
-		text += "  |  Onward: %s to the %s" % [_frontiers[0].name, _frontiers[0].direction]
-	return text
+		lines.append("Onward: %s to the %s" % [_frontiers[0].name, _frontiers[0].direction])
+	return "\n".join(lines)
+
+func _weather_alert() -> int:
+	## 0 calm, 1 weather coming or sheltered from it, 2 exposed or on a hazard.
+	if not session.has_method("environment_status") or session.world_region().get("land_name", "") == "":
+		return 0
+	var status: Dictionary = session.environment_status()
+	if status.get("exposed", false) or not str(status.get("hazard", "")).is_empty():
+		return 2
+	return 1 if not str(status.get("weather", "")).is_empty() or not str(status.get("incoming", "")).is_empty() else 0
 
 static func _short_title(title: String) -> String:
 	## "Silver Hunting wood - Healing grove" -> "Healing grove" (the region is shown already).
 	return title.get_slice(" - ", 1) if title.contains(" - ") else title
 
 func _update_info() -> void:
-	_info.text = "  %s%s%s" % [session.world.name, " * unsaved" if session.dirty else "", " | resting" if session.resting else ""]
+	_info.text = "%s\n%s%s" % [session.world.name, "Unsaved (Ctrl+S)" if session.dirty else "Saved", "  · Resting" if session.resting else ""]
 	_region_hint.text = region_text()
-	_region_hint.tooltip_text = _region_hint.text
+	_region_hint.visible = not _region_hint.text.is_empty()
+	var region: Dictionary = session.world_region()
+	_region_hint.tooltip_text = "" if region.is_empty() else "%s: %s" % [region.name, region.get("opportunity", "")]
+	_hud.set_weather_alert(_weather_alert())
 	_update_developer_overlay()
 	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
-	_hp_label.text = "Lv %d  HP %d/%d  ATK %d DEF %d" % [session.character_rules.level(session.run.state.character), stats.hp, stats.max_hp, stats.attack, stats.defense]
+	var character: Dictionary = session.run.state.character
+	_hp_label.text = "Lv %d   ATK %d   DEF %d" % [session.character_rules.level(character), stats.attack, stats.defense]
+	var track_id: String = session.character_rules.rules.tracks.keys()[0]
+	var track: Dictionary = character.progression[track_id]
+	_hud.xp_bar.max_value = maxi(1, session.character_rules.xp_to_next(track_id, int(track.level)))
+	_hud.xp_bar.value = int(track.xp)
+	_hud.xp_bar.tooltip_text = "XP %d / %d" % [int(track.xp), int(_hud.xp_bar.max_value)]
 	_hp_bar.max_value = int(stats.max_hp)
 	_hp_bar.value = int(stats.hp)
+	_hud.hp_text.text = "HP %d / %d" % [stats.hp, stats.max_hp]
 	var worst: int = session.survival.worst_level(session.stats())
 	var recovery := "regen" if worst == 0 and int(stats.hp) < int(stats.max_hp) else ("no regen" if worst > 0 and int(stats.hp) < int(stats.max_hp) else "")
 	_survival_label.text = "Hunger %d%%  Thirst %d%%%s" % [session.survival.percent(session.stats(), "hunger"), session.survival.percent(session.stats(), "thirst"), "" if recovery.is_empty() else "  " + recovery]
-	# Skill resource as a slim bar with its numbers inside (keeps the HUD width).
+	_survival_label.modulate = [Color("c8c8c8"), Color("f0c060"), Color("ff7a6b"), Color("ff4b3e")][worst]
 	var resource_id: String = session.skill_rules.resource_ids()[0]
 	_energy_bar.max_value = session.skills.resource_max(session, resource_id)
 	_energy_bar.value = session.skills.resource(session, resource_id)
 	_energy_label.text = "%s %d/%d" % [session.skill_rules.rules.resources[resource_id].short, int(_energy_bar.value), int(_energy_bar.max_value)]
-	_survival_label.modulate = [Color("c8c8c8"), Color("f0c060"), Color("ff7a6b"), Color("ff4b3e")][worst]
+	_hud.set_statuses(_status_chips())
 	var foe := current_target()
 	map_view.target_id = "" if foe.is_empty() else foe.instance_id
 	if foe.is_empty():
-		_target_hint.text = "No creature next to you."
+		_hud.show_target("", "", 0, 1)
 	else:
 		var count: int = session.roster.targets(session).size()
 		var foe_stats: Dictionary = session.roster.creature_stats(session, foe)
-		_target_hint.text = "Target: %s (%s, %s)  HP %d/%d  ATK %d DEF %d  |  F: attack%s" % [foe.definition.name, foe.definition.payload.disposition, foe.state, foe.hp, foe.max_hp, foe_stats.attack, foe_stats.defense, "  Tab: next (%d)" % count if count > 1 else ""]
-	var active_statuses: String = session.statuses.describe(session, session.run.state.character.statuses)
-	_energy_label.tooltip_text = active_statuses
-	if not active_statuses.is_empty(): _target_hint.text += "\nYou: " + active_statuses
-	if not foe.is_empty():
-		_target_hint.text += "\n" + session.statuses.describe(session, foe.get("statuses", []))
+		var text := "%s  ·  %s, %s\nHP %d/%d   ATK %d  DEF %d   F: attack%s" % [foe.definition.name, foe.definition.payload.disposition, foe.state, foe.hp, foe.max_hp, foe_stats.attack, foe_stats.defense, "  Tab: next (%d)" % count if count > 1 else ""]
+		var effects: String = session.statuses.describe(session, foe.get("statuses", []))
+		_hud.show_target(text + ("" if effects.is_empty() else "\n" + effects), str(foe.definition.payload.disposition), int(foe.hp), int(foe.max_hp))
 	var target: Dictionary = session.interaction_target()
-	_interaction_hint.text = "E: interact / choose an approach.  I: inventory.  J: Knowledge."
+	var prompt := ""
 	if not target.is_empty():
 		var definition: Dictionary = session.objects.definition_for(target)
-		_interaction_hint.text = "E: %s %s  /  (%d, %d)" % [str(definition.payload.interaction).capitalize(), definition.name, target.position.x, target.position.y]
+		prompt = "E: %s %s" % [str(definition.payload.interaction).capitalize(), definition.name]
 	elif not session.places.targets(session).is_empty():
-		_interaction_hint.text = place_hint(session.places.targets(session)[0])
+		prompt = place_hint(session.places.targets(session)[0])
 	elif session.places.search_cue(session):
-		_interaction_hint.text = "The ground nearby looks disturbed... X: search the surroundings."
+		prompt = "The ground nearby looks disturbed... X: search the surroundings."
+	_hud.show_prompt(prompt)
+	_hud.refresh_slots()
+
+func _status_chips() -> Array:
+	var chips: Array = []
+	for status in session.run.state.character.statuses:
+		if status.has("remaining"):
+			chips.append({"text": session.statuses.describe(session, [status]), "icon": str(status.id)})
+		else:
+			chips.append({"text": "%s %s %dt" % [str(status.id).capitalize(), _status_text(status), int(status.until_turn) - int(session.run.state.turn)], "icon": str(status.id)})
+	return chips
 
 func place_hint(place: Dictionary) -> String:
 	## Name, state and the next interaction (with unmet requirements) of a known place.
 	var definition: Dictionary = session.locations.definition_for(place)
-	var state: String = session.places.state(session, place)
 	var next: Dictionary = session.places.next_interaction(session, place)
 	if next.is_empty():
-		return "%s [%s] — nothing more to do here." % [definition.name, state]
+		return "%s — nothing more to do here." % definition.name
 	var needs: Array = session.places.unmet(session, session.locations.event(next.event).payload.get("conditions", []))
-	return "E: %s — %s [%s]%s" % [next.get("verb", "Explore"), definition.name, state, "  (needs %s)" % ", ".join(needs) if not needs.is_empty() else ""]
+	return "E: %s — %s%s" % [next.get("verb", "Explore"), definition.name, "  (needs %s)" % ", ".join(needs) if not needs.is_empty() else ""]
 
 func current_target() -> Dictionary:
 	## Selected adjacent creature; falls back to the first valid one (ID order).
@@ -1503,7 +1625,7 @@ func current_target() -> Dictionary:
 func _cycle_target() -> void:
 	var nearby: Array = session.roster.targets(session)
 	if nearby.is_empty():
-		_notice.text = "No creature next to you to target."
+		_say("No creature next to you to target.")
 		return
 	var index := 0
 	for i in nearby.size():
@@ -1515,13 +1637,13 @@ func _cycle_target() -> void:
 func _attack() -> void:
 	var foe := current_target()
 	if foe.is_empty():
-		_notice.text = "Nothing to attack — stand next to a creature (no turn spent)."
+		_say("Nothing to attack — stand next to a creature (no turn spent).")
 		_update_info()
 		return
 	_target_id = foe.instance_id
 	if _realtime != null:
 		if not _realtime.attack(foe.instance_id):
-			_notice.text = _realtime.last_error # Cooldown: nothing happens, nothing is spent.
+			_say(_realtime.last_error) # Cooldown: nothing happens, nothing is spent.
 			return
 		_after_action(true)
 		return
@@ -1533,10 +1655,10 @@ func _wait() -> void:
 func _rest() -> void:
 	if _realtime != null:
 		if session.rest():
-			_notice.text = "Resting… needs and energy recover faster. Move, attack or press R to stop." if session.resting else "You stop resting."
+			_say("Resting… needs and energy recover faster. Move, attack or press R to stop." if session.resting else "You stop resting.")
 			_update_info()
 		else:
-			_notice.text = session.last_error
+			_say(session.last_error)
 		return
 	if not session.rest():
 		_after_action(false)
@@ -1544,12 +1666,12 @@ func _rest() -> void:
 	var summary: Dictionary = session.last_result
 	_after_action(true)
 	var why: String = {"rested": "", "healed": " Fully healed.", "danger": " Interrupted: danger in sight!", "attacked": " Interrupted: you were attacked!", "needs": "", "died": ""}[summary.reason]
-	_notice.text = ("Rested %d turn%s (%+d HP).%s %s" % [summary.turns, "" if summary.turns == 1 else "s", summary.hp_gained, why, _notice.text]).strip_edges()
+	_say(("Rested %d turn%s (%+d HP).%s %s" % [summary.turns, "" if summary.turns == 1 else "s", summary.hp_gained, why, _notice.text]).strip_edges(), true)
 
 func _after_action(accepted: bool, quiet: String = "") -> void:
 	## Shared feedback for every turn-spending action.
 	if not accepted:
-		_notice.text = session.last_error
+		_say(session.last_error)
 		_update_info()
 		return
 	map_view.refresh()
@@ -1557,7 +1679,7 @@ func _after_action(accepted: bool, quiet: String = "") -> void:
 	_after_exploration_events(session.last_events)
 	map_view.show_events(session.last_events)
 	var text := describe_events(session.last_events)
-	_notice.text = text if not text.is_empty() else quiet
+	_say(text if not text.is_empty() else quiet)
 	_hold_notice(session.last_events)
 	_update_info()
 	if session.is_dead():
@@ -1694,7 +1816,7 @@ func _interact() -> void:
 		for item in session.last_result.received:
 			received.append(_receipt_text(item))
 		_after_action(true)
-		_notice.text = ("Received: " + ", ".join(received) + " " + _notice.text).strip_edges()
+		_say(("Received: " + ", ".join(received) + " " + _notice.text).strip_edges(), true)
 	else:
 		_after_action(false)
 
@@ -1716,7 +1838,7 @@ func _on_waypoint_changed(waypoint: Dictionary) -> void:
 	if session == null:
 		return
 	_update_info()
-	_notice.text = "Waypoint cleared." if waypoint.is_empty() else "Waypoint set to (%d, %d)." % [int(waypoint.x), int(waypoint.y)]
+	_say("Waypoint cleared." if waypoint.is_empty() else "Waypoint set to (%d, %d)." % [int(waypoint.x), int(waypoint.y)])
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if session == null or _menu.visible or not event is InputEventKey or not event.pressed or event.echo:
@@ -1728,9 +1850,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_return_to_menu()
 		get_viewport().set_input_as_handled()
 		return
-	var acting: bool = event.physical_keycode in [KEY_E, KEY_X] or event.keycode in [KEY_E, KEY_X] or (event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9) or (event.keycode >= KEY_1 and event.keycode <= KEY_9)
+	var acting: bool = event.physical_keycode in [KEY_E, KEY_X, KEY_Q, KEY_Z] or event.keycode in [KEY_E, KEY_X, KEY_Q, KEY_Z] or (event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9) or (event.keycode >= KEY_1 and event.keycode <= KEY_9)
 	if _realtime != null and acting and not event.ctrl_pressed and not event.alt_pressed and not _realtime.ready_for_action():
-		_notice.text = _realtime.last_error # Real time: short shared recovery between actions.
+		_say(_realtime.last_error) # Real time: short shared recovery between actions.
 		get_viewport().set_input_as_handled()
 		return
 	if _is_save_shortcut(event):
@@ -1761,6 +1883,14 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_toggle_skills()
 	elif event.keycode == KEY_J or event.physical_keycode == KEY_J:
 		_show_knowledge()
+	elif event.keycode in [KEY_H, KEY_F1] or event.physical_keycode in [KEY_H, KEY_F1]:
+		_show_help()
+	elif event.keycode == KEY_L or event.physical_keycode == KEY_L:
+		_show_log()
+	elif event.keycode == KEY_Q or event.physical_keycode == KEY_Q:
+		_use_quick_item("q")
+	elif event.keycode == KEY_Z or event.physical_keycode == KEY_Z:
+		_use_quick_item("z")
 	elif event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9:
 		begin_skill(event.physical_keycode - KEY_1)
 	elif event.keycode >= KEY_1 and event.keycode <= KEY_9:
@@ -1779,8 +1909,18 @@ func _input(event: InputEvent) -> void:
 		_update_developer_overlay()
 		get_viewport().set_input_as_handled()
 		return
+	if event is InputEventKey and event.pressed and not event.echo and not event.ctrl_pressed and session != null and not _menu.visible and _targeting.is_empty() and not session.is_dead():
+		var current := _current_panel()
+		var key: int = event.physical_keycode if event.physical_keycode != 0 else event.keycode
+		if not current.is_empty() and current != "interactions" and current != "map" and PANEL_KEYS.has(key):
+			if PANEL_KEYS[key] == current:
+				_close_panels()
+			else:
+				_open_panel(PANEL_KEYS[key])
+			get_viewport().set_input_as_handled()
+			return
 	if _discovery_panel != null and _discovery_panel.visible and event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_ESCAPE or (_discovery_mode == "knowledge" and event.keycode == KEY_J):
+		if event.keycode == KEY_ESCAPE:
 			_close_discovery_panel()
 			get_viewport().set_input_as_handled()
 		return
@@ -1843,6 +1983,9 @@ func _input(event: InputEvent) -> void:
 	elif event.keycode == KEY_U or event.physical_keycode == KEY_U:
 		_use_selected()
 		get_viewport().set_input_as_handled()
+	elif event.keycode in [KEY_Q, KEY_Z] or event.physical_keycode in [KEY_Q, KEY_Z]:
+		_assign_quick("q" if KEY_Q in [event.keycode, event.physical_keycode] else "z")
+		get_viewport().set_input_as_handled()
 
 static func _is_save_shortcut(event: InputEventKey) -> bool:
 	# Not F5: in the Godot editor F5 restarts the project and would drop unsaved play.
@@ -1850,6 +1993,11 @@ static func _is_save_shortcut(event: InputEventKey) -> bool:
 
 func _process(delta: float) -> void:
 	_update_developer_overlay()
+	var sheet := session != null and not _menu.visible and _current_panel() not in ["", "map"]
+	_hud.set_panel_mode(sheet)
+	if _world_map.suppressed != sheet:
+		_world_map.suppressed = sheet
+		_world_map.queue_redraw()
 	for entry in _rainbow:
 		if not is_instance_valid(entry[0]) or session == null:
 			continue
@@ -1896,7 +2044,7 @@ func _realtime_frame(delta: float) -> void:
 	map_view.show_events(events)
 	var text := describe_events(events)
 	if not text.is_empty() and (Time.get_ticks_msec() >= _notice_hold_until or not events.all(func(e: Dictionary) -> bool: return str(e.get("type", "")) in ROUTINE_EVENTS)):
-		_notice.text = text
+		_say(text)
 		_hold_notice(events)
 	_update_info()
 	if session.is_dead():
@@ -1907,9 +2055,9 @@ func _save_game() -> void:
 		return
 	if session.save():
 		_discard_on_exit = false
-		_notice.text = "Saved to local SQLite."
+		_say("Saved to local SQLite.")
 	else:
-		_notice.text = "Save failed: " + session.last_error
+		_say("Save failed: " + session.last_error)
 	_update_info()
 
 func _return_to_menu() -> void:
@@ -1921,7 +2069,7 @@ func _return_to_menu() -> void:
 		if session.run.mode == "permadeath":
 			session.save()
 	elif not session.save():
-		_notice.text = "Save failed; staying in game: " + session.last_error
+		_say("Save failed; staying in game: " + session.last_error)
 		return
 	var world_id: String = session.world.world_id
 	_discovery_panel.hide()
@@ -1938,6 +2086,7 @@ func _return_to_menu() -> void:
 	map_view.clear_map()
 	map_view.hide()
 	_world_map.detach()
+	_hud.session = null
 	_hud.hide()
 	_menu.show()
 	_refresh_worlds(world_id)
@@ -1956,7 +2105,7 @@ func _request_exit() -> void:
 	if session != null and not _discard_on_exit and not session.save():
 		# Never trap the player: a second close request explicitly discards unsaved play.
 		_discard_on_exit = true
-		_notice.text = "Save failed: %s  Close again to quit WITHOUT saving (changes since the last save are lost)." % session.last_error
+		_say("Save failed: %s  Close again to quit WITHOUT saving (changes since the last save are lost)." % session.last_error)
 		return
 	get_tree().quit()
 

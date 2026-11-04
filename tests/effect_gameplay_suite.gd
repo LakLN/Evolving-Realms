@@ -50,7 +50,7 @@ func run_test() -> void:
 	check(session.last_events.any(func(e: Dictionary) -> bool: return e.type == "status_tick" and e.status == "Regeneration"), "Quick key casts Renewal and reports a HoT tick")
 	await key(KEY_K)
 	check(app._skill_detail.text.contains("Elements: wood") and app._skill_detail.text.contains("Regeneration"), "Skill detail explains element and status")
-	check(app._target_hint.text.contains("Regeneration") and app._target_hint.text.contains("x1"), "HUD displays active player duration and stacks")
+	check(app._hud.status_text().contains("Regeneration") and app._hud.status_text().contains("x1"), "HUD displays active player duration and stacks")
 	await key(KEY_K)
 	session.statuses.apply(session, {"type": "apply_status", "content_id": "core:status/burn", "version": 1}, {"content_id": "core:skill/ember", "version": 1, "actor": "player"}, "player")
 	await key(KEY_2)

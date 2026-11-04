@@ -55,7 +55,7 @@ func _run() -> void:
 	await _key(KEY_C)
 	check(app._character_panel.visible and app._talent_line.text.contains("Talent: [%s · %s] %s" % [record.rank, rank.name, definition.name]) and app._talent_line.text.contains("(T: details)"), "Character panel shows the talent with rank and title")
 	var panel_rect: Rect2 = app._character_panel.get_global_rect()
-	check(panel_rect.position.y >= 86 and panel_rect.end.y <= app.get_viewport_rect().size.y - 100, "Character panel with the talent line still fits between the HUD bars")
+	check(app.get_viewport_rect().encloses(panel_rect) and panel_rect.end.y <= app._hud.hotbar.get_global_rect().position.y, "Character sheet with the talent line still fits above the hotbar")
 	await _key(KEY_ESCAPE)
 	# A stateful talent: walking into unknown land reports its finds.
 	_force("core:talent/wayfarer")
