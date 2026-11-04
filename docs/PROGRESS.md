@@ -1,5 +1,29 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Modern UI/UX foundation (2026-11-04)
+
+Documentation-only, bounded director request. One specification:
+[UI_UX_FOUNDATION.md](UI_UX_FOUNDATION.md), covering unified hierarchy, current
+components/inputs, truthful learning-order skill strip, future item bindings,
+panel/focus/pause behavior and a three-slice implementation handoff.
+
+Inspected main/theme/map, camera/fog/chunk cache, session reveal, weather sight,
+entity/discovery gates, skill targeting and inventory callbacks. Visibility is
+deferred: sight currently controls gameplay and persisted exploration as well as
+rendering; disabling fog alone is incomplete. The spec defines a transient
+presentation policy without enlarging mechanical sight or revealing secrets.
+Brief reference-page/image review only; assumptions are labeled in the spec.
+
+Repository checks: `git status --short`, `git branch --show-current`,
+`git worktree list`, process inspection and agent listing: master, one worktree,
+only this agent in the session tree, no Godot process. Cross-session agent activity
+cannot be proven from process names alone. Existing untracked source assets left
+untouched; no branch switch/merge, personal-save access, runtime edits or new DB.
+Validation: `git diff --check` and specification/code cross-check; no engine tests
+run for documentation-only work. Reused `.tools/ui-readability-after.png` from the
+prior verified disposable Run, not a mockup or new capture. Next: compact HUD slice,
+then separately tested presentation visibility; no unfinished rewrite started.
+
 ## Gameplay UI readability review (2026-11-04)
 
 User-authorized presentation-only review. Captured the native Snow Mountain real
