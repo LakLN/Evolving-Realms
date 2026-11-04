@@ -77,7 +77,7 @@ func _run() -> void:
 	await _key(KEY_ESCAPE)
 	check(not app._skills_panel.visible, "Critical panel controls still close normally")
 	# Native landmark review uses actual resolved place definitions and terrain.
-	for name in ["glass_bowl", "old_kiln", "wind_loom"]:
+	for name in ["glass_bowl", "old_kiln", "wind_loom", "relay_strongbox", "ashmaw_nest", "singing_ice", "prowler_den", "rune_cairn"]:
 		var site: Dictionary = plan.sites.filter(func(p: Dictionary) -> bool: return str(p.instance_id).ends_with("/" + name))[0]
 		var at := Vector2i(int(site.position.x), int(site.position.y))
 		for d in [Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP]:

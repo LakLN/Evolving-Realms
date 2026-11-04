@@ -1,0 +1,231 @@
+{
+ "pack_version": 1,
+ "notes": "Full-region layout v6 activities: build-dependent sites that connect hunting, crafting materials, techniques, talents and level. Installed only by the full-region layout; earlier definitions untouched.",
+ "definitions": [
+  {
+   "content_id": "snow:event/strongbox_force", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "Wrenched open", "description": "",
+   "dependencies": [{"content_id": "snow:bronze_scrap", "version": 1}, {"content_id": "snow:frost_linen", "version": 1}, {"content_id": "core:coin", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "The hasp shrieks and gives. Inside: the relay's last pay chest, never collected.",
+    "tone": "boon",
+    "conditions": [{"type": "stat", "stat": "attack", "min": 9}],
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:bronze_scrap", "version": 1, "quantity": 3}, {"content_id": "snow:frost_linen", "version": 1, "quantity": 1}, {"content_id": "core:coin", "version": 1, "quantity": 6}]},
+     {"type": "xp", "amount": 12}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/strongbox_latch", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "The trapped latch", "description": "",
+   "dependencies": [{"content_id": "snow:bronze_scrap", "version": 1}, {"content_id": "core:coin", "version": 1}, {"content_id": "core:status/poison", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "You ease the frozen latch tooth by tooth.",
+    "tone": "neutral",
+    "outcomes": [
+     {"type": "chance", "chance_per_10000": 5500,
+      "message": "It clicks open without a sound.",
+      "outcomes": [{"type": "grant_items", "items": [{"content_id": "snow:bronze_scrap", "version": 1, "quantity": 2}, {"content_id": "core:coin", "version": 1, "quantity": 4}]}, {"type": "xp", "amount": 8}],
+      "otherwise_message": "A needle springs from the keyhole. The box stays shut.",
+      "otherwise": [{"type": "damage", "amount": 3}, {"type": "apply_status", "content_id": "core:status/poison", "version": 1}]}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/relay_strongbox", "version": 1, "schema_version": 1, "kind": "location",
+   "name": "Carriers' strongbox", "description": "An iron-banded pay chest frozen to the floor of a collapsed lean-to. The latch is fouled with something that is not rust.",
+   "dependencies": [{"content_id": "snow:event/strongbox_force", "version": 1}, {"content_id": "snow:event/strongbox_latch", "version": 1}],
+   "metadata": {"site_only": true, "category": "ruin"},
+   "payload": {
+    "category": "ruin", "visual": "relay_strongbox",
+    "discovery": {"mode": "visible", "radius": 3},
+    "spawn": {"biomes": ["snowfield"], "per_10000": 1},
+    "interactions": [
+     {"id": "force", "verb": "Wrench the lid open", "exclusive": true, "event": {"content_id": "snow:event/strongbox_force", "version": 1}},
+     {"id": "latch", "verb": "Work the fouled latch", "exclusive": true, "event": {"content_id": "snow:event/strongbox_latch", "version": 1}}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/nest_grab", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "A smouldering stone", "description": "",
+   "dependencies": [{"content_id": "snow:ember_heart", "version": 1}, {"content_id": "core:status/burn", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "You snatch a glowing ember-stone from the scree hollow. It sears through your glove.",
+    "tone": "bane",
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:ember_heart", "version": 1, "quantity": 1}]},
+     {"type": "apply_status", "content_id": "core:status/burn", "version": 1}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/nest_wrapped", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "Frost-wrapped hands", "description": "",
+   "dependencies": [{"content_id": "snow:ember_heart", "version": 1}, {"content_id": "snow:frost_linen", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "Wrapped in frost linen, the stones hiss but do not bite. You lift two before the cloth chars through.",
+    "tone": "boon",
+    "cost": {"items": [{"content_id": "snow:frost_linen", "version": 1, "quantity": 1}]},
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:ember_heart", "version": 1, "quantity": 2}]},
+     {"type": "xp", "amount": 10}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/ashmaw_nest", "version": 1, "schema_version": 1, "kind": "location",
+   "name": "Ashmaw hollow", "description": "A scree pocket warm enough to steam. Ember-stones glow among shed scales.",
+   "dependencies": [{"content_id": "snow:event/nest_grab", "version": 1}, {"content_id": "snow:event/nest_wrapped", "version": 1}, {"content_id": "snow:frost_linen", "version": 1}],
+   "metadata": {"site_only": true, "category": "anomaly"},
+   "payload": {
+    "category": "anomaly", "visual": "ashmaw_nest",
+    "discovery": {"mode": "proximity", "radius": 4},
+    "spawn": {"biomes": ["snowfield"], "per_10000": 1},
+    "interactions": [
+     {"id": "grab", "verb": "Grab an ember-stone", "exclusive": true, "event": {"content_id": "snow:event/nest_grab", "version": 1}},
+     {"id": "wrapped", "verb": "Lift the stones in frost linen", "exclusive": true, "event": {"content_id": "snow:event/nest_wrapped", "version": 1},
+      "reveal_conditions": [{"type": "item", "content_id": "snow:frost_linen", "version": 1, "quantity": 1}]}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/ice_listen", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "The singing ice", "description": "",
+   "dependencies": [{"content_id": "snow:stormglass", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "Under the drift, a sheet of clear ice hums with the wind. The note comes in short, even stitches, as if it were waiting for an answer.",
+    "tone": "neutral",
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:stormglass", "version": 1, "quantity": 1}]},
+     {"type": "xp", "amount": 18}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/ice_answer", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "Answered", "description": "",
+   "dependencies": [{"content_id": "snow:ancient_marrow", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "You stitch the cold back into the ice in time with its note. It splits along a seam and gives up what it was keeping.",
+    "tone": "boon",
+    "conditions": [{"type": "skill_known", "content_id": "snow:skill/rime_stitch"}],
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:ancient_marrow", "version": 1, "quantity": 1}]},
+     {"type": "xp", "amount": 30}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/singing_ice", "version": 1, "schema_version": 1, "kind": "location",
+   "name": "Singing ice", "description": "A buried sheet of clear ice that hums in the wind.",
+   "dependencies": [{"content_id": "snow:event/ice_listen", "version": 1}, {"content_id": "snow:event/ice_answer", "version": 1}],
+   "metadata": {"site_only": true, "category": "anomaly"},
+   "payload": {
+    "category": "anomaly", "visual": "singing_ice",
+    "discovery": {"mode": "search", "radius": 2},
+    "spawn": {"biomes": ["snowfield"], "per_10000": 1},
+    "interactions": [
+     {"id": "listen", "verb": "Listen to the ice", "event": {"content_id": "snow:event/ice_listen", "version": 1}},
+     {"id": "answer", "verb": "Answer the note", "after": "listen", "event": {"content_id": "snow:event/ice_answer", "version": 1}}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/den_search", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "The prowler's den", "description": "",
+   "dependencies": [{"content_id": "core:hide", "version": 1}, {"content_id": "core:raw_meat", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "Under the root-arch: old bones, tufts of hide and a cached haunch the cat has not come back for.",
+    "tone": "boon",
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "core:hide", "version": 1, "quantity": 2}, {"content_id": "core:raw_meat", "version": 1, "quantity": 1}]},
+     {"type": "xp", "amount": 8}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/den_trail", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "The kill trail", "description": "",
+   "dependencies": [{"content_id": "snow:ivory_tusk", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "Drag marks lead from the den to a drift where the prowler brought down a tuskback calf. One tusk is still sound.",
+    "tone": "boon",
+    "conditions": [{"type": "any_of", "conditions": [{"type": "talent", "values": ["core:talent/beast_hunter"]}, {"type": "perception"}]}],
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:ivory_tusk", "version": 1, "quantity": 1}]},
+     {"type": "xp", "amount": 16}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/prowler_den", "version": 1, "schema_version": 1, "kind": "location",
+   "name": "Prowler den", "description": "A dry hollow under arched pine roots, ringed with claw-scored bark.",
+   "dependencies": [{"content_id": "snow:event/den_search", "version": 1}, {"content_id": "snow:event/den_trail", "version": 1}],
+   "metadata": {"site_only": true, "category": "lair"},
+   "payload": {
+    "category": "lair", "visual": "prowler_den",
+    "discovery": {"mode": "proximity", "radius": 3},
+    "spawn": {"biomes": ["taiga"], "per_10000": 1},
+    "interactions": [
+     {"id": "search", "verb": "Search the den", "event": {"content_id": "snow:event/den_search", "version": 1}},
+     {"id": "trail", "verb": "Follow the kill trail", "after": "search", "event": {"content_id": "snow:event/den_trail", "version": 1}}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/runes_read", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "Frost runes", "description": "",
+   "dependencies": [{"content_id": "snow:marrow_tonic", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "The runes are a tally of giants who walked the shelf, and of the travellers who paid them in ivory to pass. A sealed flask rests in the lowest course.",
+    "tone": "boon",
+    "conditions": [{"type": "level", "min": 4}],
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:marrow_tonic", "version": 1, "quantity": 1}]},
+     {"type": "xp", "amount": 50}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/runes_tribute", "version": 1, "schema_version": 1, "kind": "world_event",
+   "name": "The old toll", "description": "",
+   "dependencies": [{"content_id": "snow:ivory_tusk", "version": 1}, {"content_id": "snow:rime_mantle", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "You set the ivory where the runes say. Behind the loosened stone lies a mantle stitched with frost thread, left for whoever kept the toll.",
+    "tone": "boon",
+    "cost": {"items": [{"content_id": "snow:ivory_tusk", "version": 1, "quantity": 2}]},
+    "outcomes": [
+     {"type": "grant_items", "items": [{"content_id": "snow:rime_mantle", "version": 1, "quantity": 1}]},
+     {"type": "xp", "amount": 20}
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/rune_cairn", "version": 1, "schema_version": 1, "kind": "location",
+   "name": "Toll cairn", "description": "A squat cairn cut with frost runes, taller than any traveller.",
+   "dependencies": [{"content_id": "snow:event/runes_read", "version": 1}, {"content_id": "snow:event/runes_tribute", "version": 1}],
+   "metadata": {"site_only": true, "category": "shrine"},
+   "payload": {
+    "category": "shrine", "visual": "rune_cairn",
+    "discovery": {"mode": "visible", "radius": 4},
+    "spawn": {"biomes": ["snowfield"], "per_10000": 1},
+    "interactions": [
+     {"id": "read", "verb": "Read the frost runes", "event": {"content_id": "snow:event/runes_read", "version": 1}},
+     {"id": "tribute", "verb": "Pay the old toll in ivory", "after": "read", "event": {"content_id": "snow:event/runes_tribute", "version": 1}}
+    ]
+   }
+  }
+ ]
+}
