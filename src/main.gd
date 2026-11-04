@@ -55,7 +55,7 @@ var _adventure: Button
 var _chart: Button
 ## M05 development: chart the Snow Mountain layout land (land package, not published).
 var _chart_snow: Button
-const SNOW_LAYOUT := "landpkg:snow_mountain/layout"
+const SNOW_LAYOUT := "landpkg:snow_mountain/full_region"
 const CHART_SNOW := "Chart Snow Mountain (dev)"
 const SNOW_RUN := "New Run in Snow Mountain (dev)"
 ## Real-time notices that may not replace a fresh place message (see _hold_notice).
@@ -1918,6 +1918,9 @@ func describe_events(events: Array) -> String:
 			"status_tick":
 				var by := str(event.get("source", ""))
 				parts.append("%s: %s %+d HP%s." % [event.target, event.status, int(event.amount), "" if by.is_empty() or by == "you" else " (from %s)" % by])
+			"telegraph":
+				if event.get("ranged", false):
+					parts.append("%s takes aim at you: step aside or break its line of sight!" % event.name)
 			"dodge":
 				parts.append("You dodge %s's attack." % event.name)
 			"rest_start":

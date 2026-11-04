@@ -84,6 +84,7 @@ try {
     Invoke-EngineCheck -Name 'm04-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/m04_gameplay_suite.gd') -Summary 'M04 GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-mountain' -EngineArgs @('--headless', '--script', 'res://tests/snow_mountain_suite.gd') -Summary 'M05 SNOW MOUNTAIN: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-content' -EngineArgs @('--headless', '--script', 'res://tests/snow_content_suite.gd') -Summary 'M05 SNOW CONTENT: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'snow-region' -EngineArgs @('--headless', '--script', 'res://tests/snow_region_suite.gd') -Summary 'SNOW REGION: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/snow_mountain_gameplay_suite.gd') -Summary 'M05 SNOW GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'art-import' -EngineArgs @('--headless', '--script', 'res://tools/art/import_check.gd') -Summary 'ART IMPORT: \d+ checks, 0 failures'
     # Keep smoke startup away from the player's database, including opt-in World tests.
@@ -92,6 +93,7 @@ try {
     if ($Render) {
         Invoke-EngineCheck -Name 'rendered-realtime' -EngineArgs @('--script', 'res://tests/realtime_gameplay_suite.gd') -Summary 'M03 REALTIME GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-snow-gameplay' -EngineArgs @('--script', 'res://tests/snow_mountain_gameplay_suite.gd') -Summary 'M05 SNOW GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-snow-region' -EngineArgs @('--script', 'res://tests/snow_region_gameplay_suite.gd') -Summary 'SNOW REGION GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-m04-gameplay' -EngineArgs @('--script', 'res://tests/m04_gameplay_suite.gd') -Summary 'M04 GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-m03-integration' -EngineArgs @('--script', 'res://tests/m03_integration_suite.gd') -Summary 'M03 INTEGRATION: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-discoveries' -EngineArgs @('--script', 'res://tests/discovery_gameplay_suite.gd') -Summary 'M02 CHECKPOINT I GAMEPLAY: \d+ checks, 0 failures'

@@ -1,5 +1,41 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Snow Mountain full-region production ? roster/exploration batch (2026-11-04)
+
+Recovered an interrupted, uncommitted batch (17 tracked files + new pack, layout,
+art, tools and two suites) intact on `feature/snow-full-region`; nothing restarted.
+Content as recorded in SNOW_MOUNTAIN_V1_PACKAGE.md: eleven species, five materials,
+six recipes/gear, three techniques, six sites, layout v5 / atlas plan v2 with an
+authored creature-home layer (legacy v4 plans and v1 homes untouched).
+
+Finished during recovery:
+- Turn-model ranged shots now telegraph like real time: a ranged decision marks the
+  player's tile (`aim`, persisted in the creature mutation so reload cannot cancel it),
+  and the shooter's next turn releases the shot only if the player stayed on that tile
+  in clear line of sight; otherwise `dodge`. A stun spoils a pending aim. The log
+  prints "takes aim at you" for ranged telegraphs in both time models.
+- Region suite fixture used a wrong realtime rules key and aborted before its ranged
+  checks; fixed. Visual suite sent keys past the GUI; now uses real input events.
+- Spawn-loop reorder (hash rejection before ecology lookup) is a pure predicate
+  reorder; the suite compares complete home output with the old order on 16 chunks.
+
+Commands/results:
+- `scripts/test.ps1 -Only snow-region`: SNOW REGION 65 checks, 0 failures.
+- `scripts/test.ps1 -Smoke -Only combat,combat-gameplay,realtime,realtime-gameplay,systems-gameplay,build-gameplay,snow-mountain,snow-content,snow-gameplay,m04-world,m04-gameplay,art-import`:
+  data96, integration41, combat75, combat-gameplay20, build26, systems20, realtime58,
+  realtime-gameplay17, m04-world86, m04-gameplay23, snow-mountain66, snow-content114,
+  snow-gameplay53, art-import763, all 0 failures; import and startup pass.
+- `godot --script res://tests/snow_region_gameplay_suite.gd` (rendered): 31, 0 failures;
+  captures of all eleven species and new sites inspected in .tools/.
+- `asset_check.py batch assets/sources/snow_fauna_b2/batch.json`: 0 failures, 45
+  warnings (walk foot-line jitter, duplicated walk frames, centered manual icons).
+
+Gaps / cosmetic log: new creatures read small and pale on snow at gameplay scale;
+walk cycles have a duplicated frame; kiln/bowl/loom reuse existing landmark forms.
+`snow_region_gameplay_suite` now runs as `rendered-snow-region` under -Render.
+Next: region-wide pacing pass (encounter density per region, Leefoot prey density),
+more region activities/discoveries, chunk-transition stutter measurement.
+
 ## Snow Mountain full-region production ? regional economy batch (2026-11-04)
 
 Director brief authorizes full-region production without intermediate director

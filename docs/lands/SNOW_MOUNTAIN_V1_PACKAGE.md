@@ -78,6 +78,53 @@ first. No ranged/burrow/regeneration framework until a chosen creature needs it.
 Terrain/surface chemistry remains unimplemented, rather than implied by prose.
 New plan/terrain algorithms require explicit new versions with legacy paths retained.
 
+### Roster/exploration production batch - 2026-11-04 (in progress)
+
+Full-region layout v5 uses atlas plan v2 with unchanged terrain algorithm v2.
+The original layout ID/file remains v4, available for old callers and plans.
+New menu proposals select the full-region layout. Both packs install only into
+that explicitly charted World. Ecology-only new species cannot enter legacy v4
+areas; original creature definitions, sites, coordinates and homes stay pinned.
+
+| Area | Added roles | Player decisions / progression |
+|---|---|---|
+| Basin | Frost stag, fleeing prey | Optional hunting beside guaranteed plant/water sources; choose one field-manual bundle |
+| Pitchpine | Tuskback neutral charger, bleeding Pine prowler, stag | Provoke for ivory or avoid; carry fire, use ranged hunting/retreat; hunter notes and heavy-strike manual |
+| Mirror Trough | Neutral Glassback crawler, ranged Rime lantern, stag | Choose safe shore or elemental engagement; lightning counters shell, fire counters ice; glass crafting and an offering opportunity |
+| Broken Relay | Calling Relay cutthroats, retreating Relay slingers, slow Hollow carriers | Use shelter/cover, break sight, interrupt shots, separate callers; bronze/linen feed gear |
+| Windcut Stair | Slingers, aimed-fire Cinder acolytes, neutral Ashmaw ground drakes | Limited lanes make cover and shot timing matter; avoid provoking drakes; fire/ice/water trade-offs and kiln notes |
+| White Choir | Slow chilling Hollow carriers, aimed-ice lanterns, neutral crawlers | Weather plus intermittent enemies; prepare remedies, retreat by either route; control manual and linen |
+| Crown Shelf | Existing sentinels plus rare Hoarfrost giant and lanterns | Detour or confront slow short-leash giants; rare marrow tonic, optional concealed variable cache |
+
+Fourteen native species now have distinct gameplay roles (eleven additions).
+This is a production roster, not a completion quota: census and traversal must
+confirm density, group overlap, readable refuge approaches and non-repetitive gaps.
+Pack calls alert same species only; no faction diplomacy or creature-on-creature
+hunting is claimed. Ashmaw moves on the ground; wing fins do not imply flight.
+
+One new shared capability: ranged min/max/cooldown trait. Turn attacks resolve as
+ordinary ranged hits; real-time shots telegraph the player's tile and miss if the
+player moves before landing or breaks sight. Close pressure makes shooters retreat;
+cornered shooters may melee. Shot cooldown survives save/load; real-time windups
+reset like existing melee windups. Damage, resistance, statuses and talent guards
+reuse CreatureRoster.creature_strike. No generated code, projectile physics or
+species-specific AI handler. New ranged traits are bounded engine data.
+
+Five materials each feed real recipes; five gear choices add physical bleeding,
+lightning/shell counterplay, elemental range/cost trade-offs, ice-resistant caster
+armor and a fire maul. Rare marrow makes a strong restorative tonic. Three regional
+techniques have differentiated roles: interruption, pursuit control, costly short
+fire burst. Manuals come from reachable authored sites and optional rare drops.
+Six additional sites use ordinary once-only actions and existing event receipts;
+one offers mutually exclusive starter learning, one hides a conditional interaction,
+one has a Run-seeded rare reward. Original relay/bell stories remain independent.
+
+Streaming work reorders pure coordinate-hash rejection before expensive ecology
+lookups in creature/location loops. Existing object code already does this. No
+hash streams, probabilities, budgets or ordering change; compare complete placement
+output against the old predicate order and measure native traversal before claiming
+a performance improvement.
+
 ### Current production status and remaining work
 
 Design scope authorized by the brief; batch 1 undergoing validation. P0 art merged

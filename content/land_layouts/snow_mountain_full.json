@@ -1,0 +1,915 @@
+{
+  "layout_version": 1,
+  "id": "landpkg:snow_mountain/full_region",
+  "version": 5,
+  "archetype": "frost_highlands",
+  "notes": "Full region production plan v5 / atlas plan v2. Geometry, terrain algorithm v2, old site pins and certified starts retained from layout v4. Adds area ecology and six exploration sites; old plans remain self-contained and unchanged.",
+  "radius": 184,
+  "coast": {
+    "min": 1.02,
+    "max": 1.17,
+    "scale": 44
+  },
+  "warp": 34,
+  "escarpment": {
+    "name": "Hushed Crown escarpment",
+    "center": [
+      0.02,
+      -0.12
+    ],
+    "radius": [
+      0.23,
+      0.22
+    ],
+    "jitter": 0.16,
+    "scale": 30
+  },
+  "lakes": [
+    {
+      "id": "mirror_trough",
+      "center": [
+        0.5,
+        0.1
+      ],
+      "radius": [
+        0.13,
+        0.2
+      ],
+      "jitter": 0.12,
+      "scale": 26,
+      "shore": 4
+    }
+  ],
+  "barriers": [
+    {
+      "id": "trough_east_cliff",
+      "a": [
+        0.73,
+        0.32
+      ],
+      "b": [
+        0.69,
+        -0.14
+      ],
+      "width": 0.025
+    },
+    {
+      "id": "stair_east_wall",
+      "a": [
+        0.69,
+        -0.14
+      ],
+      "b": [
+        0.55,
+        -0.74
+      ],
+      "width": 0.025
+    },
+    {
+      "id": "stair_west_wall_low",
+      "a": [
+        0.24,
+        -0.26
+      ],
+      "b": [
+        0.36,
+        -0.42
+      ],
+      "width": 0.022
+    },
+    {
+      "id": "stair_west_wall_high",
+      "a": [
+        0.39,
+        -0.53
+      ],
+      "b": [
+        0.42,
+        -0.74
+      ],
+      "width": 0.022
+    },
+    {
+      "id": "pitchpine_finger_north",
+      "a": [
+        -0.2,
+        -0.04
+      ],
+      "b": [
+        -0.6,
+        -0.2
+      ],
+      "width": 0.024
+    },
+    {
+      "id": "pitchpine_finger_south",
+      "a": [
+        -0.2,
+        0.08
+      ],
+      "b": [
+        -0.62,
+        0.3
+      ],
+      "width": 0.022
+    },
+    {
+      "id": "choir_south_lip",
+      "a": [
+        -0.1,
+        -0.56
+      ],
+      "b": [
+        0.17,
+        -0.58
+      ],
+      "width": 0.02
+    },
+    {
+      "id": "crown_west_ridge",
+      "a": [
+        -0.42,
+        -0.62
+      ],
+      "b": [
+        -0.3,
+        -0.8
+      ],
+      "width": 0.02
+    }
+  ],
+  "windbreaks": [
+    {
+      "id": "stair_ledge_low",
+      "a": [
+        0.52,
+        -0.3
+      ],
+      "b": [
+        0.58,
+        -0.32
+      ],
+      "width": 0.006,
+      "tile": "rock"
+    },
+    {
+      "id": "stair_ledge_mid",
+      "a": [
+        0.51,
+        -0.6
+      ],
+      "b": [
+        0.55,
+        -0.6
+      ],
+      "width": 0.006,
+      "tile": "rock"
+    },
+    {
+      "id": "choir_cairn_ring",
+      "a": [
+        -0.03,
+        -0.76
+      ],
+      "b": [
+        0.07,
+        -0.76
+      ],
+      "width": 0.006,
+      "tile": "rock"
+    }
+  ],
+  "areas": [
+    {
+      "id": "leefoot_basin",
+      "name": "Leefoot Basin",
+      "seed": [
+        0.0,
+        0.52
+      ],
+      "danger": 0,
+      "start": true,
+      "exposure": "lee",
+      "opportunity": "sheltered clearings, meltwater and berries",
+      "ground": "snowfield",
+      "patch": {
+        "surface": "taiga",
+        "scale": 34,
+        "above": 600
+      },
+      "blocker": {
+        "tile": "pine",
+        "percent": 9,
+        "on": [
+          "taiga"
+        ]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 1
+      },
+      "ecology": {
+        "snowfield": [
+          "snow:water_cache",
+          "snow:ration_shrub",
+          "snow:rime_hare",
+          "core:loose_stones",
+          "core:lost_coin",
+          "snow:frost_stag"
+        ],
+        "taiga": [
+          "snow:ration_shrub",
+          "snow:water_cache",
+          "snow:resin_seam",
+          "snow:rime_hare",
+          "core:fallen_branches",
+          "core:herb_patch",
+          "snow:frost_stag"
+        ]
+      }
+    },
+    {
+      "id": "pitchpine_reach",
+      "name": "Pitchpine Reach",
+      "seed": [
+        -0.5,
+        0.06
+      ],
+      "danger": 1,
+      "exposure": "lee",
+      "opportunity": "resin-black pines, firewood and hares; wolves in the outer clearings",
+      "ground": "taiga",
+      "patch": {
+        "surface": "snowfield",
+        "scale": 40,
+        "above": 700
+      },
+      "blocker": {
+        "tile": "pine",
+        "percent": 22,
+        "on": [
+          "taiga"
+        ]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 2
+      },
+      "ecology": {
+        "taiga": [
+          "snow:scree_wolf",
+          "snow:rime_hare",
+          "snow:resin_seam",
+          "snow:ration_shrub",
+          "core:fallen_branches",
+          "core:herb_patch",
+          "core:weathered_chest",
+          "core:buried_cache",
+          "snow:frost_stag",
+          "snow:tuskback",
+          "snow:pine_prowler"
+        ],
+        "snowfield": [
+          "snow:scree_wolf",
+          "snow:rime_hare",
+          "snow:water_cache",
+          "core:loose_stones",
+          "snow:frost_stag",
+          "snow:tuskback",
+          "snow:pine_prowler"
+        ]
+      }
+    },
+    {
+      "id": "mirror_trough",
+      "name": "Mirror Trough",
+      "seed": [
+        0.5,
+        0.1
+      ],
+      "danger": 1,
+      "exposure": "open",
+      "opportunity": "a frozen lake circled by a walkable shore under cliff walls",
+      "ground": "snowfield",
+      "blocker": {
+        "tile": "pine",
+        "percent": 4,
+        "on": [
+          "snowfield"
+        ]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 1
+      },
+      "ecology": {
+        "snowfield": [
+          "snow:water_cache",
+          "snow:rime_hare",
+          "snow:ration_shrub",
+          "core:loose_stones",
+          "core:buried_cache",
+          "core:lost_coin",
+          "snow:frost_stag",
+          "snow:glassback_crawler",
+          "snow:rime_lantern"
+        ]
+      }
+    },
+    {
+      "id": "broken_relay",
+      "name": "Broken Relay",
+      "seed": [
+        -0.3,
+        -0.48
+      ],
+      "danger": 1,
+      "exposure": "open",
+      "opportunity": "an abandoned roofed outpost where the forest meets the pass road",
+      "ground": "frozen",
+      "patch": {
+        "surface": "snowfield",
+        "scale": 36,
+        "above": 700
+      },
+      "blocker": {
+        "tile": "pine",
+        "percent": 5,
+        "on": [
+          "snowfield"
+        ]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 3
+      },
+      "ecology": {
+        "snowfield": [
+          "snow:scree_wolf",
+          "snow:water_cache",
+          "core:loose_stones",
+          "core:weathered_chest",
+          "core:buried_cache",
+          "core:lost_coin",
+          "snow:relay_cutthroat",
+          "snow:relay_slinger",
+          "snow:hollow_carrier"
+        ]
+      }
+    },
+    {
+      "id": "windcut_stair",
+      "name": "Windcut Stair",
+      "seed": [
+        0.47,
+        -0.46
+      ],
+      "danger": 2,
+      "exposure": "open",
+      "opportunity": "a narrow scree stair with rock ledges up to the mountain pass",
+      "ground": "frozen",
+      "rocks": {
+        "tile": "rock",
+        "percent": 6
+      },
+      "ecology": {
+        "snowfield": [
+          "snow:scree_wolf",
+          "core:loose_stones",
+          "core:lost_coin",
+          "core:place/spirit_vein",
+          "snow:relay_slinger",
+          "snow:cinder_acolyte",
+          "snow:ashmaw"
+        ]
+      }
+    },
+    {
+      "id": "white_choir",
+      "name": "White Choir",
+      "seed": [
+        0.04,
+        -0.74
+      ],
+      "danger": 2,
+      "exposure": "exposed",
+      "opportunity": "a blizzard bowl around an old bell cairn; two ways out",
+      "ground": "snowfield",
+      "rocks": {
+        "tile": "rock",
+        "percent": 2
+      },
+      "ecology": {
+        "snowfield": [
+          "core:buried_cache",
+          "core:weathered_chest",
+          "core:loose_stones",
+          "snow:hollow_carrier",
+          "snow:rime_lantern",
+          "snow:glassback_crawler"
+        ]
+      }
+    },
+    {
+      "id": "crown_shelf",
+      "name": "Crown Shelf",
+      "seed": [
+        -0.2,
+        -0.86
+      ],
+      "danger": 3,
+      "exposure": "exposed",
+      "opportunity": "a wind-scoured overlook with a summit ruin",
+      "ground": "frozen",
+      "patch": {
+        "surface": "snowfield",
+        "scale": 30,
+        "above": 640
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 8
+      },
+      "ecology": {
+        "snowfield": [
+          "snow:bellback_sentinel",
+          "snow:scree_wolf",
+          "core:weathered_chest",
+          "core:loose_stones",
+          "snow:hoarfrost_giant",
+          "snow:rime_lantern"
+        ]
+      }
+    }
+  ],
+  "trails": [
+    {
+      "id": "basin_to_reach",
+      "points": [
+        [
+          0.0,
+          0.52
+        ],
+        [
+          -0.22,
+          0.46
+        ],
+        [
+          -0.48,
+          0.42
+        ],
+        [
+          -0.72,
+          0.32
+        ],
+        [
+          -0.8,
+          0.04
+        ],
+        [
+          -0.74,
+          -0.28
+        ],
+        [
+          -0.5,
+          -0.42
+        ],
+        [
+          -0.3,
+          -0.48
+        ]
+      ]
+    },
+    {
+      "id": "basin_to_trough",
+      "points": [
+        [
+          0.0,
+          0.52
+        ],
+        [
+          0.2,
+          0.44
+        ],
+        [
+          0.4,
+          0.38
+        ],
+        [
+          0.6,
+          0.36
+        ],
+        [
+          0.68,
+          0.36
+        ]
+      ]
+    },
+    {
+      "id": "trough_west_shore",
+      "points": [
+        [
+          0.2,
+          0.44
+        ],
+        [
+          0.33,
+          0.2
+        ],
+        [
+          0.33,
+          -0.08
+        ],
+        [
+          0.5,
+          -0.18
+        ]
+      ]
+    },
+    {
+      "id": "trough_east_shore",
+      "points": [
+        [
+          0.68,
+          0.36
+        ],
+        [
+          0.66,
+          0.1
+        ],
+        [
+          0.6,
+          -0.16
+        ]
+      ]
+    },
+    {
+      "id": "relay_to_stair",
+      "points": [
+        [
+          -0.3,
+          -0.48
+        ],
+        [
+          -0.08,
+          -0.46
+        ],
+        [
+          0.18,
+          -0.46
+        ],
+        [
+          0.38,
+          -0.48
+        ],
+        [
+          0.47,
+          -0.46
+        ]
+      ]
+    },
+    {
+      "id": "windcut_stair",
+      "points": [
+        [
+          0.5,
+          -0.18
+        ],
+        [
+          0.47,
+          -0.46
+        ],
+        [
+          0.48,
+          -0.7
+        ],
+        [
+          0.4,
+          -0.86
+        ]
+      ]
+    }
+  ],
+  "pass": {
+    "head": [
+      0.4,
+      -0.86
+    ]
+  },
+  "shelters": [
+    {
+      "id": "lee_shelter",
+      "name": "Lee shelter",
+      "at": [
+        0.12,
+        0.38
+      ],
+      "size": [
+        5,
+        4
+      ],
+      "doors": [
+        "south"
+      ]
+    },
+    {
+      "id": "relay_outpost",
+      "name": "Broken relay outpost",
+      "at": [
+        -0.3,
+        -0.53
+      ],
+      "size": [
+        7,
+        5
+      ],
+      "doors": [
+        "south",
+        "east"
+      ]
+    },
+    {
+      "id": "stair_hut",
+      "name": "Ledge hut",
+      "at": [
+        0.52,
+        -0.54
+      ],
+      "size": [
+        4,
+        3
+      ],
+      "doors": [
+        "south"
+      ]
+    }
+  ],
+  "starts": [
+    {
+      "id": "basin_west_hollow",
+      "at": [
+        -0.2,
+        0.5
+      ]
+    },
+    {
+      "id": "basin_lee_shelter",
+      "at": [
+        0.12,
+        0.45
+      ]
+    },
+    {
+      "id": "basin_south_pines",
+      "at": [
+        0.0,
+        0.72
+      ]
+    },
+    {
+      "id": "basin_east_knoll",
+      "at": [
+        0.26,
+        0.6
+      ]
+    },
+    {
+      "id": "reach_edge_glade",
+      "at": [
+        -0.38,
+        0.38
+      ]
+    }
+  ],
+  "clearing_radius": 4,
+  "weather": [
+    {
+      "id": "blizzard",
+      "name": "Blizzard",
+      "cycle": 150,
+      "duration": 50,
+      "chance": 60,
+      "sight": 3,
+      "exposure": {
+        "surfaces": [
+          "snowfield",
+          "taiga",
+          "ice",
+          "frozen ground",
+          "trail"
+        ],
+        "every": 5,
+        "damage": 1,
+        "shelter": [
+          "pine",
+          "rock",
+          "tree",
+          "basalt",
+          "cliff",
+          "timber"
+        ]
+      }
+    }
+  ],
+  "hazards": [],
+  "supplies": {
+    "food": [
+      "snow:ration_shrub"
+    ],
+    "water": [
+      "snow:water_cache"
+    ],
+    "food_steps": 20,
+    "water_steps": 30
+  },
+  "content_packs": [
+    "res://content/land_packages/snow_mountain/content_pack.json",
+    "res://content/land_packages/snow_mountain/fauna_pack.json"
+  ],
+  "sites": [
+    {
+      "id": "lee_shelter",
+      "content_id": "snow:place/lee_shelter",
+      "shelter": "lee_shelter",
+      "area": "leefoot_basin",
+      "reason": "a roof against the blizzard"
+    },
+    {
+      "id": "relay_locker",
+      "content_id": "snow:place/relay_locker",
+      "shelter": "relay_outpost",
+      "area": "broken_relay",
+      "reason": "the carriers' locker and ledger"
+    },
+    {
+      "id": "fallen_relay_pine",
+      "content_id": "snow:place/fallen_relay_pine",
+      "at": [
+        -0.64,
+        -0.08
+      ],
+      "area": "pitchpine_reach",
+      "reason": "a fallen pine across the old trail"
+    },
+    {
+      "id": "bell_cairn",
+      "content_id": "snow:place/bell_cairn",
+      "version": 2,
+      "at": [
+        0.03,
+        -0.7
+      ],
+      "area": "white_choir",
+      "reason": "a carriers' cairn in the blizzard bowl"
+    },
+    {
+      "id": "summit_bell",
+      "content_id": "snow:place/summit_bell",
+      "at": [
+        -0.25,
+        -0.89
+      ],
+      "area": "crown_shelf",
+      "reason": "a silent bell on the crown"
+    },
+    {
+      "id": "icebound_provisions",
+      "content_id": "snow:place/icebound_provisions",
+      "at": [
+        -0.31,
+        0.48
+      ],
+      "area": "leefoot_basin",
+      "reason": "an icebound carrier case beside the basin trail"
+    },
+    {
+      "id": "frozen_medicine",
+      "content_id": "snow:place/frozen_medicine",
+      "at": [
+        -0.57,
+        0.12
+      ],
+      "area": "pitchpine_reach",
+      "reason": "a medicine case frozen beside the pines"
+    },
+    {
+      "id": "field_satchel",
+      "content_id": "snow:place/field_satchel",
+      "at": [
+        -0.08,
+        0.53
+      ],
+      "area": "leefoot_basin",
+      "reason": "regional exploration opportunity"
+    },
+    {
+      "id": "hunters_camp",
+      "content_id": "snow:place/hunters_camp",
+      "at": [
+        -0.68,
+        0.19
+      ],
+      "area": "pitchpine_reach",
+      "reason": "regional exploration opportunity"
+    },
+    {
+      "id": "glass_bowl",
+      "content_id": "snow:place/glass_bowl",
+      "at": [
+        0.68,
+        -0.03
+      ],
+      "area": "mirror_trough",
+      "reason": "regional exploration opportunity"
+    },
+    {
+      "id": "old_kiln",
+      "content_id": "snow:place/old_kiln",
+      "at": [
+        0.52,
+        -0.41
+      ],
+      "area": "windcut_stair",
+      "reason": "regional exploration opportunity"
+    },
+    {
+      "id": "wind_loom",
+      "content_id": "snow:place/wind_loom",
+      "at": [
+        -0.14,
+        -0.72
+      ],
+      "area": "white_choir",
+      "reason": "regional exploration opportunity"
+    },
+    {
+      "id": "drift_cache",
+      "content_id": "snow:place/drift_cache",
+      "at": [
+        -0.48,
+        -0.7
+      ],
+      "area": "crown_shelf",
+      "reason": "regional exploration opportunity"
+    }
+  ],
+  "atlas_version": 2,
+  "creature_homes": [
+    {
+      "id": "relay_0",
+      "content_id": "snow:relay_cutthroat",
+      "at": [
+        -0.36,
+        -0.39
+      ]
+    },
+    {
+      "id": "relay_1",
+      "content_id": "snow:relay_cutthroat",
+      "at": [
+        -0.343,
+        -0.39
+      ]
+    },
+    {
+      "id": "relay_2",
+      "content_id": "snow:relay_slinger",
+      "at": [
+        -0.36,
+        -0.373
+      ]
+    },
+    {
+      "id": "kiln_0",
+      "content_id": "snow:cinder_acolyte",
+      "at": [
+        0.52,
+        -0.39
+      ]
+    },
+    {
+      "id": "kiln_1",
+      "content_id": "snow:relay_slinger",
+      "at": [
+        0.537,
+        -0.39
+      ]
+    },
+    {
+      "id": "glass_0",
+      "content_id": "snow:glassback_crawler",
+      "at": [
+        0.65,
+        -0.04
+      ]
+    },
+    {
+      "id": "glass_1",
+      "content_id": "snow:rime_lantern",
+      "at": [
+        0.667,
+        -0.04
+      ]
+    }
+  ]
+}

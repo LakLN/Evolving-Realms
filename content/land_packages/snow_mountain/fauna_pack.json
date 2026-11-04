@@ -1,0 +1,2545 @@
+{
+ "pack_version": 1,
+ "notes": "Full-region production additions. Installed only by full-region layout; all older definitions and homes preserved.",
+ "definitions": [
+  {
+   "content_id": "snow:ivory_tusk",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Winter tusk",
+   "description": "Dense tusk for a hunting blade.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:stormglass",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Stormglass",
+   "description": "Quartz that holds a faint static charge.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:frost_linen",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Frost linen",
+   "description": "Cloth kept intact by an unnatural cold.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:ember_heart",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Ember heart",
+   "description": "A heat-bearing mineral from a fire creature.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:ancient_marrow",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Ancient marrow",
+   "description": "Pale marrow from a mountain giant; a potent remedy ingredient.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:frost_stag",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Frost stag",
+   "description": "An antlered snowfield forager. It flees early; a ranged hunter can take a shot before it runs.",
+   "dependencies": [
+    {
+     "content_id": "core:raw_meat",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "beast"
+   },
+   "payload": {
+    "visual": "frost_stag",
+    "disposition": "passive",
+    "stats": {
+     "max_hp": 12,
+     "attack": 3,
+     "defense": 0
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 9000
+    },
+    "ai": {
+     "detect_radius": 8,
+     "wander_per_10000": 3500,
+     "flee_radius": 7,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 9,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "thick_coat"
+    ],
+    "elements": [
+     "neutral"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "core:raw_meat",
+       "version": 1,
+       "min": 3,
+       "max": 3
+      },
+      {
+       "content_id": "core:hide",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:tuskback",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Tuskback",
+   "description": "A heavy winter boar. Leaves travellers alone until provoked; then rushes straight in.",
+   "dependencies": [
+    {
+     "content_id": "snow:ivory_tusk",
+     "version": 1
+    },
+    {
+     "content_id": "core:raw_meat",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "beast"
+   },
+   "payload": {
+    "visual": "tuskback",
+    "disposition": "neutral",
+    "stats": {
+     "max_hp": 24,
+     "attack": 7,
+     "defense": 2
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 6500
+    },
+    "ai": {
+     "detect_radius": 6,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 6,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "charger",
+     "thick_coat"
+    ],
+    "elements": [
+     "neutral"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:ivory_tusk",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      },
+      {
+       "content_id": "core:raw_meat",
+       "version": 1,
+       "min": 3,
+       "max": 3
+      },
+      {
+       "content_id": "core:hide",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:pine_prowler",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Pine prowler",
+   "description": "A long-tailed cat that opens wounds, then withdraws when hurt. Fire keeps it at a distance.",
+   "dependencies": [
+    {
+     "content_id": "core:fang",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/bleed",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "mountain_denizen"
+   },
+   "payload": {
+    "visual": "pine_prowler",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 17,
+     "attack": 6,
+     "defense": 0
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 10000
+    },
+    "ai": {
+     "detect_radius": 6,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 35
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 5,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "fears_fire"
+    ],
+    "elements": [
+     "neutral"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "core:fang",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      },
+      {
+       "content_id": "core:hide",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    },
+    "on_hit_effects": [
+     {
+      "type": "apply_status",
+      "content_id": "core:status/bleed",
+      "version": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:relay_cutthroat",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Relay cutthroat",
+   "description": "A scavenger of the broken carrier roads. Calls nearby cutthroats into a fight.",
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "mountain_denizen"
+   },
+   "payload": {
+    "visual": "relay_cutthroat",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 22,
+     "attack": 6,
+     "defense": 2
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 9000
+    },
+    "ai": {
+     "detect_radius": 6,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 25
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 7,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "pack_caller"
+    ],
+    "elements": [
+     "neutral"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      },
+      {
+       "content_id": "snow:bark_ration",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:relay_slinger",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Relay slinger",
+   "description": "A fur-clad scavenger with a sling. Retreats from close threats and aims at where you stand.",
+   "dependencies": [
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:stone",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "mountain_denizen"
+   },
+   "payload": {
+    "visual": "relay_slinger",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 15,
+     "attack": 5,
+     "defense": 1
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 9000
+    },
+    "ai": {
+     "detect_radius": 8,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 6,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "slinger"
+    ],
+    "elements": [
+     "neutral"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      },
+      {
+       "content_id": "core:stone",
+       "version": 1,
+       "min": 4,
+       "max": 4
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:cinder_acolyte",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Cinder acolyte",
+   "description": "A masked keeper of a stolen kiln rite. Aimed fire and burning wounds; ice breaks its nerve.",
+   "dependencies": [
+    {
+     "content_id": "snow:ember_heart",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/burn",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "mountain_denizen"
+   },
+   "payload": {
+    "visual": "cinder_acolyte",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 19,
+     "attack": 5,
+     "defense": 1
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 7000
+    },
+    "ai": {
+     "detect_radius": 8,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 3,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "spellcaster",
+     "fears_ice"
+    ],
+    "elements": [
+     "fire"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:ember_heart",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      },
+      {
+       "content_id": "snow:resin",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      }
+     ]
+    },
+    "on_hit_effects": [
+     {
+      "type": "apply_status",
+      "content_id": "core:status/burn",
+      "version": 1
+     }
+    ],
+    "effect_modifiers": [
+     {
+      "type": "resistance",
+      "element": "fire",
+      "percent": 60
+     },
+     {
+      "type": "resistance",
+      "element": "ice",
+      "percent": -40
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:hollow_carrier",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Hollow carrier",
+   "description": "An empty carrier coat moving against the wind. Its touch chills movement; fire tears through its frozen cloth.",
+   "dependencies": [
+    {
+     "content_id": "snow:frost_linen",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/slow",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "mountain_denizen"
+   },
+   "payload": {
+    "visual": "hollow_carrier",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 29,
+     "attack": 7,
+     "defense": 2
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 4500
+    },
+    "ai": {
+     "detect_radius": 6,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 5,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "thick_coat"
+    ],
+    "elements": [
+     "ice"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:frost_linen",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      },
+      {
+       "content_id": "snow:bronze_scrap",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    },
+    "on_hit_effects": [
+     {
+      "type": "apply_status",
+      "content_id": "core:status/slow",
+      "version": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:glassback_crawler",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Glassback crawler",
+   "description": "A low crystal-backed crawler. Ignores travellers, but fights when struck. Lightning exploits its fractured shell.",
+   "dependencies": [
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "beast"
+   },
+   "payload": {
+    "visual": "glassback_crawler",
+    "disposition": "neutral",
+    "stats": {
+     "max_hp": 25,
+     "attack": 5,
+     "defense": 3
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 5500
+    },
+    "ai": {
+     "detect_radius": 6,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 7,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "hard_shell"
+    ],
+    "elements": [
+     "neutral"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:stormglass",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      }
+     ]
+    },
+    "effect_modifiers": [
+     {
+      "type": "resistance",
+      "element": "ice",
+      "percent": 40
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:rime_lantern",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Rime lantern",
+   "description": "A many-pronged light held in a cage of ice. Its cold bolts aim at a fixed position; move before they land.",
+   "dependencies": [
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    },
+    {
+     "content_id": "snow:frost_linen",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/slow",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "mountain_denizen"
+   },
+   "payload": {
+    "visual": "rime_lantern",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 14,
+     "attack": 5,
+     "defense": 0
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 9000
+    },
+    "ai": {
+     "detect_radius": 8,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 4,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "spellcaster"
+    ],
+    "elements": [
+     "ice"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:stormglass",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      },
+      {
+       "content_id": "snow:frost_linen",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    },
+    "on_hit_effects": [
+     {
+      "type": "apply_status",
+      "content_id": "core:status/slow",
+      "version": 1
+     }
+    ],
+    "effect_modifiers": [
+     {
+      "type": "resistance",
+      "element": "ice",
+      "percent": 75
+     },
+     {
+      "type": "resistance",
+      "element": "fire",
+      "percent": -50
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:ashmaw",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Ashmaw",
+   "description": "A wing-finned ground drake warming itself on exposed stone. Provoking it invites a burning rush. It does not fly.",
+   "dependencies": [
+    {
+     "content_id": "snow:ember_heart",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/burn",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "beast"
+   },
+   "payload": {
+    "visual": "ashmaw",
+    "disposition": "neutral",
+    "stats": {
+     "max_hp": 36,
+     "attack": 9,
+     "defense": 2
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 10,
+     "move_per_10000": 6500
+    },
+    "ai": {
+     "detect_radius": 6,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 3,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "charger"
+    ],
+    "elements": [
+     "fire"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:ember_heart",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      },
+      {
+       "content_id": "core:hide",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      }
+     ]
+    },
+    "on_hit_effects": [
+     {
+      "type": "apply_status",
+      "content_id": "core:status/burn",
+      "version": 1
+     }
+    ],
+    "effect_modifiers": [
+     {
+      "type": "resistance",
+      "element": "fire",
+      "percent": 75
+     },
+     {
+      "type": "resistance",
+      "element": "water",
+      "percent": -50
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:hoarfrost_giant",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "creature",
+   "name": "Hoarfrost giant",
+   "description": "A rare ice-bearded giant. Short territory and slow pursuit allow a detour; a straight approach invites a crushing rush.",
+   "dependencies": [
+    {
+     "content_id": "snow:ancient_marrow",
+     "version": 1
+    },
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "mountain_denizen"
+   },
+   "payload": {
+    "visual": "hoarfrost_giant",
+    "disposition": "hostile",
+    "stats": {
+     "max_hp": 72,
+     "attack": 13,
+     "defense": 5
+    },
+    "movement": {
+     "biomes": [
+      "snowfield",
+      "taiga"
+     ],
+     "leash": 5,
+     "move_per_10000": 3500
+    },
+    "ai": {
+     "detect_radius": 5,
+     "wander_per_10000": 1800,
+     "flee_radius": 0,
+     "flee_below_percent": 0
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 2,
+     "priority": 30,
+     "ecology_only": true
+    },
+    "traits": [
+     "charger",
+     "thick_coat"
+    ],
+    "elements": [
+     "neutral"
+    ],
+    "loot": {
+     "guaranteed": [
+      {
+       "content_id": "snow:ancient_marrow",
+       "version": 1,
+       "min": 2,
+       "max": 2
+      },
+      {
+       "content_id": "snow:stormglass",
+       "version": 1,
+       "min": 3,
+       "max": 3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:tusk_glaive",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Tusk glaive",
+   "description": "A jagged ivory blade. Physical damage and reliable bleeding; no elemental protection.",
+   "dependencies": [
+    {
+     "content_id": "core:status/bleed",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "weapon",
+     "stats": {
+      "attack": 8
+     },
+     "on_hit": [
+      {
+       "type": "apply_status",
+       "content_id": "core:status/bleed",
+       "version": 1,
+       "chance_percent": 65
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:glass_rod",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Stormglass rod",
+   "description": "Lightning strikes crack shells. Elemental skills gain reach, but cost more Energy.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "weapon",
+     "stats": {
+      "attack": 4
+     },
+     "damage_elements": [
+      "lightning"
+     ],
+     "skill_modifiers": [
+      {
+       "tags": [
+        "elemental"
+       ],
+       "range_add": 2,
+       "cost_percent": 25
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:rimeweave",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Rimeweave coat",
+   "description": "Light protection for an elemental traveller: efficient casting and resistance to ice, vulnerable to flame. Does not stop storm exposure.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "armor",
+     "stats": {
+      "defense": 1,
+      "max_hp": 9
+     },
+     "skill_modifiers": [
+      {
+       "tags": [
+        "elemental"
+       ],
+       "cost_percent": -20
+      }
+     ],
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "ice",
+       "percent": 50
+      },
+      {
+       "type": "resistance",
+       "element": "fire",
+       "percent": -30
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:kiln_maul",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Kiln maul",
+   "description": "Heavy bronze charged with a drake heart. High fire attack; physical techniques cost more Energy.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "weapon",
+     "stats": {
+      "attack": 9
+     },
+     "damage_elements": [
+      "fire"
+     ],
+     "skill_modifiers": [
+      {
+       "tags": [
+        "physical"
+       ],
+       "cost_percent": 40
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:glass_charm",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Fractured glass charm",
+   "description": "Resists lightning but draws the cold. Improves lightning damage.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": false,
+    "stack_limit": 1,
+    "equipment": {
+     "slot": "accessory",
+     "stats": {
+      "max_hp": 1
+     },
+     "effect_modifiers": [
+      {
+       "type": "resistance",
+       "element": "lightning",
+       "percent": 50
+      },
+      {
+       "type": "resistance",
+       "element": "ice",
+       "percent": -25
+      },
+      {
+       "type": "damage",
+       "element": "lightning",
+       "percent": 35
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:marrow_tonic",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Marrow tonic",
+   "description": "Restores 24 HP and Regeneration; rare giant marrow makes two doses.",
+   "dependencies": [],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 20
+   }
+  },
+  {
+   "content_id": "snow:use/marrow_tonic",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item_use",
+   "name": "Drink marrow tonic",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:marrow_tonic",
+     "version": 1
+    },
+    {
+     "content_id": "core:status/regeneration",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item_use"
+   },
+   "payload": {
+    "item": {
+     "content_id": "snow:marrow_tonic",
+     "version": 1
+    },
+    "verb": "Drink",
+    "consume": 1,
+    "effects": [
+     {
+      "type": "heal",
+      "amount": 24
+     },
+     {
+      "type": "apply_status",
+      "content_id": "core:status/regeneration",
+      "version": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:recipe/tusk_glaive",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Tusk glaive",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:ivory_tusk",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "snow:tusk_glaive",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "weapon",
+    "inputs": [
+     {
+      "content_id": "snow:ivory_tusk",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "core:wood",
+      "version": 1,
+      "quantity": 2
+     }
+    ],
+    "output": {
+     "content_id": "snow:tusk_glaive",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/glass_rod",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Stormglass rod",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "snow:glass_rod",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "weapon",
+    "inputs": [
+     {
+      "content_id": "snow:stormglass",
+      "version": 1,
+      "quantity": 3
+     },
+     {
+      "content_id": "core:wood",
+      "version": 1,
+      "quantity": 2
+     }
+    ],
+    "output": {
+     "content_id": "snow:glass_rod",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/rimeweave",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Rimeweave coat",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:frost_linen",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    },
+    {
+     "content_id": "snow:rimeweave",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "armor",
+    "inputs": [
+     {
+      "content_id": "snow:frost_linen",
+      "version": 1,
+      "quantity": 3
+     },
+     {
+      "content_id": "snow:resin",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:rimeweave",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/kiln_maul",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Kiln maul",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:ember_heart",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "core:wood",
+     "version": 1
+    },
+    {
+     "content_id": "snow:kiln_maul",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "weapon",
+    "inputs": [
+     {
+      "content_id": "snow:ember_heart",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 4
+     },
+     {
+      "content_id": "core:wood",
+      "version": 1,
+      "quantity": 2
+     }
+    ],
+    "output": {
+     "content_id": "snow:kiln_maul",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/glass_charm",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Fractured glass charm",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:glass_charm",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "trinket",
+    "inputs": [
+     {
+      "content_id": "snow:stormglass",
+      "version": 1,
+      "quantity": 2
+     },
+     {
+      "content_id": "snow:bronze_scrap",
+      "version": 1,
+      "quantity": 1
+     }
+    ],
+    "output": {
+     "content_id": "snow:glass_charm",
+     "version": 1,
+     "quantity": 1,
+     "quality": "pho_thong"
+    }
+   }
+  },
+  {
+   "content_id": "snow:recipe/marrow_tonic",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "recipe",
+   "name": "Marrow tonic",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:ancient_marrow",
+     "version": 1
+    },
+    {
+     "content_id": "core:herb",
+     "version": 1
+    },
+    {
+     "content_id": "snow:marrow_tonic",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "recipe"
+   },
+   "payload": {
+    "category": "remedy",
+    "inputs": [
+     {
+      "content_id": "snow:ancient_marrow",
+      "version": 1,
+      "quantity": 1
+     },
+     {
+      "content_id": "core:herb",
+      "version": 1,
+      "quantity": 2
+     }
+    ],
+    "output": {
+     "content_id": "snow:marrow_tonic",
+     "version": 1,
+     "quantity": 2
+    }
+   }
+  },
+  {
+   "content_id": "snow:skill/glass_lance",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "skill",
+   "name": "Glass Lance",
+   "description": "A lightning strike that briefly interrupts a creature. Strong against crystal shells.",
+   "dependencies": [],
+   "metadata": {
+    "category": "skill"
+   },
+   "payload": {
+    "type": "active",
+    "tags": [
+     "elemental",
+     "ranged"
+    ],
+    "elements": [
+     "lightning"
+    ],
+    "use": {
+     "cost": {
+      "energy": 5
+     },
+     "cooldown_turns": 5,
+     "target": {
+      "kind": "creature",
+      "range": 6,
+      "line_of_sight": true
+     }
+    },
+    "effects": [
+     {
+      "type": "strike",
+      "attack_percent": 80
+     },
+     {
+      "type": "stun",
+      "turns": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:book/glass_lance",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Glass Lance notes",
+   "description": "A field text teaching Glass Lance.",
+   "dependencies": [
+    {
+     "content_id": "snow:skill/glass_lance",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 10,
+    "skill_book": {
+     "skill": {
+      "content_id": "snow:skill/glass_lance",
+      "version": 1
+     },
+     "consume_on_learn": true
+    }
+   }
+  },
+  {
+   "content_id": "snow:skill/rime_stitch",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "skill",
+   "name": "Rime Stitch",
+   "description": "A cold needle slows a pursuer; damage is secondary to making room.",
+   "dependencies": [
+    {
+     "content_id": "core:status/slow",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "skill"
+   },
+   "payload": {
+    "type": "active",
+    "tags": [
+     "elemental",
+     "ranged"
+    ],
+    "elements": [
+     "ice"
+    ],
+    "use": {
+     "cost": {
+      "energy": 3
+     },
+     "cooldown_turns": 3,
+     "target": {
+      "kind": "creature",
+      "range": 5,
+      "line_of_sight": true
+     }
+    },
+    "effects": [
+     {
+      "type": "strike",
+      "attack_percent": 40
+     },
+     {
+      "type": "apply_status",
+      "content_id": "core:status/slow",
+      "version": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:book/rime_stitch",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Rime Stitch notes",
+   "description": "A field text teaching Rime Stitch.",
+   "dependencies": [
+    {
+     "content_id": "snow:skill/rime_stitch",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 10,
+    "skill_book": {
+     "skill": {
+      "content_id": "snow:skill/rime_stitch",
+      "version": 1
+     },
+     "consume_on_learn": true
+    }
+   }
+  },
+  {
+   "content_id": "snow:skill/kiln_breath",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "skill",
+   "name": "Kiln Breath",
+   "description": "A short-range burst of intense fire. Strong against frozen coats, with a costly close approach.",
+   "dependencies": [
+    {
+     "content_id": "core:status/burn",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "skill"
+   },
+   "payload": {
+    "type": "active",
+    "tags": [
+     "elemental",
+     "ranged"
+    ],
+    "elements": [
+     "fire"
+    ],
+    "use": {
+     "cost": {
+      "energy": 6
+     },
+     "cooldown_turns": 5,
+     "target": {
+      "kind": "creature",
+      "range": 2,
+      "line_of_sight": true
+     }
+    },
+    "effects": [
+     {
+      "type": "strike",
+      "attack_percent": 130
+     },
+     {
+      "type": "apply_status",
+      "content_id": "core:status/burn",
+      "version": 1
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:book/kiln_breath",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "item",
+   "name": "Kiln Breath notes",
+   "description": "A field text teaching Kiln Breath.",
+   "dependencies": [
+    {
+     "content_id": "snow:skill/kiln_breath",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "item"
+   },
+   "payload": {
+    "stackable": true,
+    "stack_limit": 10,
+    "skill_book": {
+     "skill": {
+      "content_id": "snow:skill/kiln_breath",
+      "version": 1
+     },
+     "consume_on_learn": true
+    }
+   }
+  },
+  {
+   "content_id": "snow:loot/rime_lantern_manual",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "loot_extension",
+   "name": "Recovered technique",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:rime_lantern",
+     "version": 1
+    },
+    {
+     "content_id": "snow:book/rime_stitch",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "loot_extension"
+   },
+   "payload": {
+    "source": {
+     "content_id": "snow:rime_lantern",
+     "version": 1
+    },
+    "chance_per_10000": 1800,
+    "table": {
+     "guaranteed": [
+      {
+       "content_id": "snow:book/rime_stitch",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:loot/cinder_acolyte_manual",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "loot_extension",
+   "name": "Recovered technique",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:cinder_acolyte",
+     "version": 1
+    },
+    {
+     "content_id": "snow:book/kiln_breath",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "loot_extension"
+   },
+   "payload": {
+    "source": {
+     "content_id": "snow:cinder_acolyte",
+     "version": 1
+    },
+    "chance_per_10000": 1800,
+    "table": {
+     "guaranteed": [
+      {
+       "content_id": "snow:book/kiln_breath",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:loot/glassback_crawler_manual",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "loot_extension",
+   "name": "Recovered technique",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:glassback_crawler",
+     "version": 1
+    },
+    {
+     "content_id": "snow:book/glass_lance",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "loot_extension"
+   },
+   "payload": {
+    "source": {
+     "content_id": "snow:glassback_crawler",
+     "version": 1
+    },
+    "chance_per_10000": 1200,
+    "table": {
+     "guaranteed": [
+      {
+       "content_id": "snow:book/glass_lance",
+       "version": 1,
+       "min": 1,
+       "max": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:event/manual_martial",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Carrier field lessons",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:book/stone_throw",
+     "version": 1
+    },
+    {
+     "content_id": "core:book/swift_step",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "A scratched carrier note: distance first, then a clear route home. These pages teach a stone cast and a swift retreat.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:book/stone_throw",
+        "version": 1,
+        "quantity": 1
+       },
+       {
+        "content_id": "core:book/swift_step",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 6
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/manual_elemental",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Weather-reader lessons",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:book/ember",
+     "version": 1
+    },
+    {
+     "content_id": "core:book/thunder_bind",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "The weather readers kept these two leaflets dry: fire for frozen cloth, lightning for fractured shells.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:book/ember",
+        "version": 1,
+        "quantity": 1
+       },
+       {
+        "content_id": "core:book/thunder_bind",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 6
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/field_satchel",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Field satchel",
+   "description": "A dry satchel holds two bundles of lessons. Taking one leaves the other sealed for the next traveller.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/manual_martial",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/manual_elemental",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "ruin"
+   },
+   "payload": {
+    "category": "ruin",
+    "visual": "relay_locker",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "martial",
+      "verb": "Take the trail-fighter bundle",
+      "event": {
+       "content_id": "snow:event/manual_martial",
+       "version": 1
+      },
+      "exclusive": true
+     },
+     {
+      "id": "elemental",
+      "verb": "Take the weather-reader bundle",
+      "event": {
+       "content_id": "snow:event/manual_elemental",
+       "version": 1
+      },
+      "exclusive": true
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/hunters_camp",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Hunter trail notes",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "core:book/power_strike",
+     "version": 1
+    },
+    {
+     "content_id": "core:hide",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bark_ration",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "Tuskbacks leave travellers alone until struck. Their straight rush punishes a head-on approach. The hunters left a heavy-strike manual and usable hides.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "core:book/power_strike",
+        "version": 1,
+        "quantity": 1
+       },
+       {
+        "content_id": "core:hide",
+        "version": 1,
+        "quantity": 2
+       },
+       {
+        "content_id": "snow:bark_ration",
+        "version": 1,
+        "quantity": 2
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 10
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/hunters_camp",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Abandoned hunters camp",
+   "description": "A rack of hides and a low lean-to beside old tusk marks.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/hunters_camp",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "ruin"
+   },
+   "payload": {
+    "category": "ruin",
+    "visual": "lee_shelter",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "search",
+      "verb": "Read the hunter notes",
+      "event": {
+       "content_id": "snow:event/hunters_camp",
+       "version": 1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/glass_inspect",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "A fractured offering bowl",
+   "description": "",
+   "dependencies": [],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "Fine quartz has been pressed into old lightning scars. The bowl smells of rain that never fell here.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 5
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/glass_offer",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The answering glass",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:book/glass_lance",
+     "version": 1
+    },
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "The shard answers the scar. The buried cylinder holds a lightning technique, written as a warning rather than a prayer.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:book/glass_lance",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 24
+     }
+    ],
+    "cost": {
+     "items": [
+      {
+       "content_id": "snow:stormglass",
+       "version": 1,
+       "quantity": 1
+      }
+     ]
+    }
+   }
+  },
+  {
+   "content_id": "snow:place/glass_bowl",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Fractured offering bowl",
+   "description": "A low stone bowl veined with quartz.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/glass_inspect",
+     "version": 1
+    },
+    {
+     "content_id": "snow:event/glass_offer",
+     "version": 1
+    },
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "ruin"
+   },
+   "payload": {
+    "category": "ruin",
+    "visual": "cairn",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "inspect",
+      "verb": "Examine the weathered bowl",
+      "event": {
+       "content_id": "snow:event/glass_inspect",
+       "version": 1
+      }
+     },
+     {
+      "id": "offer",
+      "verb": "Set stormglass into the scar",
+      "event": {
+       "content_id": "snow:event/glass_offer",
+       "version": 1
+      },
+      "after": "inspect",
+      "reveal_conditions": [
+       {
+        "type": "item",
+        "content_id": "snow:stormglass",
+        "version": 1,
+        "quantity": 1
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/kiln_notes",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The abandoned kiln",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:book/kiln_breath",
+     "version": 1
+    },
+    {
+     "content_id": "snow:resin",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "Resin crust and glass splinters surround a cold crucible. A scorched note describes the kiln-keepers' short, dangerous fire technique.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:book/kiln_breath",
+        "version": 1,
+        "quantity": 1
+       },
+       {
+        "content_id": "snow:resin",
+        "version": 1,
+        "quantity": 2
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 15
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/old_kiln",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Cold kiln",
+   "description": "Bronze fragments lie around a stone crucible; approach with care.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/kiln_notes",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "ruin"
+   },
+   "payload": {
+    "category": "ruin",
+    "visual": "ruin",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "read",
+      "verb": "Read the scorched kiln notes",
+      "event": {
+       "content_id": "snow:event/kiln_notes",
+       "version": 1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/choir_notes",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The wind stitch",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:book/rime_stitch",
+     "version": 1
+    },
+    {
+     "content_id": "snow:frost_linen",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "The cloth was sewn around a sequence of cold syllables. The technique slows a threat; it does not make a traveller immune to winter.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "grant_items",
+      "items": [
+       {
+        "content_id": "snow:book/rime_stitch",
+        "version": 1,
+        "quantity": 1
+       },
+       {
+        "content_id": "snow:frost_linen",
+        "version": 1,
+        "quantity": 2
+       }
+      ]
+     },
+     {
+      "type": "xp",
+      "amount": 18
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/wind_loom",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Wind loom",
+   "description": "Tattered blue cloth stretches between two old carriers' poles.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/choir_notes",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "ruin"
+   },
+   "payload": {
+    "category": "ruin",
+    "visual": "fallen_pine",
+    "discovery": {
+     "mode": "visible",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "read",
+      "verb": "Read the stitched syllables",
+      "event": {
+       "content_id": "snow:event/choir_notes",
+       "version": 1
+      }
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:event/drift_cache",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "A deeply buried carrier cache",
+   "description": "",
+   "dependencies": [
+    {
+     "content_id": "snow:ancient_marrow",
+     "version": 1
+    },
+    {
+     "content_id": "snow:stormglass",
+     "version": 1
+    },
+    {
+     "content_id": "snow:bronze_scrap",
+     "version": 1
+    },
+    {
+     "content_id": "snow:pine_salve",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "category": "world_event"
+   },
+   "payload": {
+    "message": "An old travelling box lies beneath the drift.",
+    "tone": "neutral",
+    "outcomes": [
+     {
+      "type": "xp",
+      "amount": 12
+     },
+     {
+      "type": "chance",
+      "chance_per_10000": 1800,
+      "outcomes": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "snow:ancient_marrow",
+          "version": 1,
+          "quantity": 1
+         },
+         {
+          "content_id": "snow:stormglass",
+          "version": 1,
+          "quantity": 3
+         }
+        ]
+       }
+      ],
+      "otherwise": [
+       {
+        "type": "grant_items",
+        "items": [
+         {
+          "content_id": "snow:bronze_scrap",
+          "version": 1,
+          "quantity": 3
+         },
+         {
+          "content_id": "snow:pine_salve",
+          "version": 1,
+          "quantity": 1
+         }
+        ]
+       }
+      ],
+      "message": "A sealed tonic ingredient and unclouded glass have survived.",
+      "otherwise_message": "Useful fittings and one carefully wrapped salve remain."
+     }
+    ]
+   }
+  },
+  {
+   "content_id": "snow:place/drift_cache",
+   "version": 1,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Carrier drift",
+   "description": "A low drift gathers against a line of half-buried stones.",
+   "dependencies": [
+    {
+     "content_id": "snow:event/drift_cache",
+     "version": 1
+    }
+   ],
+   "metadata": {
+    "site_only": true,
+    "category": "ruin"
+   },
+   "payload": {
+    "category": "ruin",
+    "visual": "cairn",
+    "discovery": {
+     "mode": "search",
+     "radius": 3
+    },
+    "spawn": {
+     "biomes": [
+      "snowfield"
+     ],
+     "per_10000": 1
+    },
+    "interactions": [
+     {
+      "id": "search",
+      "verb": "Open the buried travelling box",
+      "event": {
+       "content_id": "snow:event/drift_cache",
+       "version": 1
+      }
+     }
+    ]
+   }
+  }
+ ]
+}
