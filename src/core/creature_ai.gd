@@ -6,7 +6,9 @@ const DIRECTIONS := [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
 const WANDER_RADIUS := 4
 
 ## context: {player: Vector2i, sees_player: bool, roll: int 0..9999, direction: int 0..3,
-##           move_roll: int 0..9999, can_enter: Callable(Vector2i) -> bool}
+##           move_roll: int 0..9999, can_enter: Callable(Vector2i) -> bool,
+##           afraid: player wields an element this creature fears (trait),
+##           alerted: a kin's call put it on the hunt, charge: {min, max} when ready}
 static func decide(creature: Dictionary, definition: Dictionary, context: Dictionary) -> Dictionary:
 	var decision := _choose(creature, definition, context)
 	# Movement speed: a chosen step only happens on move_per_10000 of turns.
@@ -23,8 +25,16 @@ static func _choose(creature: Dictionary, definition: Dictionary, context: Dicti
 	var disposition: String = payload.disposition
 	var aggressive: bool = disposition == "hostile" or (disposition == "neutral" and creature.provoked)
 	var wounded: bool = int(ai.get("flee_below_percent", 0)) > 0 and int(creature.hp) * 100 < int(ai.flee_below_percent) * int(payload.stats.max_hp)
-	var spotted: bool = context.sees_player and distance <= int(ai.detect_radius)
+	var spotted: bool = (context.sees_player and distance <= int(ai.detect_radius)) or (aggressive and context.get("alerted", false))
 	var scared: bool = disposition == "passive" and (creature.provoked or distance <= int(ai.get("flee_radius", 0)))
+	if spotted and aggressive and context.get("afraid", false):
+		# Fear of a wielded element: keep two tiles away and watch; bite only when cornered.
+		if distance >= 3:
+			return {"type": "wait", "state": "wary"}
+		var back := _step(position, context.can_enter, func(tile: Vector2i) -> int: return -_distance(tile, player))
+		if back != position:
+			return {"type": "move", "to": back, "state": "wary"}
+		return {"type": "attack", "state": "attack"} if distance == 1 else {"type": "wait", "state": "wary"}
 	if spotted and (scared or (aggressive and wounded)):
 		var away := _step(position, context.can_enter, func(tile: Vector2i) -> int: return -_distance(tile, player))
 		if away != position:
@@ -35,6 +45,15 @@ static func _choose(creature: Dictionary, definition: Dictionary, context: Dicti
 	if spotted and aggressive:
 		if distance == 1:
 			return {"type": "attack", "state": "attack"}
+		var charge: Dictionary = context.get("charge", {})
+		if not charge.is_empty() and distance >= int(charge.min) and distance <= int(charge.max) and (position.x == player.x or position.y == player.y):
+			# Straight rush to the tile beside the player; every tile on the way must be open.
+			var step := Vector2i(signi(player.x - position.x), signi(player.y - position.y))
+			var open := true
+			for i in range(1, distance):
+				open = open and context.can_enter.call(position + step * i)
+			if open:
+				return {"type": "charge", "to": player - step, "state": "charge"}
 		var toward := _step(position, context.can_enter, func(tile: Vector2i) -> int: return _distance(tile, player))
 		return {"type": "move", "to": toward, "state": "chase"} if toward != position else {"type": "wait", "state": "chase"}
 	var home: Vector2i = creature.home

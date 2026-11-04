@@ -1,6 +1,7 @@
 extends RefCounted
 ## Session passed explicitly: no ownership cycle. All state belongs to one Run.
 const Effects = preload("res://src/core/effects.gd")
+const Traits = preload("res://src/core/creature_traits.gd")
 
 func actor(session: RefCounted, id: String) -> Dictionary:
 	if id == "player":
@@ -10,7 +11,7 @@ func actor(session: RefCounted, id: String) -> Dictionary:
 		return view
 	var creature: Dictionary = session.roster.creatures.get(id, {})
 	if creature.is_empty(): return {}
-	return {"hp": creature.hp, "max_hp": creature.max_hp, "statuses": creature.get("statuses", []), "modifiers": creature.definition.payload.get("effect_modifiers", [])}
+	return {"hp": creature.hp, "max_hp": creature.max_hp, "statuses": creature.get("statuses", []), "modifiers": creature.definition.payload.get("effect_modifiers", []) + Traits.of(creature.definition).effect_modifiers}
 
 func modifiers(session: RefCounted) -> Array:
 	var result: Array = []

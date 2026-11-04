@@ -13,6 +13,7 @@ const Objects = preload("res://src/world/world_objects.gd")
 const Creatures = preload("res://src/world/world_creatures.gd")
 const Chunks = preload("res://src/world/chunk_cache.gd")
 const Data = preload("res://src/data/json_data.gd")
+const WorldRulesScript = preload("res://src/core/world_rules.gd")
 const LAYOUT := "landpkg:snow_mountain/layout"
 var checks := 0
 var failures := 0
@@ -338,6 +339,25 @@ func _world_rules(world: Dictionary, plan: Dictionary) -> void:
 	fresh.run.state.inventory["snow:resin"] = {"version": 1, "quantity": 1}
 	fresh.run.state.inventory["core:wood"] = {"version": 1, "quantity": 1}
 	check(_act(fresh, medicine, "heat") and _count(fresh, "core:herb") == 3, "The second object also supports heat, preserving three herbs instead of one")
+	# Chemistry v1: heat is the element, not the fuel. A carried flame thaws the same ice.
+	var flame := _session(world, plan, 733)
+	if check(flame != null, "Start a Run for carried-flame thawing"):
+		var kit: Dictionary = preload("res://src/core/inventory.gd").new().award(store.content, flame.world.world_id, flame.run.state.inventory, [{"content_id": "core:tallow_torch", "version": 1, "quantity": 1}, {"content_id": "core:book/ember", "version": 1, "quantity": 1}], "test:flame-kit")
+		flame.run.state.inventory = kit.inventory
+		check(_equip(flame, "core:tallow_torch"), "Equip a crafted tallow torch")
+		_go(flame, supplies)
+		var props: Dictionary = flame.locations.definition_for(supplies).payload.world_properties
+		check(WorldRulesScript.heat_sources(flame, props).any(func(source: Dictionary) -> bool: return source.id == "flame"), "A fire weapon is offered as a heat source")
+		check(flame.perform_action({"type": "interact", "instance_id": supplies.instance_id, "interaction": "heat", "heat_source": "flame"}) and _count(flame, "snow:bark_ration") == 3 and _count(flame, "snow:resin") == 0, "The torch thaws the supplies with no fuel and keeps all three rations")
+		check(flame.places.record(flame, supplies.instance_id).world_state == "thawed" and flame.run.state.character.knowledge.has("rules:ice_heat_flame_v1"), "Thawed state and the carried-flame Knowledge are recorded")
+		check(flame.perform_action({"type": "learn", "content_id": "core:book/ember"}), "Learn the Ember fire skill")
+		check(flame.perform_action({"type": "unequip", "slot": "weapon"}), "Put the torch away")
+		_go(flame, medicine)
+		flame.run.state.character.resources.energy.value = 0
+		var before_skill: Dictionary = flame.run.state.duplicate(true)
+		check(not flame.perform_action({"type": "interact", "instance_id": medicine.instance_id, "interaction": "heat", "heat_source": "skill"}) and flame.last_error.contains("Energy") and preload("res://src/acceptance/standalone_check.gd").same(flame.run.state, before_skill), "A fire skill without Energy is refused and changes nothing")
+		flame.run.state.character.resources.energy.value = 10
+		check(flame.perform_action({"type": "interact", "instance_id": medicine.instance_id, "interaction": "heat", "heat_source": "skill"}) and _count(flame, "core:herb") == 3 and int(flame.run.state.character.resources.energy.value) < 10, "Ember thaws the medicine case for its Energy cost, keeping all herbs")
 	var missing: Array = []
 	var problem: String = preload("res://src/core/world_rules.gd").validate({"version": 99, "material": "ordinary_ice", "fracture_attack": 8, "thaw_fuel": [{"content_id": "core:wood", "version": 1, "quantity": 1}]}, missing)
 	check(problem.is_empty() and not missing.is_empty(), "Unknown rule version remains unsupported rather than running")

@@ -1178,7 +1178,7 @@ func _interact_action(action: Dictionary) -> bool:
 	if not action.get("instance_id") is String:
 		return _fail("Interaction requires a stable object ID")
 	if action.instance_id.begins_with("loc:"):
-		var place: Dictionary = places.interact(self, action.instance_id, str(action.get("interaction", "")))
+		var place: Dictionary = places.interact(self, action.instance_id, str(action.get("interaction", "")), str(action.get("heat_source", "")))
 		if place.is_empty():
 			return false
 		last_result = place

@@ -14,6 +14,8 @@ const Realtime = preload("res://src/run/realtime_controller.gd")
 const Structured = preload("res://src/world/structured_world.gd")
 const Atlas = preload("res://src/world/world_atlas.gd")
 const Hud = preload("res://src/ui/hud.gd")
+const WorldRules = preload("res://src/core/world_rules.gd")
+const CreatureTraits = preload("res://src/core/creature_traits.gd")
 const DEFAULT_DATABASE := "user://realms.sqlite"
 const MOVE_KEYS := {"explore_up": [KEY_W, KEY_UP], "explore_right": [KEY_D, KEY_RIGHT], "explore_down": [KEY_S, KEY_DOWN], "explore_left": [KEY_A, KEY_LEFT]}
 const MOVE_DIRECTIONS := {"explore_up": Vector2i.UP, "explore_right": Vector2i.RIGHT, "explore_down": Vector2i.DOWN, "explore_left": Vector2i.LEFT}
@@ -514,14 +516,27 @@ func _show_interactions() -> bool:
 		var definition: Dictionary = session.locations.definition_for(instance)
 		var event: Dictionary = session.locations.event(choice.event)
 		var details: Array = session.places.unmet(session, event.payload.get("conditions", []))
-		if choice.has("world_method"):
-			var threshold := int(definition.payload.world_properties.fracture_attack)
-			if choice.world_method == "force":
-				details.append("Attack %d+ (current %d); 2 HP; two thirds of fragile contents lost" % [threshold, int(session.combat_stats().attack)])
-			else:
-				details.append("Contents preserved")
-				for fuel in definition.payload.world_properties.thaw_fuel:
-					details.append("%s x%d" % [session._definition(fuel.content_id, int(fuel.version)).get("name", fuel.content_id), int(fuel.quantity)])
+		if choice.get("world_method") == "heat":
+			# One choice per heat source the player has: fuel, a fire weapon, a fire skill.
+			for source in WorldRules.heat_sources(session, definition.payload.world_properties):
+				var source_id: String = source.id
+				var verb: String = choice.get("verb", "Thaw")
+				var text: String = ("%s: %s (%s)" % [definition.name, verb, source.label]) if source.id == "fuel" else ("%s: %s %s" % [definition.name, verb.get_slice(" ", 0), source.label])
+				var heat := _button(_discovery_column, text, func() -> void:
+					_close_discovery_panel()
+					_after_action(session.perform_action({"type": "interact", "instance_id": instance.instance_id, "interaction": choice.id, "heat_source": source_id})))
+				if first == null: first = heat
+				var costs := PackedStringArray(["Contents preserved"])
+				if int(source.energy) > 0:
+					costs.append("%d Energy (have %d)" % [int(source.energy), session.skills.resource(session, "energy")])
+				elif source.items.is_empty():
+					costs.append("no fuel needed")
+				else:
+					costs.append("uses the fuel above")
+				_label(_discovery_column, "; ".join(details + Array(costs)), 16).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			continue
+		if choice.get("world_method") == "force":
+			details.append("Attack %d+ (current %d); 2 HP; two thirds of fragile contents lost" % [int(definition.payload.world_properties.fracture_attack), int(session.combat_stats().attack)])
 		for item in event.payload.get("cost", {}).get("items", []):
 			details.append("%s x%d" % [session._definition(item.content_id, int(item.version)).get("name", item.content_id), int(item.get("quantity", 1))])
 		var button := _button(_discovery_column, "%s: %s" % [definition.name, choice.get("verb", "Explore")], func() -> void:
@@ -1734,6 +1749,9 @@ func _update_info() -> void:
 		var count: int = session.roster.targets(session).size()
 		var foe_stats: Dictionary = session.roster.creature_stats(session, foe)
 		var text := "%s  ·  %s, %s\nHP %d/%d   ATK %d  DEF %d   F: attack%s" % [foe.definition.name, foe.definition.payload.disposition, foe.state, foe.hp, foe.max_hp, foe_stats.attack, foe_stats.defense, "  Tab: next (%d)" % count if count > 1 else ""]
+		var traits: Array = CreatureTraits.of(foe.definition).names
+		if not traits.is_empty():
+			text += "\n" + ", ".join(traits)
 		var effects: String = session.statuses.describe(session, foe.get("statuses", []))
 		_hud.show_target(text + ("" if effects.is_empty() else "\n" + effects), str(foe.definition.payload.disposition), int(foe.hp), int(foe.max_hp))
 	var target: Dictionary = session.interaction_target()
@@ -1882,6 +1900,10 @@ func describe_events(events: Array) -> String:
 				parts.append("%s%s%s." % [event.name, " → " + event.target if not str(event.target).is_empty() else "", ": " + event.summary if not str(event.summary).is_empty() else ""])
 			"learn":
 				parts.append("Learned %s!%s" % [event.name, " The book is used up." if event.consumed else " The book remains."])
+			"charge":
+				parts.append("%s charges!" % event.name)
+			"call_allies":
+				parts.append(("%s howls — %d more answer the call!" % [event.name, int(event.answered)]) if int(event.answered) > 0 else "%s howls." % event.name)
 			"craft":
 				var made := PackedStringArray()
 				for item in event.get("display_received", event.received):

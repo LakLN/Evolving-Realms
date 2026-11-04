@@ -60,8 +60,16 @@ func update(session: RefCounted, now_ms: int) -> Array:
 		timer.seq = int(timer.seq) + 1
 		var key := "rt-ai-v1/%d/%d/%s/%d" % [int(session.world.seed), int(session.run.seed), id, int(timer.seq)]
 		var decision: Dictionary = session.roster.decide(session, creature, key, 0)
-		creature.state = decision.state
-		if decision.type == "move":
+		events.append_array(session.roster.after_decision(session, creature, decision))
+		if decision.type == "charge":
+			# A rush is one fast dash; the following wind-up lands the heavy blow.
+			var dash: Array = session.roster.charge(session, creature, decision.to)
+			events.append_array(dash)
+			if not dash.is_empty():
+				creature.step_ms = step_ms(creature, "chase") / 2
+				moved = true
+			timer.next_ms = now_ms + int(rules.think_ms)
+		elif decision.type == "move":
 			if session.roster.move_creature(session, creature, decision.to):
 				var step := step_ms(creature, decision.state) * slow
 				creature.step_ms = step # Read by the map view to tween exactly one step.

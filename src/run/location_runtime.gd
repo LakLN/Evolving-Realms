@@ -174,7 +174,7 @@ func next_interaction(session: RefCounted, instance: Dictionary, wanted: String 
 			return interaction
 	return {}
 
-func interact(session: RefCounted, instance_id: String, wanted: String = "") -> Dictionary:
+func interact(session: RefCounted, instance_id: String, wanted: String = "", heat_source: String = "") -> Dictionary:
 	## The E action on a place. {} plus session.last_error = refused (nothing changes).
 	var instance: Dictionary = layer.find(instance_id)
 	if instance.is_empty():
@@ -186,22 +186,25 @@ func interact(session: RefCounted, instance_id: String, wanted: String = "") -> 
 	var definition: Dictionary = layer.definition_for(instance)
 	if interaction.is_empty():
 		return _refuse(session, "%s holds nothing more for you (%s) — no turn spent" % [definition.name, state(session, instance)])
-	var outcome := resolve(session, instance, interaction)
+	var outcome := resolve(session, instance, interaction, heat_source)
 	if outcome.has("error"):
 		Telemetry.record(session, {"type": "interaction", "target": instance_id, "method": interaction.get("world_method", interaction.id), "outcome": "refused", "reason": outcome.error})
 		return _refuse(session, outcome.error + " — no turn spent")
 	return {"type": "interact", "place": true, "name": definition.name, "received": outcome.received, "events": outcome.events}
 
-func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary) -> Dictionary:
+func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary, heat_source: String = "") -> Dictionary:
 	## Plan conditions, cost, awards and vital changes; commit only if all succeed.
 	var event: Dictionary = layer.event(interaction.event)
 	var definition: Dictionary = layer.definition_for(instance)
 	var p: Dictionary = event.payload
 	var method := str(interaction.get("world_method", ""))
+	var heat: Dictionary = {}
 	if not method.is_empty():
-		var requirement := WorldRules.requirement(session, definition.payload.world_properties, method)
+		if method == "heat":
+			heat = WorldRules.heat_source(session, definition.payload.world_properties, heat_source)
+		var requirement := WorldRules.requirement(session, definition.payload.world_properties, method, heat)
 		if not requirement.is_empty(): return {"error": requirement}
-		p = WorldRules.response(definition.payload.world_properties, method, p)
+		p = WorldRules.response(definition.payload.world_properties, method, p, heat)
 	var missing := unmet(session, p.get("conditions", []))
 	if not missing.is_empty():
 		return {"error": "%s: requires %s" % [interaction.get("verb", "Explore"), ", ".join(missing)]}
@@ -240,6 +243,9 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 		return {"error": layer.last_error}
 	# Commit: inventory, vitals, the resolution record, then status/XP/resource handlers.
 	session.run.state.inventory = award.inventory
+	if int(heat.get("energy", 0)) > 0:
+		var energy: Dictionary = session.run.state.character.resources.energy
+		energy.value = session.skills.resource(session, "energy") - int(heat.energy)
 	for stat in trial:
 		session.stats()[stat] = trial[stat]
 	var mutation := record(session, instance.instance_id)
@@ -253,11 +259,11 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary)
 	if not method.is_empty():
 		mutation.world_state = "thawed" if method == "heat" else "shattered"
 		mutation.world_rule_version = 1
-		var fact := WorldRules.knowledge(method)
+		var fact := WorldRules.knowledge(method, str(heat.get("id", "fuel")))
 		if Knowledge.unlock(session, fact):
 			events.append({"type": "knowledge", "name": fact.title})
 			Telemetry.record(session, {"type": "knowledge_unlock", "knowledge_id": fact.id})
-	Telemetry.record(session, {"type": "interaction", "target": instance.instance_id, "definition": definition.content_id, "definition_version": int(definition.version), "method": method if not method.is_empty() else interaction.id, "outcome": "success", "state": mutation.get("world_state", "resolved"), "received": award.received, "damage": damage})
+	Telemetry.record(session, {"type": "interaction", "target": instance.instance_id, "definition": definition.content_id, "definition_version": int(definition.version), "method": (method + (":" + str(heat.id) if not heat.is_empty() and heat.id != "fuel" else "")) if not method.is_empty() else interaction.id, "outcome": "success", "state": mutation.get("world_state", "resolved"), "received": award.received, "damage": damage})
 	var source := {"content_id": event.content_id, "version": int(event.version), "actor": "player"}
 	for outcome in outcomes:
 		match outcome.type:

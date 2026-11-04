@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "_note": "Composable creature traits (Caves of Qud-style parts): each trait is data for a generic engine handler in src/core/creature_traits.gd / creature_ai.gd / creature_roster.gd. New creatures list trait ids in payload.traits; established v1 creature definitions are never edited, so they receive traits through `assign` here.",
+  "traits": {
+    "fears_fire": {"name": "Fears fire", "description": "Keeps its distance from anyone wielding fire; fights only when cornered.",
+      "fears_elements": ["fire"]},
+    "thick_coat": {"name": "Thick coat", "description": "Cold barely touches it; fire bites deep.",
+      "effect_modifiers": [{"type": "resistance", "element": "ice", "percent": 50}, {"type": "resistance", "element": "fire", "percent": -50}]},
+    "hard_shell": {"name": "Hard shell", "description": "Blades and blunt blows glance off; lightning cracks it.",
+      "effect_modifiers": [{"type": "resistance", "element": "neutral", "percent": 25}, {"type": "resistance", "element": "lightning", "percent": -50}]},
+    "pack_caller": {"name": "Pack caller", "description": "Howls when it finds prey; kin nearby join the hunt.",
+      "call_allies": {"radius": 8, "alert_turns": 12}},
+    "charger": {"name": "Charger", "description": "Rushes in a straight line from 2-3 tiles for a heavy blow, then needs time to gather itself.",
+      "charge": {"min": 2, "max": 3, "attack_percent": 160, "cooldown_turns": 6}}
+  },
+  "assign": {
+    "core:wolf": ["fears_fire", "pack_caller"],
+    "core:boar": ["charger"],
+    "core:shore_crab": ["hard_shell"],
+    "snow:scree_wolf": ["fears_fire", "thick_coat"],
+    "snow:bellback_sentinel": ["charger", "thick_coat"]
+  }
+}

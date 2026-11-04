@@ -8,6 +8,7 @@ const Terrain = preload("res://src/world/terrain_v1.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 const AI = preload("res://src/core/creature_ai.gd")
+const Traits = preload("res://src/core/creature_traits.gd")
 const Combat = preload("res://src/core/combat.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Inventory = preload("res://src/core/inventory.gd")
@@ -156,12 +157,45 @@ func take_turn(session: RefCounted) -> Array:
 			continue # Stunned (skill): no decision this turn.
 		var key := "ai-v1/%d/%d/%s/%d" % [session.world.seed, session.run.seed, id, int(session.run.state.turn)]
 		var decision := decide(session, creature, key)
-		creature.state = decision.state
+		events.append_array(after_decision(session, creature, decision))
 		if decision.type == "move":
 			move_creature(session, creature, decision.to)
+		elif decision.type == "charge":
+			events.append_array(charge(session, creature, decision.to))
+			if _distance(creature.position, session.position) == 1:
+				events.append_array(creature_strike(session, creature, key + "/attack"))
 		elif decision.type == "attack" and _distance(creature.position, session.position) == 1:
 			events.append_array(creature_strike(session, creature, key + "/attack"))
 	return events
+
+func after_decision(session: RefCounted, creature: Dictionary, decision: Dictionary) -> Array:
+	## Shared by both time models: record the state; a pack caller that starts hunting
+	## alerts its kin within radius (they hunt even out of their own sight).
+	var before: String = creature.state
+	creature.state = decision.state
+	var call: Dictionary = Traits.of(creature.definition).call_allies
+	if call.is_empty() or decision.state not in ["chase", "attack", "charge"] or before in ["chase", "attack", "charge", "wary"]:
+		return []
+	var answered := 0
+	for other in creatures.values():
+		if other.dead or other.instance_id == creature.instance_id or other.content_id != creature.content_id or _distance(other.position, creature.position) > int(call.radius):
+			continue
+		if not _ensure_materialized(other):
+			continue
+		other.alerted_until = int(session.run.state.turn) + int(call.alert_turns)
+		_commit(session, other)
+		answered += 1
+	return [{"type": "call_allies", "attacker": creature.instance_id, "name": creature.definition.name, "answered": answered, "position": _point(creature.position)}]
+
+func charge(session: RefCounted, creature: Dictionary, to: Vector2i) -> Array:
+	## Rush to the tile beside the player; the next blow uses the trait's attack_percent.
+	var traits := Traits.of(creature.definition)
+	if not move_creature(session, creature, to):
+		return []
+	creature.charged = true
+	creature.charge_ready = int(session.run.state.turn) + int(traits.charge.cooldown_turns)
+	_commit(session, creature)
+	return [{"type": "charge", "attacker": creature.instance_id, "name": creature.definition.name, "position": _point(creature.position)}]
 
 func decide(session: RefCounted, creature: Dictionary, key: String, move_roll: int = -1) -> Dictionary:
 	## One AI decision (shared by the turn model and real time). move_roll -1 draws the
@@ -174,6 +208,12 @@ func decide(session: RefCounted, creature: Dictionary, key: String, move_roll: i
 		"roll": Loot.number(key) % 10000, "direction": Loot.number(key + "/dir") % 4, "move_roll": Loot.number(key + "/move") % 10000 if move_roll < 0 else move_roll,
 		"can_enter": func(tile: Vector2i) -> bool: return _can_enter(session, creature, tile),
 	}
+	var traits := Traits.of(creature.definition)
+	var wielded: Array = session._equipped("weapon").get("payload", {}).get("equipment", {}).get("damage_elements", [])
+	context.afraid = traits.fears.any(func(element: String) -> bool: return element in wielded)
+	context.alerted = int(creature.get("alerted_until", 0)) > int(session.run.state.turn)
+	if not traits.charge.is_empty() and int(creature.get("charge_ready", 0)) <= int(session.run.state.turn):
+		context.charge = traits.charge
 	return AI.decide(creature, creature.definition, context)
 
 func move_creature(session: RefCounted, creature: Dictionary, to: Vector2i) -> bool:
@@ -188,7 +228,11 @@ func creature_strike(session: RefCounted, creature: Dictionary, key: String) -> 
 	var id: String = creature.instance_id
 	var player: Dictionary = session.combat_stats() # Effective defense from gear/growth.
 	var events: Array = []
-	var result := Combat.resolve(creature_stats(session, creature), player, key)
+	var attacker := creature_stats(session, creature)
+	if creature.get("charged", false):
+		attacker.attack = int(attacker.attack) * int(Traits.of(creature.definition).charge.get("attack_percent", 100)) / 100
+		creature.charged = false
+	var result := Combat.resolve(attacker, player, key)
 	result.damage = Effects.damage(int(result.damage), creature.definition.payload.get("elements", ["neutral"]), session.statuses.actor(session, id), session.statuses.actor(session, "player"))
 	result.hp = maxi(0, int(player.hp) - int(result.damage))
 	result.killed = result.hp == 0
@@ -226,7 +270,7 @@ func _runtime(instance: Dictionary) -> Dictionary:
 		return {}
 	var home := Vector2i(int(instance.position.x), int(instance.position.y))
 	var max_hp := int(definition.payload.stats.max_hp)
-	return {"instance_id": instance.instance_id, "content_id": instance.content_id, "version": int(instance.version), "instance": instance, "definition": definition, "home": home, "position": home, "hp": max_hp, "max_hp": max_hp, "dead": false, "provoked": false, "state": "idle", "mutated": false, "loot": [], "received": [], "stunned_until": 0, "statuses": []}
+	return {"instance_id": instance.instance_id, "content_id": instance.content_id, "version": int(instance.version), "instance": instance, "definition": definition, "home": home, "position": home, "hp": max_hp, "max_hp": max_hp, "dead": false, "provoked": false, "state": "idle", "mutated": false, "loot": [], "received": [], "stunned_until": 0, "statuses": [], "charge_ready": 0, "alerted_until": 0, "charged": false}
 
 func _apply(creature: Dictionary, mutation: Dictionary) -> bool:
 	if not Data.integer(mutation.get("hp")) or mutation.hp < 0 or mutation.hp > creature.max_hp or not Data.position(mutation.get("position")) or not mutation.get("dead") is bool or not mutation.get("provoked", false) is bool:
@@ -239,6 +283,9 @@ func _apply(creature: Dictionary, mutation: Dictionary) -> bool:
 	creature.loot = mutation.get("loot", [])
 	creature.received = mutation.get("received", [])
 	creature.stunned_until = int(mutation.get("stunned_until", 0)) if Data.integer(mutation.get("stunned_until", 0)) else 0
+	for timer in ["charge_ready", "alerted_until"]:
+		if not Data.integer(mutation.get(timer, 0)) or int(mutation.get(timer, 0)) < 0: return false
+		creature[timer] = int(mutation.get(timer, 0))
 	var statuses: Variant = mutation.get("statuses", [])
 	if not statuses is Array: return false
 	creature.statuses = statuses.duplicate(true)
@@ -257,6 +304,9 @@ func _commit(session: RefCounted, creature: Dictionary) -> void:
 		session.run.state.entity_mutations[creature.instance_id].statuses = creature.statuses.duplicate(true)
 	if int(creature.stunned_until) > 0:
 		session.run.state.entity_mutations[creature.instance_id].stunned_until = int(creature.stunned_until)
+	for timer in ["charge_ready", "alerted_until"]:
+		if int(creature.get(timer, 0)) > 0:
+			session.run.state.entity_mutations[creature.instance_id][timer] = int(creature[timer])
 
 func creature_stats(session: RefCounted, creature: Dictionary) -> Dictionary:
 	return session.character_rules.apply_sources(creature.definition.payload.stats, [session.statuses.stat_modifiers(session, creature.statuses)])

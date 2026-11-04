@@ -57,6 +57,7 @@ try {
     Invoke-EngineCheck -Name 'effect-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/effect_gameplay_suite.gd') -Summary 'M02 CHECKPOINT F GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'ui-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/ui_gameplay_suite.gd') -Summary 'UI GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'build-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/build_gameplay_suite.gd') -Summary 'BUILD GAMEPLAY: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'systems-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/systems_gameplay_suite.gd') -Summary 'SYSTEMS GAMEPLAY: \d+ checks, 0 failures'
     if ($selected.Count -eq 0 -or 'ai-content' -in $selected -or 'ai-world' -in $selected -or 'discoveries' -in $selected) {
         # unittest reports on stderr; under 'Stop' Windows PowerShell 5.1 would throw on it.
         $previous = $ErrorActionPreference
@@ -104,6 +105,7 @@ try {
         Invoke-EngineCheck -Name 'rendered-skills' -EngineArgs @('--script', 'res://tests/skill_gameplay_suite.gd') -Summary 'M02 CHECKPOINT E GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-ui' -EngineArgs @('--script', 'res://tests/ui_gameplay_suite.gd') -Summary 'UI GAMEPLAY: \d+ checks, 0 failures'
         Invoke-EngineCheck -Name 'rendered-build' -EngineArgs @('--script', 'res://tests/build_gameplay_suite.gd') -Summary 'BUILD GAMEPLAY: \d+ checks, 0 failures'
+        Invoke-EngineCheck -Name 'rendered-systems' -EngineArgs @('--script', 'res://tests/systems_gameplay_suite.gd') -Summary 'SYSTEMS GAMEPLAY: \d+ checks, 0 failures'
     }
     if ($Export) {
         # Rebuild builds/windows and run the acceptance on the exported release exe.
