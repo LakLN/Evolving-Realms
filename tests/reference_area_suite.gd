@@ -41,7 +41,7 @@ func _run() -> void:
 	var s: RefCounted = next.session
 	var plan: Dictionary = next.plan
 	var origin := Vector2i(int(plan.spatial.origin.x),int(plan.spatial.origin.y))
-	check(int(plan.terrain_version)==3 and int(plan.atlas_version)==3 and int(plan.layout.version)==8, "Reference has explicit new terrain/plan/layout versions")
+	check(int(plan.terrain_version)==3 and int(plan.atlas_version)==3 and int(plan.layout.version)==9, "Reference has explicit new terrain/plan/layout versions")
 	check(old_plan.get("spatial",{}).is_empty() and old_session.terrain.elevation(anchor)==0, "Older world retains flat geometry")
 	app._enter_map(s)
 	_go(s, origin+Vector2i(15,22))

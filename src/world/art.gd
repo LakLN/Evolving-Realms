@@ -30,6 +30,10 @@ const SNOW_P0_PROP_SOURCE := 21
 const SNOW_P0_INDEX := "res://assets/game/snow/snow_p0_index.json"
 const SNOW_ECONOMY_INDEX := "res://assets/game/snow/snow_economy_index.json"
 const SNOW_FAUNA_INDEX := "res://assets/game/snow/snow_fauna_index.json"
+## Snow terrain T1 (tools/art/build_snow_terrain.py): regional ground in the composed-area palette.
+const SNOW_TERRAIN_INDEX := "res://assets/game/snow/snow_terrain_index.json"
+const SNOW_TERRAIN_GROUND_SOURCE := 22
+const SNOW_TERRAIN_PROP_SOURCE := 23
 static var _shared: RefCounted
 
 var index: Dictionary = {}
@@ -140,6 +144,7 @@ func _paint_snow(built: TileSet) -> void:
 	approved.merge(_load_snow_index(built, SNOW_P0_INDEX, SNOW_P0_GROUND_SOURCE, SNOW_P0_PROP_SOURCE), true)
 	approved.merge(_load_snow_index(built, SNOW_ECONOMY_INDEX, SNOW_P0_GROUND_SOURCE, SNOW_P0_PROP_SOURCE), true)
 	approved.merge(_load_snow_index(built, SNOW_FAUNA_INDEX, SNOW_P0_GROUND_SOURCE, SNOW_P0_PROP_SOURCE), true)
+	approved.merge(_load_snow_index(built, SNOW_TERRAIN_INDEX, SNOW_TERRAIN_GROUND_SOURCE, SNOW_TERRAIN_PROP_SOURCE), true)
 	for i in SnowArt.EDGES.size():
 		var upper: String = SnowArt.EDGES[i][0]
 		var upper_image: Image = approved.get(upper, SnowArt.paint(upper, 0, px))

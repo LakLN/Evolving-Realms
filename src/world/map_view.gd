@@ -66,6 +66,12 @@ var _has_origin := false
 ## the hero's feet: pulsing red when exposed, steady ice-blue when sheltered.
 var _weather_layer := Node2D.new()
 var _reference := preload("res://src/world/reference_view.gd").new()
+## Snow lands: a world-anchored, tileable brightness field multiplied over the ground
+## and composed areas so neither tile repetition nor patch borders read as a grid.
+var _macro := Node2D.new()
+var _macro_texture: Texture2D
+var _macro_rect := Rect2()
+const MACRO_TEXTURE := "res://assets/game/snow/terrain/macro.png"
 var _weather_time := 0.0
 var _weather_poll := 0.0
 var weather_status: Dictionary = {}
@@ -81,6 +87,14 @@ func _ready() -> void:
 	_reference.view = self
 	_reference.z_index = 1
 	add_child(_reference)
+	_macro.z_index = 1
+	_macro_texture = load(MACRO_TEXTURE) if ResourceLoader.exists(MACRO_TEXTURE) else null
+	_macro.draw.connect(_draw_macro)
+	var multiply := CanvasItemMaterial.new()
+	multiply.blend_mode = CanvasItemMaterial.BLEND_MODE_MUL
+	_macro.material = multiply
+	_macro.visible = false
+	add_child(_macro)
 	_object_layer.z_index = 2 # Above prop canopies so chests/resources are never hidden.
 	_object_layer.draw.connect(_draw_objects)
 	add_child(_object_layer)
@@ -228,6 +242,7 @@ func refresh() -> void:
 		chunk_nodes[chunk].root.position = Vector2(chunk * Terrain.CHUNK_SIZE - _origin) * px
 	if added > 0 and OS.get_cmdline_user_args().has("--profile-streaming"):
 		print("PROFILE presentation chunks=%d ms=%.2f" % [added, (Time.get_ticks_usec() - profile_start) / 1000.0])
+	_update_macro()
 	_update_view()
 	_update_fog()
 	_update_player()
@@ -236,6 +251,23 @@ func refresh() -> void:
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
 	_reference.queue_redraw()
+
+func _draw_macro() -> void:
+	var size := _macro_texture.get_size()
+	for y in int(ceilf(_macro_rect.size.y / size.y)):
+		for x in int(ceilf(_macro_rect.size.x / size.x)):
+			_macro.draw_texture(_macro_texture, _macro_rect.position + Vector2(x, y) * size)
+
+func _update_macro() -> void:
+	var land: Dictionary = session.terrain.land_at(session.position) if session.terrain.has_method("land_at") else {}
+	_macro.visible = _macro_texture != null and str(land.get("layout", {}).get("id", "")).contains("snow_mountain")
+	if not _macro.visible: return
+	# Tile from a world-aligned corner so the pattern never moves with the cache.
+	var size := _macro_texture.get_size()
+	var world := Vector2((_origin - Vector2i.ONE * Terrain.CHUNK_SIZE) * px)
+	var corner := Vector2(floorf(world.x / size.x) * size.x, floorf(world.y / size.y) * size.y)
+	_macro_rect = Rect2(corner - Vector2(_origin * px), Vector2.ONE * Terrain.CHUNK_SIZE * 3 * px + size)
+	_macro.queue_redraw()
 
 func _shift_transients(offset: Vector2) -> void:
 	for child in _fx_layer.get_children():
@@ -364,6 +396,8 @@ func _prepare_chunk(chunk: Vector2i, entry: Dictionary) -> void:
 			var inside := x > 0 and y > 0 and x <= Terrain.CHUNK_SIZE and y <= Terrain.CHUNK_SIZE
 			var value: int = bytes[(y - 1) * Terrain.CHUNK_SIZE + x - 1] if inside else -1
 			kinds[y * side + x] = _kind_of(value, global_tile) if inside else _kind(global_tile)
+			var seam: String = session.terrain.spatial_seam_kind(global_tile)
+			if not seam.is_empty(): kinds[y * side + x] = seam # Neighbours blend as with open land.
 	entry.merge({"kinds": kinds, "row": 0, "overlays": overlays, "decor": decor})
 
 const OFFSETS := [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(-1, -1)]
@@ -377,27 +411,23 @@ func _paint_rows(chunk: Vector2i, entry: Dictionary, start: int, stop: int) -> v
 	var props: TileMapLayer = entry.props
 	var side := Terrain.CHUNK_SIZE + 2
 	var base: Vector2i = chunk * Terrain.CHUNK_SIZE
-	var offsets := OFFSETS
 	for y in range(start, stop):
 		for x in Terrain.CHUNK_SIZE:
 			var local := Vector2i(x, y)
 			var global_tile := base + local
-			if not session.terrain.spatial_cell(global_tile).is_empty(): continue
+			if not session.terrain.spatial_cell(global_tile).is_empty():
+				# Composed patch: only its feathered border ring gets the region's ground.
+				var seam: String = session.terrain.spatial_seam_kind(global_tile)
+				if art.ground.has(seam):
+					ground.set_cell(local, art.ground_source(seam), Art.pick(art.ground[seam], Art.tile_roll(global_tile, 1)))
+					_paint_overlays(overlays, kinds, local, seam, side)
+				continue
 			var kind: String = kinds[(y + 1) * side + x + 1]
 			if not art.ground.has(kind): kind = "meadow"
 			var drawn := kind
 			if kind == "cliff" and kinds[(y + 2) * side + x + 1] != "cliff": drawn = "cliff_face" # Wall face toward the viewer.
 			ground.set_cell(local, art.ground_source(drawn), Art.pick(art.ground[drawn], Art.tile_roll(global_tile, 1)))
-			for i in art.overlay_specs.size():
-				if not kind in art.overlay_specs[i][0]:
-					continue
-				var mask := 0
-				for bit in 8:
-					var near: Vector2i = local + offsets[bit] + Vector2i.ONE
-					if kinds[near.y * side + near.x] in art.overlay_specs[i][1]:
-						mask |= 1 << bit
-				if mask != 0:
-					overlays[i].set_cell(local, art.overlay_specs[i][2], Vector2i(mask % 16, mask / 16))
+			_paint_overlays(overlays, kinds, local, kind, side)
 			var value: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			if value == Terrain.TREE:
 				props.set_cell(local, Art.PROP_SOURCE, Art.pick(art.props.tree, Art.tile_roll(global_tile, 2)))
@@ -411,6 +441,19 @@ func _paint_rows(chunk: Vector2i, entry: Dictionary, start: int, stop: int) -> v
 			elif art.decor.has(kind) and Art.tile_roll(global_tile, 3) % 100 < 7:
 				# Flat flowers/shells/mushrooms: dressing only, never on blockers.
 				decor.set_cell(local, Art.DECOR_SOURCE, Art.pick(art.decor[kind], Art.tile_roll(global_tile, 4)))
+
+func _paint_overlays(overlays: Array, kinds: PackedStringArray, local: Vector2i, kind: String, side: int) -> void:
+	## Soft transitions where a neighbouring ground kind laps over this tile.
+	for i in art.overlay_specs.size():
+		if not kind in art.overlay_specs[i][0]:
+			continue
+		var mask := 0
+		for bit in 8:
+			var near: Vector2i = local + OFFSETS[bit] + Vector2i.ONE
+			if kinds[near.y * side + near.x] in art.overlay_specs[i][1]:
+				mask |= 1 << bit
+		if mask != 0:
+			overlays[i].set_cell(local, art.overlay_specs[i][2], Vector2i(mask % 16, mask / 16))
 
 func _update_view() -> void:
 	## Weather that shortens sight (blizzards) keeps the mechanical sight circle on screen.

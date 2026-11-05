@@ -1,5 +1,45 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Snow environment production: composed Broken Relay v9 + terrain T1 (2026-11-05)
+
+`feature/snow-full-region`, no master merge. Native review showed the v8 relay as a
+flat white rectangle with grid roads to nowhere, straight walls, a box river, and a
+hard seam against the busy P0 frozen scree; its roads ignored the land's real north
+(local x7) and south (x12) roads and a massif was cut off at the east border.
+
+- Layout v9 (`tools/relay_layout_v9.py`, ASCII-authored, compiled to 307 zones): same
+  anchors (stairs, ledge, outpost, lookout, strongbox, bridge, sites, homes); organic
+  terrace with a stepped south cliff, massif merged into the outside cliffs, the north
+  road threaded through to the south road, meltwater gorge falling from the terrace
+  into a frozen pool. The script checks reachability, one-way ledge, border heights and
+  that every walkable height change is a cliff or an authored connector. v8 Worlds
+  keep stored plans; `supported_plan` accepts layout 8 and 9.
+- Composed ground (`tools/art/compose_snow_area.py`): one painted 1920x1600 layer from
+  the collision plan, keyed by layout id+version (v8 keeps the cell renderer). Smooth
+  roads traced from thinned centre lines, cliff faces/flanks with caps, icicles, talus
+  and occlusion, gorge banks, width-scaled ice, frozen cascade, bridge with rails,
+  carved stairs, outpost cutaway, grounded pines; story details: cutthroat firepit by
+  the north road, the relay's snapped mast on the lookout.
+- Snow terrain T1 (`tools/art/build_snow_terrain.py`, code-authored candidate): quiet
+  seamless frozen/snow/trail/cliff/cliff_face across the whole Snow land; replaces
+  the busy P0 scree and icy-blue trail. A world-anchored macro brightness layer hides
+  tile repetition everywhere on Snow. The composed area samples the same tiles.
+- Seams: patch outer ring (3 cells) is underpainted with the region's ground (trail
+  and cliff keep their kind) and blends with normal transition overlays; the bake
+  feathers into it, sprites stay opaque.
+
+Checks (disposable DBs only): `scripts/check-reference.ps1 -TimeoutSeconds 170` 45/0
+native; `scripts/test.ps1 -Only world,m04-world,snow-mountain,snow-region,snow-gameplay`
+49/86/66/153/53, 0 failures. Snow gameplay art-source assertion updated to T1.
+Captures (native 1100x720, seed 4242, turn 60): `.tools/reference-before.png` (old),
+`reference-after.png`, `reference-bridge.png`, `reference-lookout.png`; extra spots
+`.tools/env-{court,north,south,massif,bridge,west,east,lookout,stairs}.png` via the
+untracked `.tools/env_capture.gd`.
+
+Remaining: outpost still reads as a plank box (no roofline, weak doors); cliff rims
+step at cell resolution; one pine sprite everywhere; only Broken Relay has authored
+geometry, other areas only gained T1 ground and macro variation; art is candidate.
+
 ## World design / visual refoundation checkpoint (2026-11-05)
 
 Director priority supersedes the long journey mission above: no tours or broad

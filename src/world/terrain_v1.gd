@@ -21,6 +21,9 @@ func spatial_cell(_tile: Vector2i) -> Dictionary:
 func procedural_allowed(_tile: Vector2i) -> bool:
 	return true
 
+func spatial_seam_kind(_tile: Vector2i) -> String:
+	return ""
+
 func can_step(from: Vector2i, to: Vector2i) -> bool:
 	return walkable(from) and walkable(to)
 

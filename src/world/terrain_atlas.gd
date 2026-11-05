@@ -28,6 +28,8 @@ var _lands: Dictionary = {} # Vector2i slot -> compiled land
 var _plans: Dictionary = {} # land_id -> stored plan
 var _sites: Dictionary = {} # Vector2i chunk -> [site instances]
 var _spatial_cells: Dictionary = {} # Derived once from the immutable authored patch.
+var _spatial_seams: Dictionary = {} # Patch border ring (presentation feathering only).
+const SEAM := 3
 var _creature_homes: Dictionary = {} # Authored plan-v2 layer; v1 homes stay separate.
 var _bytes: Dictionary = {} # chunk -> tiles
 var _zones: Dictionary = {} # chunk -> region index per tile (RIM outside the mass)
@@ -45,6 +47,7 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 	_sites.clear()
 	_creature_homes.clear()
 	_spatial_cells.clear()
+	_spatial_seams.clear()
 	_bytes.clear()
 	_zones.clear()
 	_order.clear()
@@ -67,6 +70,8 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 				for sx in int(plan.spatial.size.x):
 					var tile := so + Vector2i(sx, sy)
 					_spatial_cells[tile] = Spatial.cell(plan.spatial, tile)
+					if mini(mini(sx, sy), mini(int(plan.spatial.size.x) - 1 - sx, int(plan.spatial.size.y) - 1 - sy)) < SEAM:
+						_spatial_seams[tile] = true
 		for site in plan.get("sites", []):
 			var chunk := TerrainV1.chunk_of(Vector2i(int(site.position.x), int(site.position.y)))
 			if not _sites.has(chunk): _sites[chunk] = []
@@ -89,6 +94,13 @@ func elevation(tile: Vector2i) -> int:
 
 func procedural_allowed(tile: Vector2i) -> bool:
 	return spatial_cell(tile).is_empty()
+
+func spatial_seam_kind(tile: Vector2i) -> String:
+	## Presentation: the outer ring of a composed patch is underpainted with the
+	## region's own ground so the composed art can feather into the land around it.
+	if not _spatial_seams.has(tile): return ""
+	var surface := int(spatial_cell(tile).surface)
+	return Surfaces.ART_KIND.get(surface if surface in [Surfaces.TRAIL, Surfaces.CLIFF] else _ground(tile), "")
 
 func can_step(from: Vector2i, to: Vector2i) -> bool:
 	if not walkable(from) or not walkable(to): return false

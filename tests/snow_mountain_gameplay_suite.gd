@@ -75,7 +75,7 @@ func _run() -> void:
 	await _settle()
 	var kinds := _drawn_kinds()
 	var art: RefCounted = app.map_view.art
-	check(kinds.has("snow") and not kinds.has("meadow") and art.ground_source("snow") == art.SNOW_S1_GROUND_SOURCE and art.ground_source("frozen") == art.SNOW_P0_GROUND_SOURCE and art.placeholder_kinds.is_empty(), "Basin draws approved Batch S1 snow; frozen scree comes from the P0 batch, no placeholder ground left: %s" % str(kinds.keys()))
+	check(kinds.has("snow") and not kinds.has("meadow") and art.ground_source("snow") == art.SNOW_TERRAIN_GROUND_SOURCE and art.ground_source("frozen") == art.SNOW_TERRAIN_GROUND_SOURCE and art.ground_source("taiga") == art.SNOW_TERRAIN_GROUND_SOURCE and art.ground_source("ice") == art.SNOW_S1_GROUND_SOURCE and art.placeholder_kinds.is_empty(), "Basin draws the Snow terrain T1 ground (S1 for kinds T1 leaves alone), no placeholder ground left: %s" % str(kinds.keys()))
 	check(art.prop_source("pine") == art.SNOW_S1_PROP_SOURCE and art.prop_source("rock_snow") == art.SNOW_S1_PROP_SOURCE and art.frames("snow_wolf") != null, "S1 pine, windbreak rock and snow wolf frames are loaded")
 	await _capture("snow-arrival.png")
 	var info: Label = app._info

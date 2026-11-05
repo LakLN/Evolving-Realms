@@ -3,6 +3,8 @@ extends Node2D
 ## objects and fog. Geometry comes from the same plan used by collision/navigation.
 var view: Node2D
 var materials: Texture2D
+var composed: Texture2D
+var composed_key := ""
 const SNOW := Color("dce7e5")
 const SHADOW := Color("bdcdd0")
 const STONE := Color("64747e")
@@ -24,6 +26,14 @@ func _draw() -> void:
 	var plan: Dictionary = land.spatial
 	var origin := Vector2i(int(plan.origin.x), int(plan.origin.y))
 	var px: int = view.px
+	# A composed painting of exactly this layout version replaces the cell sketch.
+	var key := "res://assets/game/snow/reference/%s_v%d_ground.png" % [str(land.get("layout", {}).get("id", "")).get_file(), int(land.get("layout", {}).get("version", 0))]
+	if composed_key != key:
+		composed_key = key
+		composed = load(key) if ResourceLoader.exists(key) else null
+	if composed != null and px == 40:
+		draw_texture(composed, view._point(origin) - Vector2.ONE * px / 2)
+		return
 	var size := Vector2i(int(plan.size.x), int(plan.size.y))
 	for y in size.y:
 		for x in size.x:

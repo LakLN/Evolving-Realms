@@ -1,0 +1,9 @@
+{
+  "source": "code-authored",
+  "generator": "tools/art/build_snow_terrain.py",
+  "palette": "tools/art/snow_env.py",
+  "material_input": "assets/game/snow/reference/materials.png (rock strata cell, candidate)",
+  "date": "2026-11-05",
+  "status": "candidate",
+  "atlas_sha256": "a789495d127ef203a8fffd15775337f4764ed3af67269932d98367692394d01c"
+}
