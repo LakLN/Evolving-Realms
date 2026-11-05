@@ -200,6 +200,8 @@ func _load_snow_index(built: TileSet, path: String, ground_id: int, prop_id: int
 			var extra: Variant = parsed.mapping[group][table]
 			if extra is Dictionary and mapping[group].get(table) is Dictionary:
 				mapping[group][table].merge(extra, true)
+			elif extra is Dictionary and not mapping[group].has(table):
+				mapping[group][table] = extra.duplicate(true) # A table only an overlay index defines.
 			elif extra is String and mapping[group] is Dictionary:
 				mapping[group][table] = extra
 	return bases
@@ -353,6 +355,32 @@ func place_sprite(definition: Dictionary) -> Texture2D:
 	var payload: Dictionary = definition.get("payload", {})
 	var name: String = map.get("by_id", {}).get(definition.get("content_id", ""), map.get("by_visual", {}).get(payload.get("visual", ""), map.get("by_category", {}).get(payload.get("category", ""), map.get("default", ""))))
 	return _single("places", name)
+
+func place_stage(definition: Dictionary, record: Dictionary) -> String:
+	## A persistent site's visible stage from this Run's record: index
+	## mapping.places.stages_by_id lists [when, sprite]; `when` is a resolved interaction
+	## id or "state:<world_state>". The last satisfied entry wins; "" = base sprite.
+	var stages: Array = index.get("mapping", {}).get("places", {}).get("stages_by_id", {}).get(definition.get("content_id", ""), [])
+	var resolved: Dictionary = record.get("resolved", {})
+	var result := ""
+	for entry in stages:
+		var when := str(entry[0])
+		var got: bool = when.begins_with("got:") and not resolved.get(when.substr(4), {}).get("received", []).is_empty() # Only if it paid out.
+		if resolved.has(when) or got or (when.begins_with("state:") and str(record.get("world_state", "")) == when.substr(6)):
+			result = str(entry[1])
+	return result
+
+func stage_sprite(name: String) -> Texture2D:
+	return _single("places", name)
+
+func stage_pivot(name: String) -> Vector2:
+	var pivot: Variant = index.get("places", {}).get(name, {}).get("pivot")
+	return Vector2(pivot[0], pivot[1]) if pivot is Array and pivot.size() == 2 else Vector2(-1, -1)
+
+func place_glow(stage: String) -> Color:
+	## Lit stages (index places.<name>.glow) cast a warm halo; transparent otherwise.
+	var glow: Variant = index.get("places", {}).get(stage, {}).get("glow") if not stage.is_empty() else null
+	return Color(str(glow)) if glow is String else Color(0, 0, 0, 0)
 
 func place_pivot(definition: Dictionary) -> Vector2:
 	## Declared ground-contact point inside the place image, or (-1, -1) for the legacy

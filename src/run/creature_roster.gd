@@ -20,6 +20,10 @@ const SAFE_RADIUS := 6 # No creature homes this close to the Run's spawn.
 ##   returns {every, times}  `every` turns after its death a new individual takes the
 ##                  home (instance id "<home>/r<n>", own loot), at most `times` times,
 ##                  and never inside the active radius. Death turns are Run state.
+## Presentation memory (never saved): who already showed a warning posture or was
+## announced as returned, so cues fire once per approach, not every turn.
+var _warned: Dictionary = {}
+var _announced: Dictionary = {}
 var layer: RefCounted
 var dynamic: Array = []
 var creatures: Dictionary = {}
@@ -88,9 +92,14 @@ func follow(tile: Vector2i, terrain_chunks: Dictionary) -> bool:
 			creatures[instance.instance_id] = creature
 	return true
 
-func refresh(session: RefCounted) -> void:
-	## Weather-bound and returning homes in the loaded chunks; pure in Run state.
+func refresh(session: RefCounted) -> Array:
+	## Weather-bound and returning homes in the loaded chunks; pure in Run state. Returns
+	## presentation cues: storm shapes arriving/leaving near the player, and a returned
+	## individual the first time it is seen.
 	var weather := ""
+	var arrived := 0
+	var left := 0
+	var events: Array = []
 	for instance in dynamic:
 		var meta: Dictionary = instance.metadata
 		var id := _current(session, instance)
@@ -98,10 +107,17 @@ func refresh(session: RefCounted) -> void:
 		if present and meta.has("weather"):
 			if weather.is_empty(): weather = session.places.weather_id(session)
 			present = weather in meta.weather
+		var near := maxi(absi(int(instance.position.x) - session.position.x), absi(int(instance.position.y) - session.position.y)) <= ACTIVE_RADIUS * 2
 		if not present:
-			if not id.is_empty() and creatures.has(id) and not creatures[id].dead: creatures.erase(id)
+			if not id.is_empty() and creatures.has(id) and not creatures[id].dead:
+				creatures.erase(id)
+				if near and meta.has("weather"): left += 1
 			continue
-		if creatures.has(id): continue
+		if creatures.has(id):
+			if id != instance.instance_id and not _announced.has(id) and not creatures[id].dead and session.visible.has(creatures[id].position):
+				_announced[id] = true
+				events.append({"type": "creature_return", "target": id, "name": creatures[id].definition.name, "position": _point(creatures[id].position)})
+			continue
 		var copy: Dictionary = instance.duplicate(true)
 		copy.instance_id = id
 		var creature := _runtime(copy)
@@ -109,6 +125,28 @@ func refresh(session: RefCounted) -> void:
 		var mutation: Variant = session.run.state.entity_mutations.get(id)
 		if mutation is Dictionary and mutation.has("creature") and not _apply(creature, mutation): continue
 		creatures[id] = creature
+		if near and meta.has("weather"): arrived += 1
+	if arrived > 0: events.append({"type": "stirring", "state": "arrive", "weather": weather})
+	if left > 0: events.append({"type": "stirring", "state": "depart", "weather": weather})
+	return events
+
+func warnings(session: RefCounted) -> Array:
+	## Warning postures (trait `warning`): a dangerous creature that has not engaged yet
+	## shows itself once per approach when the player comes within its radius in sight.
+	var events: Array = []
+	for creature in creatures.values():
+		if creature.dead: continue
+		var warning: Dictionary = Traits.of(creature.definition).warning
+		if warning.is_empty(): continue
+		var distance := _distance(creature.position, session.position)
+		if distance > int(warning.radius) + 4:
+			_warned.erase(creature.instance_id)
+			continue
+		if _warned.has(creature.instance_id) or distance > int(warning.radius) or not session.visible.has(creature.position) or creature.provoked or int(creature.alerted_until) > int(session.run.state.turn) or str(creature.state) in ["chase", "attack", "charge"]:
+			continue
+		_warned[creature.instance_id] = true
+		events.append({"type": "creature_warning", "target": creature.instance_id, "name": creature.definition.name, "text": warning.text, "position": _point(creature.position)})
+	return events
 
 func _current(session: RefCounted, instance: Dictionary) -> String:
 	## The home's individual for now: "" once every allowed individual is dead, or while

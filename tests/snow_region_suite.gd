@@ -293,11 +293,12 @@ func _living(world_id: String, plan: Dictionary) -> void:
 	var lantern_id := "crt:atlas/%d_%d/home/storm_lantern_1" % [int(plan.slot.x), int(plan.slot.y)]
 	s.roster.follow(s.position + Vector2i(64, 0), s.cache.chunks)
 	s.roster.follow(s.position, s.cache.chunks)
-	s.roster.refresh(s)
-	check(s.roster.creatures.has(lantern_id), "Storm lanterns walk the bowl in a blizzard")
+	var cues: Array = s.roster.refresh(s)
+	check(s.roster.creatures.has(lantern_id) and cues.any(func(e: Dictionary) -> bool: return e.type == "stirring" and e.state == "arrive"), "Storm lanterns walk the bowl in a blizzard, with one arrival cue")
+	check(s.roster.refresh(s).is_empty(), "No repeated cue while they stay")
 	s.run.state.turn = _weather_turn(s, "calm", int(s.run.state.turn))
-	s.roster.refresh(s)
-	check(not s.roster.creatures.has(lantern_id), "Storm lanterns are gone in calm weather")
+	cues = s.roster.refresh(s)
+	check(not s.roster.creatures.has(lantern_id) and cues.any(func(e: Dictionary) -> bool: return e.type == "stirring" and e.state == "depart"), "Storm lanterns are gone in calm weather, with a departure cue")
 	# Returning herd: a new stag takes the home after its death, limited, never in view.
 	var herd := "crt:atlas/%d_%d/home/herd_0" % [int(plan.slot.x), int(plan.slot.y)]
 	var home := Vector2i.ZERO

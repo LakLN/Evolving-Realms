@@ -68,6 +68,9 @@ var _weather_layer := Node2D.new()
 var _weather_time := 0.0
 var _weather_poll := 0.0
 var weather_status: Dictionary = {}
+## 0 calm .. 1 full storm, eased each frame so a blizzard builds up during its warning
+## and thins out when it passes instead of switching on one turn (presentation only).
+var _storm := 0.0
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
@@ -128,27 +131,32 @@ func _process(delta: float) -> void:
 	if _weather_poll <= 0.0:
 		_weather_poll = 0.25
 		weather_status = session.environment_status() if not session.run.is_empty() else {}
+	var target := 0.0
+	if not str(weather_status.get("weather", "")).is_empty():
+		target = 1.0
+	elif not str(weather_status.get("incoming", "")).is_empty():
+		target = 0.15 + 0.4 * (1.0 - clampf(float(weather_status.get("incoming_in", 12)) / 12.0, 0.0, 1.0))
+	_storm = move_toward(_storm, target, delta * (0.5 if target > _storm else 0.25))
 	if was or _weather_drawn():
 		_weather_layer.queue_redraw()
 
 func _weather_drawn() -> bool:
-	return not weather_status.is_empty() and (not str(weather_status.get("weather", "")).is_empty() or not str(weather_status.get("incoming", "")).is_empty())
+	return _storm > 0.01 or (not weather_status.is_empty() and (not str(weather_status.get("weather", "")).is_empty() or not str(weather_status.get("incoming", "")).is_empty()))
 
 func _draw_weather() -> void:
 	if session == null or not _weather_drawn():
 		return
-	var active := not str(weather_status.get("weather", "")).is_empty()
 	var view := get_viewport_rect().size / (camera.zoom if camera != null else Vector2.ONE) + Vector2(80, 80)
 	var center: Vector2 = _player.position
-	if active:
-		_weather_layer.draw_rect(Rect2(center - view / 2.0, view), Color(0.86, 0.91, 1.0, 0.1))
-	var count := 170 if active else 45
+	if _storm > 0.05:
+		_weather_layer.draw_rect(Rect2(center - view / 2.0, view), Color(0.86, 0.91, 1.0, 0.13 * _storm))
+	var count := int(20 + 150 * _storm)
 	for i in count:
 		var speed := 0.75 + float(Art.tile_roll(Vector2i(i, 3), 41) % 100) / 200.0
 		var base := Vector2(Art.tile_roll(Vector2i(i, 1), 41) % int(view.x), Art.tile_roll(Vector2i(i, 2), 41) % int(view.y))
 		var drift := Vector2(-260.0, 140.0) * _weather_time * speed
 		var at := Vector2(fposmod(base.x + drift.x, view.x), fposmod(base.y + drift.y, view.y)) - view / 2.0 + center
-		_weather_layer.draw_line(at, at + Vector2(-11.0, 6.0) * speed, Color(1, 1, 1, 0.6 if active else 0.35), 1.5)
+		_weather_layer.draw_line(at, at + Vector2(-11.0, 6.0) * speed * (0.6 + 0.6 * _storm), Color(1, 1, 1, 0.3 + 0.35 * _storm), 1.5)
 	var feet := center + Vector2(0, px * 0.32)
 	if weather_status.get("exposed", false):
 		var pulse := 0.5 + 0.5 * sin(_weather_time * 6.0)
@@ -537,8 +545,15 @@ func _sync_creatures() -> void:
 			entry.creature = creature
 	for id in _creatures.keys():
 		if not seen.has(id) and not _creatures[id].get("dying", false):
-			_creatures[id].node.queue_free()
+			var gone: Dictionary = _creatures[id]
 			_creatures.erase(id)
+			if session.roster != null and not session.roster.creatures.has(id) and shown(gone.tile):
+				# It left the world in view (the storm ended): dissolve rather than vanish.
+				var fade: Tween = gone.node.create_tween()
+				fade.tween_property(gone.node, "modulate:a", 0.0, 1.4)
+				fade.tween_callback(gone.node.queue_free)
+			else:
+				gone.node.queue_free()
 	# Y-sort keeps a creature directly north of the hero behind them; the taller hero
 	# would hide it, so the hero turns see-through while something stands there.
 	var hidden_behind := false
@@ -571,6 +586,9 @@ func _spawn_creature(creature: Dictionary) -> Dictionary:
 		token.draw.connect(func() -> void: _draw_creature_token(token, entry.creature))
 		node.add_child(token)
 	node.position = _feet(creature.position)
+	if creature.get("instance", {}).get("metadata", {}).has("weather"):
+		node.modulate.a = 0.0
+		node.create_tween().tween_property(node, "modulate:a", 1.0, 1.2)
 	return entry
 
 func _play_creature(entry: Dictionary, state: String) -> void:
@@ -662,10 +680,19 @@ func _draw_places() -> void:
 		var state: String = session.places.state(session, place)
 		var done: bool = state in ["resolved", "unavailable"]
 		var point := _point(tile)
-		var sprite: Texture2D = art.place_sprite(definition) if art.ready() else null
+		var record: Dictionary = session.places.record(session, place.instance_id)
+		var stage: String = art.place_stage(definition, record) if art.ready() else ""
+		var sprite: Texture2D = (art.stage_sprite(stage) if not stage.is_empty() else art.place_sprite(definition)) if art.ready() else null
+		var glow: Color = art.place_glow(stage)
+		if glow.a > 0.0:
+			_object_layer.draw_circle(_feet(tile) + Vector2(0, -px * 0.6), px * 1.1, Color(glow, 0.14))
+			_object_layer.draw_circle(_feet(tile) + Vector2(0, -px * 0.6), px * 0.6, Color(glow, 0.2))
+		if state == "interactable" and definition.payload.interactions.any(func(i: Dictionary) -> bool: return i.has("repeat") and record.get("resolved", {}).has(i.id)):
+			var star := _feet(tile) + Vector2(px * 0.55, -px * 1.4)
+			_object_layer.draw_colored_polygon(PackedVector2Array([star + Vector2(0, -6), star + Vector2(2, -2), star + Vector2(6, 0), star + Vector2(2, 2), star + Vector2(0, 6), star + Vector2(-2, 2), star + Vector2(-6, 0), star + Vector2(-2, -2)]), Color("f8df8b"))
 		if sprite != null:
 			var size := sprite.get_size()
-			var pivot: Vector2 = art.place_pivot(definition)
+			var pivot: Vector2 = art.stage_pivot(stage) if not stage.is_empty() else art.place_pivot(definition)
 			var at := _feet(tile) - pivot if pivot.x >= 0 else Vector2(point.x - size.x / 2, point.y + px * 0.75 - size.y)
 			_object_layer.draw_texture(sprite, at, Color(0.58, 0.58, 0.64) if done else (Color(0.8, 0.82, 0.88) if state == "recovering" else Color.WHITE))
 		else:
@@ -771,6 +798,17 @@ func show_events(events: Array) -> void:
 					_popup(foe.tile, "!", Color("ffb347"), 0.55, 0.0, 26)
 					foe.node.modulate = Color(1.9, 1.15, 0.5)
 					foe.node.create_tween().tween_property(foe.node, "modulate", Color.WHITE, float(event.windup_ms) / 1000.0)
+			"creature_warning":
+				# Posture before a fight: the creature rears (attack frames) and flares.
+				var beast: Dictionary = _creatures.get(str(event.target), {})
+				if not beast.is_empty():
+					_popup(beast.tile, "!", Color("ff9a3c"), 0.6, 0.0, 30)
+					_play_creature(beast, "attack")
+					beast.node.modulate = Color(1.7, 1.05, 0.6)
+					beast.node.create_tween().tween_property(beast.node, "modulate", Color.WHITE, 1.2)
+			"creature_return":
+				var back: Dictionary = _creatures.get(str(event.target), {})
+				if not back.is_empty(): _popup(back.tile, "returned", Color("d7c9a9"), 0.6, 0.0, 14)
 			"dodge":
 				_popup(session.position, "dodged", Color("c8e6ff"), -0.35, 0.0, 15)
 			"rest_start":

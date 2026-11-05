@@ -1384,12 +1384,12 @@
   "prowler_den": {
    "texture": "snow/fauna/prowler_den.png",
    "size": [
-    80,
-    70
+    100,
+    88
    ],
    "pivot": [
-    40,
-    62
+    50,
+    79
    ]
   },
   "fishing_hole": {
@@ -1501,6 +1501,107 @@
     40,
     62
    ]
+  },
+  "crown_beacon_mended": {
+   "texture": "snow/fauna/crown_beacon_mended.png",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ]
+  },
+  "crown_beacon_lit": {
+   "texture": "snow/fauna/crown_beacon_lit.png",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "glow": "#ffb35c"
+  },
+  "crown_beacon_kept": {
+   "texture": "snow/fauna/crown_beacon_kept.png",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "glow": "#ffc870"
+  },
+  "ashmaw_nest_empty": {
+   "texture": "snow/fauna/ashmaw_nest_empty.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "relay_strongbox_open": {
+   "texture": "snow/fauna/relay_strongbox_open.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "sunken_sledge_open": {
+   "texture": "snow/fauna/sunken_sledge_open.png",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ]
+  },
+  "summit_bell_restored": {
+   "texture": "snow/fauna/summit_bell_restored.png",
+   "size": [
+    96,
+    112
+   ],
+   "pivot": [
+    48,
+    104
+   ]
+  },
+  "icebound_case_thawed": {
+   "texture": "snow/fauna/icebound_case_thawed.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    50
+   ]
+  },
+  "icebound_case_shattered": {
+   "texture": "snow/fauna/icebound_case_shattered.png",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    50
+   ]
   }
  },
  "mapping": {
@@ -1558,6 +1659,78 @@
     "snow:place/snowbloom": "snowbloom",
     "snow:place/crown_beacon": "crown_beacon",
     "snow:place/rune_cairn": "rune_cairn"
+   },
+   "stages_by_id": {
+    "snow:place/crown_beacon": [
+     [
+      "clear",
+      "crown_beacon_mended"
+     ],
+     [
+      "kindle",
+      "crown_beacon_lit"
+     ],
+     [
+      "vigil",
+      "crown_beacon_kept"
+     ]
+    ],
+    "snow:place/summit_bell": [
+     [
+      "restore",
+      "summit_bell_restored"
+     ]
+    ],
+    "snow:place/ashmaw_nest": [
+     [
+      "grab",
+      "ashmaw_nest_empty"
+     ],
+     [
+      "wrapped",
+      "ashmaw_nest_empty"
+     ]
+    ],
+    "snow:place/relay_strongbox": [
+     [
+      "force",
+      "relay_strongbox_open"
+     ],
+     [
+      "got:latch",
+      "relay_strongbox_open"
+     ]
+    ],
+    "snow:place/sunken_sledge": [
+     [
+      "state:thawed",
+      "sunken_sledge_open"
+     ],
+     [
+      "state:shattered",
+      "sunken_sledge_open"
+     ]
+    ],
+    "snow:place/icebound_provisions": [
+     [
+      "state:thawed",
+      "icebound_case_thawed"
+     ],
+     [
+      "state:shattered",
+      "icebound_case_shattered"
+     ]
+    ],
+    "snow:place/frozen_medicine": [
+     [
+      "state:thawed",
+      "icebound_case_thawed"
+     ],
+     [
+      "state:shattered",
+      "icebound_case_shattered"
+     ]
+    ]
    }
   }
  }

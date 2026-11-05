@@ -1,0 +1,966 @@
+{
+ "schema": "er-asset-batch",
+ "version": 1,
+ "batch": "snow_fauna_b5",
+ "package": "snow_mountain_full",
+ "status": "candidate",
+ "provenance": {
+  "source": "original code-authored geometry",
+  "date": "2026-11-04",
+  "generator": "snow_fauna_author.py + pixel3d.py",
+  "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette. b5: world-state stage sprites (beacon, bell, caches, nest, strongbox, sledge) and a rock-overhang den; b4: larger cells for large species, people and beasts rescaled to the hero, the crown elder, a new den and living-region landmarks/rewards."
+ },
+ "assets": [
+  {
+   "id": "C04",
+   "name": "frost_stag",
+   "kind": "sheet",
+   "file": "frost_stag.png",
+   "sha256": "7525b9c9b68ca4ee398f62f470aa1b4973997fe081dcb970b5eafc015641a965",
+   "size": [
+    1144,
+    368
+   ],
+   "cell": [
+    104,
+    92
+   ],
+   "pivot": [
+    52,
+    84
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C05",
+   "name": "tuskback",
+   "kind": "sheet",
+   "file": "tuskback.png",
+   "sha256": "cef04158795c42472daa3c7a7679ff6bfd7258420885dfb7948c3491600d9f29",
+   "size": [
+    1144,
+    368
+   ],
+   "cell": [
+    104,
+    92
+   ],
+   "pivot": [
+    52,
+    84
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C06",
+   "name": "pine_prowler",
+   "kind": "sheet",
+   "file": "pine_prowler.png",
+   "sha256": "e14fd5cfd727fbd1625c1126fa74839149bda8a8a7b29a236c9d3e7b822c82bd",
+   "size": [
+    1144,
+    368
+   ],
+   "cell": [
+    104,
+    92
+   ],
+   "pivot": [
+    52,
+    84
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C07",
+   "name": "relay_cutthroat",
+   "kind": "sheet",
+   "file": "relay_cutthroat.png",
+   "sha256": "0e4e27e311d93c05d7d662e569d183920b26ad820972874e2746cc4f36c47ff1",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C08",
+   "name": "relay_slinger",
+   "kind": "sheet",
+   "file": "relay_slinger.png",
+   "sha256": "4708229ec91d35c618d15aa7b9a14c38204b67956103e019d4fe5a85c65ea48e",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C09",
+   "name": "cinder_acolyte",
+   "kind": "sheet",
+   "file": "cinder_acolyte.png",
+   "sha256": "e05cb252fe58383f0edf14dd54348d7c82edeeb2133c2ecc27e9eb728ee1d2c9",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C10",
+   "name": "hollow_carrier",
+   "kind": "sheet",
+   "file": "hollow_carrier.png",
+   "sha256": "4082627155d2787a28fd998062f6c5693dc09fe84a31d58409f3122c913677db",
+   "size": [
+    1144,
+    368
+   ],
+   "cell": [
+    104,
+    92
+   ],
+   "pivot": [
+    52,
+    84
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C11",
+   "name": "glassback_crawler",
+   "kind": "sheet",
+   "file": "glassback_crawler.png",
+   "sha256": "a65237afbe98967213f88438214f64b5341083dd0c88bfbf5115dedd8a76e252",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C12",
+   "name": "rime_lantern",
+   "kind": "sheet",
+   "file": "rime_lantern.png",
+   "sha256": "a129cbda08b9227e88d453db5591e9b71895dc03c7677ee355fe3de029c96381",
+   "size": [
+    924,
+    304
+   ],
+   "cell": [
+    84,
+    76
+   ],
+   "pivot": [
+    42,
+    69
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C13",
+   "name": "ashmaw",
+   "kind": "sheet",
+   "file": "ashmaw.png",
+   "sha256": "85056ffdf767049e4b3d9e52cb9f37ccd4512464e6a7ab7e763dd09480471e52",
+   "size": [
+    1540,
+    496
+   ],
+   "cell": [
+    140,
+    124
+   ],
+   "pivot": [
+    70,
+    115
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C14",
+   "name": "hoarfrost_giant",
+   "kind": "sheet",
+   "file": "hoarfrost_giant.png",
+   "sha256": "c3b1cb5b99d518a43ea403049062a67f3e379bad8d42199de3699e49f08185cf",
+   "size": [
+    1540,
+    496
+   ],
+   "cell": [
+    140,
+    124
+   ],
+   "pivot": [
+    70,
+    115
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "C15",
+   "name": "elder_bellback",
+   "kind": "sheet",
+   "file": "elder_bellback.png",
+   "sha256": "5f376ef57c8fd1ab68df330e4030a4fd5e3b1ad0ec2ad9ada015035332b3678c",
+   "size": [
+    1540,
+    496
+   ],
+   "cell": [
+    140,
+    124
+   ],
+   "pivot": [
+    70,
+    115
+   ],
+   "rows": [
+    "down",
+    "left",
+    "right",
+    "up"
+   ],
+   "columns": [
+    "idle",
+    "walk1",
+    "walk2",
+    "walk3",
+    "walk4",
+    "attack1",
+    "attack2",
+    "attack3",
+    "hit",
+    "death1",
+    "death2"
+   ]
+  },
+  {
+   "id": "I03",
+   "name": "fauna_items",
+   "kind": "icons",
+   "file": "item_sheet.png",
+   "sha256": "690258fd91c0d1655e8703ad7f127aa1e4b90789d92159eac51dc8210e66602f",
+   "size": [
+    128,
+    128
+   ],
+   "cell": [
+    32,
+    32
+   ],
+   "margin": 2,
+   "ids": [
+    "snow:ivory_tusk",
+    "snow:stormglass",
+    "snow:frost_linen",
+    "snow:ember_heart",
+    "snow:ancient_marrow",
+    "snow:tusk_glaive",
+    "snow:glass_rod",
+    "snow:rimeweave",
+    "snow:kiln_maul",
+    "snow:glass_charm",
+    "snow:marrow_tonic",
+    "snow:trough_char",
+    "snow:elder_horn",
+    "snow:choir_lens",
+    "snow:relay_crown",
+    "snow:bellhorn_hammer"
+   ]
+  },
+  {
+   "id": "I03/glass_lance",
+   "name": "glass_lance",
+   "kind": "sprite",
+   "file": "book_glass_lance.png",
+   "sha256": "6923260200e8d9cbfcfd04fc1f68a06f0309513b491c7d677d4a196ab075589d",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": "I03/rime_stitch",
+   "name": "rime_stitch",
+   "kind": "sprite",
+   "file": "book_rime_stitch.png",
+   "sha256": "1f8bb529549460178f16deeb8dcb8ca01b2bd457f452016a4fe2e67006b3e5ce",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": "I03/kiln_breath",
+   "name": "kiln_breath",
+   "kind": "sprite",
+   "file": "book_kiln_breath.png",
+   "sha256": "34e5b27d59c916e8ef58d290a70c61bead7efdce219fd64df75512ce8324f287",
+   "size": [
+    32,
+    32
+   ],
+   "pivot": [
+    16,
+    16
+   ]
+  },
+  {
+   "id": "L/old_kiln",
+   "name": "old_kiln",
+   "kind": "sprite",
+   "file": "old_kiln.png",
+   "sha256": "7adad36f5688959d638022b06b4dce4e5da31308996eb21b353a3eb860953bd3",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/glass_bowl",
+   "name": "glass_bowl",
+   "kind": "sprite",
+   "file": "glass_bowl.png",
+   "sha256": "d8f0fa60801782a7bcc3d0506af4d1495db81fec8a1bef1f9debb0a6362e2b52",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/wind_loom",
+   "name": "wind_loom",
+   "kind": "sprite",
+   "file": "wind_loom.png",
+   "sha256": "0cb3e41fec6f9b4c6018554ce75b2e2f60451cab99eb72ddacdc886275355194",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/relay_strongbox",
+   "name": "relay_strongbox",
+   "kind": "sprite",
+   "file": "relay_strongbox.png",
+   "sha256": "aefb01d6630e19945ade192ffe92378bf2856d5cdbd3e8d5d8c462474e5a38ba",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/ashmaw_nest",
+   "name": "ashmaw_nest",
+   "kind": "sprite",
+   "file": "ashmaw_nest.png",
+   "sha256": "b3fa63a572696a0f88d078e880a409f5d43108233064d1e2e0c5caed6220fc49",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/singing_ice",
+   "name": "singing_ice",
+   "kind": "sprite",
+   "file": "singing_ice.png",
+   "sha256": "09fe0956226a60b0d0e3ce7ae9699a42192b3d419f63b6eb7ad569446c312ac9",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/prowler_den",
+   "name": "prowler_den",
+   "kind": "sprite",
+   "file": "prowler_den.png",
+   "sha256": "39ab85c163d5f984723c60affe38be49ba8d7e3b09521e03a8c4c758efea6667",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/fishing_hole",
+   "name": "fishing_hole",
+   "kind": "sprite",
+   "file": "fishing_hole.png",
+   "sha256": "608e041b50f1c015b087bb0314b5b80a73801bf2781c6f7871b13be7c4ce3c73",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/hare_run",
+   "name": "hare_run",
+   "kind": "sprite",
+   "file": "hare_run.png",
+   "sha256": "4d7f3c7c46d5fcb054eb9f02d9e1540c747d8232f9690b8d5dbd0188b87f6efb",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/warm_spring",
+   "name": "warm_spring",
+   "kind": "sprite",
+   "file": "warm_spring.png",
+   "sha256": "13a49b26ba3bcea0170ae8fcd74bf38fa2ae7ee2c278b53872d36445d3b3e2b2",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/bandit_stash",
+   "name": "bandit_stash",
+   "kind": "sprite",
+   "file": "bandit_stash.png",
+   "sha256": "3b528953a65dafb3446e5c305155955472ae87b56ba68ea8a3a1ff6a43ed33fa",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/rime_ledge",
+   "name": "rime_ledge",
+   "kind": "sprite",
+   "file": "rime_ledge.png",
+   "sha256": "908982bae096f523f3d6d6491718449e8bae4370f8da94dbccdfe8cc4c28b4b5",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/choir_hollow",
+   "name": "choir_hollow",
+   "kind": "sprite",
+   "file": "choir_hollow.png",
+   "sha256": "71a5b20136abf4c29203552b887c246669ea58ae1f35d0e65a3235b9f2e3fedc",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/sunken_sledge",
+   "name": "sunken_sledge",
+   "kind": "sprite",
+   "file": "sunken_sledge.png",
+   "sha256": "97dde5f4c33dffba07cde5f3b85b0a720e8fae93773ac4032bdbe644c36d9602",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/snowbloom",
+   "name": "snowbloom",
+   "kind": "sprite",
+   "file": "snowbloom.png",
+   "sha256": "2f1f2987d00587ae2eba9d987f27926a41516e7d9081cb49a2d5717269d326c0",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/crown_beacon",
+   "name": "crown_beacon",
+   "kind": "sprite",
+   "file": "crown_beacon.png",
+   "sha256": "861f72cc7f478ebf71b2280202a49d468a75cea439caddd23ad8361a71e78bd1",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/rune_cairn",
+   "name": "rune_cairn",
+   "kind": "sprite",
+   "file": "rune_cairn.png",
+   "sha256": "abe1f7e2239c74f392e94cefe7fbefa566d9952495127b056b979d4cd5f5b1c6",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/crown_beacon_mended",
+   "name": "crown_beacon_mended",
+   "kind": "sprite",
+   "file": "crown_beacon_mended.png",
+   "sha256": "5c46923eee0f1f35221e805ffe9484f9726969b14a843105c3356b69d3534ff8",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/crown_beacon_lit",
+   "name": "crown_beacon_lit",
+   "kind": "sprite",
+   "file": "crown_beacon_lit.png",
+   "sha256": "449b667e768dd257912c5c9ab3845cb743bb0116d28893b268647c12a149e943",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/crown_beacon_kept",
+   "name": "crown_beacon_kept",
+   "kind": "sprite",
+   "file": "crown_beacon_kept.png",
+   "sha256": "1d80a08bafd73e5446fb1ed35f89709bdefb6743c69e2455d3de5e224e372cef",
+   "size": [
+    100,
+    88
+   ],
+   "pivot": [
+    50,
+    79
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/ashmaw_nest_empty",
+   "name": "ashmaw_nest_empty",
+   "kind": "sprite",
+   "file": "ashmaw_nest_empty.png",
+   "sha256": "8ef831ec722fcf84bd6acfb8107c09a4bb244c15b5a729393228bf7a36cb4aa9",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/relay_strongbox_open",
+   "name": "relay_strongbox_open",
+   "kind": "sprite",
+   "file": "relay_strongbox_open.png",
+   "sha256": "bf6373023fd3285fc058c962f5592c32d2bb03101c250a17f85a2b2840119a49",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/sunken_sledge_open",
+   "name": "sunken_sledge_open",
+   "kind": "sprite",
+   "file": "sunken_sledge_open.png",
+   "sha256": "c247b5abec1a66de0aff85d09111e0dceaf4f31f0ab12477c54d5d3cb15bfb2a",
+   "size": [
+    80,
+    70
+   ],
+   "pivot": [
+    40,
+    62
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/summit_bell_restored",
+   "name": "summit_bell_restored",
+   "kind": "sprite",
+   "file": "summit_bell_restored.png",
+   "sha256": "e07d3fa1e7e01f6347bc32591002144f7b37ef5d4d0f213e7343d22e83c5b5d6",
+   "size": [
+    96,
+    112
+   ],
+   "pivot": [
+    48,
+    104
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/icebound_case_thawed",
+   "name": "icebound_case_thawed",
+   "kind": "sprite",
+   "file": "icebound_case_thawed.png",
+   "sha256": "ead620ee67514dff60f98f03577f916baf928b6f0ab950029b559bbebe281eaa",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    50
+   ],
+   "margin": 2
+  },
+  {
+   "id": "L/icebound_case_shattered",
+   "name": "icebound_case_shattered",
+   "kind": "sprite",
+   "file": "icebound_case_shattered.png",
+   "sha256": "dea0fe707bb5cc3d67d149f660709713403cd71a8b0d82675db4a866c9dcfc04",
+   "size": [
+    64,
+    56
+   ],
+   "pivot": [
+    32,
+    50
+   ],
+   "margin": 2
+  }
+ ]
+}

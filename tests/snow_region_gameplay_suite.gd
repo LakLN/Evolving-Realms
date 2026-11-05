@@ -3,6 +3,7 @@ extends SceneTree
 const Store = preload("res://src/data/game_store.gd")
 const Atlas = preload("res://src/world/world_atlas.gd")
 const Session = preload("res://src/run/exploration_session.gd")
+const Inventory = preload("res://src/core/inventory.gd")
 const Data = preload("res://src/data/json_data.gd")
 const Terrain = preload("res://src/world/terrain_v1.gd")
 var app: Control
@@ -110,6 +111,43 @@ func _run() -> void:
 	await _key(KEY_E)
 	check(s.places.uses(s, hole.instance_id, "fish") == 1 and "recovering" in app.place_hint(place), "E fishes once; the hint then says the hole is recovering")
 	await _capture("snow-region-fishing-recovering.png")
+	# World state: the beacon visibly changes with each restoration stage.
+	var beacon: Dictionary = plan.sites.filter(func(p: Dictionary) -> bool: return str(p.instance_id).ends_with("/crown_beacon"))[0]
+	var award := Inventory.new().award(app.store.content, s.world.world_id, s.run.state.inventory, [{"content_id": "snow:bronze_scrap", "version": 1, "quantity": 2}, {"content_id": "snow:ember_heart", "version": 1, "quantity": 1}], "beacon review")
+	s.run.state.inventory = award.inventory
+	var near := Vector2i(int(beacon.position.x), int(beacon.position.y))
+	for d in [Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP]:
+		if s.terrain.walkable(near + d):
+			near += d
+			break
+	s.run.state.turn = calm
+	_move_fixture(s, near)
+	s.roster.creatures.clear() # Stage review, not the elder fight.
+	s.places.tick(s)
+	var definition: Dictionary = s.locations.definition_for(s.locations.find(beacon.instance_id))
+	for step in [["clear", "crown_beacon_mended", calm], ["kindle", "crown_beacon_lit", calm], ["vigil", "crown_beacon_kept", storm]]:
+		s.run.state.turn = int(step[2])
+		var acted: bool = s.perform_action({"type": "interact", "instance_id": beacon.instance_id, "interaction": step[0]})
+		s.roster.creatures.clear()
+		var stage: String = app.map_view.art.place_stage(definition, s.places.record(s, beacon.instance_id))
+		check(acted and stage == step[1] and app.map_view.art.stage_sprite(stage) != null, "Beacon shows its %s stage (%s)" % [step[0], stage])
+		app.map_view.refresh()
+		app._update_info()
+		await _capture("snow-region-beacon-" + str(step[0]) + ".png")
+	check(app.map_view.art.place_glow("crown_beacon_lit").a > 0.0, "A lit beacon glows")
+	# Danger: a heavy neutral beast postures before an avoidable fight.
+	if samples.has("snow:tuskback"):
+		s.run.state.turn = calm
+		var home: Dictionary = samples["snow:tuskback"]
+		var at := Vector2i(int(home.position.x), int(home.position.y))
+		_move_fixture(s, at + Vector2i(0, 5) if s.terrain.walkable(at + Vector2i(0, 5)) else at + Vector2i(4, 0))
+		app.map_view.refresh()
+		var cues: Array = s.roster.warnings(s)
+		check(cues.any(func(e: Dictionary) -> bool: return e.type == "creature_warning" and e.name == "Tuskback"), "A tuskback in sight shows a warning posture")
+		check(s.roster.warnings(s).is_empty(), "The posture is shown once per approach")
+		app.map_view.show_events(cues)
+		check("stamps the snow" in app.describe_events(cues), "The log describes the posture, not the creature's numbers: " + app.describe_events(cues))
+		await _capture("snow-region-tuskback-warning.png")
 	_finish()
 
 func _weather_turn(s: RefCounted, wanted: String) -> int:

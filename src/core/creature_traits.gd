@@ -5,7 +5,7 @@ extends RefCounted
 ## payload.traits plus the `assign` overlay for established v1 definitions.
 const Effects = preload("res://src/core/effects.gd")
 const PATH := "res://content/creature_traits.json"
-const FIELDS := ["name", "description", "fears_elements", "effect_modifiers", "call_allies", "charge", "ranged"]
+const FIELDS := ["name", "description", "fears_elements", "effect_modifiers", "call_allies", "charge", "ranged", "warning"]
 static var _rules: Dictionary = {}
 
 static func rules() -> Dictionary:
@@ -37,6 +37,9 @@ static func validate(data: Dictionary) -> String:
 		var ranged: Dictionary = part.get("ranged", {})
 		if not ranged.is_empty() and (not Effects.integer(ranged.get("min"), 2, 8) or not Effects.integer(ranged.get("max"), 2, 8) or not Effects.integer(ranged.get("cooldown_turns"), 1, 20) or int(ranged.min) < 2 or int(ranged.max) < int(ranged.min) or int(ranged.max) > 8 or int(ranged.cooldown_turns) < 1 or int(ranged.cooldown_turns) > 20):
 			return "Trait %s: ranged needs integer min 2..max<=8 and cooldown 1..20" % id
+		var warning: Dictionary = part.get("warning", {})
+		if not warning.is_empty() and (not Effects.integer(warning.get("radius"), 2, 10) or not warning.get("text") is String or str(warning.text).is_empty() or str(warning.text).length() > 160):
+			return "Trait %s: warning needs radius 2..10 and text up to 160 characters" % id
 		if not call.is_empty() and (int(call.get("radius", 0)) < 1 or int(call.radius) > 16 or int(call.get("alert_turns", 0)) < 1):
 			return "Trait %s: call_allies needs radius 1..16 and alert_turns >= 1" % id
 	for content_id in data.get("assign", {}):
@@ -53,7 +56,7 @@ static func ids(definition: Dictionary) -> Array:
 
 static func of(definition: Dictionary) -> Dictionary:
 	## Merged parts: {names, fears, effect_modifiers, charge, call_allies}.
-	var merged := {"names": [], "fears": [], "effect_modifiers": [], "charge": {}, "call_allies": {}, "ranged": {}}
+	var merged := {"names": [], "fears": [], "effect_modifiers": [], "charge": {}, "call_allies": {}, "ranged": {}, "warning": {}}
 	for id in ids(definition):
 		var part: Dictionary = rules().traits[id]
 		merged.names.append(part.name)
@@ -63,6 +66,7 @@ static func of(definition: Dictionary) -> Dictionary:
 		if part.has("charge"): merged.charge = part.charge
 		if part.has("call_allies"): merged.call_allies = part.call_allies
 		if part.has("ranged"): merged.ranged = part.ranged
+		if part.has("warning"): merged.warning = part.warning
 	return merged
 
 static func described(definition: Dictionary) -> Array:

@@ -1926,6 +1926,12 @@ func describe_events(events: Array) -> String:
 			"telegraph":
 				if event.get("ranged", false):
 					parts.append("%s takes aim at you: step aside or break its line of sight!" % event.name)
+			"creature_warning":
+				parts.append("⚠ The %s %s" % [str(event.name).to_lower(), event.text])
+			"stirring":
+				parts.append("Shapes move in the whiteout." if event.state == "arrive" else "The shapes in the storm are gone.")
+			"creature_return":
+				parts.append("Fresh tracks: a %s has come back to its old ground." % str(event.name).to_lower())
 			"dodge":
 				parts.append("You dodge %s's attack." % event.name)
 			"rest_start":

@@ -16,9 +16,10 @@ from snow_fauna_models import SPECS, CELLS, FROST, HIDE, BRONZE, BLUE, FIRE, DAR
 from snow_p0_author import sheet, CELL, PIVOT, DIRECTIONS
 from snow_quadrupeds import COLUMNS, COLUMN_NAMES
 from asset_check import grid_frames
+from snow_statics import damaged_bell, icebound_case, landmark, ICE, SNOWCAP, WOOD, BARK, CRACK
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / "assets/sources/snow_fauna_b4"
+SOURCE = ROOT / "assets/sources/snow_fauna_b5"
 GAME = ROOT / "assets/game/snow/fauna"
 
 
@@ -114,13 +115,12 @@ def main():
         "singing_ice": [Box("slab", (0, 9, 0), (3.2, 9, 1.2), BLUE, rot(roll=-6)), Box("left", (-5, 6, 1), (2, 6, 1.1), FROST, rot(roll=16)),
                         Box("right", (5, 5, 1), (1.8, 5, 1.1), BLUE, rot(roll=-20)), Box("sliver", (2, 13, 1.5), (0.8, 4, 0.6), FROST, rot(roll=-12)),
                         Part("drift", (0, 0.6, 3), (10, 1.2, 4), FROST)],
-        # b4 den: a dark hollow under a pine on a snowy hummock (b3 read as a flat disc).
-        "prowler_den": [Part("hummock", (0, 6, -2), (12, 7, 7), DARK), Part("snowcap", (0, 11.5, -3), (11, 3.2, 6), FROST),
-                        Part("hollow", (0, 5, 4.6), (5.6, 4.8, 1.4), ["#1b1720", "#14111a"]), Part("lip", (0, 9.6, 4.4), (6.2, 1.2, 1.4), FROST),
-                        Box("trunk", (2, 17, -4), (1.4, 6, 1.4), HIDE)] + [Part("crown", (2, 19 + k * 3.2, -4), (5 - k * 1.3, 2.4, 5 - k * 1.3), PINE) for k in range(4)]
-                       + [Box("root", (x, 5.5, 5.2), (0.7, 4.2, 0.7), ["#6b4a34", "#4a3324", "#2e2018"], rot(roll=x * 11)) for x in (-5.5, -2.5, 2.5, 5.5)]
-                       + [Box("claw", (x, 7, 6.5), (0.25, 1.8, 0.3), RED, rot(roll=14)) for x in (-8.4, -7.6, -6.8)]
-                       + [Part("bone", (5, 0.8, 8.5), (2.6, 0.6, 0.8), FROST, rot(yaw=30)), Part("skull", (8, 1, 8), (1.3, 1.1, 1.2), FROST)],
+        # b4 den (rev 3): a wide snow-capped rock overhang over a deep lair mouth.
+        "prowler_den": [Part("rock", (0, 7, -3), (14, 8, 7), DARK), Part("overhang", (0, 13, 0), (13, 3, 6), DARK), Part("cap", (0, 16, -1), (12, 2.6, 6), FROST),
+                        Part("mouth", (0, 6, 4.8), (7.5, 6, 1.4), ["#120f16", "#0c0a10"]), Part("floor", (0, 0.6, 7), (7, 0.6, 3), HIDE), Part("drift", (-11, 1.5, 4), (5, 2, 3.5), FROST)]
+                       + [Box("root", (x, 10.5, 5.6), (0.6, 3.4, 0.6), ["#6b4a34", "#4a3324", "#2e2018"], rot(roll=x * 6)) for x in (-5, -2, 1.5, 4.5)]
+                       + [Box("claw", (x, 7, 6.2), (0.3, 2.6, 0.3), FROST, rot(roll=16)) for x in (-11.2, -10.2, -9.2)]
+                       + [Part("bone", (5, 0.9, 9), (3, 0.7, 0.9), FROST, rot(yaw=30)), Part("skull", (9, 1.3, 8.5), (1.6, 1.3, 1.4), FROST), Part("tuft", (-4, 0.8, 9), (1.6, 0.5, 1), HIDE)],
         "fishing_hole": [Part("ice", (0, 0.3, 0), (13, 0.6, 9), BLUE), Part("hole", (0, 0.7, 1), (4.2, 0.4, 3), ["#2b4a6c", "#1d3350", "#132238"])]
                         + [Part("stone", (math.cos(a) * 6.2, 1.1, 1 + math.sin(a) * 4.6), (1.4, 1.0, 1.2), DARK) for a in [k * math.pi / 4 for k in range(8)]]
                         + [Box("pole", (7, 6, -2), (0.5, 7, 0.5), HIDE, rot(roll=30)), Box("line", (2.6, 5.6, 0), (0.15, 5, 0.15), FROST), Part("char", (-8, 1.4, 5), (3.2, 1, 1.2), FROST, rot(yaw=25))],
@@ -151,14 +151,49 @@ def main():
         "rune_cairn": [Part("stone", (0, y, 0), (w, h, w * 0.85), DARK) for y, w, h in [(3, 9, 3), (8.5, 7, 3), (13, 5, 2.6), (16.6, 3, 1.6)]]
                       + [Box("rune", (x, 8.5, 6.2), (0.6, 1.6, 0.4), BLUE) for x in (-3, 0, 3)] + [Part("cap", (0, 18.2, 0), (3.2, 1, 2.8), FROST)],
     }
-    landmarks = {"choir_hollow", "crown_beacon"}  # b4: larger set pieces
+    landmarks = {"choir_hollow", "crown_beacon", "prowler_den"}  # b4: larger set pieces
     for name, parts in statics.items():
         size, pivot = ((100, 88), [50, 79]) if name in landmarks else ((80, 70), [40, 62])  # b4: read at 40px tiles
         image = centered(parts, size)
         assets.append({"id": "L/" + name, "name": name, "kind": "sprite", **write(image, name), "pivot": pivot, "margin": 2})
         index["places"][name] = {"texture": "snow/fauna/" + name + ".png", "size": list(size), "pivot": pivot}
         index["mapping"]["places"]["by_id"]["snow:place/" + name] = name
-    batch = {"schema": "er-asset-batch", "version": 1, "batch": "snow_fauna_b4", "package": "snow_mountain_full", "status": "candidate", "provenance": {"source": "original code-authored geometry", "date": "2026-11-04", "generator": "snow_fauna_author.py + pixel3d.py", "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette. b4: larger cells for large species, people and beasts rescaled to the hero, the crown elder, a new den and living-region landmarks/rewards."}, "assets": assets}
+    # b4 world states: persistent sites show what this Run did to them.
+    fire = [Part("flame", (x, 18 + h, -3 + z), (1.6, 2.6 + h, 1.4), FIRE) for x, z, h in [(-2, 0, 0.6), (1.5, -0.6, 1.2), (0, 1, 0)]]
+    beacon = statics["crown_beacon"]
+    mended = [p for p in beacon if p.name != "crack"]
+    stages = {
+        "crown_beacon_mended": (mended, (100, 88), [50, 79], None),
+        "crown_beacon_lit": (mended + fire, (100, 88), [50, 79], "#ffb35c"),
+        "crown_beacon_kept": (mended + fire + [Box("pole", (8, 14, -4), (0.5, 9, 0.5), HIDE), Box("pennant", (10.4, 21, -4), (2.4, 1.6, 0.3), BLUE, rot(roll=-6))], (100, 88), [50, 79], "#ffc870"),
+        "ashmaw_nest_empty": ([p for p in statics["ashmaw_nest"] if p.name != "ember"] + [Part("ash", (0, 0.8, 0), (3.6, 0.5, 2.6), DARK)], (80, 70), [40, 62], None),
+        "relay_strongbox_open": ([p for p in statics["relay_strongbox"] if p.name not in ("lid", "lock")] + [Box("lid", (0, 13, -5.5), (9.4, 1.4, 6.4), HIDE, rot(pitch=70)), Part("hollow", (0, 8.4, 0), (7.6, 0.6, 4.6), DARK)], (80, 70), [40, 62], None),
+        "sunken_sledge_open": ([p for p in statics["sunken_sledge"] if p.name not in ("load", "lash")] + [Part("hole", (-5, 0.7, 2), (4, 0.4, 3), ["#2b4a6c", "#1d3350", "#132238"]), Part("shard", (4, 1.4, 5), (1.4, 1, 1), FROST)], (80, 70), [40, 62], None),
+    }
+    for name, (parts, size, pivot, glow) in stages.items():
+        image = centered(parts, size)
+        assets.append({"id": "L/" + name, "name": name, "kind": "sprite", **write(image, name), "pivot": pivot, "margin": 2})
+        index["places"][name] = {"texture": "snow/fauna/" + name + ".png", "size": list(size), "pivot": pivot, **({"glow": glow} if glow else {})}
+    # P0 sites keep their own model and fit; only the changed parts differ.
+    bell_parts, bell_marks = damaged_bell()
+    restored = lambda: ([p for p in bell_parts] + [Box("ribbon", (0, 30.2, 2.2), (2.6, 0.6, 0.4), BLUE)], [m for m in bell_marks if m[1] != CRACK])
+    ice_parts, ice_marks = icebound_case()
+    thawed = lambda: ([p for p in ice_parts if p.name not in ("ice", "shard", "frost")] + [Part("melt", (0, 0.6, 0), (11, 0.6, 8), ICE)], [])
+    shattered = lambda: ([p for p in ice_parts if p.name not in ("ice", "frost")] + [Part("shard", (x, 1.4, z), (1.6, 1.2, 1.4), ICE, rot(roll=x * 7)) for x, z in [(-9, -2), (-6, 5), (7, -4), (10, 3)]], [])
+    for name, model, size, pivot, scale in [("summit_bell_restored", restored, (96, 112), (48, 104), 2.5), ("icebound_case_thawed", thawed, (64, 56), (32, 50), 2.0), ("icebound_case_shattered", shattered, (64, 56), (32, 50), 2.0)]:
+        image = landmark(model, size, pivot, scale)
+        assets.append({"id": "L/" + name, "name": name, "kind": "sprite", **write(image, name), "pivot": list(pivot), "margin": 2})
+        index["places"][name] = {"texture": "snow/fauna/" + name + ".png", "size": list(size), "pivot": list(pivot)}
+    index["mapping"]["places"]["stages_by_id"] = {
+        "snow:place/crown_beacon": [["clear", "crown_beacon_mended"], ["kindle", "crown_beacon_lit"], ["vigil", "crown_beacon_kept"]],
+        "snow:place/summit_bell": [["restore", "summit_bell_restored"]],
+        "snow:place/ashmaw_nest": [["grab", "ashmaw_nest_empty"], ["wrapped", "ashmaw_nest_empty"]],
+        "snow:place/relay_strongbox": [["force", "relay_strongbox_open"], ["got:latch", "relay_strongbox_open"]],
+        "snow:place/sunken_sledge": [["state:thawed", "sunken_sledge_open"], ["state:shattered", "sunken_sledge_open"]],
+        "snow:place/icebound_provisions": [["state:thawed", "icebound_case_thawed"], ["state:shattered", "icebound_case_shattered"]],
+        "snow:place/frozen_medicine": [["state:thawed", "icebound_case_thawed"], ["state:shattered", "icebound_case_shattered"]],
+    }
+    batch = {"schema": "er-asset-batch", "version": 1, "batch": "snow_fauna_b5", "package": "snow_mountain_full", "status": "candidate", "provenance": {"source": "original code-authored geometry", "date": "2026-11-04", "generator": "snow_fauna_author.py + pixel3d.py", "notes": "No AI service or traced images. All directions rendered from original models. Technique manuals reuse the established book silhouette. b5: world-state stage sprites (beacon, bell, caches, nest, strongbox, sledge) and a rock-overhang den; b4: larger cells for large species, people and beasts rescaled to the hero, the crown elder, a new den and living-region landmarks/rewards."}, "assets": assets}
     (SOURCE / "batch.json").write_text(json.dumps(batch, indent=1) + "\n")
     (ROOT / "assets/game/snow/snow_fauna_index.json").write_text(json.dumps(index, indent=1) + "\n")
     print("Full roster, items and landmarks built", flush=True)

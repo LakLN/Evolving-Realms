@@ -83,6 +83,38 @@
       "fears_elements": [
         "ice"
       ]
+    },
+    "menace_tusks": {
+      "name": "Menacing",
+      "description": "Shows clear signs before it is pushed into a fight.",
+      "warning": {
+        "radius": 5,
+        "text": "lowers its tusks and stamps the snow flat. It will not give ground."
+      }
+    },
+    "menace_ember": {
+      "name": "Menacing",
+      "description": "Shows clear signs before it is pushed into a fight.",
+      "warning": {
+        "radius": 6,
+        "text": "lifts its head; smoke curls from its jaws, and the scree around it is scorched black."
+      }
+    },
+    "menace_bell": {
+      "name": "Menacing",
+      "description": "Shows clear signs before it is pushed into a fight.",
+      "warning": {
+        "radius": 7,
+        "text": "swings its horns, and a low bronze note rolls across the stone."
+      }
+    },
+    "menace_quake": {
+      "name": "Menacing",
+      "description": "Shows clear signs before it is pushed into a fight.",
+      "warning": {
+        "radius": 7,
+        "text": "turns toward you. The snow shivers with each of its steps."
+      }
     }
   },
   "assign": {
@@ -103,6 +135,18 @@
     "snow:bellback_sentinel": [
       "charger",
       "thick_coat"
+    ],
+    "snow:tuskback": [
+      "menace_tusks"
+    ],
+    "snow:ashmaw": [
+      "menace_ember"
+    ],
+    "snow:elder_bellback": [
+      "menace_bell"
+    ],
+    "snow:hoarfrost_giant": [
+      "menace_quake"
     ]
   }
 }
