@@ -1,5 +1,66 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## World design / visual refoundation checkpoint (2026-11-05)
+
+Director priority supersedes the long journey mission above: no tours or broad
+regression campaign in this pass. `feature/snow-full-region`, no master merge.
+Main causes: flat collision model, independent procedural clutter, noisy repeated
+scree, wall strips without architecture, inconsistent prop scale and gold/brown HUD.
+
+Implemented new Snow layout v8 (`landpkg:snow_mountain/reference`), atlas/terrain v3,
+spatial v1. Broken Relay is a real 48x40 section of the existing land: lower approach,
+raised outpost courtyard, higher lookout, authored stair connections, directed drop,
+ravine bridge and longer return route. Existing discoveries and authored enemy homes
+are preserved; site placements are pinned in the NEW plan. Random objects/creatures
+are suppressed inside the composed patch, not across the region. Old plans unchanged.
+Height edges now govern player/creature movement, corner cutting, navigation,
+interaction, targeting/LOS and relocation. Derived cell cache avoids zone scans per
+collision query. No new Run fields, dependency or schema migration.
+
+Native visual iterations: first flat prototype rejected; coordinated material atlas
+added, repeated snow reduced, path borders removed, continuous cliff faces and
+cutaway masonry/timber outpost, composed pine/rock banks, compatible chest sprite.
+New material source, exact prompt and provenance:
+`assets/sources/snow_reference_materials_v1/`; reproducible extraction:
+`.venv/Scripts/python.exe tools/art/build_reference_materials.py` (passed).
+Art remains candidate. Before/after at native 1100x720, same World seed 4242 and
+calm turn 60, focused on old/new relay respectively (same zoom, composed camera):
+`.tools/reference-before.png`, `reference-after.png`, `reference-bridge.png`,
+`reference-lookout.png`, `reference-hud.png`. Baseline terrain uses the revised HUD;
+these are geometry comparisons, not a preserved old HUD capture.
+
+HUD: ten real slots 1..9/0, tenth skill cost/cooldown, Q/Z retained, plain HP/Energy
+labels, no permanent ATK/DEF, narrower panels, restrained matching panel/hotbar styles.
+Gear retains derived combat details. Saves keep the original learned-skill array.
+
+Bounded commands/results (all disposable databases, no personal saves or Run 01):
+- `scripts/check-reference.ps1 -TimeoutSeconds 110`: import/startup plus actual
+  native traversal, AI edge refusal/stairs, accessible shelter/discovery, key 0,
+  Q/Z, no-spend repeats and exact inventory/skill/position save/load: 45/0, native
+  OpenGL/NVIDIA, final captures inspected. Each child killed on timeout, stdout/stderr
+  checked, explicit suite completion required. No missing-log polling.
+- `.tools/run-bounded.ps1 -Script res://tests/ui_gameplay_suite.gd -Headless -TimeoutSeconds 75 -Tag reference-ui`: 24/0.
+- Same bounded runner, `world_suite.gd`, tag `reference-world`: 49/0, includes frozen
+  v1 golden fixtures, reverse chunk order, legacy refusal and restart save/load.
+- Same runner, `combat_suite.gd`, tag `reference-combat`: 75/0, includes AI identity,
+  item duplication, World/Run separation, normal death and permadeath persistence.
+
+Applied reference patterns: readable one-way ledges (Pokemon), landmark/route
+composition (Zelda), explicit traversable levels (CrossCode). Research:
+https://www.radicalfishgames.com/?paged=47 ;
+https://www.nintendo.co.jp/clv/manuals/en/pdf/CLV-P-NAANE.pdf ;
+https://bulbapedia.bulbagarden.net/wiki/Ledge . Adapted to turn-based discrete edges.
+
+Continuation: final native captures inspected after narrowing routes, stepping the
+lookout silhouette and correcting north rims. Only Broken Relay has
+this composition pass; the rest still has the old flat/noisy terrain and procedural
+placement. Avoid claiming regional completion or final artistic acceptance. Next
+coherent batch: further naturalize the long terrace edges, softer patch-to-old-terrain
+joins, architecture/ground-scale polish, then one adjoining route and habitat using
+the same edges. No arbitrary jumping, climbing, stacked underpasses or high-ground
+projectile rules yet. Keep old records append-only; new geography needs new version.
+Unrelated untracked `assets/sources/README.md` and `manifest.json` left untouched.
+
 ## Snow Mountain experience pass - feedback, world state, journeys (2026-11-05)
 
 Branch `feature/snow-full-region` (not merged). Commits 4a7b57c (eased weather, storm

@@ -363,7 +363,7 @@ func _draw_waypoint() -> void:
 func _draw_minimap() -> void:
 	_minimap_rect = Rect2(Vector2(size.x - MINIMAP_SIZE.x - MINIMAP_MARGIN, MINIMAP_MARGIN), MINIMAP_SIZE)
 	draw_rect(_minimap_rect, Color("18140f", 0.96))
-	draw_rect(_minimap_rect, Color("8a6c3c"), false, 2.0)
+	draw_rect(_minimap_rect, Color("53666c"), false, 1.0)
 	_draw_text(_minimap_rect.position + Vector2(8, 19), "LOCAL MAP  [N]", 13, Color("e6c47b"))
 	var viewport := Rect2(_minimap_rect.position + Vector2(8, 27), _minimap_rect.size - Vector2(16, 36))
 	draw_rect(viewport, Color("090d10"))

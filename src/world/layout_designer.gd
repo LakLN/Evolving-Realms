@@ -7,7 +7,7 @@ extends RefCounted
 const TerrainAtlas = preload("res://src/world/terrain_atlas.gd")
 const Designer = preload("res://src/world/land_designer.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
-const LAYOUTS := {"landpkg:snow_mountain/layout": "res://content/land_layouts/snow_mountain.json", "landpkg:snow_mountain/full_region": "res://content/land_layouts/snow_mountain_full.json"}
+const LAYOUTS := {"landpkg:snow_mountain/layout": "res://content/land_layouts/snow_mountain.json", "landpkg:snow_mountain/full_region": "res://content/land_layouts/snow_mountain_full.json", "landpkg:snow_mountain/reference": "res://content/land_layouts/snow_mountain_reference.json"}
 const LAYOUT_VERSION := 1
 const TERRAIN_VERSION := 2
 const DESIGNER := "layout-v1"
@@ -60,7 +60,7 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 		return center + Vector2i((rotate(Vector2(float(p[0]), float(p[1])), r) * radius).round())
 	var root: String = designer._root(slot)
 	var name := str(archetype.names[designer.h(slot.x, slot.y, 7104) % archetype.names.size()]).replace("{root}", root)
-	var plan := {"land_id": land_id, "atlas_version": int(layout.get("atlas_version", 1)), "terrain_version": TERRAIN_VERSION,
+	var plan := {"land_id": land_id, "atlas_version": int(layout.get("atlas_version", 1)), "terrain_version": int(layout.get("terrain_version", TERRAIN_VERSION)),
 		"layout": {"id": layout.id, "version": int(layout.version), "rotation": r}, "archetype": layout.archetype, "archetype_title": archetype.title,
 		"name": name, "epithet": "the Hushed Crown, a winter relay valley around a silent ice escarpment",
 		"history": "Carriers once rang bronze bells across %s to guide travellers through the whiteouts. The relay fell silent; the pines took it back." % name,
@@ -147,6 +147,14 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 		"mirrors": str(gate.get("mirrors", "")), "region": region, "inner": _xy(inner)})
 	plan.hooks = ["Rumours speak of an abandoned relay outpost where the pines meet the pass road.", "Travellers tell of a lee shelter in the basin below the escarpment."]
 	plan.content_packs = layout.get("content_packs", []).duplicate()
+	if layout.has("reference_area"):
+		plan.spatial = layout.reference_area.duplicate(true)
+		var anchor: Vector2i = to_tile.call(layout.reference_area.anchor)
+		plan.spatial.origin = _xy(anchor - Vector2i(24, 20))
+		for shelter in geo.shelters:
+			if str(shelter.shelter_id).ends_with("/relay_outpost"):
+				shelter.rect = {"x": anchor.x - 6, "y": anchor.y - 10, "w": 10, "h": 7}
+				shelter.doors = [_xy(anchor + Vector2i(-2, -4)), _xy(anchor + Vector2i(3, -7))]
 	if not _place_sites(designer, plan, layout, to_tile):
 		return {}
 	if not _place_creatures(designer, plan, layout, to_tile): return {}
@@ -186,7 +194,9 @@ func _place_sites(designer: RefCounted, plan: Dictionary, layout: Dictionary, to
 	var taken := {}
 	for site in layout.get("sites", []):
 		var target := Vector2i.ZERO
-		if site.has("shelter"):
+		if site.has("spatial") and plan.has("spatial"):
+			target = Vector2i(int(plan.spatial.origin.x),int(plan.spatial.origin.y))+Vector2i(int(site.spatial[0]),int(site.spatial[1]))
+		elif site.has("shelter"):
 			for shelter in plan.geography.shelters:
 				if str(shelter.shelter_id).ends_with("/" + str(site.shelter)):
 					target = Vector2i(int(shelter.rect.x) + int(shelter.rect.w) / 2, int(shelter.rect.y) + int(shelter.rect.h) / 2)

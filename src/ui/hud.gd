@@ -6,13 +6,13 @@ extends Control
 ## session state for bars and slots and never mutates a Run.
 const FantasyTheme = preload("res://src/ui/fantasy_theme.gd")
 const Art = preload("res://src/world/art.gd")
-const SLOT := 44
-const SKILL_SLOTS := 9
+const SLOT := 40
+const SKILL_SLOTS := 10
 const ITEM_KEYS := ["q", "z"]
 const EDGE := 16
 const COLUMN_WIDTH := 200.0 # Matches the minimap width (world_map.gd MINIMAP_SIZE).
-const FEED_WIDTH := 320.0
-const MAX_FEED := 3
+const FEED_WIDTH := 280.0
+const MAX_FEED := 2
 const LOG_SIZE := 80
 const DISPOSITION_COLORS := {"hostile": Color("e0564b"), "neutral": Color("e0b34b"), "passive": Color("7fd17a")}
 const COMMANDS := [["Bag", "I", "inventory"], ["Gear", "C", "character"], ["Skills", "K", "skills"], ["Craft", "G", "craft"],
@@ -81,9 +81,9 @@ func build() -> void:
 
 # ------------------------------------------------------------------ layout
 
-func _panel(alpha: float = 0.82, border: Color = FantasyTheme.GOLD_DIM, margin: int = 8) -> PanelContainer:
+func _panel(alpha: float = 0.82, border: Color = Color("52616c"), margin: int = 8) -> PanelContainer:
 	var panel := PanelContainer.new()
-	var style := FantasyTheme.box(Color(FantasyTheme.PANEL, alpha), border, 1, 6, margin)
+	var style := FantasyTheme.box(Color(Color("172126"), alpha), border, 1, 6, margin)
 	style.shadow_color = Color(0, 0, 0, 0.35)
 	style.shadow_size = 4
 	panel.add_theme_stylebox_override("panel", style)
@@ -133,7 +133,7 @@ func _bar_text(bar: ProgressBar, font_size: int) -> Label:
 func _build_vitals() -> void:
 	var panel := _panel()
 	panel.position = Vector2(EDGE, EDGE)
-	panel.custom_minimum_size = Vector2(290, 0)
+	panel.custom_minimum_size = Vector2(260, 0)
 	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(panel)
 	_vitals_style = panel.get_theme_stylebox("panel")
@@ -143,16 +143,18 @@ func _build_vitals() -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 8)
 	column.add_child(header)
-	hp_label = _text(header, 15, FantasyTheme.GOLD)
+	hp_label = _text(header, 15, Color("d3dace"))
 	xp_bar = _bar(header, Color("b48a3c"), 6)
 	xp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	for row in [["heart", Color("c9483f"), 18], ["mana", Color("3b7fc4"), 14]]:
+	for row in [["HP", Color("ac514b"), 18], ["Energy", Color("50849b"), 16]]:
 		var line := HBoxContainer.new()
 		line.add_theme_constant_override("separation", 6)
 		column.add_child(line)
-		_icon(line, row[0], 18)
+		var label := _text(line, 12, Color("cbd4d8"))
+		label.text = row[0]
+		label.custom_minimum_size.x = 48
 		var bar := _bar(line, row[1], row[2])
-		if row[0] == "heart":
+		if row[0] == "HP":
 			hp_bar = bar
 			hp_text = _bar_text(bar, 14)
 		else:
@@ -161,12 +163,12 @@ func _build_vitals() -> void:
 	var needs := HBoxContainer.new()
 	needs.add_theme_constant_override("separation", 6)
 	column.add_child(needs)
-	_icon(needs, "drumstick", 16)
+
 	survival = _text(needs, 14)
 	_statuses = HFlowContainer.new()
 	_statuses.add_theme_constant_override("h_separation", 4)
 	_statuses.add_theme_constant_override("v_separation", 4)
-	_statuses.custom_minimum_size.x = 274
+	_statuses.custom_minimum_size.x = 244
 	_statuses.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(_statuses)
 
@@ -253,7 +255,7 @@ func _build_hotbar() -> void:
 	stack.add_theme_constant_override("separation", 6)
 	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(stack)
-	_prompt_panel = _panel(0.86, FantasyTheme.GOLD, 6)
+	_prompt_panel = _panel(0.86, Color("d3dace"), 6)
 	_prompt_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	stack.add_child(_prompt_panel)
 	interaction = _text(_prompt_panel, 16)
@@ -261,7 +263,7 @@ func _build_hotbar() -> void:
 	interaction.custom_minimum_size.x = 0
 	interaction.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt_panel.hide()
-	hotbar = _panel(0.8, FantasyTheme.GOLD_DIM, 5)
+	hotbar = _panel(0.8, Color("53666c"), 5)
 	hotbar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	hotbar.mouse_filter = Control.MOUSE_FILTER_PASS
 	stack.add_child(hotbar)
@@ -269,11 +271,11 @@ func _build_hotbar() -> void:
 	row.add_theme_constant_override("separation", 4)
 	hotbar.add_child(row)
 	for index in SKILL_SLOTS:
-		var slot := _slot(row, str(index + 1))
+		var slot := _slot(row, str((index + 1) % 10))
 		slot.button.pressed.connect(func() -> void: skill_pressed.emit(index))
 		_skill_slots.append(slot)
 	var divider := ColorRect.new()
-	divider.color = FantasyTheme.GOLD_DIM
+	divider.color = Color("53666c")
 	divider.custom_minimum_size = Vector2(2, SLOT - 8)
 	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -286,6 +288,8 @@ func _build_hotbar() -> void:
 func _slot(parent: Node, key: String) -> Dictionary:
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(SLOT, SLOT)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		button.add_theme_stylebox_override(state, FantasyTheme.box(Color("172126") if state != "hover" else Color("30424b"), Color("53666c"), 1, 3, 2))
 	button.focus_mode = Control.FOCUS_NONE
 	button.clip_contents = true
 	parent.add_child(button)
@@ -308,7 +312,7 @@ func _slot(parent: Node, key: String) -> Dictionary:
 	cool_text.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cool_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	cool_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	var keycap := _text(button, 12, FantasyTheme.GOLD)
+	var keycap := _text(button, 12, Color("d3dace"))
 	keycap.position = Vector2(3, 0)
 	keycap.text = key
 	var corner := _text(button, 11, Color("cfe3ff"))
@@ -320,7 +324,7 @@ func _slot(parent: Node, key: String) -> Dictionary:
 	return {"button": button, "icon": icon, "short": short, "cool": cool, "cool_text": cool_text, "corner": corner, "key": key}
 
 func _build_menu_bar() -> void:
-	var panel := _panel(0.78, FantasyTheme.GOLD_DIM, 5)
+	var panel := _panel(0.78, Color("53666c"), 5)
 	panel.anchor_left = 1.0
 	panel.anchor_right = 1.0
 	panel.anchor_top = 1.0
@@ -332,7 +336,7 @@ func _build_menu_bar() -> void:
 	panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(panel)
 	menu_bar = GridContainer.new()
-	menu_bar.columns = 4
+	menu_bar.columns = 2
 	menu_bar.add_theme_constant_override("h_separation", 4)
 	menu_bar.add_theme_constant_override("v_separation", 4)
 	panel.add_child(menu_bar)
@@ -341,10 +345,10 @@ func _build_menu_bar() -> void:
 		button.text = "%s %s" % [entry[0], entry[1]]
 		button.tooltip_text = {"inventory": "Inventory: items, use, equip, learn, quick slots", "character": "Character: stats, level and equipped gear", "skills": "Skills: learned skills, costs and cooldowns", "talent": "Talent awakened in this Run", "craft": "Crafting: turn materials into gear, remedies and food", "knowledge": "Knowledge confirmed in this Run", "map": "World map and journal", "help": "Controls and how the screen works", "menu": "Save and return to the main menu"}[entry[2]]
 		button.focus_mode = Control.FOCUS_NONE
-		button.custom_minimum_size = Vector2(56, 28)
+		button.custom_minimum_size = Vector2(56, 24)
 		button.add_theme_font_size_override("font_size", 13)
 		for state in ["normal", "hover", "pressed", "disabled"]:
-			var style: StyleBoxFlat = FantasyTheme.box(Color("2a1f15") if state != "hover" else Color("47331f"), FantasyTheme.GOLD_DIM if state != "hover" else FantasyTheme.GOLD, 1, 4, 3)
+			var style: StyleBoxFlat = FantasyTheme.box(Color("172126") if state != "hover" else Color("2b3b42"), Color("53666c") if state != "hover" else Color("d3dace"), 1, 4, 3)
 			button.add_theme_stylebox_override(state, style)
 		var name: String = entry[2]
 		button.pressed.connect(func() -> void: command.emit(name))
@@ -384,7 +388,7 @@ func say(text: String, replace: bool = false) -> void:
 static func _tone(text: String) -> Color:
 	## Message frame: gold for discoveries and learning, amber for refusals and failures.
 	if text.begins_with("DISCOVERED") or text.contains("Knowledge learned") or text.begins_with("LAND:") or text.begins_with("LEVEL UP") or text.begins_with("Learned "):
-		return FantasyTheme.GOLD
+		return Color("d3dace")
 	if text.contains("no turn spent") or text.contains("failed") or text.contains("Cannot") or text.contains("Not enough") or text.contains("is empty"):
 		return Color("e0904b")
 	return Color(0, 0, 0, 0)
@@ -440,7 +444,7 @@ func show_target(text: String, disposition: String, hp: int, max_hp: int) -> voi
 
 func set_weather_alert(level: int) -> void:
 	## 0 calm, 1 warning/incoming, 2 exposed or hazardous: tints the region frame.
-	_region_style.border_color = [FantasyTheme.GOLD_DIM, Color("e0b34b"), Color("e0564b")][clampi(level, 0, 2)]
+	_region_style.border_color = [Color("53666c"), Color("e0b34b"), Color("e0564b")][clampi(level, 0, 2)]
 	_region_style.set_border_width_all(1 if level == 0 else 2)
 
 func set_statuses(chips: Array) -> void:
@@ -483,7 +487,7 @@ func _vital_feedback(delta: float) -> void:
 		_hurt = 0.5
 	_last_hp = hp
 	_hurt = maxf(0.0, _hurt - delta)
-	_vitals_style.border_color = FantasyTheme.GOLD_DIM.lerp(Color("ff5a4a"), clampf(_hurt * 2.0, 0.0, 1.0))
+	_vitals_style.border_color = Color("53666c").lerp(Color("ff5a4a"), clampf(_hurt * 2.0, 0.0, 1.0))
 	_vitals_style.set_border_width_all(2 if _hurt > 0.0 else 1)
 	var low := hp_bar.max_value > 0 and hp > 0 and float(hp) / hp_bar.max_value < 0.3
 	hp_bar.modulate = Color(1, 1, 1).lerp(Color(1.6, 0.8, 0.8), 0.5 + 0.5 * sin(Time.get_ticks_msec() / 160.0)) if low else Color.WHITE

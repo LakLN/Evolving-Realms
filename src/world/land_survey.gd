@@ -47,8 +47,9 @@ static func survey(terrain: RefCounted, plan: Dictionary, from: Vector2i, chunks
 			var local: Vector2i = next - origin
 			if local.x < 0 or local.y < 0 or local.x >= size or local.y >= size or seen[local.y * size + local.x] != 0:
 				continue
+			if Surfaces.walkable(value_at(chunks, next)) and not terrain.can_step(current, next): continue
 			seen[local.y * size + local.x] = 1
-			if Surfaces.walkable(value_at(chunks, next)):
+			if Surfaces.walkable(value_at(chunks, next)) and terrain.can_step(current, next):
 				queue.append(next)
 			else:
 				seen[local.y * size + local.x] = 2
@@ -97,7 +98,7 @@ static func steps(terrain: RefCounted, from: Vector2i, limit: int, goal: Callabl
 			continue
 		for direction in DIRECTIONS:
 			var next: Vector2i = current + direction
-			if seen.has(next) or not terrain.walkable(next):
+			if seen.has(next) or not terrain.can_step(current, next):
 				continue
 			seen[next] = depth + 1
 			if goal.call(next):

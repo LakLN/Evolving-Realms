@@ -3,7 +3,7 @@
 2026-11-04. Design and implementation handoff; no runtime change in this commit.
 
 **Status (later 2026-11-04):** implemented. `src/ui/hud.gd` owns the edge HUD (vitals,
-target frame, region/weather column, prompt, hotbar with 9 skill slots + Q/Z quick
+target frame, region/weather column, prompt, hotbar with 10 skill slots + Q/Z quick
 items, fading message feed, panel shortcuts); main.gd keeps action handlers and text.
 Sheets (Bag, Gear, Skills, Talent, Lore, Help, Log) share one tabbed frame on the right
 while vitals, messages and hotbar stay visible. Presentation visibility shipped in
@@ -34,7 +34,7 @@ do not import reference art, their lighting model, or their gameplay mechanics.
 |---|---|
 | Character status | Top-left compact HP and energy bars with readable current/max values; small hunger/thirst indicators beneath. Show status icons with duration and text on focus/hover. ATK/DEF/level detail belongs in Character. Preserve the actual hunger/thirst semantics (higher currently means need). |
 | Navigation | Small collapsible minimap top-right; brief area name. Expand weather only for meaningful warnings/exposure, with numbers and symbols as well as color. No permanent region-description paragraph. |
-| Actions | Bottom-center skill strip, up to nine slots matching existing learning order exactly. Icon/fallback abbreviation, key number, cooldown and disabled reason. Clicking delegates to `begin_skill(index)`. Passive/triggered skills remain labeled, non-activatable; do not compress indices or invent reassignment. |
+| Actions | Bottom-center skill strip, up to ten slots matching existing learning order exactly. Icon/fallback abbreviation, key number, cooldown and disabled reason. Clicking delegates to `begin_skill(index)`. Passive/triggered skills remain labeled, non-activatable; do not compress indices or invent reassignment. |
 | Items | Inventory is the functional item-use surface initially. A future item quickbar requires an explicit binding design; no item keybindings or saved assignments exist today. Do not suggest that the skill strip uses consumables. |
 | Nearby context | One short prompt above the strip, only for an offered action/valid target: key + verb + name. E opens existing choices when needed; X appears only through current eligible cues. No hidden requirement hints. Selected hostile HP/telegraph stays near the target. |
 | Notifications | Small edge toast, usually 2–4 seconds; coalesce routine saves/pickups. Errors remain readable until dismissed/replaced intentionally. Clues stay available in the journal/Knowledge, not only in a toast. Preserve current critical-message hold until a replacement is verified. |
@@ -73,7 +73,7 @@ do not import reference art, their lighting model, or their gameplay mechanics.
 | `src/main.gd` discovery panel, `_show_knowledge`, `_show_interactions` | Shared paused reader/choice selector, Run-local confirmed facts and guarded interaction choices. |
 | `src/ui/world_map.gd` | Separate Control: explored-bit terrain sampling, minimap, pan/zoom, waypoint, discovered markers and scrollable journal. Keep its knowledge filters. |
 | `src/ui/fantasy_theme.gd`, `src/world/art.gd` | Shared Theme/StyleBox helpers; item/status/icon lookups. Some item icons use heuristic mapping; exact icons are not guaranteed. |
-| `src/main.gd` input and `_process`, `src/run/realtime_controller.gd` | WASD/arrows; E/X/F/Tab/Space/R; I/C/T/K/J; 1–9; M/N; Ctrl+S; Esc. U acts on selected item/gear/skill in its panel. Targeting uses Tab or directions, Enter/F confirm, Esc cancel. Preserve turn-based and held real-time paths. |
+| `src/main.gd` input and `_process`, `src/run/realtime_controller.gd` | WASD/arrows; E/X/F/Tab/Space/R; I/C/T/K/J; 1–9/0; M/N; Ctrl+S; Esc. U acts on selected item/gear/skill in its panel. Targeting uses Tab or directions, Enter/F confirm, Esc cancel. Preserve turn-based and held real-time paths. |
 
 ## Visibility: target and smallest safe route
 

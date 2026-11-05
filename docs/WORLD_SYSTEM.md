@@ -1,5 +1,18 @@
 # World and exploration — Checkpoint C
 
+## Snow reference geometry (2026-11-05)
+
+New Snow reference plans pin atlas/terrain version 3 and layout version 8. Their
+`spatial` v1 layer stores bounded surface/height rectangles and adjacent directed
+connectors; it is immutable World data, never a Run elevation field. Old terrain
+v1/v2 plans retain their original surfaces and height zero. `spatial_layout.gd`
+validates the layer; `terrain_atlas.gd` derives its cell cache once on configure.
+Player/creature steps, diagonal corners, stairs, one-way drops, navigation and
+interactions share these edges. Targeting/LOS cannot cross different heights except
+adjacent stairs. This first model has no stacked bridge underpass or free climbing.
+Native geometry/controls/save review: `scripts/check-reference.ps1` (bounded,
+disposable database; screenshots under `.tools/reference-*.png`).
+
 ## Boundaries
 
 GameStore remains the only persistence API. Database user_version=2 and record

@@ -1045,6 +1045,7 @@ func wait_turn() -> bool:
 	return perform_action({"type": "wait"})
 
 func line_clear(from: Vector2i, target: Vector2i) -> bool:
+	if not terrain.can_reach(from, target): return false
 	## Integer Bresenham; the first opaque tile is visible, terrain behind is hidden.
 	var current := from
 	var dx := absi(target.x - current.x)
@@ -1074,7 +1075,7 @@ func _move_action(action: Dictionary) -> bool:
 	if direction not in Spawn.DIRECTIONS and not (realtime and direction in DIAGONALS):
 		return _fail("Choose one cardinal direction")
 	var target := position + direction
-	if not Surfaces.walkable(cache.tile_at(target)):
+	if not terrain.can_step(position, target):
 		return _fail("Blocked — no turn spent")
 	if direction in DIAGONALS:
 		# No corner cutting: both orthogonal neighbours must be open and unoccupied.
@@ -1109,6 +1110,8 @@ func prefetch_step() -> bool:
 	return false
 
 func relocate(target: Vector2i) -> bool:
+	var adjacent: bool = maxi(absi(position.x-target.x),absi(position.y-target.y)) <= 1
+	if (adjacent and not terrain.can_step(position,target)) or (not adjacent and not terrain.can_reach(position,target)): return _fail("The height edge blocks relocation")
 	## Move the player to a validated walkable tile (a step or a skill), streaming chunks.
 	var profile: bool = OS.get_cmdline_user_args().has("--profile-streaming") and cache.center != Terrain.chunk_of(target)
 	var timings: Array = []
@@ -1215,7 +1218,7 @@ func _interact_action(action: Dictionary) -> bool:
 	if instance.is_empty():
 		return _fail("Object is not in the loaded chunks")
 	var tile := Vector2i(int(instance.position.x), int(instance.position.y))
-	if not visible.has(tile) or absi(tile.x - position.x) + absi(tile.y - position.y) > 1:
+	if not terrain.can_reach(position, tile) or not visible.has(tile) or absi(tile.x - position.x) + absi(tile.y - position.y) > 1:
 		return _fail("Object is out of interaction range or sight")
 	if is_consumed(instance.instance_id):
 		return _fail("Already collected or opened — no turn spent")

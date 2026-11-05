@@ -11,7 +11,7 @@ static func accessible(terrain: RefCounted, tile: Vector2i) -> bool:
 		return false
 	var exits := 0
 	for direction in DIRECTIONS:
-		if terrain.walkable(tile + direction):
+		if terrain.can_step(tile, tile + direction):
 			exits += 1
 	if exits < 2:
 		return false
@@ -23,7 +23,7 @@ static func accessible(terrain: RefCounted, tile: Vector2i) -> bool:
 		index += 1
 		for direction in DIRECTIONS:
 			var next: Vector2i = current + direction
-			if absi(next.x - tile.x) <= 5 and absi(next.y - tile.y) <= 5 and not visited.has(next) and terrain.walkable(next):
+			if absi(next.x - tile.x) <= 5 and absi(next.y - tile.y) <= 5 and not visited.has(next) and terrain.can_step(current, next):
 				visited[next] = true
 				queue.append(next)
 	return visited.size() >= 20
@@ -62,8 +62,9 @@ static func has_exploration_room(terrain: RefCounted, tile: Vector2i) -> bool:
 			var distance: int = maxi(absi(next.x - tile.x), absi(next.y - tile.y))
 			if distance > ROOM_RADIUS or seen.has(next):
 				continue
+			if terrain.walkable(next) and not terrain.can_step(current, next): continue
 			seen[next] = true # Cache blocked probes too; no terrain mutation/cache lifetime.
-			if terrain.walkable(next):
+			if terrain.can_step(current, next):
 				queue.append(next)
 				reaches_edge = reaches_edge or distance == ROOM_RADIUS
 				if queue.size() >= ROOM_TILES and reaches_edge:

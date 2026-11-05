@@ -137,6 +137,7 @@ func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray())
 			if habitat.is_empty():
 				continue
 			var point := origin + Vector2i(x, y)
+			if not terrain.procedural_allowed(point): continue
 			# Same coordinate_hash rolls, in rule order, then the habitat/ecology test.
 			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
 				var rule: Dictionary = rules[i]

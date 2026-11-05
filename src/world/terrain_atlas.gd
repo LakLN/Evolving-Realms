@@ -14,9 +14,10 @@ extends "res://src/world/terrain_v1.gd"
 const TerrainV1 = preload("res://src/world/terrain_v1.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
 const Layout = preload("res://src/world/terrain_layout.gd")
+const Spatial = preload("res://src/world/spatial_layout.gd")
 const TERRAIN_VERSION := 1
 const LAYOUT_TERRAIN_VERSION := 2
-const TERRAIN_VERSIONS := [TERRAIN_VERSION, LAYOUT_TERRAIN_VERSION]
+const TERRAIN_VERSIONS := [TERRAIN_VERSION, LAYOUT_TERRAIN_VERSION, 3]
 const SLOT := 512 # Multiple of CHUNK_SIZE: a chunk always belongs to exactly one slot.
 const CACHE_LIMIT := 128
 const WARP := 28.0
@@ -26,6 +27,7 @@ const RIM := 255 # Zone of tiles outside the land mass.
 var _lands: Dictionary = {} # Vector2i slot -> compiled land
 var _plans: Dictionary = {} # land_id -> stored plan
 var _sites: Dictionary = {} # Vector2i chunk -> [site instances]
+var _spatial_cells: Dictionary = {} # Derived once from the immutable authored patch.
 var _creature_homes: Dictionary = {} # Authored plan-v2 layer; v1 homes stay separate.
 var _bytes: Dictionary = {} # chunk -> tiles
 var _zones: Dictionary = {} # chunk -> region index per tile (RIM outside the mass)
@@ -42,19 +44,29 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 	_plans.clear()
 	_sites.clear()
 	_creature_homes.clear()
+	_spatial_cells.clear()
 	_bytes.clear()
 	_zones.clear()
 	_order.clear()
 	for plan in plans:
-		if not int(plan.get("terrain_version", 0)) in TERRAIN_VERSIONS or (int(plan.terrain_version) == LAYOUT_TERRAIN_VERSION) != plan.has("geography"):
+		if plan.has("spatial") and not Spatial.validate(plan.spatial).is_empty():
+			last_error = Spatial.validate(plan.spatial)
+			return false
+		if not int(plan.get("terrain_version", 0)) in TERRAIN_VERSIONS or (int(plan.terrain_version) >= LAYOUT_TERRAIN_VERSION) != plan.has("geography") or (int(plan.terrain_version) == 3 and (not plan.has("spatial") or int(plan.spatial.get("version", 0)) != 1)):
 			last_error = "Unsupported atlas terrain version in %s; World was not changed" % str(plan.get("land_id", "?"))
 			return false
 		var slot := Vector2i(int(plan.slot.x), int(plan.slot.y))
 		if _lands.has(slot):
 			last_error = "Two lands claim slot %s" % str(slot)
 			return false
-		_lands[slot] = Layout.compile(plan, compile_kind) if int(plan.terrain_version) == LAYOUT_TERRAIN_VERSION else _compile(plan)
+		_lands[slot] = Layout.compile(plan, compile_kind) if int(plan.terrain_version) >= LAYOUT_TERRAIN_VERSION else _compile(plan)
 		_plans[plan.land_id] = plan
+		if plan.has("spatial"):
+			var so := Vector2i(int(plan.spatial.origin.x), int(plan.spatial.origin.y))
+			for sy in int(plan.spatial.size.y):
+				for sx in int(plan.spatial.size.x):
+					var tile := so + Vector2i(sx, sy)
+					_spatial_cells[tile] = Spatial.cell(plan.spatial, tile)
 		for site in plan.get("sites", []):
 			var chunk := TerrainV1.chunk_of(Vector2i(int(site.position.x), int(site.position.y)))
 			if not _sites.has(chunk): _sites[chunk] = []
@@ -68,6 +80,40 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 
 func creature_homes(chunk: Vector2i) -> Array:
 	return _creature_homes.get(chunk, []).duplicate(true)
+
+func spatial_cell(tile: Vector2i) -> Dictionary:
+	return _spatial_cells.get(tile, {})
+
+func elevation(tile: Vector2i) -> int:
+	return int(spatial_cell(tile).get("height", 0))
+
+func procedural_allowed(tile: Vector2i) -> bool:
+	return spatial_cell(tile).is_empty()
+
+func can_step(from: Vector2i, to: Vector2i) -> bool:
+	if not walkable(from) or not walkable(to): return false
+	var delta := to - from
+	if absi(delta.x) > 1 or absi(delta.y) > 1:
+		if delta.x != 0 and delta.y != 0: return false
+		var step := Vector2i(signi(delta.x), signi(delta.y))
+		var at := from
+		while at != to:
+			if not can_step(at, at + step): return false
+			at += step
+		return true
+	if delta.x != 0 and delta.y != 0:
+		var x := from + Vector2i(delta.x, 0)
+		var y := from + Vector2i(0, delta.y)
+		return can_step(from, x) and can_step(x, to) and can_step(from, y) and can_step(y, to)
+	if elevation(from) == elevation(to): return true
+	var land: Dictionary = land_at(from)
+	return land.has("spatial") and Spatial.connector(land.spatial, from, to)
+
+func can_reach(from: Vector2i, to: Vector2i) -> bool:
+	if elevation(from) == elevation(to): return true
+	if absi(from.x-to.x) + absi(from.y-to.y) != 1: return false
+	var land: Dictionary = land_at(from)
+	return land.has("spatial") and Spatial.connector(land.spatial, from, to, false)
 
 func configure(_seed_value: int, _generation_version: int) -> bool:
 	last_error = "Atlas terrain needs its land plans (configure_atlas)"
@@ -191,6 +237,10 @@ func _chunk_bytes(chunk: Vector2i) -> PackedByteArray:
 		tiles.fill(Surfaces.VEIL)
 	elif land.has("version"):
 		Layout.build(self, land, origin, tiles, zones)
+		if land.plan.has("spatial"):
+			for i in tiles.size():
+				var c: Dictionary = spatial_cell(origin + Vector2i(i % CHUNK_SIZE, i / CHUNK_SIZE))
+				if not c.is_empty(): tiles[i] = int(c.surface)
 	else:
 		_build(land, origin, tiles, zones)
 	_bytes[chunk] = tiles

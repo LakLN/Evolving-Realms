@@ -193,6 +193,7 @@ func attack(session: RefCounted, target_id: String, options: Dictionary = {}) ->
 	var creature: Dictionary = creatures.get(target_id, {})
 	if creature.is_empty() or creature.dead:
 		return _refuse("No living creature to attack")
+	if not options.get("status_tick", false) and not session.terrain.can_reach(session.position, creature.position): return _refuse("The height edge blocks the attack")
 	var reach := int(options.get("range", 1))
 	var distance := _distance(creature.position, session.position)
 	if not options.get("status_tick", false) and (distance < 1 or distance > reach or not session.visible.has(creature.position)):
@@ -353,6 +354,7 @@ func move_creature(session: RefCounted, creature: Dictionary, to: Vector2i) -> b
 
 func creature_strike(session: RefCounted, creature: Dictionary, key: String) -> Array:
 	## One creature hit on the player: combat formula, elements, talent guards, on-hit statuses.
+	if not session.terrain.can_reach(creature.position, session.position): return []
 	var id: String = creature.instance_id
 	var player: Dictionary = session.combat_stats() # Effective defense from gear/growth.
 	var events: Array = []
@@ -386,9 +388,13 @@ func stun(session: RefCounted, target_id: String, turns: int) -> Dictionary:
 	return {"type": "stun", "target": target_id, "name": creature.definition.name, "turns": turns, "position": _point(creature.position)}
 
 func _can_enter(session: RefCounted, creature: Dictionary, tile: Vector2i) -> bool:
+	if not session.terrain.can_step(creature.position, tile): return false
 	if tile == session.position or not living_at(tile).is_empty() or _distance(tile, creature.home) > int(creature.definition.payload.movement.leash):
 		return false
 	var ground: int = session.cache.tile_at(tile)
+	# Authored routes are transit surfaces, never spawn habitats. Spatial creatures
+	# may use them while retaining their own leash and the same directed height edges.
+	if not session.terrain.spatial_cell(tile).is_empty() and ground in [Surfaces.TRAIL, Surfaces.FLOOR]: return true
 	return Surfaces.hosts(session.terrain, ground, tile, str(creature.definition.content_id), creature.definition.payload.movement.biomes)
 
 func _runtime(instance: Dictionary) -> Dictionary:

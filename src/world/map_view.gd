@@ -65,6 +65,7 @@ var _has_origin := false
 ## wind-blown streaks while a blizzard blows (sparser when one is coming) and a ring at
 ## the hero's feet: pulsing red when exposed, steady ice-blue when sheltered.
 var _weather_layer := Node2D.new()
+var _reference := preload("res://src/world/reference_view.gd").new()
 var _weather_time := 0.0
 var _weather_poll := 0.0
 var weather_status: Dictionary = {}
@@ -77,6 +78,9 @@ func _ready() -> void:
 	art = Art.shared()
 	px = art.px if art.ready() else Palette.SIZE
 	_tiles = art.tileset if art.ready() else Palette.make_tileset()
+	_reference.view = self
+	_reference.z_index = 1
+	add_child(_reference)
 	_object_layer.z_index = 2 # Above prop canopies so chests/resources are never hidden.
 	_object_layer.draw.connect(_draw_objects)
 	add_child(_object_layer)
@@ -190,6 +194,7 @@ func clear_map() -> void:
 	_object_layer.queue_redraw()
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
+	_reference.queue_redraw()
 
 func _point(tile: Vector2i) -> Vector2:
 	## Centre of a tile in view space (relative to the cached area's centre chunk).
@@ -230,6 +235,7 @@ func refresh() -> void:
 	_object_layer.queue_redraw()
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
+	_reference.queue_redraw()
 
 func _shift_transients(offset: Vector2) -> void:
 	for child in _fx_layer.get_children():
@@ -376,6 +382,7 @@ func _paint_rows(chunk: Vector2i, entry: Dictionary, start: int, stop: int) -> v
 		for x in Terrain.CHUNK_SIZE:
 			var local := Vector2i(x, y)
 			var global_tile := base + local
+			if not session.terrain.spatial_cell(global_tile).is_empty(): continue
 			var kind: String = kinds[(y + 1) * side + x + 1]
 			if not art.ground.has(kind): kind = "meadow"
 			var drawn := kind
@@ -683,6 +690,8 @@ func _draw_places() -> void:
 		var record: Dictionary = session.places.record(session, place.instance_id)
 		var stage: String = art.place_stage(definition, record) if art.ready() else ""
 		var sprite: Texture2D = (art.stage_sprite(stage) if not stage.is_empty() else art.place_sprite(definition)) if art.ready() else null
+		var reference_chest: bool = not session.terrain.spatial_cell(tile).is_empty() and definition.content_id == "snow:place/relay_strongbox"
+		if reference_chest: sprite = art.texture("objects/chest_open.png" if not stage.is_empty() else "objects/chest_closed.png")
 		var glow: Color = art.place_glow(stage)
 		if glow.a > 0.0:
 			_object_layer.draw_circle(_feet(tile) + Vector2(0, -px * 0.6), px * 1.1, Color(glow, 0.14))
@@ -693,6 +702,7 @@ func _draw_places() -> void:
 		if sprite != null:
 			var size := sprite.get_size()
 			var pivot: Vector2 = art.stage_pivot(stage) if not stage.is_empty() else art.place_pivot(definition)
+			if reference_chest: pivot = Vector2(size.x/2,size.y-px*0.25)
 			var at := _feet(tile) - pivot if pivot.x >= 0 else Vector2(point.x - size.x / 2, point.y + px * 0.75 - size.y)
 			_object_layer.draw_texture(sprite, at, Color(0.58, 0.58, 0.64) if done else (Color(0.8, 0.82, 0.88) if state == "recovering" else Color.WHITE))
 		else:

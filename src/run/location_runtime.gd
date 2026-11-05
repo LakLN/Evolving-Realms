@@ -230,7 +230,7 @@ func interact(session: RefCounted, instance_id: String, wanted: String = "", hea
 	if instance.is_empty():
 		return _refuse(session, "That place is not in the loaded region")
 	var tile := Vector2i(int(instance.position.x), int(instance.position.y))
-	if not discovered(session, instance_id) or not session.visible.has(tile) or absi(tile.x - session.position.x) + absi(tile.y - session.position.y) > 1:
+	if not session.terrain.can_reach(session.position, tile) or not discovered(session, instance_id) or not session.visible.has(tile) or absi(tile.x - session.position.x) + absi(tile.y - session.position.y) > 1:
 		return _refuse(session, "Nothing you know of is within reach — no turn spent")
 	var interaction := next_interaction(session, instance, wanted)
 	var definition: Dictionary = layer.definition_for(instance)

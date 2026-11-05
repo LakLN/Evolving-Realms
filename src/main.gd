@@ -55,7 +55,7 @@ var _adventure: Button
 var _chart: Button
 ## M05 development: chart the Snow Mountain layout land (land package, not published).
 var _chart_snow: Button
-const SNOW_LAYOUT := "landpkg:snow_mountain/full_region"
+const SNOW_LAYOUT := "landpkg:snow_mountain/reference"
 const CHART_SNOW := "Chart Snow Mountain (dev)"
 const SNOW_RUN := "New Run in Snow Mountain (dev)"
 ## Real-time notices that may not replace a fresh place message (see _hold_notice).
@@ -266,7 +266,7 @@ func _build_menu(parent: Control) -> void:
 	_status = _label(column, "", 16)
 	_status.custom_minimum_size.y = 52
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills  1-9: hotbar  Q/Z: quick items  J: lore  M: map  L: log  H: help  Ctrl+S: save  Esc: menu", 14).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_label(column, "WASD/Arrows: move  E: interact  X: search  F: attack  Tab: target  Space: wait  R: rest  I: inventory (U: use/equip)  C: gear  T: talent  K: skills  1-9/0: hotbar  Q/Z: quick items  J: lore  M: map  L: log  H: help  Ctrl+S: save  Esc: menu", 14).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 func _build_hud(parent: Control) -> void:
 	## Layout lives in src/ui/hud.gd; these aliases keep main.gd the owner of the text.
@@ -476,7 +476,7 @@ func _show_help() -> void:
 	_shell_header(_discovery_column, "HELP", "help")
 	var sections := [
 		["Moving and acting", ("Hold WASD / arrows: move (diagonals allowed)\nF: attack the target   \"!\" over a creature: a blow is coming, step away\n" if _realtime != null else "WASD / arrows: move one tile (walking into a creature attacks)\nF: attack the target   Tab: next adjacent target   Space: wait a turn\n") + "E: interact with what the prompt names (choices open when there are several)\nX: search the surroundings   R: rest (stops when danger appears)"],
-		["Hotbar", "1–9: skills, in the order you learned them. Click a slot or press its number.\nCreature or tile skills ask for a target: Tab / WASD to choose, Enter or F to use, Esc to cancel.\nPassive and triggered skills (PAS / TRI) work on their own and cannot be pressed.\nA dark slot is recharging; a dim slot cannot be used yet (hover for the reason).\nQ / Z: quick items. In the Bag, select a usable item and press Q or Z to place it."],
+		["Hotbar", "1–9 / 0: skills, in the order you learned them. Click a slot or press its number.\nCreature or tile skills ask for a target: Tab / WASD to choose, Enter or F to use, Esc to cancel.\nPassive and triggered skills (PAS / TRI) work on their own and cannot be pressed.\nA dark slot is recharging; a dim slot cannot be used yet (hover for the reason).\nQ / Z: quick items. In the Bag, select a usable item and press Q or Z to place it."],
 		["Panels (the world pauses)", "I Bag   G Craft   C Gear (spend attribute points with 1-3)   K Skills   T Talent   J Lore (Knowledge)   M Map and journal\nL Message log   H / F1 Help   N Minimap on/off   Ctrl+S Save   Esc Close / save and menu"],
 		["Reading the world", "Rings under creatures: red hostile, amber neutral (fights back), green passive.\nYou can see the land around you, but seeing is not knowing: the map, journal and Lore record only what you have passed close by, discovered or confirmed yourself. A landmark seen from afar keeps its story until you reach it.\nBlizzards shrink sight to a small circle. A red frame on the region panel means you are exposed: shelter beside pines or rocks, or under a roof."],
 	]
@@ -835,7 +835,7 @@ func _scroll_column(panel: PanelContainer, separation: int) -> VBoxContainer:
 	return column
 
 func _build_skills(parent: Control) -> void:
-	## K: learned skills with costs, cooldowns, conditions; U / Enter / 1-9 use one.
+	## K: learned skills with costs, cooldowns, conditions; U / Enter / 1-9/0 use one.
 	var shell := _shell(parent, "SKILLS", "skills")
 	_skills_panel = shell.panel
 	var left := _shell_column(shell.body, 1.0)
@@ -847,7 +847,7 @@ func _build_skills(parent: Control) -> void:
 	_skill_list.item_selected.connect(_show_skill)
 	_skill_list.item_activated.connect(func(index: int) -> void: begin_skill(index))
 	left.add_child(_skill_list)
-	_label(left, "Hotbar keys 1–9 follow this learning order.", 14).modulate = Color(1, 1, 1, 0.7)
+	_label(left, "Hotbar keys 1–9 / 0 follow this learning order.", 14).modulate = Color(1, 1, 1, 0.7)
 	var right := _shell_column(shell.body, 1.0)
 	_skill_detail = _label(right, "", 15)
 	_skill_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -950,7 +950,7 @@ func _toggle_skills() -> void:
 		get_viewport().gui_release_focus()
 
 func skill_rows() -> Array:
-	## Learned skills in learning order; 1-9 use the same order.
+	## Learned skills in learning order; 1-9/0 use the same order.
 	return session.run.state.character.skills
 
 func _refresh_skills(selected: int = 0) -> void:
@@ -976,7 +976,7 @@ func _refresh_skills(selected: int = 0) -> void:
 		if kind == "active":
 			var cost: Dictionary = session.skills.costs(session, definition)
 			state = "%s%s" % [_cost_text(cost), "  ready" if int(record.cooldown_until) <= turn else "  %dt" % (int(record.cooldown_until) - turn)]
-		_skill_list.add_item("%s%s  [%s]" % ["%d. " % (index + 1) if index < 9 else "", definition.name, state])
+		_skill_list.add_item("%s%s  [%s]" % ["%d. " % ((index + 1) % 10) if index < 10 else "", definition.name, state])
 		if kind == "active" and not session.skills.use_check(session, definition).is_empty():
 			_skill_list.set_item_custom_fg_color(_skill_list.item_count - 1, Color("9a9a9a"))
 	if skill_rows().is_empty():
@@ -1722,7 +1722,7 @@ func _update_info() -> void:
 	var stats: Dictionary = session.combat_stats() # Effective: base + level + gear.
 	var character: Dictionary = session.run.state.character
 	var free_points: int = session.character_rules.attribute_points(character).free
-	_hp_label.text = "Lv %d   ATK %d   DEF %d%s" % [session.character_rules.level(character), stats.attack, stats.defense, "   +%d pts" % free_points if free_points > 0 else ""]
+	_hp_label.text = "Lv %d%s" % [session.character_rules.level(character), "   +%d points" % free_points if free_points > 0 else ""]
 	_hp_label.tooltip_text = "%d attribute point%s to spend: Gear (C)" % [free_points, "" if free_points == 1 else "s"] if free_points > 0 else ""
 	var track_id: String = session.character_rules.rules.tracks.keys()[0]
 	var track: Dictionary = character.progression[track_id]
@@ -2054,7 +2054,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_return_to_menu()
 		get_viewport().set_input_as_handled()
 		return
-	var acting: bool = event.physical_keycode in [KEY_E, KEY_X, KEY_Q, KEY_Z] or event.keycode in [KEY_E, KEY_X, KEY_Q, KEY_Z] or (event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9) or (event.keycode >= KEY_1 and event.keycode <= KEY_9)
+	var acting: bool = event.physical_keycode in [KEY_E, KEY_X, KEY_Q, KEY_Z] or event.keycode in [KEY_E, KEY_X, KEY_Q, KEY_Z] or event.physical_keycode == KEY_0 or event.keycode == KEY_0 or (event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9) or (event.keycode >= KEY_1 and event.keycode <= KEY_9)
 	if _realtime != null and acting and not event.ctrl_pressed and not event.alt_pressed and not _realtime.ready_for_action():
 		_say(_realtime.last_error) # Real time: short shared recovery between actions.
 		get_viewport().set_input_as_handled()
@@ -2097,6 +2097,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_use_quick_item("q")
 	elif event.keycode == KEY_Z or event.physical_keycode == KEY_Z:
 		_use_quick_item("z")
+	elif event.physical_keycode == KEY_0 or event.keycode == KEY_0:
+		begin_skill(9)
 	elif event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9:
 		begin_skill(event.physical_keycode - KEY_1)
 	elif event.keycode >= KEY_1 and event.keycode <= KEY_9:

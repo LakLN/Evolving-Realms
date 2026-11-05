@@ -12,6 +12,21 @@ const BIOMES := ["forest", "beach", "meadow"]
 var world_seed := 0
 var last_error := ""
 
+func elevation(_tile: Vector2i) -> int:
+	return 0
+
+func spatial_cell(_tile: Vector2i) -> Dictionary:
+	return {}
+
+func procedural_allowed(_tile: Vector2i) -> bool:
+	return true
+
+func can_step(from: Vector2i, to: Vector2i) -> bool:
+	return walkable(from) and walkable(to)
+
+func can_reach(from: Vector2i, to: Vector2i) -> bool:
+	return elevation(from) == elevation(to)
+
 func configure(seed_value: int, generation_version: int) -> bool:
 	if generation_version != 1 or seed_value < -2147483648 or seed_value > 2147483647:
 		last_error = "Unsupported terrain generator or world seed"

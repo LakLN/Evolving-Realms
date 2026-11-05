@@ -1,5 +1,13 @@
 # Milestone 04 — World generation (design first, terrain later)
 
+Snow reference layout `landpkg:snow_mountain/reference` v8 adds terrain/atlas v3
+without replacing any established land. Its Broken Relay spatial patch is part of
+the stored plan, with absolute origin and local height/surface zones and connectors.
+Authored sites can use `spatial: [x,y]` within that patch; existing IDs/definitions
+remain intact. Random spawn/decor layers do not populate the composed patch; authored
+homes/sites still do. Outside it the previous geography is retained. The new menu
+Snow chart selects this layout; existing Worlds/Runs never silently upgrade.
+
 Generation has three stages. Only the first two are ever stored; terrain is a pure
 function of what was stored, so revisiting an area can never change its identity.
 

@@ -183,6 +183,7 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 		for x in Terrain.CHUNK_SIZE:
 			var ground: int = bytes[y * Terrain.CHUNK_SIZE + x]
 			var point := origin + Vector2i(x, y)
+			if not terrain.procedural_allowed(point): continue
 			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
 			if habitat.is_empty() or occupied.has(point):
 				continue

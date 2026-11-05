@@ -30,7 +30,7 @@ Saves live in `%APPDATA%\Godot\app_userdata\Evolving Realms\realms.sqlite`.
 | I | inventory (U or Enter uses, equips or learns the selected item) |
 | C | character and gear (U unequips the selected slot) |
 | T | your talent and its counters |
-| K | skills; 1–9 use a skill (Tab/WASD choose a target, Enter confirms, Esc cancels) |
+| K | skills; 1–9/0 use a skill (Tab/WASD choose a target, Enter confirms, Esc cancels) |
 | Ctrl+S | save · Esc: close panel, or save and return to the menu |
 
 Every accepted action is one turn; creatures nearby then act once. Refused actions

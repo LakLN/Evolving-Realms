@@ -39,6 +39,7 @@ static func enabled(blueprint: Dictionary) -> bool:
 
 static func supported_plan(plan: Dictionary) -> bool:
 	var version := int(plan.get("atlas_version", 0))
+	if version == 3: return int(plan.get("terrain_version", 0)) == 3 and plan.has("spatial") and int(plan.spatial.get("version", 0)) == 1 and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/reference" and int(plan.layout.get("version", 0)) == 8
 	return version == 1 or (version == 2 and int(plan.get("terrain_version", 0)) == 2 and plan.has("geography") and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/full_region" and int(plan.layout.get("version", 0)) in [5, 6, 7])
 
 static func create_world(store: RefCounted, name: String, seed_value: int, approval: Dictionary = {"by": "world-creation"}) -> Dictionary:
@@ -259,7 +260,7 @@ func validate(proposal: Dictionary) -> String:
 	var home_tiles := {}
 	for home in plan.get("creature_homes", []):
 		var tile := Vector2i(int(home.position.x), int(home.position.y))
-		if int(plan.atlas_version) != 2 or home_ids.has(home.instance_id) or home_tiles.has(tile) or not str(home.instance_id).begins_with("crt:atlas/") or TerrainAtlas.slot_of(tile) != slot or not generator.walkable(tile): return "Invalid authored creature home"
+		if int(plan.atlas_version) not in [2, 3] or home_ids.has(home.instance_id) or home_tiles.has(tile) or not str(home.instance_id).begins_with("crt:atlas/") or TerrainAtlas.slot_of(tile) != slot or not generator.walkable(tile): return "Invalid authored creature home"
 		var definition: Dictionary = registry.load_definition(world.world_id, home.content_id, int(home.version))
 		if definition.is_empty() or definition.kind != "creature" or definition.status != "active": return "Authored home needs an active creature"
 		home_ids[home.instance_id] = true

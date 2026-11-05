@@ -184,6 +184,7 @@ func generate_chunk(chunk: Vector2i) -> Array:
 	for y in Terrain.CHUNK_SIZE:
 		for x in Terrain.CHUNK_SIZE:
 			var point := origin + Vector2i(x, y)
+			if not terrain.procedural_allowed(point): continue
 			var ground: int = bytes[y * 32 + x]
 			var habitat: String = Surfaces.HABITAT_OF.get(ground, "")
 			if habitat.is_empty() or occupied.has(point) or reserved.has(point):

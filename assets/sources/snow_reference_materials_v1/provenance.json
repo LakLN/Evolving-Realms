@@ -1,0 +1,22 @@
+{
+  "source": "OpenAI built-in image_gen tool",
+  "model": "not reported by tool",
+  "date": "2026-11-05",
+  "status": "candidate",
+  "source_sha256": "3723918720bdfb4aee6c3369a82ad4272be66a9e9d63d5fd76090b51c53bbccd",
+  "source_size": [
+    1774,
+    887
+  ],
+  "derivation": "Exact 4x2 material-cell extraction; nearest-neighbour native 160px material fields; source unchanged",
+  "materials": [
+    "snow",
+    "packed_trail",
+    "rock_strata",
+    "timber",
+    "snow_slate_roof",
+    "granite",
+    "cold_water",
+    "bridge_boards"
+  ]
+}
