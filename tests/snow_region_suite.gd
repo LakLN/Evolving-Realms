@@ -355,6 +355,23 @@ func _living(world_id: String, plan: Dictionary) -> void:
 	s.run.state.turn = _weather_turn(s, "calm", int(s.run.state.turn))
 	var herbs := int(s.run.state.inventory.get("core:herb", {}).get("quantity", 0))
 	check(_act(s, bloom, "pick") and int(s.run.state.inventory["core:herb"].quantity) >= herbs + 2 and not _act(s, bloom, "pick"), "Snowbloom: herbs in calm weather, then it regrows")
+	# Storms keep their bite: exposure costs at least 2% of max HP (1 HP early on).
+	var gale: Dictionary = s.environment.weather(s, _weather_turn(s, "blizzard", int(s.run.state.turn)))
+	var expected := maxi(1, int(s.combat_stats().max_hp) * 2 / 100)
+	check(not gale.is_empty() and s.environment.exposure_damage(s, gale) == expected, "Exposure scales with the traveller: %d HP at %d max HP" % [expected, int(s.combat_stats().max_hp)])
+	# Attention, not markers: a search-only place gives one vague compass cue nearby.
+	var ice := _site(plan, "singing_ice")
+	var ice_tile := Vector2i(int(ice.position.x), int(ice.position.y))
+	var spot := ice_tile
+	for offset in [Vector2i(0, 6), Vector2i(6, 0), Vector2i(-6, 0), Vector2i(0, -6), Vector2i(5, 5), Vector2i(-5, 5)]:
+		if s.terrain.walkable(ice_tile + offset):
+			spot = ice_tile + offset
+			break
+	_go(s, {"position": {"x": spot.x, "y": spot.y - 1}})
+	s.places._sensed.erase(ice.instance_id) # The fixture's own tick already heard it; listen again.
+	var sensed: Array = s.places.tick(s).filter(func(e: Dictionary) -> bool: return e.type == "place_sense")
+	check(spot != ice_tile and sensed.size() == 1 and not s.places.discovered(s, ice.instance_id) and str(sensed[0].direction) != "", "A hidden place nearby gives one compass cue and stays undiscovered")
+	check(s.places.tick(s).filter(func(e: Dictionary) -> bool: return e.type == "place_sense").is_empty(), "The cue is not repeated")
 	var saved: Dictionary = s.run.state.duplicate(true)
 	check(s.save(), "Save the living-region Run")
 	var resumed := Session.new(store)

@@ -19,6 +19,12 @@ const WorldRules = preload("res://src/core/world_rules.gd")
 const Knowledge = preload("res://src/run/player_knowledge.gd")
 const Telemetry = preload("res://src/run/interaction_telemetry.gd")
 const SEARCH_RADIUS := 2
+## Sense cues (2026-11-05): an undiscovered hidden/search place whose discovery
+## conditions hold (weather, talents...) gives one vague compass cue per session when
+## the player passes within SENSE_RADIUS, so rare places are findable by attention,
+## never by markers. No tile, name or Run state is revealed or stored.
+const SENSE_RADIUS := 10
+var _sensed: Dictionary = {}
 const STATES := ["undiscovered", "discovered", "interactable", "recovering", "resolved", "unavailable"]
 var layer: RefCounted
 
@@ -131,6 +137,10 @@ func tick(session: RefCounted) -> Array:
 		if int(session.stats().hp) <= 0: break
 		if not discovered(session, instance.instance_id) and _detects(session, instance, false):
 			events.append_array(_discover(session, instance))
+		elif not discovered(session, instance.instance_id) and not _sensed.has(instance.instance_id) and _senses(session, instance):
+			_sensed[instance.instance_id] = true
+			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
+			events.append({"type": "place_sense", "category": str(layer.definition_for(instance).payload.category), "direction": _compass(tile - session.position)})
 		if Vector2i(int(instance.position.x), int(instance.position.y)) == session.position:
 			for interaction in available(session, instance, "enter"):
 				var event: Dictionary = layer.event(interaction.event)
@@ -139,6 +149,17 @@ func tick(session: RefCounted) -> Array:
 				var outcome := resolve(session, instance, interaction)
 				events.append_array(outcome.get("events", []))
 	return events
+
+func _senses(session: RefCounted, instance: Dictionary) -> bool:
+	var rule: Dictionary = layer.definition_for(instance).payload.get("discovery", {"mode": "visible"})
+	if rule.mode not in ["hidden", "search"]: return false
+	var tile := Vector2i(int(instance.position.x), int(instance.position.y))
+	var distance := maxi(absi(tile.x - session.position.x), absi(tile.y - session.position.y))
+	return distance <= SENSE_RADIUS and distance > maxi(int(rule.get("radius", 1)), SEARCH_RADIUS) and unmet(session, rule.get("conditions", [])).is_empty()
+
+static func _compass(delta: Vector2i) -> String:
+	var angle := fposmod(rad_to_deg(atan2(float(delta.y), float(delta.x))) + 360.0, 360.0)
+	return ["east", "south-east", "south", "south-west", "west", "north-west", "north", "north-east"][int(round(angle / 45.0)) % 8]
 
 func search(session: RefCounted) -> Array:
 	## Declared rule: searching always spends one turn, found or not.

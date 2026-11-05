@@ -8,6 +8,8 @@ extends RefCounted
 ## region.exposure "lee" halves the exposure rate and adds 1 sight, "exposed" hits every
 ## (every - 2) and removes 1 sight (min 2); a roofed shelter floor fully protects.
 ## Every atlas land: a forecast warning up to WARNING turns/seconds before weather starts.
+## Optional exposure.damage_percent (layout v7): a hit costs at least that share of max
+## HP, so storms still matter to a seasoned character; absent = flat damage as before.
 const Surfaces = preload("res://src/world/surfaces.gd")
 const NEIGHBORS := [Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(-1, 1), Vector2i(0, 1), Vector2i(1, 1)]
 const WARNING := 12
@@ -100,6 +102,7 @@ func exposure(session: RefCounted) -> Dictionary:
 		result.exposed = not result.sheltered
 		var every := exposure_every(active, result.area)
 		result.next_damage_in = every - int(session.run.state.turn) % every
+		result.damage = exposure_damage(session, active)
 	if active.is_empty():
 		var next := upcoming(session)
 		if not next.is_empty():
@@ -129,13 +132,17 @@ func tick(session: RefCounted) -> Array:
 	var stats: Dictionary = session.stats()
 	var surface: String = Surfaces.NAME_OF.get(session.cache.tile_at(session.position), "")
 	if _exposed_surface(session, active) and turn % exposure_every(active, area_exposure(session)) == 0 and not sheltered(session, active.exposure.shelter):
-		stats.hp = maxi(0, int(stats.hp) - int(active.exposure.damage))
-		events.append({"type": "environment", "kind": "exposure", "name": name, "amount": -int(active.exposure.damage), "target": "player", "area": area_exposure(session)})
+		var hit := exposure_damage(session, active)
+		stats.hp = maxi(0, int(stats.hp) - hit)
+		events.append({"type": "environment", "kind": "exposure", "name": name, "amount": -hit, "target": "player", "area": area_exposure(session)})
 	for hazard in session.terrain.land_at(session.position).get("environment", {}).get("hazards", []):
 		if hazard.surface == surface and turn % maxi(1, int(hazard.every)) == 0:
 			stats.hp = maxi(0, int(stats.hp) - int(hazard.damage))
 			events.append({"type": "environment", "kind": "hazard", "name": hazard.name, "amount": -int(hazard.damage), "target": "player"})
 	return events
+
+func exposure_damage(session: RefCounted, active: Dictionary) -> int:
+	return maxi(int(active.exposure.damage), int(session.combat_stats().max_hp) * int(active.exposure.get("damage_percent", 0)) / 100)
 
 func reset() -> void:
 	_last_weather = ""

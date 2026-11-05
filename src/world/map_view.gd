@@ -806,6 +806,8 @@ func show_events(events: Array) -> void:
 					_play_creature(beast, "attack")
 					beast.node.modulate = Color(1.7, 1.05, 0.6)
 					beast.node.create_tween().tween_property(beast.node, "modulate", Color.WHITE, 1.2)
+			"place_sense":
+				_popup(session.position, "?", Color("d7c9a9"), 0.0, 0.0, 22)
 			"creature_return":
 				var back: Dictionary = _creatures.get(str(event.target), {})
 				if not back.is_empty(): _popup(back.tile, "returned", Color("d7c9a9"), 0.6, 0.0, 14)

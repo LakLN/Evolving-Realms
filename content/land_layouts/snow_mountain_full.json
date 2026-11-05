@@ -697,6 +697,7 @@
         ],
         "every": 5,
         "damage": 1,
+        "damage_percent": 2,
         "shelter": [
           "pine",
           "rock",
