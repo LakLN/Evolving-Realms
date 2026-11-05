@@ -31,6 +31,9 @@ hard seam against the busy P0 frozen scree; its roads ignored the land's real no
 Checks (disposable DBs only): `scripts/check-reference.ps1 -TimeoutSeconds 170` 45/0
 native; `scripts/test.ps1 -Only world,m04-world,snow-mountain,snow-region,snow-gameplay`
 49/86/66/153/53, 0 failures. Snow gameplay art-source assertion updated to T1.
+`-Render -Only rendered-snow-gameplay,rendered-snow-region,rendered-ui` 73/62/33, 0
+failures; after the taiga tiles one rendered-snow-gameplay run failed 14 checks from
+the timing-sensitive M04 baseline walk (empty sample, cascade), re-run 73/0 - flaky.
 Captures (native 1100x720, seed 4242, turn 60): `.tools/reference-before.png` (old),
 `reference-after.png`, `reference-bridge.png`, `reference-lookout.png`; extra spots
 `.tools/env-{court,north,south,massif,bridge,west,east,lookout,stairs}.png` via the
