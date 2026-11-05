@@ -398,3 +398,18 @@ discarded or restarted. Targeted consequences:
 - **Telemetry:** step 3 survey Runs and the step 7 playtest Run are exported with
   the offline telemetry tool (disposable Runs only). Rare secrets are not made
   easier on discovery rate alone.
+
+### Layout v7 living region - 2026-11-05
+
+`living_pack.json` (v7 only; earlier packs untouched). Calm weather opens the lake
+fishing hole (8 uses) and snowbloom herbs (5); a blizzard grows storm rime on the stair
+(4) and opens the White Choir hollow, which is found only in the whiteout: shelter
+recurs each storm, listening reveals that stormglass tunes the Whiteout lens (elemental
+build accessory). In storms the carrier procession and three lanterns walk the bowl; in
+calm it is empty, so crossing timing matters. Crown Shelf beacon: bronze from the relay,
+an ember heart from the stair lit in calm air, then a storm vigil for the keepers'
+crown, then resin (finally a resin sink) feeds a recurring summit refuge. The crown
+elder (unique, not returning) holds the beacon road; its horn crafts the Bellhorn hammer.
+The lakeshore herd (2 returns), den cat (1) and relay camp (2) return after deaths, with
+the camp stash restocked up to three times. Sunken sledge: heat or force ice rules.
+Broken Relay danger 2. Not repeatable: the story sites, lens, crown and elder.

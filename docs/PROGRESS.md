@@ -1,5 +1,46 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Snow Mountain full-region production - living region (2026-11-05)
+
+Branch `feature/snow-full-region` (not merged). Commits 1db2d26 (event.repeat,
+weather condition, dynamic homes, layout v7 + living_pack), 24b8eb0 (art b4 + recurring
+UI feedback), fb1a145 (thin-area sites, Broken Relay danger 2, docs), 45a092e (batched
+first-visit ledger writes).
+
+Reusable capability (data only, additive; older saves read unchanged): recurring
+interactions `repeat {every, times?}` with per-use roll keys and a `recovering` state;
+a `weather` condition for discovery/requirements/reveals; authored homes that are
+weather-bound or return a limited number of times after death (never in view).
+Layout v7 (v5/v6 plans still load): recurring fishing, snares, a warm spring, a
+restocked camp stash, storm rime, herbs; storm-only procession and lanterns; returning
+herd, den cat and camp; two multi-stage highlights for the blizzard bowl and summit
+(weather-timed, cross-area materials, unique rewards, a summit elder); a sledge in the
+lake ice. Art b4: per-species cells so large species are no longer capped (giant about
+twice hero height), people at hero height, new den, 11 landmark sprites, 5 icons.
+
+Self-evaluation (dev probes, disposable DBs, not tests): per-area census showed Mirror
+Trough (21.6k walkable tiles, 2 sites) and Leefoot Basin as thinnest, so both got
+content; Broken Relay (17 hostiles) relabelled danger 2. Tour bot `.tools/snow_bot.gd`
+(real Run, route order, aggressive): seeds 924/925 reached Crown Shelf at L10 by turn
+~4300; XP rises by area (Pitchpine ~170-260, Relay ~330-420, Stair ~320, Choir ~445-490);
+the elder killed one bot and was killed by the other; food/water held; save/reload
+identical. One early seed died attacking a neutral tuskback at L2 (optional fight).
+Ledger: 3-chunk first visit ~9.5 ms one-by-one -> ~4 ms in one transaction.
+
+Commands/results:
+- `scripts/test.ps1 -Only snow-region`: 149 checks, 0 failures.
+- `-Render -Only rendered-snow-region`: 51 checks, 0 failures (captures inspected).
+- `-Only` discoveries 40, combat 75, realtime 58, ai-content 35, ai-world 41, m04-world 86,
+  snow-content 114, snow-mountain 66, land-package 22, run01-content 68, interactions 69,
+  world 49, integration 41, data 96, run01-world 20, m03-world 45, gameplay 30, map 22,
+  survival 60: all 0 failures. `-Smoke` (import, data, integration, startup): pass.
+- `asset_check.py batch assets/sources/snow_fauna_b4/batch.json`: 0 failures, 64 warnings.
+
+Gaps: art is candidate (den and small sites still modest; no lit/unlit beacon state);
+the recurring-place map marker only dims; storm creatures appear without a dedicated
+log cue; neutral heavy beasts in Pitchpine can punish reckless low-level hunting;
+the tour bot does not seek sites, so place pacing is checked by tests, not play.
+
 ## Snow Mountain full-region production ? pacing, activities, streaming (2026-11-04)
 
 Branch `feature/snow-full-region` (not merged). Commits a032c96 (streaming),

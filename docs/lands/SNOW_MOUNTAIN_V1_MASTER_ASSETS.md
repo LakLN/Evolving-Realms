@@ -215,3 +215,13 @@ sealed cleft, new shelter facades, additional pine/rock variants, creature bosse
 future species, snow skills, quest badges, achievements, cinematic backgrounds or
 new audio. Single-state interaction feedback uses existing dimming/text/receipts.
 Future work reopens the master manifest rather than adding parallel asset lists.
+
+## Fauna batch b4 (candidate, 2026-11-05)
+
+`assets/sources/snow_fauna_b4`, `tools/art/snow_fauna_author.py`. The shared sheet
+builder takes a per-species cell: 104x92 for stag, prowler, tuskback and carrier,
+140x124 for ashmaw, giant and the new crown elder (P0 bytes unchanged). People are at
+hero height, the giant about twice it. New den (hollow under a pine), landmark canvases
+80x70 (100x88 for the choir hollow and beacon), sprites for every living-region site and
+icons for the char, horn, lens, crown and hammer. asset_check: 0 failures, 64 warnings
+(foot-line jitter and duplicated walk frames, not visible at play scale).
