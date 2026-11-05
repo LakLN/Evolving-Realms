@@ -73,6 +73,18 @@ func _streaming(s: RefCounted) -> void:
 	for i in 80: s.prefetch_step()
 	check(Same.same(before, s.run.state) and s.locations.ledger.established(ring) == known and known == -1, "Idle prefetch writes no Run state and establishes no region")
 	check(s.objects._ahead.has(ring) and Same.same(s.objects._ahead[ring], s.objects.generate_chunk(ring)), "Prefetched objects equal load-time generation")
+	# Batched first visits write exactly the records one-by-one establishment writes.
+	var ledger: RefCounted = s.locations.ledger
+	var single: Array = [s.cache.center + Vector2i(-1, 9), s.cache.center + Vector2i(0, 9), s.cache.center + Vector2i(1, 9)]
+	var batch: Array = [s.cache.center + Vector2i(-1, -9), s.cache.center + Vector2i(0, -9), s.cache.center + Vector2i(1, -9)]
+	for chunk in single: ledger.establish(chunk, ledger.revision)
+	check(ledger.establish_all(batch, ledger.revision) and ledger.establish_all(batch, ledger.revision + 5), "Batched establishment succeeds and is idempotent")
+	var same := true
+	for i in 3:
+		var a: Dictionary = store.content.load_instance(s.world.world_id, ledger.record_id(single[i]))
+		var b: Dictionary = store.content.load_instance(s.world.world_id, ledger.record_id(batch[i]))
+		same = same and not b.is_empty() and Same.same(a.metadata.layers, b.metadata.layers) and int(a.metadata.encounter_revision) == int(b.metadata.encounter_revision) and int(b.metadata.encounter_revision) == ledger.established(batch[i])
+	check(same, "Batched region records match one-by-one records; established regions keep their revision")
 
 func _census(s: RefCounted, plan: Dictionary) -> void:
 	var start := Vector2i(int(plan.slot.x), int(plan.slot.y)) * 16

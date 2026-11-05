@@ -23,6 +23,17 @@ func register_definition(world_id: String, definition: Dictionary) -> Dictionary
 		return {}
 	return result
 
+func batch(work: Callable) -> bool:
+	## Several plain writes in one transaction (one disk sync); all or nothing.
+	if not _db.execute("BEGIN IMMEDIATE"): return false
+	if not work.call():
+		_db.rollback(_db.last_error)
+		return false
+	if not _db.execute("COMMIT"):
+		_db.rollback(_db.last_error)
+		return false
+	return true
+
 func register_batch(world_id: String, sources: Array, preflight: Callable = Callable()) -> Dictionary:
 	# Authoring activation: definitions and lifecycle receipt commit together.
 	if sources.is_empty() or sources.size() > 25 or not _db.execute("BEGIN IMMEDIATE"): return {}

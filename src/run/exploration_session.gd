@@ -1111,6 +1111,14 @@ func relocate(target: Vector2i) -> bool:
 	var profile: bool = OS.get_cmdline_user_args().has("--profile-streaming") and cache.center != Terrain.chunk_of(target)
 	var timings: Array = []
 	var stamp := Time.get_ticks_usec()
+	var next_center := Terrain.chunk_of(target)
+	if cache.center != next_center and locations.ledger != null:
+		# The layers below establish every new chunk of the 3x3 anyway; one transaction.
+		var ring: Array = []
+		for y in range(next_center.y - 1, next_center.y + 2):
+			for x in range(next_center.x - 1, next_center.x + 2): ring.append(Vector2i(x, y))
+		if not locations.ledger.establish_all(ring, locations.ledger.revision):
+			return _fail(locations.ledger.last_error)
 	cache.follow(target)
 	timings.append(Time.get_ticks_usec() - stamp)
 	stamp = Time.get_ticks_usec()

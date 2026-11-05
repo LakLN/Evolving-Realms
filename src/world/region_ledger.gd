@@ -98,6 +98,25 @@ func establish(chunk: Vector2i, at_revision: int, with_layers: Variant = null) -
 	_layers[chunk] = tags.duplicate()
 	return at_revision
 
+func establish_all(chunks: Array, at_revision: int) -> bool:
+	## First visits of several chunks in one transaction (streaming: the 3x3 around a new
+	## centre). Same records and revisions as establishing them one by one; on failure
+	## nothing is written and the cache forgets the batch.
+	last_error = ""
+	var fresh: Array = chunks.filter(func(chunk: Vector2i) -> bool: return established(chunk) < 0)
+	if not last_error.is_empty(): return false
+	if fresh.size() < 2: return true # Nothing to batch; establish() handles a single chunk.
+	var ok: bool = registry.batch(func() -> bool:
+		for chunk in fresh:
+			if establish(chunk, at_revision) < 0: return false
+		return true)
+	if not ok:
+		for chunk in fresh:
+			_revisions.erase(chunk)
+			_layers.erase(chunk)
+		if last_error.is_empty(): _fail(registry.last_error)
+	return ok
+
 func seal_baseline(store: RefCounted) -> bool:
 	## Once per World: chunks explored by any Run before the ledger existed were seen
 	## at revision 0 (no encounter content existed), so pin them there. Every caller
