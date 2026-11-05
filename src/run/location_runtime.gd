@@ -24,6 +24,7 @@ const SEARCH_RADIUS := 2
 ## the player passes within SENSE_RADIUS, so rare places are findable by attention,
 ## never by markers. No tile, name or Run state is revealed or stored.
 const SENSE_RADIUS := 10
+const SENSE_NEAR := 5 # A second, nearer cue: the trail warms up.
 var _sensed: Dictionary = {}
 const STATES := ["undiscovered", "discovered", "interactable", "recovering", "resolved", "unavailable"]
 var layer: RefCounted
@@ -137,10 +138,12 @@ func tick(session: RefCounted) -> Array:
 		if int(session.stats().hp) <= 0: break
 		if not discovered(session, instance.instance_id) and _detects(session, instance, false):
 			events.append_array(_discover(session, instance))
-		elif not discovered(session, instance.instance_id) and not _sensed.has(instance.instance_id) and _senses(session, instance):
-			_sensed[instance.instance_id] = true
+		elif not discovered(session, instance.instance_id) and int(_sensed.get(instance.instance_id, 0)) < 2 and _senses(session, instance):
 			var tile := Vector2i(int(instance.position.x), int(instance.position.y))
-			events.append({"type": "place_sense", "category": str(layer.definition_for(instance).payload.category), "direction": _compass(tile - session.position)})
+			var near := maxi(absi(tile.x - session.position.x), absi(tile.y - session.position.y)) <= SENSE_NEAR
+			if near or not _sensed.has(instance.instance_id):
+				_sensed[instance.instance_id] = 2 if near else 1
+				events.append({"type": "place_sense", "category": str(layer.definition_for(instance).payload.category), "direction": _compass(tile - session.position), "near": near})
 		if Vector2i(int(instance.position.x), int(instance.position.y)) == session.position:
 			for interaction in available(session, instance, "enter"):
 				var event: Dictionary = layer.event(interaction.event)

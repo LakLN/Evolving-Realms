@@ -11,6 +11,7 @@ extends "res://tests/playtest_sim.gd"
 ## Env: JOURNEY_SEEDS="931:932", JOURNEY_TURNS=7000, JOURNEY_BUILDS="might:spirit".
 const Atlas = preload("res://src/world/world_atlas.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
+const WorldRules = preload("res://src/core/world_rules.gd")
 const FOOD := ["snow:trough_char", "core:roast_meat", "snow:trail_stew", "snow:bark_ration", "core:berries", "core:raw_meat"]
 const DWELL := 320
 const ROUTE := ["Leefoot Basin", "Pitchpine Reach", "Mirror Trough", "Broken Relay", "Windcut Stair", "White Choir", "Crown Shelf"]
@@ -62,23 +63,42 @@ func journey(store: RefCounted, world: Dictionary, plan: Dictionary, run_seed: i
 	var last_hit := ""
 	var level := 1
 	var sense := {} # {"dir": Vector2i, "until": turn}: a heard cue the explorer follows
+	var refused := {} # "instance/interaction" -> turn: a player stops retrying a refusal for a while
+	var anchor := Vector2i.ZERO
+	var anchor_turn := 0
+	j.trace = []
+	j.skipped = []
 	var guard := 0
 	while int(s.run.state.turn) < turns and not s.is_dead() and guard < turns * 3:
 		guard += 1
 		if not j.resumed and int(s.run.state.turn) >= turns / 2:
 			# Save and continue in a fresh session, exactly as quitting and reloading would.
+			var stored: bool = s.save() # Saving folds the explored-map masks into the state.
 			var saved: Dictionary = s.run.state.duplicate(true)
 			var again := Session.new(store)
-			if not s.save() or not again.resume(s.run.run_id) or not Acceptance.same(saved, again.run.state):
+			if not stored or not again.resume(s.run.run_id) or not Acceptance.same(saved, again.run.state):
 				failures += 1
 				j.persist_error = s.last_error + again.last_error
+				for key in saved:
+					if not Acceptance.same(saved[key], again.run.state.get(key)): j.persist_error += " differs:" + str(key) + " " + str(saved[key]).left(200) + " vs " + str(again.run.state.get(key)).left(200)
 			s = again
 			s.autosave_interval = 0
 			route = []
 			j.resumed = true
 		var area := str(s.terrain.region_at(s.position).name)
 		if not j.areas.has(area): j.areas[area] = {"turns": 0, "events": 0, "kills": 0, "places": 0, "xp": 0, "damage": 0, "first_turn": int(s.run.state.turn), "level_in": s.character_rules.level(s.run.state.character)}
-		var acted := _spend_points(s, build) or _shelter(s, j) or _needs(s, m) or _craft(s, j) or _place(s, known, j, build) or _hunt(s, warned, j, m) or step(s, m)
+		if int(s.run.state.turn) % 500 == 0: j.trace.append("%d %s %s goal=%s" % [int(s.run.state.turn), area, s.position, goals[goal].name if goal < goals.size() else "-"])
+		if dwell == 0 and goal < goals.size():
+			if s.position.distance_to(anchor) > 8:
+				anchor = s.position
+				anchor_turn = int(s.run.state.turn)
+			elif int(s.run.state.turn) - anchor_turn > 400:
+				# No progress toward this area for 400 turns: give up on it, as a player would.
+				j.skipped.append("%s at %s" % [goals[goal].name, s.position])
+				goal += 1
+				route = []
+				anchor_turn = int(s.run.state.turn)
+		var acted := _spend_points(s, build) or _shelter(s, j) or _needs(s, m) or _craft(s, j) or _place(s, known, j, build, refused) or _hunt(s, warned, j, m) or step(s, m)
 		if not acted and not sense.is_empty() and int(s.run.state.turn) < int(sense.until):
 			# Follow the cue a few steps, searching as a player would.
 			if int(s.run.state.turn) % 3 == 0:
@@ -138,7 +158,8 @@ func journey(store: RefCounted, world: Dictionary, plan: Dictionary, run_seed: i
 					a.xp += int(event.get("amount", 0))
 				"place_sense":
 					var dirs := {"east": Vector2i(1, 0), "south-east": Vector2i(1, 1), "south": Vector2i(0, 1), "south-west": Vector2i(-1, 1), "west": Vector2i(-1, 0), "north-west": Vector2i(-1, -1), "north": Vector2i(0, -1), "north-east": Vector2i(1, -1)}
-					sense = {"dir": dirs.get(str(event.direction), Vector2i.ZERO) * 3, "until": int(s.run.state.turn) + 24}
+					var step_size := 1 if event.get("near", false) else 3
+					sense = {"dir": dirs.get(str(event.direction), Vector2i.ZERO) * step_size, "until": int(s.run.state.turn) + (30 if event.get("near", false) else 24)}
 					j.cues["sense"] = int(j.cues.get("sense", 0)) + 1
 				"creature_warning":
 					warned[str(event.target)] = true
@@ -228,29 +249,50 @@ func _craft(s: RefCounted, j: Dictionary) -> bool:
 				return true
 	return false
 
-func _place(s: RefCounted, known: Dictionary, j: Dictionary, build: String) -> bool:
+func _place(s: RefCounted, known: Dictionary, j: Dictionary, build: String, refused: Dictionary) -> bool:
 	## Visit a discovered place within 40 tiles that can be used now (its requirements met).
 	var best: Dictionary = {}
 	var best_d := 41
+	var calm: bool = s.places.weather_id(s) == "calm"
 	for instance in s.locations.loaded():
-		if not known.has(instance.instance_id) and not s.places.discovered(s, instance.instance_id): continue
+		var tile0 := Vector2i(int(instance.position.x), int(instance.position.y))
+		if not known.has(instance.instance_id) and not s.places.discovered(s, instance.instance_id):
+			# A landmark drawn on screen in clear air: walk over to see what it is.
+			var rule: Dictionary = s.locations.definition_for(instance).payload.get("discovery", {"mode": "visible"})
+			var seen: bool = calm and rule.get("mode") == "visible" and rule.get("conditions", []).is_empty() and maxi(absi(tile0.x - s.position.x), absi(tile0.y - s.position.y)) <= 12
+			if seen and absi(tile0.x - s.position.x) + absi(tile0.y - s.position.y) < best_d:
+				best = instance
+				best_d = absi(tile0.x - s.position.x) + absi(tile0.y - s.position.y)
+			continue
 		known[instance.instance_id] = true
 		var interaction := _choice(s, instance, build)
-		if interaction.is_empty(): continue
+		if interaction.is_empty() or int(refused.get(instance.instance_id + "/" + str(interaction.id), -999)) > int(s.run.state.turn) - 300: continue
 		var tile := Vector2i(int(instance.position.x), int(instance.position.y))
 		var d := absi(tile.x - s.position.x) + absi(tile.y - s.position.y)
 		if d < best_d:
 			best = instance
 			best_d = d
 	if best.is_empty(): return false
+	if best_d <= 1 and not s.places.discovered(s, best.instance_id): return false
 	if best_d <= 1:
 		var interaction := _choice(s, best, build)
-		var used: bool = s.perform_action({"type": "interact", "instance_id": best.instance_id, "interaction": interaction.id})
+		var action := {"type": "interact", "instance_id": best.instance_id, "interaction": interaction.id}
+		if interaction.get("world_method", "") == "heat": action.heat_source = _heat(s, best)
+		var used: bool = s.perform_action(action)
 		var key := "%s/%s" % [str(best.content_id).get_slice("/", 1), interaction.id]
 		if used: j.uses[key] = int(j.uses.get(key, 0)) + 1
-		else: j.refusals[s.last_error.left(70)] = int(j.refusals.get(s.last_error.left(70), 0)) + 1
+		else:
+			j.refusals[s.last_error.left(70)] = int(j.refusals.get(s.last_error.left(70), 0)) + 1
+			refused[best.instance_id + "/" + str(interaction.id)] = int(s.run.state.turn)
 		return used
 	return _follow(s, _path(s, Vector2i(int(best.position.x), int(best.position.y)) + Vector2i(0, 1)))
+
+func _heat(s: RefCounted, instance: Dictionary) -> String:
+	## The heat source the selector would offer that this character can pay for now.
+	for source in WorldRules.heat_sources(s, s.locations.definition_for(instance).payload.world_properties):
+		if source.items.all(func(c: Dictionary) -> bool: return int(s.run.state.inventory.get(c.content_id, {}).get("quantity", 0)) >= int(c.get("quantity", 1))) and int(source.energy) <= s.skills.resource(s, "energy"):
+			return str(source.id)
+	return ""
 
 func _choice(s: RefCounted, instance: Dictionary, build: String) -> Dictionary:
 	## The interaction a player of this build would pick now: requirements and costs met;
@@ -260,6 +302,7 @@ func _choice(s: RefCounted, instance: Dictionary, build: String) -> Dictionary:
 		var event: Dictionary = s.locations.event(i.event)
 		if not s.places.unmet(s, event.payload.get("conditions", [])).is_empty(): return false
 		if i.has("world_method") and i.world_method == "force" and int(s.combat_stats().attack) < int(s.locations.definition_for(instance).payload.world_properties.fracture_attack): return false
+		if i.has("world_method") and i.world_method == "heat" and _heat(s, instance).is_empty(): return false
 		return event.payload.get("cost", {}).get("items", []).all(func(c: Dictionary) -> bool: return int(s.run.state.inventory.get(c.content_id, {}).get("quantity", 0)) >= int(c.get("quantity", 1))))
 	if options.is_empty(): return {}
 	for option in options:

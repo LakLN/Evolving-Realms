@@ -1927,6 +1927,9 @@ func describe_events(events: Array) -> String:
 				if event.get("ranged", false):
 					parts.append("%s takes aim at you: step aside or break its line of sight!" % event.name)
 			"place_sense":
+				if event.get("near", false):
+					parts.append("It is close now, somewhere to the %s. Search around here (X)." % event.direction)
+					continue
 				parts.append({"anomaly": "A faint, strange sound carries from the %s.", "cache": "The snow to the %s looks disturbed.", "supplies": "The snow to the %s looks disturbed."}.get(str(event.category), "Something to the %s catches your eye.") % event.direction)
 			"creature_warning":
 				parts.append("⚠ The %s %s" % [str(event.name).to_lower(), event.text])

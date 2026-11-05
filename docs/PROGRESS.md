@@ -1,5 +1,30 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Snow Mountain experience pass - feedback, world state, journeys (2026-11-05)
+
+Branch `feature/snow-full-region` (not merged). Commits 4a7b57c (eased weather, storm
+arrival/departure cues and fades, returned-creature notice, warning postures, stage
+sprites with glow, recurring-ready mark, art b5 incl. den rev 3), e160998 (journey
+explorer, compass sense cue, storm exposure 2% of max HP), and the near-cue commit.
+
+Journey explorer `tests/snow_journey_sim.gd` (diagnostic; earned knowledge only).
+Runs 931 might / 932 spirit, 7000 turns: both reached Crown Shelf at L10-11 (turn
+~3600 / ~5200), finished the beacon chain and the bell, chose different exclusive
+options; no deaths, 5-8 warning postures heeded; save/continue identical. Findings
+acted on: hidden/search places never found (sense cues far 10 + near 5 tiles);
+storms negligible late (exposure scales with max HP). Explorer limits fixed on the
+way: heat-source choice, refusal memory, equipped-gear check, skill use, landmark
+sight. Not re-run after the near cue (only a 300-turn load/save check).
+
+Commands/results: `-Only snow-region` 153/0; `-Render -Only rendered-snow-region`
+62/0; discoveries 40, m04-world 86, snow-mountain 66, snow-gameplay 53, survival 60,
+run01-content 68, combat 75, realtime 58, snow-content 114, ai-content 35, gameplay 30:
+all 0 failures. asset_check b5: 0 failures, 66 warnings.
+
+Gaps: off-path resource sites (hare run, warm spring, sledge) rarely met by the
+explorer; Crown Shelf is quiet after completion; Leefoot is slow (few events);
+no audio; art remains candidate.
+
 ## Snow Mountain full-region production - living region (2026-11-05)
 
 Branch `feature/snow-full-region` (not merged). Commits 1db2d26 (event.repeat,
