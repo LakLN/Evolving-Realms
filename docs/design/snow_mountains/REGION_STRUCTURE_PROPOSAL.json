@@ -1,0 +1,36 @@
+{
+  "schema": "studio_design_region_structure_v1_not_runtime",
+  "region_id_proposed": "snow_mountains",
+  "region_scale": "major_world_region",
+  "status": "PROPOSED_STUDIO_V1",
+  "caveat": "All new cluster IDs and relative geography are provisional; not to be imported directly into runtime.",
+  "implemented_cluster": {
+    "label": "Hushed Crown valley",
+    "label_semantics": "local epithet, not fixed generated land name",
+    "status": "CANON_IMPLEMENTED",
+    "areas": [
+      "Leefoot Basin", "Pitchpine Reach", "Mirror Trough", "Broken Relay",
+      "Windcut Stair", "White Choir", "Crown Shelf"
+    ],
+    "known_spawn": "Leefoot Basin certified sheltered clearings; deterministic per Run seed",
+    "network": "connected loop around central impassable ice escarpment; one mountain-pass gate"
+  },
+  "potential_expansion_clusters": [
+    {"working_name":"The Long Thaw","theme":"lower valleys, seasonal thaw, shelter and trade possibilities","canon_status":"PROPOSED_STUDIO_V1"},
+    {"working_name":"Needlewall Range","theme":"steep ridges, hanging passes, elevation exploration","canon_status":"PROPOSED_STUDIO_V1"},
+    {"working_name":"Bluevault Icefields","theme":"large glaciers, ice caves, flowing water beneath ice","canon_status":"PROPOSED_STUDIO_V1"},
+    {"working_name":"Ashfrost Verge","theme":"rare geothermal warmth, dark geology, hot-cold ecology","canon_status":"PROPOSED_STUDIO_V1"},
+    {"working_name":"Farwhite Plateau","theme":"high plateaus, exposure, sparse landmarks, migratory fauna","canon_status":"PROPOSED_STUDIO_V1"}
+  ],
+  "narrative_threads_proposed": ["Roads Nobody Keeps","Warmth Beneath Winter","The White Atlas"],
+  "outdoor_transition": "seamless where geographically connected; streaming/detail choice is implementation dependent",
+  "interior_transition": "separate scene transition permitted",
+  "future_spawns": "allow multiple curated safe spawn locations in the large region, after explicit validation and runtime work",
+  "non_goals": [
+    "treat seven areas as all of Snow Mountains",
+    "change weather globally after bell restoration",
+    "assume active towns or factions in existing cluster",
+    "publish narrative proposals as implemented game content",
+    "use AI visual boards as lore authority"
+  ]
+}

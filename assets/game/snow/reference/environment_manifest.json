@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "tile_px": 40,
+  "layout_id": "landpkg:snow_mountain/reference",
+  "compositions": [
+    {"layout_version": 9, "area": "default", "origin_mode": "patch", "size_tiles": [48, 40], "ground": "snow/reference/reference_v9_ground.png"},
+    {"layout_version": 10, "area": "default", "origin_mode": "patch", "size_tiles": [48, 40], "ground": "snow/reference/reference_v10_ground.png", "roof": "snow/reference/reference_v10_roof.png"},
+    {"layout_version": 10, "area": "windcut", "origin_mode": "patch", "size_tiles": [64, 44], "ground": "snow/reference/reference_v10_windcut_ground.png", "roof": "snow/reference/reference_v10_windcut_roof.png"}
+  ]
+}

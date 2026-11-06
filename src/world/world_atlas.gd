@@ -39,7 +39,7 @@ static func enabled(blueprint: Dictionary) -> bool:
 
 static func supported_plan(plan: Dictionary) -> bool:
 	var version := int(plan.get("atlas_version", 0))
-	if version == 3: return int(plan.get("terrain_version", 0)) == 3 and plan.has("spatial") and int(plan.spatial.get("version", 0)) == 1 and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/reference" and int(plan.layout.get("version", 0)) in [8, 9, 10] and (int(plan.layout.version) >= 10 or not plan.has("spatial_areas"))
+	if version == 3: return int(plan.get("terrain_version", 0)) == 3 and plan.has("spatial") and int(plan.spatial.get("version", 0)) == 1 and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/reference" and int(plan.layout.get("version", 0)) in [8, 9, 10, 11] and (int(plan.layout.version) >= 10 or not plan.has("spatial_areas"))
 	return version == 1 or (version == 2 and int(plan.get("terrain_version", 0)) == 2 and plan.has("geography") and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/full_region" and int(plan.layout.get("version", 0)) in [5, 6, 7])
 
 static func create_world(store: RefCounted, name: String, seed_value: int, approval: Dictionary = {"by": "world-creation"}) -> Dictionary:
@@ -245,7 +245,8 @@ func validate(proposal: Dictionary) -> String:
 	var center := Vector2(int(plan.center.x), int(plan.center.y))
 	if center.distance_to(Vector2(origin) + Vector2.ONE * TerrainAtlas.SLOT / 2.0) + float(plan.radius) * 1.22 > TerrainAtlas.SLOT / 2.0 - 2.0:
 		return "Land mass would cross its slot"
-	if plan.regions.size() < 3: return "A land needs at least three regions"
+	var minimum_regions := 2 if plan.get("layout", {}).get("id", "") == LayoutDesigner.LONG_THAW_N3 else 3
+	if plan.regions.size() < minimum_regions: return "A land needs at least %d regions" % minimum_regions
 	for region in plan.regions:
 		if not plan.kinds.has(region.kind): return "Region kind rules missing: " + str(region.kind)
 		if Vector2(int(region.seed.x), int(region.seed.y)).distance_to(center) > float(plan.radius) * (LAYOUT_REGION_REACH if plan.has("geography") else 0.7): return "Region %s lies outside the land mass" % region.name
@@ -423,7 +424,8 @@ func _layout_start(generator: RefCounted, run_seed: int, candidate: Dictionary, 
 func _install_packs(paths: Array) -> bool:
 	var packs := Pack.new()
 	for path in paths:
-		if not str(path).begins_with("res://content/land_packages/") or not packs.install(registry, world.world_id, str(path)):
+		var draft_n3 := str(path) == "res://content/drafts/snow_mountains/long_thaw/content_pack.json" and ("--long-thaw-n3" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()) or "--long-thaw-n4" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()))
+		if (not str(path).begins_with("res://content/land_packages/") and not draft_n3) or not packs.install(registry, world.world_id, str(path)):
 			return _fail("Land content pack %s: %s" % [str(path), packs.last_error])
 	return true
 

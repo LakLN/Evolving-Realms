@@ -127,11 +127,21 @@ func modifiers(session: RefCounted, definition: Dictionary) -> Dictionary:
 
 func costs(session: RefCounted, definition: Dictionary) -> Dictionary:
 	var cost: Dictionary = definition.payload.use.get("cost", {}).duplicate(true)
+	if cost.has("energy") and not session.skill_rules.rules.resources.has("energy"):
+		var resource_id := _routed_resource(session, definition)
+		cost[resource_id] = int(cost.energy)
+		cost.erase("energy")
 	var percent := 100 + int(modifiers(session, definition).cost_percent)
 	for key in cost:
 		if session.skill_rules.rules.resources.has(key):
 			cost[key] = maxi(0, int(cost[key]) * percent / 100)
 	return cost
+
+func _routed_resource(session: RefCounted, definition: Dictionary) -> String:
+	var tags: Array = definition.payload.get("tags", [])
+	var elements: Array = definition.payload.get("elements", ["neutral"])
+	var mana_tags: Array = session.skill_rules.rules.get("legacy_resource_routing", {}).get("mana_tags", [])
+	return "mana" if elements.any(func(element: String) -> bool: return element != "neutral") or tags.any(func(tag: String) -> bool: return tag in mana_tags) else "stamina"
 
 func reach(session: RefCounted, definition: Dictionary) -> int:
 	var target: Dictionary = definition.payload.use.target
@@ -250,7 +260,10 @@ func use_action(session: RefCounted, action: Dictionary) -> bool:
 	for effect in definition.payload.effects:
 		match effect.type:
 			"strike":
-				var result: Dictionary = session.strike(action.target_id, {"range": reach(session, definition), "line_of_sight": definition.payload.use.target.get("line_of_sight", true), "attack_percent": int(effect.get("attack_percent", 100)) * power / 100, "flat": int(effect.get("flat", 0)), "key": "/skill/" + definition.content_id, "elements": definition.payload.get("elements", ["neutral"])})
+				var elements: Array = definition.payload.get("elements", ["neutral"])
+				var tags: Array = definition.payload.get("tags", [])
+				var magical := elements.any(func(element: String) -> bool: return element != "neutral") or tags.any(func(tag: String) -> bool: return tag in ["magic", "arcane"])
+				var result: Dictionary = session.strike(action.target_id, {"range": reach(session, definition), "line_of_sight": definition.payload.use.target.get("line_of_sight", true), "attack_percent": int(effect.get("attack_percent", 100)) * power / 100, "flat": int(effect.get("flat", 0)), "key": "/skill/" + definition.content_id, "elements": elements, "damage_kind": "magic" if magical else "physical"})
 				if result.is_empty():
 					if events.is_empty():
 						return false # Refused before anything changed.
@@ -315,12 +328,13 @@ func _plan_self(session: RefCounted, definition: Dictionary, power: int) -> Dict
 				changes.append({"type": "status"})
 				summary.append("%s %+d for %d turns" % [session.character_rules.rules.stats[effect.stat].name, int(effect.get("add", 0)) * power / 100, turns])
 			"restore":
-				var current := mini(int(resources[effect.resource].value), resource_max(session, effect.resource))
-				var after := mini(resource_max(session, effect.resource), current + int(effect.amount) * power / 100)
-				resources[effect.resource].value = after
+				var resource_id := _routed_resource(session, definition) if effect.resource == "energy" and not session.skill_rules.rules.resources.has("energy") else str(effect.resource)
+				var current := mini(int(resources[resource_id].value), resource_max(session, resource_id))
+				var after := mini(resource_max(session, resource_id), current + int(effect.amount) * power / 100)
+				resources[resource_id].value = after
 				if after != current:
 					changes.append({"type": "restore"})
-					summary.append("%s %+d" % [session.skill_rules.rules.resources[effect.resource].short, after - current])
+					summary.append("%s %+d" % [session.skill_rules.rules.resources[resource_id].short, after - current])
 	return {"trial": trial, "resources": resources, "statuses": statuses, "changes": changes, "summary": summary}
 
 func _apply_self(session: RefCounted, definition: Dictionary, plan: Dictionary) -> void:

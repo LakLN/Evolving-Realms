@@ -1,6 +1,6 @@
 # RPG gameplay foundation
 
-2026-11-04. Decisions that new content and code must follow so systems stay one
+2026-11-06 Phase 1 revision. Decisions that new content and code must follow so systems stay one
 coherent model. Implementation: `content/character_rules.json` (attributes),
 `src/core/character_stats.gd`, `src/core/crafting.gd`, `content/crafting_pack.json`,
 `src/run/exploration_session.gd` (craft action, weapon on-hit), `src/run/skill_actions.gd`.
@@ -17,9 +17,11 @@ other system (materials → gear, gear → skills, attributes → skills and sta
 | Area | Decision | Why |
 |---|---|---|
 | Classes | None. Builds come from attributes, talents, skills and gear. | Vision: no fixed class; Runs differ through choices and luck. |
-| Attributes | Might, Vitality, Spirit; `points_per_level` (2) free points per level, stored only as allocations, no respec within a Run. Older Runs get their earned points to spend. | A small set the player can reason about; each changes play, not just numbers. |
+| Attributes | STR, DEX, AGI, VIT, INT, SPI; 2 free points per level, stored only as allocations, no unrestricted respec. Legacy Might becomes STR; VIT/SPI retain their allocation. | Familiar classless vocabulary with separate force, precision, mobility, durability, spell power and mana affinity. |
 | Derived stats | Attributes add `grants` (same shape as level growth) inside `CharacterStats.effective`; never stored. Max HP/Energy gained are granted as current values. | One derivation path; reload cannot stack. |
-| Skill power | `power_percent` = talents + gear `skill_modifiers` + attribute `skill_power`. Might scales neutral/metal/earth skills; Spirit scales elemental skills, healing/restore and the statuses they apply. Status records keep the power at application. | Same knob for skills, statuses and weapon on-hit, so a build's focus compounds. |
+| Resources | HP, MP and Stamina. Magical/arcane/restoration/control skills spend MP; martial/ranged/movement/guard skills spend Stamina. Ordinary walking is free. Both regenerate each turn and faster while resting. | Physical and magical builds manage different constraints without making exploration tedious. |
+| Skill power | `power_percent` = talents + gear modifiers + matching attributes/tags/elements. STR powers physical/melee, DEX ranged/technical, AGI movement, INT magic/arcane/restoration, SPI elements/healing. | Hybrid skills can benefit from more than one deliberate investment while each attribute keeps a distinct job. |
+| Combat stats | ATK/MATK, DEF/MDEF, Accuracy/Evasion, Critical Rate/Damage. All are derived; deterministic hit and critical draws live in Combat. | Physical and magical offense/defense diverge, while precision and mobility create another build axis. |
 | Weapons | Equipment may declare `damage_elements` (basic-attack element through the shared resistance pipeline), `on_hit` (`apply_status` with `chance_percent`, deterministic roll) and `skill_modifiers` (tags, power/cost/range). On-hit power uses the attribute matching the weapon element. | Weapons define a play style, not only +ATK. |
 | Elements/statuses | Reuse `effect_rules.json` elements, reactions and status definitions; no parallel damage system. | Already engine-tested; creatures and skills share it. |
 | Crafting | `recipe` definitions: 1–6 pinned item inputs, one output (optional quality), category. Craft = one action, atomic (inputs out and output in together), per-Run counter keeps instance IDs unique. Recipes may only depend on content installed in every World where they ship. | Gives gathered and hunted materials purpose; data-only, extensible by AI Studio packs. |
@@ -36,12 +38,12 @@ other system (materials → gear, gear → skills, attributes → skills and sta
 
 ## Representative builds (v1 content)
 
-- **Might hunter:** Might points, Fang spear (Bleed on hit, scales with Might),
+- **Strength hunter:** STR points, Fang spear (Bleed on hit, scales with STR),
   Power Strike; hide armor and fang charm from wolf materials.
-- **Spirit caster:** Spirit points (more Energy, stronger burns/heals), Herbwood
+- **Elemental caster:** INT/SPI points (MATK, MP, stronger burns/heals), Herbwood
   focus (+30% elemental power, −25% cost), Ember/Frost/Renewal books.
-- **Fire skirmisher:** Tallow torch (fire damage, Burn on hit scaling with Spirit)
-  with Might for base damage; thrives against burn-sensitive talents (Ember Heart).
+- **Fire skirmisher:** Tallow torch with STR for the weapon strike and SPI for its
+  fire/Burn component; thrives against burn-sensitive talents (Ember Heart).
 - **Vitality survivor:** Vitality points, poultices and roast meat, resting and
   shelter play in harsh regions.
 

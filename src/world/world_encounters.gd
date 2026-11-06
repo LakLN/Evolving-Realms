@@ -149,7 +149,8 @@ func generate(terrain: RefCounted, chunk: Vector2i, bytes: PackedByteArray, at_r
 			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
 				var rule: Dictionary = eligible[i]
 				var p: Dictionary = rule.definition.payload
-				if not (habitat in p.biomes or (adaptive and terrain.ecology_hosts(ground, point, str(p.creature.content_id)))) or not _tile_allows(terrain, chunk, bytes, point, p):
+				var strict: bool = adaptive and terrain.has_method("strict_ecology") and terrain.strict_ecology(point)
+				if not ((not strict and habitat in p.biomes) or (adaptive and terrain.ecology_hosts(ground, point, str(p.creature.content_id)))) or not _tile_allows(terrain, chunk, bytes, point, p):
 					continue
 				candidates.append({"point": point, "local": Vector2i(x, y), "rule": rule, "order": terrain.coordinate_hash(point.x, point.y, order_stream)})
 				break

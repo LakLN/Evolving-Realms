@@ -29,11 +29,17 @@ static func player_stats(stats: Dictionary) -> Dictionary:
 	return result
 
 static func resolve(attacker: Dictionary, defender: Dictionary, key: String) -> Dictionary:
-	## damage = max(1, attack + variance - defense); variance in 0..attack/3 from a
-	## SHA256 draw of key, so replaying the same action cannot change the result.
+	## Accuracy/evasion and criticals use independent deterministic draws. Actors that
+	## do not expose the new stats retain the legacy always-hit, non-critical result.
+	var hit_chance := clampi(int(attacker.get("accuracy", 100)) - int(defender.get("evasion", 0)), 25, 100)
+	if Loot.number(key + "/hit") % 100 >= hit_chance:
+		return {"damage": 0, "variance": 0, "hp": int(defender.hp), "killed": false, "missed": true, "critical": false}
 	var attack := int(attacker.attack)
 	var spread := attack / 3
 	var variance := Loot.number(key) % (spread + 1) if spread > 0 else 0
 	var damage := maxi(1, attack + variance - int(defender.defense))
+	var critical := Loot.number(key + "/critical") % 100 < clampi(int(attacker.get("critical_rate", 0)), 0, 75)
+	if critical:
+		damage = maxi(1, damage * maxi(100, int(attacker.get("critical_damage", 150))) / 100)
 	var remaining := maxi(0, int(defender.hp) - damage)
-	return {"damage": damage, "variance": variance, "hp": remaining, "killed": remaining == 0}
+	return {"damage": damage, "variance": variance, "hp": remaining, "killed": remaining == 0, "missed": false, "critical": critical}

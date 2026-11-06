@@ -1689,6 +1689,32 @@
      }
     ]
    }
+  },
+  {
+   "content_id": "snow:event/camp_stash",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The cutthroats' stash",
+   "description": "",
+   "dependencies": [{"content_id": "core:coin", "version": 1}, {"content_id": "snow:bronze_scrap", "version": 1}, {"content_id": "snow:frost_linen", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "tone": "neutral",
+    "message": "You lift the slab over the cutthroats' stash hole. Fresh boot scrapes and lamp grease show that the old relay is occupied now, not restored as a settlement.",
+    "outcomes": [{"type": "chance", "chance_per_10000": 7000, "message": "Someone has filled it again: coin, bronze and a fold of linen taken from a traveller.", "outcomes": [{"type": "grant_items", "items": [{"content_id": "core:coin", "version": 1, "quantity": 3}, {"content_id": "snow:bronze_scrap", "version": 1, "quantity": 1}, {"content_id": "snow:frost_linen", "version": 1, "quantity": 1}]}], "otherwise_message": "Picked clean. Whoever stocks it has not been back.", "otherwise": []}]
+   }
+  },
+  {
+   "content_id": "snow:place/bandit_stash",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Stash under the slab",
+   "description": "A flat stone by the cutthroats' fire pit, freshly scraped where it has been lifted many times.",
+   "dependencies": [{"content_id": "snow:event/camp_stash", "version": 2}],
+   "metadata": {"site_only": true, "category": "cache"},
+   "payload": {"category": "cache", "visual": "bandit_stash", "discovery": {"mode": "proximity", "radius": 2}, "spawn": {"biomes": ["snowfield"], "per_10000": 1}, "interactions": [{"id": "lift", "verb": "Lift the slab", "event": {"content_id": "snow:event/camp_stash", "version": 2}, "repeat": {"every": 400, "times": 3}}]}
   }
  ]
 }

@@ -1,0 +1,195 @@
+{
+  "schema": "director_scene_brief.v1",
+  "status": "design_spec_not_runtime_json",
+  "region": "snow_mountain",
+  "area": "broken_relay",
+  "target_layout_version": 11,
+  "layout_family": "landpkg:snow_mountain/reference",
+  "logical_cell_px": 40,
+  "native_viewport": [
+    1100,
+    720
+  ],
+  "reference_v10": {
+    "size_tiles": [
+      48,
+      40
+    ],
+    "size_px": [
+      1920,
+      1600
+    ],
+    "source_transitions": [
+      [
+        [
+          15,
+          21
+        ],
+        [
+          15,
+          22
+        ]
+      ],
+      [
+        [
+          16,
+          21
+        ],
+        [
+          16,
+          22
+        ]
+      ],
+      [
+        [
+          34,
+          8
+        ],
+        [
+          34,
+          9
+        ]
+      ],
+      [
+        [
+          35,
+          8
+        ],
+        [
+          35,
+          9
+        ]
+      ],
+      [
+        [
+          32,
+          22
+        ],
+        [
+          32,
+          23
+        ]
+      ],
+      [
+        [
+          33,
+          22
+        ],
+        [
+          33,
+          23
+        ]
+      ]
+    ],
+    "source_one_way_transition_indices": [
+      4,
+      5
+    ]
+  },
+  "art_style": "Modern Stylized Pixel Fantasy sample #3",
+  "art_visual_projection": "3/4 top-down stylized using 2D Camera2D; no isometric grid conversion",
+  "spatial_intent": [
+    "lower forest-edge approach",
+    "irregular gorge",
+    "walkable bridge",
+    "lower shelf",
+    "main stair ascent",
+    "raised relay courtyard and shelter",
+    "upper pass continuation",
+    "secondary directed one-way ledge"
+  ],
+  "coordinate_bands_hint": [
+    {
+      "id": "approach",
+      "x_range": [
+        3,
+        19
+      ],
+      "y_range": [
+        25,
+        39
+      ]
+    },
+    {
+      "id": "gorge",
+      "x_range": [
+        20,
+        32
+      ],
+      "y_range": [
+        22,
+        39
+      ]
+    },
+    {
+      "id": "lower_shelf",
+      "x_range": [
+        10,
+        21
+      ],
+      "y_range": [
+        19,
+        27
+      ]
+    },
+    {
+      "id": "outpost_terrace",
+      "x_range": [
+        11,
+        38
+      ],
+      "y_range": [
+        10,
+        22
+      ]
+    },
+    {
+      "id": "outpost_building",
+      "x_range": [
+        16,
+        31
+      ],
+      "y_range": [
+        9,
+        18
+      ]
+    },
+    {
+      "id": "upper_pass",
+      "x_range": [
+        30,
+        46
+      ],
+      "y_range": [
+        3,
+        17
+      ]
+    },
+    {
+      "id": "one_way_drop",
+      "x_range": [
+        29,
+        37
+      ],
+      "y_range": [
+        20,
+        26
+      ]
+    }
+  ],
+  "layer_semantics": [
+    "ground_opaque",
+    "cliff_grounded",
+    "world_facade_and_props",
+    "actors_sorted_by_feet",
+    "roof_only_and_rail_occluders",
+    "weather_fog",
+    "hud"
+  ],
+  "must_keep_content_ids": [
+    "snow:place/relay_locker",
+    "snow:place/relay_strongbox",
+    "snow:place/bandit_stash"
+  ],
+  "asset_status_note": "V1/V2/V3 are mostly reference/candidate materials; game-ready art must be reviewed. No fake production-finished claim."
+}

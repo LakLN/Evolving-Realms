@@ -185,6 +185,12 @@ func ecology_hosts(value: int, point: Vector2i, content_id: String) -> bool:
 		return zone != RIM and land.kinds[zone].ecology.get(habitat, {}).has(content_id)
 	return true
 
+func strict_ecology(point: Vector2i) -> bool:
+	## N4 authored areas whitelist their procedural identities. This prevents generic
+	## beach/meadow shells, chests and creatures leaking into the lower-mountain basin.
+	var land: Variant = _lands.get(slot_of(point))
+	return land != null and land.has("plan") and land.plan.get("layout", {}).get("id", "") == "landpkg:snow_mountain/long_thaw_n3" and int(land.plan.get("layout", {}).get("version", 0)) >= 2
+
 func placements(chunk: Vector2i) -> Array:
 	## Atlas sites (waystones, landmarks) pinned by land plans, as location instances.
 	var result: Array = []

@@ -1,0 +1,87 @@
+{
+  "layout_version": 1,
+  "id": "landpkg:snow_mountain/long_thaw_n3",
+  "version": 1,
+  "atlas_version": 1,
+  "terrain_version": 2,
+  "archetype": "frost_highlands",
+  "epithet": "the Long Thaw, a lower basin of braided meltwater and old stone weirs",
+  "history": "Short green seasons return between snowmelt channels. Travellers read flood marks, gravel bars and repaired waterworks to cross the basin.",
+  "notes": "N3 opt-in vertical slice only: Thawgate Fans and Nine Weirs. Append-only; no previous Snow Mountain layout is changed.",
+  "radius": 104,
+  "coast": {"min": 1.05, "max": 1.18, "scale": 38},
+  "warp": 20,
+  "escarpment": {"name": "North meltwall", "center": [0.0, -0.72], "radius": [0.18, 0.08], "jitter": 0.08, "scale": 22},
+  "lakes": [
+    {"id": "west_braid", "center": [-0.12, 0.22], "radius": [0.06, 0.42], "jitter": 0.08, "scale": 20, "shore": 3},
+    {"id": "east_braid", "center": [0.22, 0.04], "radius": [0.05, 0.35], "jitter": 0.08, "scale": 20, "shore": 3}
+  ],
+  "barriers": [
+    {"id": "west_fan_wall", "a": [-0.82, -0.4], "b": [-0.78, 0.52], "width": 0.025},
+    {"id": "east_weir_wall", "a": [0.78, -0.5], "b": [0.82, 0.5], "width": 0.025},
+    {"id": "north_meltwall_west", "a": [-0.78, -0.48], "b": [-0.18, -0.68], "width": 0.02},
+    {"id": "north_meltwall_east", "a": [0.18, -0.68], "b": [0.78, -0.48], "width": 0.02}
+  ],
+  "windbreaks": [
+    {"id": "fan_rocks", "a": [-0.58, 0.02], "b": [-0.48, 0.02], "width": 0.01, "tile": "rock"},
+    {"id": "weir_stones", "a": [0.38, -0.18], "b": [0.58, -0.18], "width": 0.01, "tile": "rock"}
+  ],
+  "areas": [
+    {
+      "id": "thawgate_fans",
+      "name": "Thawgate Fans",
+      "seed": [-0.42, 0.12],
+      "danger": 0,
+      "start": true,
+      "exposure": "lee",
+      "opportunity": "sheltered gravel fans, clean seepage and a readable route toward the weirs",
+      "ground": "meadow",
+      "patch": {"surface": "frozen", "scale": 28, "above": 720},
+      "blocker": {"tile": "tree", "percent": 6, "on": ["meadow"]},
+      "rocks": {"tile": "rock", "percent": 2},
+      "ecology": {
+        "meadow": ["core:fresh_spring", "core:herb_patch", "core:fallen_branches", "core:loose_stones"],
+        "snowfield": ["core:loose_stones"]
+      }
+    },
+    {
+      "id": "nine_weirs",
+      "name": "Nine Weirs",
+      "seed": [0.46, -0.02],
+      "danger": 1,
+      "exposure": "open",
+      "opportunity": "dry-stone channels, flood records and the Weir Five survey",
+      "ground": "meadow",
+      "patch": {"surface": "beach", "scale": 25, "above": 610},
+      "blocker": {"tile": "rock", "percent": 5, "on": ["beach", "meadow"]},
+      "rocks": {"tile": "rock", "percent": 2},
+      "ecology": {
+        "meadow": ["core:herb_patch", "core:fallen_branches"],
+        "beach": ["core:fresh_spring", "core:loose_stones"]
+      }
+    }
+  ],
+  "trails": [
+    {"id": "main_fan_walk", "points": [[-0.42, 0.12], [-0.15, 0.05], [0.12, 0.02], [0.46, -0.02]]},
+    {"id": "high_weir_walk", "points": [[-0.42, 0.12], [-0.42, -0.28], [-0.1, -0.48], [0.32, -0.4], [0.46, -0.02]]},
+    {"id": "pass_link", "points": [[-0.42, 0.12], [-0.24, 0.45], [0.0, 0.78]]}
+  ],
+  "pass": {"head": [0.0, 0.78]},
+  "shelters": [],
+  "starts": [
+    {"id": "fan_lee_west", "at": [-0.52, 0.18]},
+    {"id": "fan_lee_south", "at": [-0.34, 0.3]}
+  ],
+  "clearing_radius": 5,
+  "weather": [
+    {"id": "wet_snow", "name": "Wet snow", "cycle": 180, "duration": 35, "chance": 45, "sight": 5, "exposure": {"surfaces": ["meadow", "forest", "beach", "frozen ground", "trail"], "every": 8, "damage": 1, "shelter": ["pine", "tree", "rock", "cliff", "timber"]}}
+  ],
+  "hazards": [],
+  "supplies": {"food": ["core:herb_patch"], "water": ["core:fresh_spring"], "food_steps": 30, "water_steps": 30},
+  "content_packs": ["res://content/drafts/snow_mountains/long_thaw/content_pack.json"],
+  "sites": [
+    {"id": "thawgate_spring", "content_id": "core:place/clear_spring", "at": [-0.57, 0.3], "area": "thawgate_fans", "reason": "a clean seep and survival stop beside the main fan walk"},
+    {"id": "floodline_stones", "content_id": "long_thaw:place/floodline_stones", "at": [0.31, 0.12], "area": "nine_weirs", "reason": "the first readable evidence in the Weir Five survey"},
+    {"id": "weir_five_control", "content_id": "long_thaw:place/weir_five_control", "at": [0.57, -0.13], "area": "nine_weirs", "reason": "an inspect-then-recommend terminal interaction that does not move the gate"}
+  ]
+}

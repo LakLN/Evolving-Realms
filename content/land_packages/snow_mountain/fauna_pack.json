@@ -2540,6 +2540,58 @@
      }
     ]
    }
+  },
+  {
+   "content_id": "snow:event/hunters_camp",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Hunter trail notes",
+   "description": "",
+   "dependencies": [{"content_id": "core:book/power_strike", "version": 1}, {"content_id": "core:hide", "version": 1}, {"content_id": "snow:bark_ration", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "Tuskbacks leave travellers alone until struck. Their straight rush punishes a head-on approach. Beside the old carrier-route cuts, fresher boot marks turn toward the relay. The hunters left a heavy-strike manual and usable hides.",
+    "tone": "neutral",
+    "outcomes": [{"type": "grant_items", "items": [{"content_id": "core:book/power_strike", "version": 1, "quantity": 1}, {"content_id": "core:hide", "version": 1, "quantity": 2}, {"content_id": "snow:bark_ration", "version": 1, "quantity": 2}]}, {"type": "xp", "amount": 10}]
+   }
+  },
+  {
+   "content_id": "snow:place/hunters_camp",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Abandoned hunters camp",
+   "description": "A rack of hides and a low lean-to beside old tusk marks; boot cuts cross the old carrier route.",
+   "dependencies": [{"content_id": "snow:event/hunters_camp", "version": 2}],
+   "metadata": {"site_only": true, "category": "ruin"},
+   "payload": {"category": "ruin", "visual": "lee_shelter", "discovery": {"mode": "visible", "radius": 3}, "spawn": {"biomes": ["snowfield"], "per_10000": 1}, "interactions": [{"id": "search", "verb": "Read the hunter notes", "event": {"content_id": "snow:event/hunters_camp", "version": 2}}]}
+  },
+  {
+   "content_id": "snow:event/choir_notes",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "The wind stitch",
+   "description": "",
+   "dependencies": [{"content_id": "snow:book/rime_stitch", "version": 1}, {"content_id": "snow:frost_linen", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "The cloth was sewn around a sequence of cold syllables, spaced like the road-calls carriers cut into shelter posts. The resemblance does not say whether the voices heard here belong to people, wind, ice, or something else. The technique slows a threat; it does not make a traveller immune to winter.",
+    "tone": "neutral",
+    "outcomes": [{"type": "grant_items", "items": [{"content_id": "snow:book/rime_stitch", "version": 1, "quantity": 1}, {"content_id": "snow:frost_linen", "version": 1, "quantity": 2}]}, {"type": "xp", "amount": 18}]
+   }
+  },
+  {
+   "content_id": "snow:place/wind_loom",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Wind loom",
+   "description": "Tattered blue cloth stretches between two old carriers' poles, stitched in a measured cadence.",
+   "dependencies": [{"content_id": "snow:event/choir_notes", "version": 2}],
+   "metadata": {"site_only": true, "category": "ruin"},
+   "payload": {"category": "ruin", "visual": "fallen_pine", "discovery": {"mode": "visible", "radius": 3}, "spawn": {"biomes": ["snowfield"], "per_10000": 1}, "interactions": [{"id": "read", "verb": "Read the stitched syllables", "event": {"content_id": "snow:event/choir_notes", "version": 2}}]}
   }
  ]
 }

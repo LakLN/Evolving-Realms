@@ -1,0 +1,265 @@
+{
+  "pack_version": 1,
+  "status": "draft_not_bound",
+  "notes": "Current-handler evidence vertical slice for The Long Thaw. Recommendation events do not mutate water, routes, terrain or collision.",
+  "definitions": [
+    {
+      "content_id": "long_thaw:fifth_channel_survey",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "item",
+      "name": "Fifth Channel survey",
+      "description": "A waxed slate recording one recommended course for Weir Five. It is a proposal, not proof that the waterworks were changed.",
+      "metadata": {"category": "key"},
+      "payload": {"stackable": false, "stack_limit": 1}
+    },
+    {
+      "content_id": "long_thaw:event/weir_inspect",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Weir Five inspection",
+      "description": "",
+      "metadata": {"category": "lore"},
+      "payload": {
+        "tone": "neutral",
+        "message": "The dry control slot can record a course recommendation, but moving the gate would require work beyond this survey.",
+        "outcomes": [{"type": "xp", "amount": 4}]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/old_floodline",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "The oldest flood line",
+      "description": "",
+      "metadata": {"category": "lore"},
+      "payload": {
+        "tone": "neutral",
+        "message": "The lowest stone is still seated in its original foundation. Two newer flood marks were cut on blocks reset after the wall was repaired.",
+        "outcomes": [{"type": "xp", "amount": 5}]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/gatehouse_tally",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Maintenance tally",
+      "description": "",
+      "metadata": {"category": "lore"},
+      "payload": {
+        "tone": "neutral",
+        "message": "Repair notches name separate crews, seasons and channels. The numbering belongs to later workers; the nine weirs were not built as one machine.",
+        "outcomes": [{"type": "xp", "amount": 7}]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/orchard_seep",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Cold seep beneath the orchard",
+      "description": "",
+      "metadata": {"category": "lore"},
+      "payload": {
+        "tone": "neutral",
+        "message": "Water pushes through the terrace from beneath the gravel. Its silt matches the blocked course above Weir Five.",
+        "outcomes": [{"type": "xp", "amount": 6}]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/understone_thunder",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Under-stone thunder",
+      "description": "",
+      "metadata": {"category": "lore"},
+      "payload": {
+        "tone": "neutral",
+        "message": "A broad current sounds beneath the talus. The surface channel is only part of the river.",
+        "outcomes": [{"type": "xp", "amount": 5}]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/recommend_open",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Recommend the orchard course",
+      "description": "",
+      "dependencies": [{"content_id": "long_thaw:fifth_channel_survey", "version": 1}],
+      "metadata": {"category": "world_event"},
+      "payload": {
+        "tone": "neutral",
+        "message": "You record a recommendation to reopen the old orchard course. Nothing in the weir has moved.",
+        "outcomes": [{"type": "grant_items", "items": [{"content_id": "long_thaw:fifth_channel_survey", "version": 1, "quantity": 1}]}, {"type": "xp", "amount": 12}]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/recommend_brace",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Recommend the market course",
+      "description": "",
+      "dependencies": [{"content_id": "long_thaw:fifth_channel_survey", "version": 1}],
+      "metadata": {"category": "world_event"},
+      "payload": {
+        "tone": "neutral",
+        "message": "You record a recommendation to brace the present market course. Nothing in the weir has moved.",
+        "outcomes": [{"type": "grant_items", "items": [{"content_id": "long_thaw:fifth_channel_survey", "version": 1, "quantity": 1}]}, {"type": "xp", "amount": 12}]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/recommend_spill",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Recommend a measured spill",
+      "description": "",
+      "dependencies": [{"content_id": "long_thaw:fifth_channel_survey", "version": 1}],
+      "metadata": {"category": "world_event"},
+      "payload": {
+        "tone": "neutral",
+        "message": "You record a recommendation for a measured spill between both courses. Nothing in the weir has moved.",
+        "outcomes": [{"type": "grant_items", "items": [{"content_id": "long_thaw:fifth_channel_survey", "version": 1, "quantity": 1}]}, {"type": "xp", "amount": 12}]
+      }
+    },
+    {
+      "content_id": "long_thaw:place/floodline_stones",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Reset flood stones",
+      "description": "Three flood marks stand beside Weir Five, but their foundations do not match.",
+      "dependencies": [{"content_id": "long_thaw:event/old_floodline", "version": 1}],
+      "metadata": {"site_only": true, "category": "ruin"},
+      "payload": {"category": "ruin", "visual": "floodline_stones", "discovery": {"mode": "visible", "radius": 3}, "spawn": {"biomes": ["meadow", "beach"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "compare", "verb": "Compare the flood marks", "event": {"content_id": "long_thaw:event/old_floodline", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/gatehouse_tally",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Gatehouse tally wall",
+      "description": "Repair notches cover the dry inner wall in several hands.",
+      "dependencies": [{"content_id": "long_thaw:event/gatehouse_tally", "version": 1}],
+      "metadata": {"site_only": true, "category": "ruin"},
+      "payload": {"category": "ruin", "visual": "tally_wall", "discovery": {"mode": "proximity", "radius": 2}, "spawn": {"biomes": ["meadow"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "read", "verb": "Read the repair notches", "event": {"content_id": "long_thaw:event/gatehouse_tally", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/orchard_seep",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Orchard seep",
+      "description": "Cold water beads through a drowned terrace wall.",
+      "dependencies": [{"content_id": "long_thaw:event/orchard_seep", "version": 1}],
+      "metadata": {"site_only": true, "category": "natural"},
+      "payload": {"category": "natural", "visual": "orchard_seep", "discovery": {"mode": "visible", "radius": 2}, "spawn": {"biomes": ["forest", "beach"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "inspect", "verb": "Inspect the seep", "event": {"content_id": "long_thaw:event/orchard_seep", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/underflow_rumble",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Rumbling talus",
+      "description": "The stones tremble above an unseen current.",
+      "dependencies": [{"content_id": "long_thaw:event/understone_thunder", "version": 1}],
+      "metadata": {"site_only": true, "category": "natural"},
+      "payload": {"category": "natural", "visual": "rumbling_talus", "discovery": {"mode": "proximity", "radius": 2}, "spawn": {"biomes": ["beach", "meadow"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "listen", "verb": "Listen beneath the stones", "event": {"content_id": "long_thaw:event/understone_thunder", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/weir_five_control",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Weir Five control slot",
+      "description": "A dry control slot records three possible courses. This draft supports surveying only, not moving the gate.",
+      "dependencies": [{"content_id": "long_thaw:event/weir_inspect", "version": 1}, {"content_id": "long_thaw:event/recommend_open", "version": 1}, {"content_id": "long_thaw:event/recommend_brace", "version": 1}, {"content_id": "long_thaw:event/recommend_spill", "version": 1}],
+      "metadata": {"site_only": true, "category": "ruin"},
+      "payload": {
+        "category": "ruin",
+        "visual": "weir_control",
+        "discovery": {"mode": "visible", "radius": 3},
+        "spawn": {"biomes": ["meadow", "beach"], "per_10000": 1, "priority": 90},
+        "interactions": [
+          {"id": "inspect", "verb": "Inspect the dry control slot", "event": {"content_id": "long_thaw:event/weir_inspect", "version": 1}},
+          {"id": "open", "verb": "Record the orchard course", "after": "inspect", "exclusive": true, "event": {"content_id": "long_thaw:event/recommend_open", "version": 1}},
+          {"id": "brace", "verb": "Record the market course", "after": "inspect", "exclusive": true, "event": {"content_id": "long_thaw:event/recommend_brace", "version": 1}},
+          {"id": "spill", "verb": "Record a measured spill", "after": "inspect", "exclusive": true, "event": {"content_id": "long_thaw:event/recommend_spill", "version": 1}}
+        ]
+      }
+    },
+    {
+      "content_id": "long_thaw:floodseed_cutting", "version": 1, "schema_version": 1, "kind": "item",
+      "name": "Floodseed cutting", "description": "A hardy living graft from the drowned terraces.",
+      "metadata": {"category": "material"}, "payload": {"stackable": true, "stack_limit": 10}
+    },
+    {
+      "content_id": "long_thaw:event/alder_tags", "version": 1, "schema_version": 1, "kind": "world_event",
+      "name": "Alder repair tags", "description": "", "metadata": {"category": "lore"},
+      "payload": {"tone": "neutral", "message": "Repair tags from different households share the same root bridge. Whatever their disputes, both crews kept this crossing usable.", "outcomes": [{"type": "xp", "amount": 5}]}
+    },
+    {
+      "content_id": "long_thaw:event/turning_pole", "version": 1, "schema_version": 1, "kind": "world_event",
+      "name": "The turning pole", "description": "", "metadata": {"category": "lore"},
+      "payload": {"tone": "neutral", "message": "A ferry pole stands far above the present braid. Old scoring at its foot follows a former bank: the river moved around it.", "outcomes": [{"type": "xp", "amount": 5}]}
+    },
+    {
+      "content_id": "long_thaw:event/dry_fish_ladder", "version": 1, "schema_version": 1, "kind": "world_event",
+      "name": "Dry fish ladder", "description": "", "metadata": {"category": "lore"},
+      "payload": {"tone": "neutral", "message": "The ladder is sound but dry. Its lower stones angle toward the Weir Five course rather than the channel beside the market ground.", "outcomes": [{"type": "xp", "amount": 6}]}
+    },
+    {
+      "content_id": "long_thaw:event/graft_harvest", "version": 1, "schema_version": 1, "kind": "world_event",
+      "name": "Take the living graft", "description": "",
+      "dependencies": [{"content_id": "long_thaw:floodseed_cutting", "version": 1}], "metadata": {"category": "world_event"},
+      "payload": {"tone": "neutral", "message": "You cut the one living graft cleanly and wrap its roots. The terrace keeps no second cutting this Run.", "outcomes": [{"type": "grant_items", "items": [{"content_id": "long_thaw:floodseed_cutting", "version": 1, "quantity": 1}]}, {"type": "xp", "amount": 8}]}
+    },
+    {
+      "content_id": "long_thaw:event/graft_preserve", "version": 1, "schema_version": 1, "kind": "world_event",
+      "name": "Preserve the living graft", "description": "", "metadata": {"category": "world_event"},
+      "payload": {"tone": "neutral", "message": "You leave the living graft rooted above the seep and mark the unstable terrace around it.", "outcomes": [{"type": "xp", "amount": 10}]}
+    },
+    {
+      "content_id": "long_thaw:event/rush_harvest", "version": 1, "schema_version": 1, "kind": "world_event",
+      "name": "Silver rush harvest", "description": "",
+      "dependencies": [{"content_id": "core:berries", "version": 1}], "metadata": {"category": "resource"},
+      "payload": {"tone": "boon", "message": "Edible seed heads cling to the silver rush above the new silt.", "outcomes": [{"type": "grant_items", "items": [{"content_id": "core:berries", "version": 1, "quantity": 2}]}]}
+    },
+    {
+      "content_id": "long_thaw:place/alder_oath_bridge", "version": 1, "schema_version": 1, "kind": "location",
+      "name": "Tagged root bridge", "description": "An alder-root crossing carries repair tags in several hands.",
+      "dependencies": [{"content_id": "long_thaw:event/alder_tags", "version": 1}], "metadata": {"site_only": true, "category": "landmark"},
+      "payload": {"category": "landmark", "visual": "root_bridge", "discovery": {"mode": "visible", "radius": 3}, "spawn": {"biomes": ["forest", "meadow"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "read", "verb": "Compare the repair tags", "event": {"content_id": "long_thaw:event/alder_tags", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/turning_pole", "version": 1, "schema_version": 1, "kind": "location",
+      "name": "Stranded turning pole", "description": "A scored ferry pole stands above the present channel.",
+      "dependencies": [{"content_id": "long_thaw:event/turning_pole", "version": 1}], "metadata": {"site_only": true, "category": "landmark"},
+      "payload": {"category": "landmark", "visual": "turning_pole", "discovery": {"mode": "visible", "radius": 3}, "spawn": {"biomes": ["meadow"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "inspect", "verb": "Inspect the bank scoring", "event": {"content_id": "long_thaw:event/turning_pole", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/dry_fish_ladder", "version": 1, "schema_version": 1, "kind": "location",
+      "name": "Dry fish ladder", "description": "A sound stone fish ladder ends above a dry channel.",
+      "dependencies": [{"content_id": "long_thaw:event/dry_fish_ladder", "version": 1}], "metadata": {"site_only": true, "category": "ruin"},
+      "payload": {"category": "ruin", "visual": "fish_ladder", "discovery": {"mode": "visible", "radius": 3}, "spawn": {"biomes": ["meadow", "snowfield"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "inspect", "verb": "Trace the dry channel", "event": {"content_id": "long_thaw:event/dry_fish_ladder", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/last_green_graft", "version": 1, "schema_version": 1, "kind": "location",
+      "name": "Last green graft", "description": "One graft remains alive above the drowned orchard seep.",
+      "dependencies": [{"content_id": "long_thaw:event/graft_harvest", "version": 1}, {"content_id": "long_thaw:event/graft_preserve", "version": 1}], "metadata": {"site_only": true, "category": "natural"},
+      "payload": {"category": "natural", "visual": "green_graft", "discovery": {"mode": "proximity", "radius": 3}, "spawn": {"biomes": ["forest", "meadow"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "harvest", "verb": "Take the living graft", "exclusive": true, "event": {"content_id": "long_thaw:event/graft_harvest", "version": 1}}, {"id": "preserve", "verb": "Leave and mark the graft", "exclusive": true, "event": {"content_id": "long_thaw:event/graft_preserve", "version": 1}}]}
+    },
+    {
+      "content_id": "long_thaw:place/silver_rush_bed", "version": 1, "schema_version": 1, "kind": "location",
+      "name": "Silver rush bed", "description": "Pale rush colonizes a strip of fresh silt.",
+      "dependencies": [{"content_id": "long_thaw:event/rush_harvest", "version": 1}], "metadata": {"site_only": true, "category": "resource_site"},
+      "payload": {"category": "resource_site", "visual": "silver_rush", "discovery": {"mode": "visible", "radius": 2}, "spawn": {"biomes": ["meadow", "snowfield"], "per_10000": 1, "priority": 90}, "interactions": [{"id": "harvest", "verb": "Gather edible seed heads", "event": {"content_id": "long_thaw:event/rush_harvest", "version": 1}, "repeat": {"every": 100, "times": 5}}]}
+    }
+  ]
+}

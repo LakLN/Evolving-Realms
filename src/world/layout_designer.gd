@@ -7,7 +7,10 @@ extends RefCounted
 const TerrainAtlas = preload("res://src/world/terrain_atlas.gd")
 const Designer = preload("res://src/world/land_designer.gd")
 const Surfaces = preload("res://src/world/surfaces.gd")
-const LAYOUTS := {"landpkg:snow_mountain/layout": "res://content/land_layouts/snow_mountain.json", "landpkg:snow_mountain/full_region": "res://content/land_layouts/snow_mountain_full.json", "landpkg:snow_mountain/reference": "res://content/land_layouts/snow_mountain_reference.json"}
+const LONG_THAW_N3 := "landpkg:snow_mountain/long_thaw_n3"
+const LONG_THAW_N4_PATH := "res://content/land_layouts/long_thaw_n4.json"
+const LAYOUTS := {"landpkg:snow_mountain/layout": "res://content/land_layouts/snow_mountain.json", "landpkg:snow_mountain/full_region": "res://content/land_layouts/snow_mountain_full.json", "landpkg:snow_mountain/reference": "res://content/land_layouts/snow_mountain_reference.json", LONG_THAW_N3: "res://content/land_layouts/long_thaw_n3.json"}
+const REFERENCE_V11 := "res://content/land_layouts/snow_mountain_reference_v11.json"
 const LAYOUT_VERSION := 1
 const TERRAIN_VERSION := 2
 const DESIGNER := "layout-v1"
@@ -21,7 +24,13 @@ var last_error := ""
 static func load_layout(layout_id: String) -> Dictionary:
 	if not LAYOUTS.has(layout_id):
 		return {}
-	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(LAYOUTS[layout_id]))
+	# The rebuild remains opt-in while its production art is incomplete. Established
+	# worlds already carry a copied plan, and normal proposals continue to use v10.
+	var args := OS.get_cmdline_user_args() + OS.get_cmdline_args()
+	if layout_id == LONG_THAW_N3 and "--long-thaw-n3" not in args and "--long-thaw-n4" not in args:
+		return {}
+	var path: String = REFERENCE_V11 if layout_id == "landpkg:snow_mountain/reference" and "--broken-relay-v11" in args else (LONG_THAW_N4_PATH if layout_id == LONG_THAW_N3 and "--long-thaw-n4" in args else LAYOUTS[layout_id])
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not data is Dictionary or int(data.get("layout_version", 0)) != LAYOUT_VERSION or data.get("id") != layout_id:
 		return {}
 	return data
@@ -62,8 +71,8 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 	var name := str(archetype.names[designer.h(slot.x, slot.y, 7104) % archetype.names.size()]).replace("{root}", root)
 	var plan := {"land_id": land_id, "atlas_version": int(layout.get("atlas_version", 1)), "terrain_version": int(layout.get("terrain_version", TERRAIN_VERSION)),
 		"layout": {"id": layout.id, "version": int(layout.version), "rotation": r}, "archetype": layout.archetype, "archetype_title": archetype.title,
-		"name": name, "epithet": "the Hushed Crown, a winter relay valley around a silent ice escarpment",
-		"history": "Carriers once rang bronze bells across %s to guide travellers through the whiteouts. The relay fell silent; the pines took it back." % name,
+		"name": name, "epithet": str(layout.get("epithet", "the Hushed Crown, a winter relay valley around a silent ice escarpment")),
+		"history": str(layout.get("history", "Carriers once rang bronze bells across %s to guide travellers through the whiteouts. The relay fell silent; the pines took it back." % name)),
 		"climate": archetype.climate.label, "slot": _xy(slot), "center": _xy(center), "radius": radius, "rim": "cliff", "shore": "",
 		"stream": 100000 + designer.h(slot.x, slot.y, 7107) % 800000,
 		"environment": {"weather": layout.weather.duplicate(true), "hazards": layout.hazards.duplicate(true)},
@@ -153,8 +162,15 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 		plan.spatial.origin = _xy(anchor - Vector2i(24, 20))
 		for shelter in geo.shelters:
 			if str(shelter.shelter_id).ends_with("/relay_outpost"):
-				shelter.rect = {"x": anchor.x - 6, "y": anchor.y - 10, "w": 10, "h": 7}
-				shelter.doors = [_xy(anchor + Vector2i(-2, -4)), _xy(anchor + Vector2i(3, -7))]
+				var authored: Dictionary = layout.reference_area.get("shelter", {})
+				if authored.is_empty():
+					shelter.rect = {"x": anchor.x - 6, "y": anchor.y - 10, "w": 10, "h": 7}
+					shelter.doors = [_xy(anchor + Vector2i(-2, -4)), _xy(anchor + Vector2i(3, -7))]
+				else:
+					var cells: Array = authored.rect
+					var area_origin := Vector2i(int(plan.spatial.origin.x), int(plan.spatial.origin.y))
+					shelter.rect = {"x": area_origin.x + int(cells[0]), "y": area_origin.y + int(cells[1]), "w": int(cells[2]), "h": int(cells[3])}
+					shelter.doors = authored.doors.map(func(d: Array) -> Dictionary: return _xy(area_origin + Vector2i(int(d[0]), int(d[1]))))
 	# Layout v10: further composed areas, each anchored to a layout point, optionally
 	# owning one shelter whose rect/doors are authored in the area's own cells.
 	for area in layout.get("composed_areas", []):

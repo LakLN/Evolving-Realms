@@ -1,0 +1,19 @@
+{
+  "schema": "snow_region_assets.v1",
+  "layout_id": "landpkg:snow_mountain/reference",
+  "layout_version": 11,
+  "area": "broken_relay",
+  "tile_px": 40,
+  "size_tiles": [48, 40],
+  "projection": "2d_three_quarter",
+  "layers": [
+    {"id":"ground", "renderer_layer":"ground_opaque", "origin_tiles":[0,0], "size_px":[1920,1600], "art_status":"MISSING"},
+    {"id":"cliffs", "renderer_layer":"cliff_grounded", "origin_tiles":[0,0], "size_px":[1920,1600], "art_status":"MISSING"},
+    {"id":"facade", "renderer_layer":"world_facade_and_props", "foot_anchor":[240,240], "size_px":[480,240], "art_status":"MISSING"},
+    {"id":"roof", "renderer_layer":"roof_only_and_rail_occluders", "foot_anchor":[260,170], "size_px":[520,180], "art_status":"BLOCKOUT"},
+    {"id":"bridge_rail", "renderer_layer":"roof_only_and_rail_occluders", "foot_anchor":[0,40], "size_px":[440,48], "art_status":"BLOCKOUT"}
+  ],
+  "provenance": "Director v11 scene brief; runtime blockouts are code geometry and are not production artwork.",
+  "light_direction": "upper_left",
+  "asset_gaps": "res://docs/design/snow_rebuild/ASSET_GAPS.md"
+}

@@ -4,9 +4,19 @@ extends Node2D
 var view: Node2D
 var materials: Texture2D
 var composed := {} # resource path -> Texture2D or null (missing)
+var composition_manifest := {} # layout version/area -> validated layer specification
+var artpass_manifest := {} # Opt-in Broken Relay v10 preview; never affects Windcut.
+var artpass_v3 := "--artpass-v3" in OS.get_cmdline_user_args()
+var artbase_v11 := "--broken-relay-v11-artbase" in (OS.get_cmdline_user_args() + OS.get_cmdline_args())
+const ARTBASE_GROUND := "res://assets/game/snow/reference/v11_artbase/organic_ground_preview.png"
+var architecture_v4 := "--broken-relay-v11-architecture-v4" in (OS.get_cmdline_user_args() + OS.get_cmdline_args())
+const V11_FACADE := "res://assets/game/snow/reference/v11_architecture_v4/outpost_facade_480x240.png"
+const V11_ROOF := "res://assets/game/snow/reference/v11_architecture_v4/outpost_roof_only_480x240.png"
 ## Roof mode: draws each area's roof layer above actors instead of its ground.
 var roofs := false
 const TerrainAtlas = preload("res://src/world/terrain_atlas.gd")
+const COMPOSITION_MANIFEST := "res://assets/game/snow/reference/environment_manifest.json"
+const ARTPASS_MANIFEST := "res://assets/game/snow/reference/artpass_v3_manifest.json"
 const SNOW := Color("dce7e5")
 const SHADOW := Color("bdcdd0")
 const STONE := Color("64747e")
@@ -18,6 +28,67 @@ func _material(rect: Rect2, index: int, tile: Vector2i) -> void:
 	# The path sample contains snow at its outer edge; sample only its earth core.
 	if index == 1: uv = Vector2(180+posmod(tile.x,3)*30,20+posmod(tile.y,3)*30)
 	draw_texture_rect_region(materials,rect,Rect2(uv,Vector2(40,40)))
+
+func _load_composition_manifest() -> void:
+	if not composition_manifest.is_empty(): return
+	var file := FileAccess.open(COMPOSITION_MANIFEST, FileAccess.READ)
+	var parsed: Variant = JSON.parse_string(file.get_as_text()) if file != null else null
+	if not parsed is Dictionary or int(parsed.get("version", 0)) != 1 or int(parsed.get("tile_px", 0)) < 1:
+		composition_manifest = {"_loaded": true}
+		push_warning("Environment composition manifest is missing or unsupported")
+		return
+	composition_manifest = {"_loaded": true, "tile_px": int(parsed.tile_px), "layout_id": str(parsed.get("layout_id", ""))}
+	for entry in parsed.get("compositions", []):
+		if not entry is Dictionary or not entry.get("size_tiles") is Array or entry.size_tiles.size() != 2: continue
+		composition_manifest["%d/%s" % [int(entry.get("layout_version", 0)), str(entry.get("area", "default"))]] = entry
+
+func _load_artpass_manifest() -> void:
+	if not artpass_manifest.is_empty(): return
+	var file := FileAccess.open(ARTPASS_MANIFEST, FileAccess.READ)
+	var parsed: Variant = JSON.parse_string(file.get_as_text()) if file != null else null
+	if not parsed is Dictionary or int(parsed.get("layout_version", 0)) != 10 or int(parsed.get("tile_px", 0)) != 40 or not parsed.get("patch_tiles") is Array or parsed.patch_tiles.size() != 2:
+		artpass_manifest = {"_loaded": true}
+		push_warning("Broken Relay Art Pass V3 manifest is missing or unsupported")
+		return
+	artpass_manifest = parsed
+
+func _artpass_composition(land: Dictionary, patch: Dictionary, layer: String, px: int) -> Texture2D:
+	if not artpass_v3 or patch.has("id"): return null # Default Broken Relay only; Windcut is unchanged.
+	_load_artpass_manifest()
+	if str(land.get("layout", {}).get("id", "")) != str(artpass_manifest.get("layout_id", "")) or int(land.get("layout", {}).get("version", 0)) != int(artpass_manifest.get("layout_version", -1)) or px != int(artpass_manifest.get("tile_px", -1)) or not artpass_manifest.has(layer):
+		return null
+	var key := "res://assets/game/" + str(artpass_manifest[layer])
+	if not composed.has(key): composed[key] = load(key) if ResourceLoader.exists(key) else null
+	var texture: Texture2D = composed[key]
+	if texture == null: return null
+	var expected := Vector2i(int(artpass_manifest.patch_tiles[0]), int(artpass_manifest.patch_tiles[1])) * px
+	if texture.get_width() != expected.x or texture.get_height() != expected.y:
+		push_warning("Art Pass V3 %s is %dx%d; expected %dx%d" % [key, texture.get_width(), texture.get_height(), expected.x, expected.y])
+		return null
+	return texture
+
+func _composition(land: Dictionary, patch: Dictionary, layer: String, px: int) -> Texture2D:
+	if artbase_v11 and layer == "ground" and not patch.has("id") and int(land.get("layout", {}).get("version", 0)) == 11 and px == 40:
+		if not composed.has(ARTBASE_GROUND): composed[ARTBASE_GROUND] = load(ARTBASE_GROUND) if ResourceLoader.exists(ARTBASE_GROUND) else null
+		var artbase: Texture2D = composed[ARTBASE_GROUND]
+		if artbase != null and artbase.get_width() == 1920 and artbase.get_height() == 1600: return artbase
+	var preview := _artpass_composition(land, patch, layer, px)
+	if preview != null: return preview
+	_load_composition_manifest()
+	if str(land.get("layout", {}).get("id", "")) != str(composition_manifest.get("layout_id", "")) or px != int(composition_manifest.get("tile_px", -1)):
+		return null
+	var area := str(patch.get("id", "default"))
+	var spec: Dictionary = composition_manifest.get("%d/%s" % [int(land.get("layout", {}).get("version", 0)), area], {})
+	if spec.is_empty() or not spec.has(layer): return null
+	var key := "res://assets/game/" + str(spec[layer])
+	if not composed.has(key): composed[key] = load(key) if ResourceLoader.exists(key) else null
+	var texture: Texture2D = composed[key]
+	if texture == null: return null
+	var expected := Vector2i(int(spec.size_tiles[0]), int(spec.size_tiles[1])) * px
+	if texture.get_width() != expected.x or texture.get_height() != expected.y:
+		push_warning("Environment composition %s is %dx%d; expected %dx%d" % [key, texture.get_width(), texture.get_height(), expected.x, expected.y])
+		return null
+	return texture
 
 static func under_roof(land: Dictionary, tile: Vector2i) -> bool:
 	## The hero is inside a composed building or tucked behind its roofline.
@@ -34,15 +105,38 @@ func _draw() -> void:
 	if TerrainAtlas.patches(land).is_empty(): return
 	if materials == null and ResourceLoader.exists("res://assets/game/snow/reference/materials.png"): materials=load("res://assets/game/snow/reference/materials.png")
 	var px: int = view.px
+	var artbase_active := artbase_v11 and int(land.get("layout", {}).get("version", 0)) == 11
 	# A composed painting of exactly this layout version (and area) replaces the cell sketch.
 	var sketch := false
 	for patch in TerrainAtlas.patches(land):
-		var key := "res://assets/game/snow/reference/%s_v%d%s_%s.png" % [str(land.get("layout", {}).get("id", "")).get_file(), int(land.get("layout", {}).get("version", 0)), "_" + str(patch.id) if patch.has("id") else "", "roof" if roofs else "ground"]
-		if not composed.has(key): composed[key] = load(key) if ResourceLoader.exists(key) else null
-		if composed[key] != null and px == 40:
-			draw_texture(composed[key], view._point(Vector2i(int(patch.origin.x), int(patch.origin.y))) - Vector2.ONE * px / 2)
+		var texture := _composition(land, patch, "roof" if roofs else "ground", px)
+		if texture != null:
+			draw_texture(texture, view._point(Vector2i(int(patch.origin.x), int(patch.origin.y))) - Vector2.ONE * px / 2)
+			if artbase_active and not roofs and not patch.has("id"): sketch = true
 		elif not patch.has("id"): sketch = true
-	if not sketch or roofs: return
+	if roofs:
+		# v11 has no approved roof/rail sprites yet. Keep these occluders isolated
+		# above actors so the architecture is correct without flattening a facade
+		# into the roof layer. ASSET_GAPS.md marks this visible blockout as non-final.
+		if int(land.get("layout", {}).get("version", 0)) == 11 and architecture_v4:
+			var plan: Dictionary = land.spatial
+			var origin := Vector2i(int(plan.origin.x), int(plan.origin.y))
+			var at: Vector2 = view._point(origin + Vector2i(18, 11)) - Vector2.ONE * px / 2
+			var roof: Texture2D = load(V11_ROOF) if ResourceLoader.exists(V11_ROOF) else null
+			if roof != null and roof.get_size() == Vector2(480, 240): draw_texture(roof, at)
+		elif int(land.get("layout", {}).get("version", 0)) == 11:
+			var plan: Dictionary = land.spatial
+			var origin := Vector2i(int(plan.origin.x), int(plan.origin.y))
+			var roof: Vector2 = view._point(origin + Vector2i(18, 11)) - Vector2.ONE * px / 2
+			draw_colored_polygon(PackedVector2Array([roof+Vector2(-8,18), roof+Vector2(px*6,-44), roof+Vector2(px*12+8,18), roof+Vector2(px*12+8,px*2), roof+Vector2(-8,px*2)]), Color("d9e5e2"))
+			draw_polyline(PackedVector2Array([roof+Vector2(-8,18), roof+Vector2(px*6,-44), roof+Vector2(px*12+8,18)]), Color("68757a"), 4)
+			# Only the near bridge rail belongs above actors; deck stays in ground.
+			var rail_a: Vector2 = view._point(origin + Vector2i(20, 32)) + Vector2(-px/2, px/3)
+			var rail_b: Vector2 = view._point(origin + Vector2i(30, 32)) + Vector2(px/2, px/3)
+			draw_line(rail_a, rail_b, Color("51483f"), 6)
+			for x in range(11): draw_line(rail_a+Vector2(x*px,0), rail_a+Vector2(x*px,13), Color("6d5b49"), 4)
+		return
+	if not sketch: return
 	var plan: Dictionary = land.spatial
 	var origin := Vector2i(int(plan.origin.x), int(plan.origin.y))
 	var size := Vector2i(int(plan.size.x), int(plan.size.y))
@@ -52,6 +146,12 @@ func _draw() -> void:
 			var c: Dictionary = terrain.spatial_cell(tile)
 			var at: Vector2 = view._point(tile) - Vector2.ONE * px / 2
 			var rect := Rect2(at, Vector2.ONE * px)
+			# The opaque artbase owns ordinary ground and water. Retain the existing
+			# grounded cliff/stair/bridge and architecture drawing above it.
+			if artbase_active and c.style not in ["cliff", "stairs", "ledge", "bridge", "floor", "timber"]: continue
+			# The V4 facade replaces old timber wall cells; floor remains walkable and
+			# visible through the transparent architecture canvas.
+			if architecture_v4 and c.style == "timber": continue
 			draw_rect(rect, SNOW)
 			_material(rect,0,tile)
 			# Snow is resting space. Suppress the sample's repetitive diagonal ridges.
@@ -113,14 +213,19 @@ func _draw() -> void:
 						draw_rect(Rect2(at+Vector2(0,6),Vector2(px,5)),Color("665b4d"))
 	# A cutaway outpost: masonry footings, timber walls and a pitched snow roof on
 	# the north section, with the reachable floor/doors clearly visible beneath it.
-	var roof: Vector2 = view._point(origin+Vector2i(18,10)) - Vector2.ONE*px/2
-	var w := px*10.0
-	draw_rect(Rect2(roof+Vector2(7,9),Vector2(w,px*2.6)),Color(0.1,0.18,0.22,0.22))
-	for ry in 3:
-		for rx in 10: _material(Rect2(roof+Vector2(rx*px,ry*px-34),Vector2(px,px)),4,origin+Vector2i(rx,ry))
-	draw_rect(Rect2(roof+Vector2(-7,-36),Vector2(w+14,7)),Color("f0f2e8"))
-	draw_rect(Rect2(roof+Vector2(-7,px*2),Vector2(w+14,6)),Color("c1cfcb"))
-	draw_rect(Rect2(roof+Vector2(0,px*2),Vector2(w,7)),Color("514f46"))
+	if architecture_v4:
+		var facade: Texture2D = load(V11_FACADE) if ResourceLoader.exists(V11_FACADE) else null
+		var facade_at: Vector2 = view._point(origin + Vector2i(18, 11)) - Vector2.ONE * px / 2
+		if facade != null and facade.get_size() == Vector2(480, 240): draw_texture(facade, facade_at)
+	else:
+		var roof: Vector2 = view._point(origin+Vector2i(18,10)) - Vector2.ONE*px/2
+		var w := px*10.0
+		draw_rect(Rect2(roof+Vector2(7,9),Vector2(w,px*2.6)),Color(0.1,0.18,0.22,0.22))
+		for ry in 3:
+			for rx in 10: _material(Rect2(roof+Vector2(rx*px,ry*px-34),Vector2(px,px)),4,origin+Vector2i(rx,ry))
+		draw_rect(Rect2(roof+Vector2(-7,-36),Vector2(w+14,7)),Color("f0f2e8"))
+		draw_rect(Rect2(roof+Vector2(-7,px*2),Vector2(w+14,6)),Color("c1cfcb"))
+		draw_rect(Rect2(roof+Vector2(0,px*2),Vector2(w,7)),Color("514f46"))
 	# Reuse the accepted snow-pine atlas at its real native scale, in authored banks.
 	var texture: Texture2D = view.art.texture("snow/props.png")
 	if texture != null:

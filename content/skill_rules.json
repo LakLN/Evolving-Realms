@@ -1,8 +1,1 @@
-{
-  "rules_version": 1,
-  "_note": "Skill resources. Skills name the resource they spend; future resources (mana, qi, stamina...) are added here, not assumed. regen values accumulate per turn; every 100 restores 1 point.",
-  "resources": {
-    "energy": {"name": "Energy", "short": "EN", "color": "5aa9e6", "base_max": 20, "per_level": 2, "regen_per_turn": 34, "rest_regen_per_turn": 100}
-  },
-  "learning": {"max_known": 0}
-}
+{"rules_version":2,"resources":{"mana":{"name":"Mana","short":"MP","color":"526fd6","base_max":18,"per_level":2,"regen_per_turn":25,"rest_regen_per_turn":100},"stamina":{"name":"Stamina","short":"STA","color":"65a85b","base_max":20,"per_level":2,"regen_per_turn":50,"rest_regen_per_turn":100}},"legacy_resource_routing":{"mana_tags":["magic","arcane","restoration","control","forbidden","summon"],"stamina_tags":["physical","melee","ranged","movement","defense","buff","body"]},"learning":{"max_known":0}}

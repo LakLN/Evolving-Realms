@@ -1,93 +1,72 @@
-# Art Bible
+# Evolving Realms technical art bible
 
-Adopted as a **candidate** standard on 2026-11-03 (`feature/art-studio-foundation`);
-the director accepts style. It states what new art must be so that it drops into the
-current renderer unchanged. Numbers come from the project and from
-`tools/art/asset_check.py index`, not from taste. Process and tools:
-[ART_PIPELINE.md](ART_PIPELINE.md). History of the earlier batches:
-[ART_DIRECTION.md](ART_DIRECTION.md).
+Status: Phase 2A production foundation, 2026-11-06. The approved game-wide identity is
+**Modern Stylized Pixel Fantasy RPG**. This document records integration rules, not a
+claim that current placeholder or candidate assets are approved final art.
 
-## 1. One style
+## Native canvas and pixel standard
 
-Readable, hand-finished **fantasy pixel art** seen from a **three-quarter top-down,
-orthographic** camera. Hard pixel edges, a dark selective outline on everything that
-stands on the ground (creatures, characters, props, landmarks), flat ground textures
-without outlines. Light from the **upper left**. Detail serves the silhouette at 1x.
+- Camera: orthographic `Camera2D`, top-down/three-quarter presentation. Gameplay
+  coordinates remain an integer square grid; artwork may extend beyond a cell.
+- Logical terrain cell: **40 × 40 px** for current Snow/atlas presentation. Composed
+  paintings must use this exact lattice and must not change collision geometry.
+- Reference viewport: **1100 × 720**, canvas-items stretch. Review at 100% native
+  scale before reviewing enlarged captures.
+- Import: lossless texture import, no mipmaps, no arbitrary fractional resampling.
+  Pixel assets must retain hard pixel edges. Scale authored source art only by an
+  integer factor during controlled adaptation, then inspect the result at 1:1.
+- Lighting: upper-left key light. Lit top/left planes are warmer or brighter;
+  right/down faces and cast shadows are darker and cooler. Do not mirror a sprite if
+  doing so reverses its light.
+- Outlines: selective material-separating outlines, never a uniform heavy black rim.
 
-Reference set: the Batch01 hero and grey wolf (outline, value contrast, proportions)
-plus S1 *materials* for snow (ivory snow, blue-lavender shadow, cyan ice, dark
-pitch-pine). S1 is **not** the creature standard: its soft unoutlined white wolf
-disappears on snow in native captures. Concept boards are never a style standard
-for pixel density; they are painted at 1448x1086 and downscaled.
+## Scale, anchors and layers
 
-## 2. Engine facts every asset must respect
+- Ground tiles: 40 px atlas regions. Variation changes material detail, not collision.
+- Props: current Snow atlas cells are 96 × 96 px. Trees and rocks may span several
+  cells; their visual foot is anchored to one gameplay tile.
+- Creatures: current production frames are 84 × 76 px with the common foot anchor
+  `(42, 69)`. New silhouettes may use a different frame only when their index records
+  the exact frame and foot anchor.
+- Places/objects: transparent canvas tightly bounds the sprite. Record an explicit
+  bottom-centre `pivot` for multi-tile landmarks; interaction remains attached to its
+  stable world tile.
+- Draw order: composed ground → terrain/decor → world objects and actors by feet/Y →
+  composed roof/foreground → fog/weather → HUD. Roof art fades while the player is
+  inside its declared shelter; it must not encode collision.
+- Shadows are painted or separate presentation layers and follow the upper-left light.
+  Avoid circular default blobs when the form calls for a directional cast shadow.
 
-| Fact | Value (source) |
-|---|---|
-| Tile | 40x40 px (`tile_px`, art_index.json); logic grid unchanged by art |
-| Viewport | 1100x720, `canvas_items` stretch, GL Compatibility (project.godot) |
-| Filtering | Nearest on map/world-map nodes; no mipmaps; lossless import (`art-import`) |
-| Creature/character | One sheet, fixed cell, anchor = feet point placed at tile centre +12.8 px |
-| Objects | Bottom-centred at tile centre +18.4 px; code draws the ellipse shadow |
-| Places (landmarks) | Bottom-centred at tile centre +30 px; **no pivot support yet** |
-| Props (trees/rocks) | 96 px atlas cells (snow) / 80 px (core), painted alpha-70 shadow allowed |
-| Animations played | `idle walk attack hit death` x `down left right up`, all 20 required |
-| Playback | idle 2 fps (loop), walk 10 (loop), attack 14, hit 8, death 5 |
-| Item/status icons | Single textures, 23-28 px drawn in a 32 px slot |
+## Terrain and architecture
 
-## 3. Scale (measured idle-down body height)
+- Grid logic does not require square visual boundaries. Trails, shores, snow banks and
+  cliff rims should cross cells with irregular silhouettes and coordinated overlays.
+- Use quiet base materials plus authored macro forms. Random speckle is not a substitute
+  for landform composition.
+- Cliffs require a readable top/rim, vertical face and foot transition. Height changes
+  must agree with authored gameplay edges and connectors.
+- Buildings are multi-tile compositions with coherent wall thickness, doors, roof
+  pitch, snow load, occlusion and cast shadow. Repeated horizontal roof stripes are not
+  an acceptable production solution.
+- Region palettes may differ, but perspective, lighting, scale discipline, material
+  grouping and silhouette readability are shared game-wide.
 
-| Asset | Body | Cell / anchor |
-|---|---|---|
-| Hero | 47 px | 88x80 / 44,73 |
-| Core wolf / deer | 54 / 51 px | 84x76 / 42,69; 88x80 / 44,74 |
-| Boar / crab / rabbit | 37 / 33 / 28 px | 80x72, 64x56, 56x48 |
-| S1 snow wolf | **35 px** (0.74 hero) | 84x76 / 42,69 |
+## Composed-area contract
 
-Classes: small prey 24-32 px, medium 35-55, large 56-68 (largest that fits 84x76 with
-anchor 69 and a 1 px margin). Bigger creatures need a bigger cell, declared in the
-manifest. Trees 56-60 px canopy; objects 24-40 px wide; landmarks 76-100 px wide.
+`assets/game/snow/reference/environment_manifest.json` binds paintings to an exact
+layout ID, layout version, named area, native tile size and tile footprint. Ground and
+roof are separate transparent PNG layers. The renderer checks native pixel dimensions;
+a mismatched export is refused and falls back to the existing presentation rather than
+being stretched. Old layout records and gameplay geometry remain unchanged.
 
-## 4. Region identity (one style, different palettes)
+Broken Relay layout v10 uses a 48 × 40 tile / 1920 × 1600 px composition. Windcut uses
+64 × 44 tiles / 2560 × 1760 px. Each image origin is the top-left edge of its declared
+patch; the renderer places it half a cell above/left of the patch's first tile centre.
 
-| Region | Ground ramp | Accent | Shadow hue | Hazard read |
-|---|---|---|---|---|
-| Forest/meadow | warm greens, earth | flowers, moss | deep green-brown | yellow-green miasma |
-| Snow mountain | ivory, pale blue | cyan ice, dark pine, worn bronze | blue-lavender | white-out, wind streaks |
-| Volcanic | ash grey, basalt | orange-red glow | warm purple-brown | lava glow, embers |
-| Desert | sand ochre, pale stone | turquoise water, bleached bone | warm violet | heat shimmer |
-| Underground | slate, damp brown | crystal/fungus glow | near-black blue | glow-lit danger |
+## Production acceptance
 
-Creatures and items keep the hero's outline weight in every region. A creature must
-contrast with its region's dominant ground in **value**, not only hue: test it at 1x on
-that ground (white-on-snow and black-on-basalt fail without an outline/rim).
-
-## 5. Production rules
-
-- **Native size, 1:1.** Deliver the runtime size. No relabelled resizes, no fractional
-  scaling of finished pixel art. Originals at other sizes stay as sources.
-- **PNG, 8-bit RGBA, hard alpha 0/255.** Soft alpha only where declared
-  (`soft_alpha`: effects, overlays). Ground cells fully opaque. No painted shadow under
-  creatures/objects (code draws it); no backdrop, label, frame, checkerboard or scenery.
-- **Margins.** Sheet frames >=1 px empty border; icons >=2 px; nothing clipped.
-- **Pivot = feet.** Lowest ground-contact pixel of idle/walk/attack/hit frames within
-  4 px of the pivot row; idle/walk foot line steady (<=2 px).
-- **Animation.** Canonical sheet: rows `down left right up`; columns idle, walk1-4,
-  attack1-3 (if the creature attacks), hit, death1-2. Every frame distinct and
-  intentional; a held pose is not an animation. Left may mirror right only after a
-  review that accepts the flipped upper-left light. Passive creatures may omit attack
-  columns; the manifest declares the engine fallback (`aliases`).
-- **Terrain.** Deliver flat base textures in 40 px cells, seamless with themselves and
-  their variants. Transitions are derived by the build script (256-mask atlases);
-  hand-painted edge sets are an explicit, separately approved order.
-- **Naming.** snake_case asset names; batch IDs from the package manifest (`C01`,
-  `L04`); runtime files under `assets/game/<land>/`. Content IDs map to art in the
-  index, never through filenames.
-
-## 6. Known engine limits (log, do not work around in art)
-
-- Places ignore pivots and per-state sprites (single image, dimmed when resolved).
-- Item icons resolve slot -> book -> keyword; no exact content-ID icon lookup.
-- Creature art is chosen by `payload.visual`; no content-ID priority.
-- Inventory/ItemList icons use the default (linear) filter; fractional window scaling
-  can blur or shimmer pixel art. Cosmetic: recorded in the audit, not fixed here.
+An asset is integrated only when its source/provenance, native dimensions, pivot,
+mapping and intended layer are recorded. It is final only after native in-game review
+checks seams, feet/pivots, occlusion, route readability, elevation and neighbouring
+materials. Missing art keeps an explicit integration target or existing candidate;
+technical fallbacks are not presented as approved art.

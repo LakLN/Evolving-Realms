@@ -190,7 +190,8 @@ func preview_chunk(chunk: Vector2i, at_revision: int, layers: Array, bytes: Pack
 			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
 				var rule: Dictionary = eligible[i]
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if not (habitat in spawn.biomes or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
+				var strict: bool = adaptive and terrain.has_method("strict_ecology") and terrain.strict_ecology(point)
+				if not ((not strict and habitat in spawn.biomes) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))) or not Encounters._tile_allows(terrain, chunk, bytes, point, spawn):
 					continue
 				# Four neighbour probes recompute terrain instead of reading chunk bytes.
 				# Test it only for spawn candidates; all rules share this predicate.

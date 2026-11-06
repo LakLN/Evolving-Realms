@@ -18,6 +18,8 @@ static func all_supported() -> Array:
 	var skills := Skills.new()
 	skills.load_rules()
 	for resource in skills.resource_ids(): result.append("skill.resource." + resource)
+	if skills.rules.has("legacy_resource_routing"):
+		result.append("skill.resource.energy") # Established v1 content is routed to MP/Stamina at runtime.
 	for trigger in Talents.TRIGGERS:
 		result.append("talent.trigger." + trigger)
 		for effect in Talents.TRIGGERS[trigger]: result.append("talent.effect.%s.%s" % [trigger, effect])

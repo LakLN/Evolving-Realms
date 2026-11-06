@@ -297,8 +297,9 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary,
 	# Commit: inventory, vitals, the resolution record, then status/XP/resource handlers.
 	session.run.state.inventory = award.inventory
 	if int(heat.get("energy", 0)) > 0:
-		var energy: Dictionary = session.run.state.character.resources.energy
-		energy.value = session.skills.resource(session, "energy") - int(heat.energy)
+		var resource_id := str(heat.get("resource", "mana"))
+		var pool: Dictionary = session.run.state.character.resources[resource_id]
+		pool.value = session.skills.resource(session, resource_id) - int(heat.energy)
 	for stat in trial:
 		session.stats()[stat] = trial[stat]
 	var mutation := record(session, instance.instance_id)
@@ -326,8 +327,9 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary,
 			"xp": events.append_array(session.gain_xp(int(outcome.amount))) # Reports its own XP event.
 			"restore":
 				var resources: Dictionary = session.run.state.character.resources
-				var current := int(session.skills.resource(session, outcome.resource))
-				resources[outcome.resource].value = mini(int(session.skills.resource_max(session, outcome.resource)), current + int(outcome.amount))
+				var resource_id := "mana" if outcome.resource == "energy" and not session.skill_rules.rules.resources.has("energy") else str(outcome.resource)
+				var current := int(session.skills.resource(session, resource_id))
+				resources[resource_id].value = mini(int(session.skills.resource_max(session, resource_id)), current + int(outcome.amount))
 	session.refresh_stats()
 	return {"events": events, "received": award.display_received}
 

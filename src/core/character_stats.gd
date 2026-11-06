@@ -16,7 +16,7 @@ var last_error := ""
 func load_rules(quality_rules: RefCounted, path: String = PATH) -> bool:
 	quality = quality_rules
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not parsed is Dictionary or parsed.get("rules_version") != 1:
+	if not parsed is Dictionary or int(parsed.get("rules_version", 0)) not in [1, 2]:
 		return _fail("Character rules are missing or unsupported")
 	if not parsed.get("stats") is Dictionary or not parsed.stats.has("max_hp") or not parsed.stats.has("attack") or not parsed.stats.has("defense"):
 		return _fail("Character stats must include max_hp, attack and defense")
@@ -85,6 +85,9 @@ func normalize(character: Dictionary) -> Dictionary:
 			result.progression[track_id] = {"xp": 0, "level": 1}
 	if not result.has("attributes"):
 		result.attributes = {} # Older Runs: every earned point is still free to spend.
+	var legacy: Dictionary = result.attributes
+	if legacy.has("might") or legacy.has("vitality"):
+		result.attributes = {"strength": int(legacy.get("might", 0)), "vitality": int(legacy.get("vitality", 0)), "spirit": int(legacy.get("spirit", 0))}
 	return result
 
 func validate(character: Dictionary) -> String:
@@ -136,13 +139,14 @@ func attribute_skill_power(character: Dictionary, definition: Dictionary) -> int
 	## Percent power a skill gains from attributes whose elements or effect types match.
 	var payload: Dictionary = definition.get("payload", {})
 	var elements: Array = payload.get("elements", ["neutral"])
+	var tags: Array = payload.get("tags", [])
 	var effects: Array = payload.get("effects", []).map(func(effect: Dictionary) -> String: return str(effect.get("type", "")))
 	var total := 0
 	for entry in rules.get("attributes", {}).get("list", []):
 		var power: Dictionary = entry.get("skill_power", {})
 		if power.is_empty():
 			continue
-		var matched: bool = elements.any(func(element: String) -> bool: return element in power.get("elements", [])) or effects.any(func(effect: String) -> bool: return effect in power.get("effects", []))
+		var matched: bool = elements.any(func(element: String) -> bool: return element in power.get("elements", [])) or effects.any(func(effect: String) -> bool: return effect in power.get("effects", [])) or tags.any(func(tag: String) -> bool: return tag in power.get("tags", []))
 		if matched:
 			total += int(power.percent) * int(character.get("attributes", {}).get(entry.id, 0))
 	return total
@@ -242,11 +246,13 @@ func effective(base_stats: Dictionary, character: Dictionary, definition_for: Ca
 	var attributes := _attribute_flat(character)
 	var totals := {}
 	var breakdown := {}
+	var phase1_defaults := {"magic_attack": 4, "magic_defense": 1, "accuracy": 90, "evasion": 5, "critical_rate": 5, "critical_damage": 150}
 	for stat in rules.stats:
-		var raw := int(base_stats.get(stat, 0)) + int(growth.get(stat, 0)) + int(attributes.get(stat, 0)) + int(flat.get(stat, 0))
+		var base_value := int(base_stats.get(stat, phase1_defaults.get(stat, 0)))
+		var raw := base_value + int(growth.get(stat, 0)) + int(attributes.get(stat, 0)) + int(flat.get(stat, 0))
 		var without := _total(stat, raw, int(percent.get(stat, 0)))
 		totals[stat] = _total(stat, raw + int(extra_flat.get(stat, 0)), int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0)))
-		breakdown[stat] = {"base": int(base_stats.get(stat, 0)), "growth": int(growth.get(stat, 0)), "attribute": int(attributes.get(stat, 0)), "gear": without - int(base_stats.get(stat, 0)) - int(growth.get(stat, 0)) - int(attributes.get(stat, 0)), "talent": totals[stat] - without, "percent": int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0))}
+		breakdown[stat] = {"base": base_value, "growth": int(growth.get(stat, 0)), "attribute": int(attributes.get(stat, 0)), "gear": without - base_value - int(growth.get(stat, 0)) - int(attributes.get(stat, 0)), "talent": totals[stat] - without, "percent": int(percent.get(stat, 0)) + int(extra_percent.get(stat, 0))}
 	return {"stats": totals, "breakdown": breakdown}
 
 func _total(stat: String, raw: int, percent: int) -> int:

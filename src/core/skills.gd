@@ -19,7 +19,7 @@ var last_error := ""
 
 func load_rules(path: String = PATH) -> bool:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
-	if not parsed is Dictionary or parsed.get("rules_version") != 1 or not parsed.get("resources") is Dictionary or parsed.resources.is_empty():
+	if not parsed is Dictionary or int(parsed.get("rules_version", 0)) not in [1, 2] or not parsed.get("resources") is Dictionary or parsed.resources.is_empty():
 		return _fail("Skill rules are missing or unsupported")
 	for id in parsed.resources:
 		var resource: Variant = parsed.resources[id]
@@ -148,7 +148,7 @@ func classify(definition: Dictionary, context: Dictionary, registry: RefCounted 
 					return {"missing": missing, "problem": "item costs need content_id, version, quantity"}
 				if not definition.get("dependencies", []).any(func(dependency: Dictionary) -> bool: return dependency.content_id == item.content_id and int(dependency.version) == int(item.version)):
 					return {"missing": missing, "problem": "an item cost must be a pinned dependency: " + item.content_id}
-		elif rules.resources.has(key):
+		elif rules.resources.has(key) or (key == "energy" and rules.has("legacy_resource_routing")):
 			if not _int_in(use.cost[key], 0, 10000):
 				return {"missing": missing, "problem": "%s cost must be 0..10000" % key}
 		else:
@@ -199,7 +199,8 @@ func _check_effect(effect: Variant, kind: String, context: Dictionary, missing: 
 				return "status needs status id, known stat and duration 1..100"
 			return "" if _int_in(effect.get("add", 0), -1000, 1000) and _int_in(effect.get("percent", 0), -90, 500) and (effect.get("add", 0) != 0 or effect.get("percent", 0) != 0) else "status needs add or percent"
 		"restore":
-			return "" if rules.resources.has(effect.get("resource")) and _int_in(effect.get("amount"), 1, 10000) else "restore needs a known resource and amount"
+			var known: bool = rules.resources.has(effect.get("resource")) or (effect.get("resource") == "energy" and rules.has("legacy_resource_routing"))
+			return "" if known and _int_in(effect.get("amount"), 1, 10000) else "restore needs a known resource and amount"
 	return "" # blink: no parameters.
 
 func check_conditions(conditions: Variant, context: Dictionary, missing: Array) -> String:
@@ -309,6 +310,13 @@ func normalize(character: Dictionary, level: int) -> Dictionary:
 		result.statuses = []
 	if not result.has("resources"):
 		result.resources = {}
+	if result.resources.has("energy"):
+		var old: Dictionary = result.resources.energy
+		for id in resource_ids():
+			if not result.resources.has(id):
+				var cap := max_resource(id, level)
+				result.resources[id] = {"value": mini(cap, int(old.get("value", cap))), "progress": int(old.get("progress", 0))}
+		result.resources.erase("energy")
 	for id in resource_ids():
 		if not result.resources.has(id):
 			result.resources[id] = {"value": max_resource(id, level), "progress": 0}

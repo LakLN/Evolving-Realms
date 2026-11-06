@@ -27,7 +27,9 @@ static func heat_sources(session: RefCounted, properties: Dictionary) -> Array:
 	for record in session.run.state.character.skills:
 		var skill: Dictionary = session.skill_definition(record.content_id, int(record.version))
 		if skill.get("payload", {}).get("type") == "active" and "fire" in skill.payload.get("elements", []):
-			sources.append({"id": "skill", "label": "with %s" % skill.name, "items": [], "energy": int(session.skills.costs(session, skill).get("energy", 0)), "skill": skill.name})
+			var costs: Dictionary = session.skills.costs(session, skill)
+			var resource_id := "mana" if costs.has("mana") else ("stamina" if costs.has("stamina") else "")
+			sources.append({"id": "skill", "label": "with %s" % skill.name, "items": [], "energy": int(costs.get(resource_id, 0)), "resource": resource_id, "skill": skill.name})
 			break
 	return sources
 
@@ -54,8 +56,10 @@ static func response(properties: Dictionary, method: String, payload: Dictionary
 static func requirement(session: RefCounted, properties: Dictionary, method: String, source: Dictionary = {}) -> String:
 	if method == "heat" and source.is_empty():
 		return "That heat source is not available now"
-	if method == "heat" and int(source.get("energy", 0)) > session.skills.resource(session, "energy"):
-		return "Not enough Energy to thaw with %s (%d needed)" % [source.get("skill", "a fire skill"), int(source.energy)]
+	if method == "heat" and int(source.get("energy", 0)) > 0:
+		var resource_id := str(source.get("resource", "mana"))
+		if int(source.energy) > session.skills.resource(session, resource_id):
+			return "Not enough %s to thaw with %s (%d needed)" % [session.skill_rules.rules.resources[resource_id].name, source.get("skill", "a fire skill"), int(source.energy)]
 	if method == "force" and int(session.combat_stats().attack) < int(properties.fracture_attack):
 		return "Attack %d+ to fracture this ice (current %d); equipment and talents count" % [int(properties.fracture_attack), int(session.combat_stats().attack)]
 	return ""

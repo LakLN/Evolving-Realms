@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "package_id": "landpkg:snow_mountain/long_thaw_n2",
+  "version": 1,
+  "status": "draft_not_bound",
+  "canon_status": "PROPOSED_STUDIO_N2",
+  "binding": {},
+  "publish": false,
+  "files": [
+    "content_pack.json",
+    "topology_contract.json"
+  ],
+  "activation_gates": [
+    "director_story_and_scope_approval",
+    "append_only_land_layout_versions",
+    "engine_pack_validation_disposable_world",
+    "connectivity_and_start_certification",
+    "interaction_save_load_tests",
+    "human_playtest",
+    "explicit_activation"
+  ],
+  "notes": "N2 design handoff only. No active layout references this directory."
+}

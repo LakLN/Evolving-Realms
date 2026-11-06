@@ -97,6 +97,8 @@ var _talent_header: VBoxContainer
 var _talent_close: Button
 var _energy_bar: ProgressBar
 var _energy_label: Label
+var _stamina_bar: ProgressBar
+var _stamina_label: Label
 var _skills_panel: PanelContainer
 var _skills_summary: Label
 var _skill_list: ItemList
@@ -161,6 +163,12 @@ func _ready() -> void:
 	if options.has("acceptance"):
 		_acceptance = Acceptance.new()
 		_acceptance.run(self, options.acceptance)
+	elif "--long-thaw-n3" in OS.get_cmdline_user_args() or "--long-thaw-n4" in OS.get_cmdline_user_args():
+		if ProjectSettings.globalize_path(database_path) == ProjectSettings.globalize_path(DEFAULT_DATABASE):
+			printerr("The Long Thaw N3 requires --database=<separate path>; personal saves are never opened")
+			get_tree().quit(2)
+			return
+		call_deferred("_launch_long_thaw", "N4" if "--long-thaw-n4" in OS.get_cmdline_user_args() else "N3")
 
 static func launch_options() -> Dictionary:
 	## User arguments after `--`, e.g. `-- --database=D:/saves/test.sqlite`.
@@ -169,6 +177,32 @@ static func launch_options() -> Dictionary:
 		if argument.begins_with("--") and argument.contains("="):
 			options[argument.get_slice("=", 0).trim_prefix("--")] = argument.substr(argument.find("=") + 1)
 	return options
+
+func _launch_long_thaw(label: String) -> void:
+	## Explicit development slice: fixed seeds and a caller-supplied isolated database.
+	## It never appears in normal charting or an established player World.
+	var world := Atlas.create_world(store, "The Long Thaw %s" % label, 4242)
+	if world.is_empty():
+		_message(store.last_error, true)
+		return
+	var atlas := Atlas.new()
+	if not atlas.open(store.content, world):
+		_message(atlas.last_error, true)
+		return
+	var proposal: Dictionary = atlas.propose_layout_land("landpkg:snow_mountain/long_thaw_n3")
+	if proposal.is_empty():
+		_message(atlas.last_error, true)
+		return
+	var problem := atlas.validate(proposal)
+	if not problem.is_empty() or not atlas.activate(proposal, {"by": "N3 opt-in isolated slice"}):
+		_message(problem if not problem.is_empty() else atlas.last_error, true)
+		return
+	var next := Session.new(store)
+	if not next.start_new(world.world_id, 919, proposal.land.land_id, "normal", "turn"):
+		_message(next.last_error, true)
+		return
+	_enter_map(next)
+	_say("The Long Thaw %s — draft content is active only in this isolated Run." % label, true)
 
 func _build_menu(parent: Control) -> void:
 	_menu = Panel.new()
@@ -287,6 +321,8 @@ func _build_hud(parent: Control) -> void:
 	_hp_bar = _hud.hp_bar
 	_energy_bar = _hud.energy_bar
 	_energy_label = _hud.energy_label
+	_stamina_bar = _hud.stamina_bar
+	_stamina_label = _hud.stamina_label
 	_survival_label = _hud.survival
 	_developer_overlay = _hud.developer_overlay
 	_developer_text = _hud.developer_text
@@ -528,7 +564,8 @@ func _show_interactions() -> bool:
 				if first == null: first = heat
 				var costs := PackedStringArray(["Contents preserved"])
 				if int(source.energy) > 0:
-					costs.append("%d Energy (have %d)" % [int(source.energy), session.skills.resource(session, "energy")])
+					var resource_id := str(source.get("resource", "mana"))
+					costs.append("%d %s (have %d)" % [int(source.energy), session.skill_rules.rules.resources[resource_id].name, session.skills.resource(session, resource_id)])
 				elif source.items.is_empty():
 					costs.append("no fuel needed")
 				else:
@@ -587,10 +624,19 @@ func _refresh_character(selected_slot: String = "") -> void:
 	for track_id in session.character_rules.rules.tracks:
 		var track: Dictionary = character.progression[track_id]
 		lines.append("%s  Level %d   XP %d / %d" % [session.character_rules.rules.tracks[track_id].get("name", track_id), int(track.level), int(track.xp), session.character_rules.xp_to_next(track_id, int(track.level))])
+	lines.append("\nRESOURCES")
+	lines.append("HP %d / %d" % [int(session.stats().hp), int(effective.stats.max_hp)])
+	for resource_id in session.skill_rules.resource_ids():
+		var resource: Dictionary = session.skill_rules.rules.resources[resource_id]
+		lines.append("%s %d / %d   Regen %.2f/turn" % [resource.name, session.skills.resource(session, resource_id), session.skills.resource_max(session, resource_id), float(resource.regen_per_turn) / 100.0])
+	lines.append("\nCOMBAT")
 	for stat in session.character_rules.rules.stats:
+		if stat == "max_hp":
+			continue
 		var part: Dictionary = effective.breakdown[stat]
 		var talent := " %s %d talent" % ["+" if int(part.talent) >= 0 else "-", absi(int(part.talent))] if int(part.talent) != 0 else ""
-		lines.append("%s %d  = %d base + %d level + %d gear%s%s%s" % [session.character_rules.rules.stats[stat].name, effective.stats[stat], part.base, part.growth, part.gear, " + %d attributes" % int(part.get("attribute", 0)) if int(part.get("attribute", 0)) != 0 else "", talent, " (incl. %+d%%)" % part.percent if part.percent != 0 else ""])
+		var suffix := str(session.character_rules.rules.stats[stat].get("suffix", ""))
+		lines.append("%s %d%s  = %d base + %d level + %d gear%s%s%s" % [session.character_rules.rules.stats[stat].name, effective.stats[stat], suffix, part.base, part.growth, part.gear, " + %d attributes" % int(part.get("attribute", 0)) if int(part.get("attribute", 0)) != 0 else "", talent, " (incl. %+d%%)" % part.percent if part.percent != 0 else ""])
 	_character_summary.text = "\n".join(lines)
 	_refresh_attributes()
 	_talent_line.text = talent_summary()
@@ -616,7 +662,7 @@ func _refresh_character(selected_slot: String = "") -> void:
 	_show_slot(index)
 
 func _refresh_attributes() -> void:
-	## Attribute rows with a spend button while points are free (keys 1-3 in this sheet).
+	## Attribute rows with a spend button while points are free (keys 1-6 in this sheet).
 	for child in _attribute_box.get_children():
 		_attribute_box.remove_child(child)
 		child.queue_free()
@@ -1736,10 +1782,12 @@ func _update_info() -> void:
 	var recovery := "regen" if worst == 0 and int(stats.hp) < int(stats.max_hp) else ("no regen" if worst > 0 and int(stats.hp) < int(stats.max_hp) else "")
 	_survival_label.text = "Hunger %d%%  Thirst %d%%%s" % [session.survival.percent(session.stats(), "hunger"), session.survival.percent(session.stats(), "thirst"), "" if recovery.is_empty() else "  " + recovery]
 	_survival_label.modulate = [Color("c8c8c8"), Color("f0c060"), Color("ff7a6b"), Color("ff4b3e")][worst]
-	var resource_id: String = session.skill_rules.resource_ids()[0]
-	_energy_bar.max_value = session.skills.resource_max(session, resource_id)
-	_energy_bar.value = session.skills.resource(session, resource_id)
-	_energy_label.text = "%s %d/%d" % [session.skill_rules.rules.resources[resource_id].short, int(_energy_bar.value), int(_energy_bar.max_value)]
+	_energy_bar.max_value = session.skills.resource_max(session, "mana")
+	_energy_bar.value = session.skills.resource(session, "mana")
+	_energy_label.text = "MP %d/%d" % [int(_energy_bar.value), int(_energy_bar.max_value)]
+	_stamina_bar.max_value = session.skills.resource_max(session, "stamina")
+	_stamina_bar.value = session.skills.resource(session, "stamina")
+	_stamina_label.text = "STA %d/%d" % [int(_stamina_bar.value), int(_stamina_bar.max_value)]
 	_hud.set_statuses(_status_chips())
 	var foe := current_target()
 	map_view.target_id = "" if foe.is_empty() else foe.instance_id
@@ -1832,7 +1880,7 @@ func _wait() -> void:
 func _rest() -> void:
 	if _realtime != null:
 		if session.rest():
-			_say("Resting… needs and energy recover faster. Move, attack or press R to stop." if session.resting else "You stop resting.")
+			_say("Resting… needs, MP and Stamina recover faster. Move, attack or press R to stop." if session.resting else "You stop resting.")
 			_update_info()
 		else:
 			_say(session.last_error)

@@ -1,0 +1,32 @@
+{
+  "contract_version": 1,
+  "status": "design_only_pending_capability",
+  "land_id": "landpkg:snow_mountain/long_thaw_n2",
+  "outdoor_mode": "seamless",
+  "areas": [
+    {"id": "long_thaw:area/thawgate_fans", "connects": ["long_thaw:area/alderwash", "long_thaw:area/nine_weirs", "external:mountain_corridor"], "start_candidate": true},
+    {"id": "long_thaw:area/alderwash", "connects": ["long_thaw:area/thawgate_fans", "long_thaw:area/braided_commons", "long_thaw:area/underflow_gorge"]},
+    {"id": "long_thaw:area/braided_commons", "connects": ["long_thaw:area/alderwash", "long_thaw:area/siltmarket_reach", "long_thaw:area/drowned_orchard"], "start_candidate": true},
+    {"id": "long_thaw:area/siltmarket_reach", "connects": ["long_thaw:area/braided_commons", "long_thaw:area/nine_weirs", "external:southern_corridor"]},
+    {"id": "long_thaw:area/nine_weirs", "connects": ["long_thaw:area/thawgate_fans", "long_thaw:area/siltmarket_reach", "long_thaw:area/drowned_orchard"]},
+    {"id": "long_thaw:area/drowned_orchard", "connects": ["long_thaw:area/braided_commons", "long_thaw:area/nine_weirs", "long_thaw:area/underflow_gorge"]},
+    {"id": "long_thaw:area/underflow_gorge", "connects": ["long_thaw:area/drowned_orchard", "long_thaw:area/alderwash"]}
+  ],
+  "interiors": [
+    {"id": "long_thaw:interior/dry_gatehouse", "status": "pending_capability"},
+    {"id": "long_thaw:interior/orchard_seed_cellar", "status": "pending_capability"},
+    {"id": "long_thaw:interior/underflow_gallery", "status": "pending_capability"}
+  ],
+  "run_states": {
+    "baseline": {"implemented": false},
+    "market_course": {"implemented": false, "requires": "run_local_route_terrain_overlay"},
+    "orchard_course": {"implemented": false, "requires": "run_local_route_terrain_overlay"},
+    "measured_spill": {"implemented": false, "requires": "run_local_route_terrain_overlay"}
+  },
+  "invariants": [
+    "every ordinary outdoor area has at least two outdoor connections",
+    "a dry or high alternate exists for every ford",
+    "no terminal water choice rewrites World geography or another Run",
+    "external connector directions remain provisional until macro-world approval"
+  ]
+}

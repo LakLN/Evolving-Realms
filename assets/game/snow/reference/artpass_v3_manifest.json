@@ -1,0 +1,385 @@
+{
+  "pack": "Broken Relay layout v10 / Opt-in Artpass V3",
+  "layout_id": "landpkg:snow_mountain/reference",
+  "layout_version": 10,
+  "tile_px": 40,
+  "patch_tiles": [
+    48,
+    40
+  ],
+  "pixel_size": [
+    1920,
+    1600
+  ],
+  "ground": "snow/reference/reference_v10_ground_artpass.png",
+  "roof": "snow/reference/reference_v10_roof_artpass.png",
+  "bridge_overlay_on_ground": {
+    "pixel_xy": [
+      900,
+      1222
+    ],
+    "size": [
+      245,
+      130
+    ]
+  },
+  "roof_overlay": {
+    "pixel_xy": [
+      688,
+      380
+    ],
+    "size": [
+      466,
+      269
+    ]
+  },
+  "v10_original_roof_alpha_bbox": [
+    712,
+    360,
+    1127,
+    661
+  ],
+  "native_collision_changed": false,
+  "visual_registration": "approximate; art preview only",
+  "does_not_replace_live_manifest": true,
+  "props": [
+    {
+      "id": "architecture_14",
+      "path": "assets/game/snow/artpass_props/architecture_14.png",
+      "width": 162,
+      "height": 168,
+      "foot_pivot": [
+        81,
+        167
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "architecture_15",
+      "path": "assets/game/snow/artpass_props/architecture_15.png",
+      "width": 152,
+      "height": 167,
+      "foot_pivot": [
+        76,
+        166
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "architecture_16",
+      "path": "assets/game/snow/artpass_props/architecture_16.png",
+      "width": 135,
+      "height": 114,
+      "foot_pivot": [
+        67,
+        113
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "architecture_18",
+      "path": "assets/game/snow/artpass_props/architecture_18.png",
+      "width": 268,
+      "height": 142,
+      "foot_pivot": [
+        134,
+        141
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "architecture_19",
+      "path": "assets/game/snow/artpass_props/architecture_19.png",
+      "width": 244,
+      "height": 141,
+      "foot_pivot": [
+        122,
+        140
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "architecture_21",
+      "path": "assets/game/snow/artpass_props/architecture_21.png",
+      "width": 184,
+      "height": 254,
+      "foot_pivot": [
+        92,
+        253
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "architecture_22",
+      "path": "assets/game/snow/artpass_props/architecture_22.png",
+      "width": 208,
+      "height": 216,
+      "foot_pivot": [
+        104,
+        215
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "architecture_23",
+      "path": "assets/game/snow/artpass_props/architecture_23.png",
+      "width": 151,
+      "height": 154,
+      "foot_pivot": [
+        75,
+        153
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_01",
+      "path": "assets/game/snow/artpass_props/vegetation_01.png",
+      "width": 339,
+      "height": 488,
+      "foot_pivot": [
+        169,
+        487
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_02",
+      "path": "assets/game/snow/artpass_props/vegetation_02.png",
+      "width": 343,
+      "height": 488,
+      "foot_pivot": [
+        171,
+        487
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_03",
+      "path": "assets/game/snow/artpass_props/vegetation_03.png",
+      "width": 254,
+      "height": 480,
+      "foot_pivot": [
+        127,
+        479
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_05",
+      "path": "assets/game/snow/artpass_props/vegetation_05.png",
+      "width": 172,
+      "height": 223,
+      "foot_pivot": [
+        86,
+        222
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_07",
+      "path": "assets/game/snow/artpass_props/vegetation_07.png",
+      "width": 221,
+      "height": 214,
+      "foot_pivot": [
+        110,
+        213
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_08",
+      "path": "assets/game/snow/artpass_props/vegetation_08.png",
+      "width": 475,
+      "height": 184,
+      "foot_pivot": [
+        237,
+        183
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_09",
+      "path": "assets/game/snow/artpass_props/vegetation_09.png",
+      "width": 234,
+      "height": 179,
+      "foot_pivot": [
+        117,
+        178
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_10",
+      "path": "assets/game/snow/artpass_props/vegetation_10.png",
+      "width": 256,
+      "height": 204,
+      "foot_pivot": [
+        128,
+        203
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_11",
+      "path": "assets/game/snow/artpass_props/vegetation_11.png",
+      "width": 225,
+      "height": 201,
+      "foot_pivot": [
+        112,
+        200
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "vegetation_12",
+      "path": "assets/game/snow/artpass_props/vegetation_12.png",
+      "width": 233,
+      "height": 188,
+      "foot_pivot": [
+        116,
+        187
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "bridge_07",
+      "path": "assets/game/snow/artpass_props/bridge_07.png",
+      "width": 232,
+      "height": 131,
+      "foot_pivot": [
+        116,
+        130
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "bridge_09",
+      "path": "assets/game/snow/artpass_props/bridge_09.png",
+      "width": 345,
+      "height": 92,
+      "foot_pivot": [
+        172,
+        91
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "bridge_10",
+      "path": "assets/game/snow/artpass_props/bridge_10.png",
+      "width": 324,
+      "height": 156,
+      "foot_pivot": [
+        162,
+        155
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "bridge_12",
+      "path": "assets/game/snow/artpass_props/bridge_12.png",
+      "width": 300,
+      "height": 162,
+      "foot_pivot": [
+        150,
+        161
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "bridge_13",
+      "path": "assets/game/snow/artpass_props/bridge_13.png",
+      "width": 197,
+      "height": 165,
+      "foot_pivot": [
+        98,
+        164
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "bridge_19",
+      "path": "assets/game/snow/artpass_props/bridge_19.png",
+      "width": 147,
+      "height": 122,
+      "foot_pivot": [
+        73,
+        121
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "roof_02",
+      "path": "assets/game/snow/artpass_props/roof_02.png",
+      "width": 582,
+      "height": 336,
+      "foot_pivot": [
+        291,
+        335
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    },
+    {
+      "id": "roof_05",
+      "path": "assets/game/snow/artpass_props/roof_05.png",
+      "width": 299,
+      "height": 159,
+      "foot_pivot": [
+        149,
+        158
+      ],
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "status": "preview_candidate_visual_QA_required"
+    }
+  ]
+}

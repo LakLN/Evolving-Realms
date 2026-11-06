@@ -226,6 +226,27 @@
      {"id": "tribute", "verb": "Pay the old toll in ivory", "after": "read", "event": {"content_id": "snow:event/runes_tribute", "version": 1}}
     ]
    }
+  },
+  {
+   "content_id": "snow:event/runes_read", "version": 2, "schema_version": 1, "kind": "world_event",
+   "name": "Frost runes", "description": "",
+   "dependencies": [{"content_id": "snow:marrow_tonic", "version": 1}],
+   "metadata": {"category": "world_event"},
+   "payload": {
+    "message": "The cairn carries cuts from different hands and winters: a tally of giants who walked the shelf, and of travellers who paid them in ivory to pass. The marks record a route and a toll, but not who first raised the stones. A sealed flask rests in the lowest course.",
+    "tone": "boon", "conditions": [{"type": "level", "min": 4}],
+    "outcomes": [{"type": "grant_items", "items": [{"content_id": "snow:marrow_tonic", "version": 1, "quantity": 1}]}, {"type": "xp", "amount": 50}]
+   }
+  },
+  {
+   "content_id": "snow:place/rune_cairn", "version": 2, "schema_version": 1, "kind": "location",
+   "name": "Toll cairn", "description": "A squat cairn cut by different hands across many winters, taller than any traveller.",
+   "dependencies": [{"content_id": "snow:event/runes_read", "version": 2}, {"content_id": "snow:event/runes_tribute", "version": 1}],
+   "metadata": {"site_only": true, "category": "shrine"},
+   "payload": {
+    "category": "shrine", "visual": "rune_cairn", "discovery": {"mode": "visible", "radius": 4}, "spawn": {"biomes": ["snowfield"], "per_10000": 1},
+    "interactions": [{"id": "read", "verb": "Read the frost runes", "event": {"content_id": "snow:event/runes_read", "version": 2}}, {"id": "tribute", "verb": "Pay the old toll in ivory", "after": "read", "event": {"content_id": "snow:event/runes_tribute", "version": 1}}]
+   }
   }
  ]
 }

@@ -35,10 +35,14 @@ func _initialize() -> void:
 	var atlas := Atlas.new()
 	if not check(not world.is_empty() and not other.is_empty() and atlas.open(store.content, world), "Two disposable atlas Worlds"):
 		return _finish()
-	var proposal: Dictionary = atlas.propose_layout_land(LAYOUT)
+	var narrative_only := "--narrative-only" in OS.get_cmdline_user_args()
+	var proposal: Dictionary = atlas.propose_layout_land("landpkg:snow_mountain/reference" if narrative_only else LAYOUT)
 	if not check(not proposal.is_empty() and atlas.activate(proposal, {"by": "content suite"}), "Chart Snow Mountain in one World: " + atlas.last_error):
 		return _finish()
 	var plan: Dictionary = atlas.lands[proposal.land.land_id]
+	if narrative_only:
+		_narrative_foundation(world)
+		return _finish()
 	if "--economy-only" in OS.get_cmdline_user_args():
 		_regional_crafting(world, other, plan)
 		return _finish()
@@ -58,6 +62,45 @@ func _initialize() -> void:
 func _finish() -> void:
 	print("M05 SNOW CONTENT: %d checks, %d failures" % [checks, failures])
 	quit(1 if failures else 0)
+
+func _narrative_foundation(world: Dictionary) -> void:
+	var pairs := [
+		["snow:event/lee_marks", "snow:place/lee_shelter"],
+		["snow:event/hunters_camp", "snow:place/hunters_camp"],
+		["snow:event/choir_notes", "snow:place/wind_loom"],
+		["snow:event/camp_stash", "snow:place/bandit_stash"],
+		["snow:event/runes_read", "snow:place/rune_cairn"],
+	]
+	var versions_ok := true
+	var rewards_ok := true
+	for pair in pairs:
+		for content_id in pair:
+			var v1_exists := not store.content.load_definition(world.world_id, content_id, 1).is_empty()
+			var v2_exists := not store.content.load_definition(world.world_id, content_id, 2).is_empty()
+			versions_ok = versions_ok and v1_exists and v2_exists
+		var event_v1: Dictionary = store.content.load_definition(world.world_id, pair[0], 1)
+		var event_v2: Dictionary = store.content.load_definition(world.world_id, pair[0], 2)
+		rewards_ok = rewards_ok and event_v1.payload.get("outcomes", []) == event_v2.payload.get("outcomes", [])
+		rewards_ok = rewards_ok and event_v1.payload.get("conditions", []) == event_v2.payload.get("conditions", [])
+	check(versions_ok, "Narrative N1 keeps every v1 definition and installs five additive v2 event/location pairs")
+	check(rewards_ok, "Narrative N1 changes no event reward or condition")
+	var stash_v1: Dictionary = store.content.load_definition(world.world_id, "snow:place/bandit_stash", 1)
+	var stash_v2: Dictionary = store.content.load_definition(world.world_id, "snow:place/bandit_stash", 2)
+	var cairn_v2: Dictionary = store.content.load_definition(world.world_id, "snow:place/rune_cairn", 2)
+	check(stash_v1.payload.interactions[0].repeat == stash_v2.payload.interactions[0].repeat and cairn_v2.payload.interactions[1].event.version == 1, "N1 preserves stash repeat cadence and the established cairn tribute branch")
+	var relay_message: String = store.content.load_definition(world.world_id, "snow:event/camp_stash", 2).payload.message
+	var choir_message: String = store.content.load_definition(world.world_id, "snow:event/choir_notes", 2).payload.message
+	check(relay_message.contains("occupied now") and relay_message.contains("not restored as a settlement"), "Broken Relay text identifies a currently occupied old relay, not a town")
+	check(choir_message.contains("does not say whether") and choir_message.contains("people, wind, ice, or something else"), "Wind-loom clue links motifs without deciding the cause of the voices")
+	var layout: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://content/land_layouts/snow_mountain_reference_v11.json"))
+	var pinned := {}
+	if layout is Dictionary:
+		for site in layout.get("sites", []):
+			pinned[str(site.get("content_id", ""))] = int(site.get("version", 1))
+	var pins_ok := true
+	for pair in pairs:
+		pins_ok = pins_ok and int(pinned.get(pair[1], 0)) == 2
+	check(pins_ok, "The v11 source layout pins all five Narrative N1 locations to version 2")
 
 # --- Isolation and ecology -------------------------------------------------------------
 

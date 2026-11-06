@@ -1,5 +1,85 @@
 # Progress — 2026-11-01 (Asia/Saigon)
 
+## Broken Relay Art Pass V3 opt-in integration (2026-11-06)
+
+Imported the supplied 1920×1600 RGBA ground and roof candidates without replacing the
+v10 originals. `reference_view.gd` selects them only for layout
+`landpkg:snow_mountain/reference` v10's unnamed/default patch when the game is launched
+with `--artpass-v3`; named patches including Windcut always use the live manifest.
+No layout, collision, elevation, Run, save or established asset was changed.
+
+Static QA: copied images match source SHA256, dimensions are 1920×1600, ground covers
+the full canvas and roof alpha bbox is `(691,384)-(1151,646)`. Gameplay bridge cells
+occupy pixels x=920..1119/y=1240..1319; the supplied decorative bridge overlay is
+x=900..1144/y=1222..1351, so its non-walkable visual margin requires in-game review.
+The candidate roof also differs from the original alpha footprint and includes front
+walls/doorway, so actor occlusion and fade remain explicitly unverified.
+`.\scripts\test.ps1 -Only import` could not start: the expected Godot 4.7.2 executable
+is absent. No screenshot was claimed and no broader suite ran.
+
+Runtime follow-up, same date: installed the official signed Godot 4.7.2 editor under
+ignored `.tools/godot` and ran native OpenGL/NVIDIA disposable seed-4242 fixtures.
+Same-camera captures are in `art_exports/BrokenRelay_V3/`. V3 registers to the patch;
+bridge traversal passed and the visible deck meets both approaches, though decorative
+rails/posts extend beyond the 5x2 walkable cells. Roof fade activated inside (alpha
+1.0 -> 0.5307 after two frames, tweening toward 0.12) and the actor remained visible.
+Confirmed defect: the candidate roof contains facade/front walls, hiding more of the
+actor at the south entrance while opaque and doubling ground-painted walls while faded.
+No opaque alpha box or obvious bridge clipping was seen. Runtime setup exposed Phase-1
+compatibility blockers (JSON numeric version coercion and established v1 Energy
+references); minimal routing fixes restored World creation without changing layouts.
+The bounded art probe reached 34 checks / 0 failures. The unchanged full reference
+suite later assumes stored `resources.energy` and was not treated as Phase-1 acceptance.
+
+## Phase 2A art production foundation (2026-11-06, worktree without Git metadata)
+
+Approved direction locked as Modern Stylized Pixel Fantasy RPG. Added the concise
+technical standard in `docs/ART_BIBLE.md` and the concrete Snow production request in
+`docs/lands/SNOW_ENVIRONMENT_ASSET_MANIFEST.md`. Current standard: 40 px logical cell,
+1100×720 reference viewport, upper-left lighting, foot/pivot anchored multi-tile art,
+ground → Y-sorted world → roof/foreground → fog/weather → HUD, lossless/no-mipmap
+imports and native 1:1 review.
+
+Broken Relay/Windcut composed art is now declared by
+`assets/game/snow/reference/environment_manifest.json` instead of being accepted only
+through filename convention. `reference_view.gd` binds each ground/roof painting to the
+exact layout version and named patch, verifies tile size and native pixel footprint,
+and refuses mismatched images rather than stretching them. Gameplay geometry, collision,
+elevation, routes, points of interest, World records and Run state are unchanged.
+
+Static verification: manifest JSON parsed; all five declared current layers exist and
+match their required dimensions (Relay 1920×1600, Windcut 2560×1760). Godot startup or
+native rendering could not run because Godot remains unavailable. The only discovered
+Git checkout (`Thien-Nhai-Cong-Thu-Hanh`, remote `LakLN/novels`) is an unrelated prose
+repository and was not modified; this game workspace still has no `.git` metadata.
+Current composed images remain candidates, not approved final environment art.
+
+## Phase 1 RPG core migration (2026-11-06, worktree without Git metadata)
+
+Director-authorized foundation pass. Implemented rules v2 with STR/DEX/AGI/VIT/INT/SPI,
+derived ATK/MATK/DEF/MDEF, Accuracy/Evasion and Critical Rate/Damage. Effective values
+remain centralized in `CharacterStats`; no effective values are saved. Legacy
+Might/Vitality/Spirit allocations normalize to Strength/Vitality/Spirit.
+
+Replaced generic Energy at runtime with MP and Stamina. Established v1 skill definitions
+remain unchanged: their legacy Energy cost is routed by tags to MP (magic/control/
+restoration) or Stamina (martial/ranged/movement/guard). Old Energy state normalizes
+to both current pools and the old key is removed. Walking remains free; pools regenerate
+at distinct rates and rest accelerates both. Snow heat interactions now pay the routed
+resource rather than assuming Energy.
+
+Combat now selects MATK/MDEF for magical strikes, and the shared deterministic combat
+resolver supports Accuracy/Evasion and critical hits. Character Info groups real
+resources and combat values with derivation breakdowns; the permanent HUD shows HP,
+MP and Stamina plus the existing ten skill slots.
+
+Verification attempted: `.\scripts\test.ps1 -Only import` stopped before import because
+Godot is not installed/discoverable in this workspace environment. Focused Godot
+acceptance remains required. No commit was possible because this copied source tree has
+no `.git` metadata. Next: run import plus character/equipment/skills/combat/UI/save-load
+focused suites in a configured checkout, then correct migrated fixtures and balance
+from a short physical/magical/hybrid play pass.
+
 ## Snow environment production: composed Broken Relay v9 + terrain T1 (2026-11-05)
 
 `feature/snow-full-region`, no master merge. Native review showed the v8 relay as a
@@ -3029,3 +3109,178 @@ source images; only example batch JSON path strings). Exe headless start on a co
 the DB: exit 0, no errors, preview DB unchanged. `builds/windows` untouched.
 Best next task: director style review of the candidate batch in this preview plus a
 spoiler-free human playtest; correct only rejected rows in a new batch (snow_p0_b2).
+
+## Broken Relay rebuild v11 geometry preview (2026-11-06)
+
+Implemented an isolated opt-in `landpkg:snow_mountain/reference` layout v11 without
+altering the v10 package or Windcut. The new 48x40 authored patch has a south forest
+approach, irregular gorge and aligned 11-cell bridge, lower shelf/main stair, raised
+relay courtyard and shelter, high east pass stair, optional west cache branch and a
+directed two-cell drop. Relay locker, strongbox and bandit stash IDs are retained at
+reachable v11 anchors. Layer contract now distinguishes ground, grounded cliffs,
+facade/world props, feet-sorted actors, roof/rail occluders, weather/fog and HUD.
+
+Run with `scripts/godot.ps1 -- --broken-relay-v11` (or pass the same user argument to
+Godot). Normal dispatch remains v10; established plans contain copied geometry and are
+unchanged. Bounded native proof used an isolated database, World seed 4242 and Run seed
+919: `Godot --script res://tests/broken_relay_v11_suite.gd -- --broken-relay-v11`,
+16 checks / 0 failures. It verified mandatory reachability, bridge/stairs/pass, directed
+drop and preserved content IDs, then captured three 1100x720 images under
+`art_exports/BrokenRelay_V11/`. Import initially exposed three inferred-type parse
+errors in the new blockout drawing; explicit `Vector2` types fixed them before the
+passing run. No full regression, Snow suite, long playthrough or personal Run was used.
+
+Art status: geometry/layer architecture only, not production complete. Existing terrain
+materials and the v11 roof/rail geometry are visible review blockouts. Concrete missing
+GAME_READY modules, sizes, pivots and layers are recorded in
+`docs/design/snow_rebuild/ASSET_GAPS.md` and the v11 asset manifest.
+
+## Broken Relay v11 artbase opt-in review (2026-11-06)
+
+Extracted and reviewed `EvolvingRealms_BrokenRelay_V11_Artbase_WorkingPack.zip`. Added
+its opaque 1920x1600 ground prototype and five manifest-pivoted candidate props under a
+separate runtime preview path. `--broken-relay-v11-artbase` requires the existing v11
+flag, replaces only the Broken Relay ground visual, and adds decoration-only feet-sorted
+sprites; it does not alter spatial JSON, collision, saves, v10 or Windcut. Semantic masks
+were not integrated into runtime or physics.
+
+Godot 4.7.2 import passed. Two disposable seed-4242/Run-919 native runs retained the
+bounded v11 traversal/content checks (16 checks / 0 failures in the baseline; the artbase
+run passed the same checks and produced all captures). Same-camera 1100x720 comparison:
+`art_exports/BrokenRelay_V11/broken_relay_v11_current.png` and
+`broken_relay_v11_artbase.png`. Review: registration, bridge and roof fade are intact;
+snow/path contrast improves, while cell-stepped road/gorge edges, repeated material
+structure and candidate-vs-legacy pine pixel-density mismatch remain. Preview is not
+production complete. No full regression or personal Run was used.
+
+## Broken Relay v11 architecture V4 bounded integration (2026-11-06)
+
+Added opt-in `--broken-relay-v11-architecture-v4` for the delivered paired 480x240
+facade/roof at shelter origin `[18,11]`. In this mode old timber facade cells and the old
+building blockout are suppressed; facade remains static below actors and roof-only uses
+the existing roof node/tween. No terrain materials or cliff modules were imported into
+runtime, and gameplay/layout/save data is unchanged.
+
+Godot 4.7.2 import passed and the bounded disposable v11 probe passed 18 checks with 0
+failures, including two settled captures for roof alpha 1.0 and entrance fade. Visual
+review failed: both supplied PNGs composite as broad white/matte 480x240 rectangles.
+RGBA inspection found extensive partially transparent extraction bleed across each
+canvas. The nominal door center matches v11 door columns `[23,16]`/`[24,16]`, but the
+artifact blocks reliable visual alignment approval. No source-image threshold/repaint or
+collision adjustment was attempted. See `art_exports/BrokenRelay_V11/ARCHITECTURE_V4_REPORT.md`.
+
+## Snow Mountains Narrative Foundation N1 (2026-11-06)
+
+Added version 2 of five existing optional clue event/location pairs: Lee shelter marks,
+hunter trail notes, wind-loom stitches, the hostile camp stash and toll-cairn runes.
+The v11 reference source pins those location versions; all v1 definitions remain for
+copied plans and old Runs. N1 changes descriptions/messages only. Event outcomes,
+conditions, costs, stash repeat cadence, cairn tribute, Carrier's Debt, Bell Restoration,
+beacon stages and every terminal branch remain unchanged. The new wording establishes
+Broken Relay as an old relay under current hostile occupation, distinguishes weather
+shelter from combat safety, and links route/call motifs without deciding the cause of
+the Hollow Carriers or ice voices.
+
+Added `docs/design/snow_mountains/HUSHED_CROWN_ART_STATES.md`, an event-backed handoff
+for Broken Relay evidence, Crown Beacon receipts, bell/cairn/locker variants and the
+trigger requirement for flags, lights, smoke and NPCs. Proposed visual variants are
+explicitly separated from implemented receipts.
+
+Bounded verification only: `scripts/godot.ps1 --headless --editor --quit` completed on
+Godot 4.7.2; `scripts/godot.ps1 --headless --script
+res://tests/snow_content_suite.gd '--' --narrative-only --broken-relay-v11` passed 9
+checks with 0 failures in disposable Worlds. It verified pack installation, retained v1
+definitions, v2 availability, reward/condition/repeat/branch invariants, canon wording
+guards and all five v11 pins. No full suite, playthrough, personal Run, layout geometry,
+art, collision, binding, publish action or save migration was used. Git metadata is not
+present in this workspace, so no commit was created or claimed.
+
+## Snow Mountains N2 design package — The Long Thaw (2026-11-06)
+
+Completed a spoiler-separated, implementation-facing design package for a second Snow
+Mountains local cluster. The proposed lower-elevation basin has seven seamless outdoor
+areas, two route circuits, seasonal meltwater geography, a distinct wetland/river ecology,
+meaningful environmental investigations and Run-local decision targets. It remains one
+cluster within the larger Snow Mountains and does not alter or explain away Hushed Crown.
+
+Studio-only story details are isolated under
+`docs/design/snow_mountains/n2_long_thaw/02_STORY_AND_QUESTS_STUDIO_ONLY.md`; the director
+summary contains no solutions, secret positions or terminal rewards. The handoff also
+defines geography/gameplay, data contracts, genuine capability gaps and a staged map/gameplay
+implementation sequence.
+
+Added a non-bound draft package under `content/drafts/snow_mountains/long_thaw/`: 14
+versioned item/event/location candidates plus a seven-area topology contract. No active
+layout, manifest binding, player World or Run references the draft. A bounded Node check
+parsed all three JSON files, verified 13 unique ordered definitions and pack-local
+dependencies, reciprocal topology with at least two local links per area, empty binding and
+`publish: false`: `N2 DRAFT CHECK: 0 failures`. This was structural draft validation, not
+engine activation. No Godot map, art, gameplay code, save, personal Run, full suite or Git
+history was changed.
+
+## The Long Thaw N3 playable vertical slice (2026-11-06)
+
+Implemented an isolated opt-in vertical slice across Thawgate Fans and Nine Weirs. A
+new append-only `landpkg:snow_mountain/long_thaw_n3` layout v1 uses the established
+authored-terrain v2 algorithm and contains two seamless areas, a main walk, high branch,
+natural barriers, two certified starts, a clear-spring survival stop and two N2 evidence
+landmarks. Existing Snow layouts, Hushed Crown, Broken Relay and Windcut are unchanged.
+
+Launch with a separate database only:
+`scripts/godot.ps1 -- --database=<absolute-test-db-path> --long-thaw-n3`.
+The flag creates fixed World seed 4242 / Run seed 919 and enters the slice directly. It
+refuses the default personal database. The draft manifest remains unbound with
+`publish: false`; its content pack can be installed only through the exact opt-in flag.
+
+Gameplay implemented: normal movement between both areas in both directions, clear-spring
+water gathering, a Run-local floodline evidence receipt, and an inspect-then-exclusive
+Weir Five recommendation that grants `long_thaw:fifth_channel_survey@1`. The interaction
+explicitly records a survey recommendation and does not claim to move water, terrain or
+collision. Position, inventory, evidence and terminal receipts survive save/reload and
+return travel. N2 creature identities remain unimplemented because no approved creature
+definitions exist yet; no fallback creature was mislabeled as N2 ecology.
+
+Bounded native check:
+`scripts/godot.ps1 --script res://tests/long_thaw_n3_suite.gd '--' --long-thaw-n3`
+passed 26 checks with 0 failures on Godot 4.7.2. It covered JSON/schema/reference order,
+reported capability gaps, unbound status, layout activation, connectivity and real walking,
+landmark reachability, reward/refusal/exclusivity, save/load and return-state persistence.
+Two 1100x720 captures are under `art_exports/LongThaw_N3/`. Visual review confirms readable
+routes and area transition, but presentation reuses existing meadow/beach/road/object art;
+it is geometry/gameplay preview quality, not production Long Thaw art. No full regression,
+long playthrough, personal save, binding or publication was used.
+
+## The Long Thaw N4 seven-area exploration cluster (2026-11-06)
+
+Extended the opt-in Long Thaw into an append-only layout v2 with all seven contracted
+areas: Thawgate Fans, Alderwash, Braided Commons, Siltmarket Reach, Nine Weirs, Drowned
+Orchard and Underflow Gorge. Nine authored two-way trail corridors form the outer and
+inner circuits; all area centres and twelve fixed landmarks are reachable in one seamless
+outdoor land. N3 layout v1 remains selected by `--long-thaw-n3`; N4 uses
+`--long-thaw-n4`, fixed World seed 4242 / Run seed 919 and still requires an explicit
+separate database.
+
+Added N2-authored environmental observations, a repeatable local food activity and a
+Run-exclusive orchard interaction alongside the existing floodline and Weir Five survey.
+The recommendation remains a recorded choice only: N4 does not claim a redirected river,
+changed collision or opened route. A Long Thaw-specific strict ecology whitelist prevents
+generic shells, chests, caches, coins, creatures and procedural locations from leaking in;
+the normal generator behavior of every other land is unchanged. No N2 creature is active
+because production-ready creature definitions/visual identity have not been approved.
+
+Bounded native test:
+`scripts/godot.ps1 --script res://tests/long_thaw_n4_suite.gd '--' --long-thaw-n4`
+passed 31 checks with 0 failures. It covered pack/layout parsing, dependencies/references,
+draft isolation, all seven areas, nine connectors, real movement across every area,
+landmark reachability, evidence receipts, repeat cooldown/refusal, exclusive choices,
+Weir Five reward, strict biome filtering, save/load and return persistence. The touched N3
+compatibility suite also passed 26 checks with 0 failures. No full regression or long
+playthrough was run.
+
+Three 1100x720 captures are in `art_exports/LongThaw_N4/`. Geometry and routes are
+readable, but current meadow/forest/frozen materials remain preview reuse: broad water
+reads as lake ice, grey paths cross channels without bridge/ford art, and some snow rocks
+show square backing. Exact future asset sizes, footprints, layers, pivots and states are in
+`docs/design/snow_mountains/n2_long_thaw/N4_PRODUCTION_ART_GAPS.md`. Draft binding remains
+empty and `publish: false`; Hushed Crown, Broken Relay, Windcut and personal saves were not
+changed.

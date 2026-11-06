@@ -203,9 +203,12 @@ func attack(session: RefCounted, target_id: String, options: Dictionary = {}) ->
 	var definition: Dictionary = creature.definition
 	var key := "hit-v1/%d/%d/%s/%d%s" % [session.world.seed, session.run.seed, creature.instance_id, int(session.run.state.turn), str(options.get("key", ""))]
 	var attacker: Dictionary = session.combat_stats()
+	if options.get("damage_kind", "physical") == "magic":
+		attacker.attack = int(attacker.get("magic_attack", attacker.attack))
 	attacker.attack = int(attacker.attack) * int(options.get("attack_percent", 100)) / 100 + int(options.get("flat", 0))
 	var defense := creature_stats(session, creature)
-	var base := Combat.resolve(attacker, {"hp": creature.hp, "defense": defense.defense}, key)
+	var defense_value := int(defense.get("magic_defense", defense.defense)) if options.get("damage_kind", "physical") == "magic" else int(defense.defense)
+	var base := Combat.resolve(attacker, {"hp": creature.hp, "defense": defense_value, "evasion": int(defense.get("evasion", 0))}, key)
 	if options.has("direct_damage"): base.damage = int(options.direct_damage)
 	var strike: Dictionary = session.talent_strike(creature, base, options.get("status_tick", false), options) # Planned only; committed by the session.
 	var result: Dictionary = strike.result

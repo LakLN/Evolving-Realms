@@ -2327,6 +2327,37 @@
      ]
     }
    }
+  },
+  {
+   "content_id": "snow:event/lee_marks",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "world_event",
+   "name": "Carriers' marks",
+   "description": "Knife marks on the shelter posts.",
+   "metadata": {"category": "lore"},
+   "payload": {
+    "tone": "neutral",
+    "message": "Carriers' marks on the posts: 'When the wind rises, get under a roof or into the pines.' Below it, an older hand adds: 'A roof breaks the weather, not a blade.' One mark points up the trail through the pines: RELAY.",
+    "outcomes": [{"type": "xp", "amount": 3}]
+   }
+  },
+  {
+   "content_id": "snow:place/lee_shelter",
+   "version": 2,
+   "schema_version": 1,
+   "kind": "location",
+   "name": "Lee shelter",
+   "description": "A carriers' lean-to inside a timber windbreak. Its roof cuts the storm, but offers no safety from armed travellers.",
+   "metadata": {"category": "shelter", "site_only": true},
+   "dependencies": [{"content_id": "snow:event/lee_marks", "version": 2}],
+   "payload": {
+    "category": "shelter",
+    "visual": "lee_shelter",
+    "discovery": {"mode": "visible"},
+    "interactions": [{"id": "marks", "verb": "Read the carriers' marks", "trigger": "interact", "event": {"content_id": "snow:event/lee_marks", "version": 2}}],
+    "spawn": {"biomes": ["forest"], "per_10000": 1, "priority": 90, "conditions": []}
+   }
   }
  ]
 }

@@ -142,7 +142,8 @@ func generate_chunk(chunk: Vector2i, bytes: PackedByteArray = PackedByteArray())
 			for i in Terrain.roll_rules(seeds, chances, point.x, point.y):
 				var rule: Dictionary = rules[i]
 				var spawn: Dictionary = rule.definition.payload.spawn
-				if not ((habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
+				var strict: bool = adaptive and terrain.has_method("strict_ecology") and terrain.strict_ecology(point)
+				if not ((not strict and habitat in spawn.biomes and not rule.ecology_only) or (adaptive and terrain.ecology_hosts(ground, point, rule.definition.content_id))):
 					continue
 				result.append({"instance_id": "crt:v1/%d/%d/%d_%d" % [chunk.x, chunk.y, x, y], "content_id": rule.definition.content_id, "version": 1, "position": {"x": point.x, "y": point.y}, "origin": "procedural", "metadata": {"creature_generation_version": 1}})
 				break

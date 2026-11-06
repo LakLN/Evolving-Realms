@@ -54,6 +54,7 @@ var _fog := Sprite2D.new()
 var _fog_image: Image
 var _fog_texture: ImageTexture
 var _creatures: Dictionary = {} # instance_id -> {node, sprite, tile, facing, sheet}
+var _artbase_props: Dictionary = {} # Review-only decorative sprites; never collision.
 var _origin := Vector2i.ZERO
 var _stack := 0 # Centred popups of one turn stack upward instead of overlapping.
 ## Popups and effects live here; when the view re-centres on a new chunk the layer's
@@ -205,6 +206,8 @@ func clear_map() -> void:
 	for entry in _creatures.values():
 		entry.node.free()
 	_creatures.clear()
+	for node in _artbase_props.values(): node.free()
+	_artbase_props.clear()
 	for child in _fx_layer.get_children():
 		child.free()
 	_dying.clear()
@@ -254,11 +257,44 @@ func refresh() -> void:
 	_update_fog()
 	_update_player()
 	_sync_creatures()
+	_sync_artbase_props()
 	_object_layer.queue_redraw()
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
 	_reference.queue_redraw()
 	_update_roofs()
+
+func _sync_artbase_props() -> void:
+	var args := OS.get_cmdline_user_args() + OS.get_cmdline_args()
+	var land: Dictionary = session.terrain.land_at(session.position) if session.terrain.has_method("land_at") else {}
+	var active := "--broken-relay-v11-artbase" in args and int(land.get("layout", {}).get("version", 0)) == 11 and land.has("spatial")
+	if not active:
+		for node in _artbase_props.values(): node.free()
+		_artbase_props.clear()
+		return
+	var origin := Vector2i(int(land.spatial.origin.x), int(land.spatial.origin.y))
+	# Hand-placed on non-route snow cells. These are visual QA candidates only.
+	var specs := {
+		"pine_large":{"file":"snow_pine_large_candidate.png", "tile":Vector2i(5, 27), "pivot":Vector2(82,238)},
+		"pine_narrow":{"file":"snow_pine_narrow_candidate.png", "tile":Vector2i(39, 25), "pivot":Vector2(57,218)},
+		"pine_young":{"file":"snow_pine_young_candidate.png", "tile":Vector2i(12, 34), "pivot":Vector2(52,136)},
+		"rock_cluster":{"file":"snow_rock_cluster_candidate.png", "tile":Vector2i(35, 28), "pivot":Vector2(71,110)},
+		"exposed_rock":{"file":"exposed_rock_candidate.png", "tile":Vector2i(42, 22), "pivot":Vector2(71,112)}
+	}
+	for id: String in specs:
+		var spec: Dictionary = specs[id]
+		if not _artbase_props.has(id):
+			var node := Node2D.new()
+			node.name = "Artbase_" + id
+			var sprite := Sprite2D.new()
+			sprite.centered = false
+			sprite.position = -Vector2(spec.pivot)
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			sprite.texture = load("res://assets/game/snow/reference/v11_artbase/" + str(spec.file))
+			node.add_child(sprite)
+			_creature_layer.add_child(node) # Same feet-sorted parent as actors.
+			_artbase_props[id] = node
+		_artbase_props[id].position = _feet(origin + Vector2i(spec.tile))
 
 func _update_roofs() -> void:
 	## Roofs go translucent while the hero is inside or right behind a building.

@@ -113,7 +113,8 @@ static func _check_outcome(outcome: Variant, definition: Dictionary, registry: R
 		"xp":
 			if not _between(outcome.get("amount"), 1, 10000): problem = "xp needs amount 1..10000"
 		"restore":
-			if not skills.rules.get("resources", {}).has(outcome.get("resource")): missing.append("skill.resource." + str(outcome.get("resource")))
+			var known: bool = skills.rules.get("resources", {}).has(outcome.get("resource")) or (outcome.get("resource") == "energy" and skills.rules.has("legacy_resource_routing"))
+			if not known: missing.append("skill.resource." + str(outcome.get("resource")))
 			elif not _between(outcome.get("amount"), 1, 1000): problem = "restore needs amount 1..1000"
 	return problem
 

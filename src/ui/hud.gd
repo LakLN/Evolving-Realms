@@ -37,6 +37,8 @@ var hp_text: Label
 var xp_bar: ProgressBar
 var energy_bar: ProgressBar
 var energy_label: Label
+var stamina_bar: ProgressBar
+var stamina_label: Label
 var survival: Label
 var menu_bar: GridContainer
 var hotbar: PanelContainer
@@ -146,7 +148,7 @@ func _build_vitals() -> void:
 	hp_label = _text(header, 15, Color("d3dace"))
 	xp_bar = _bar(header, Color("b48a3c"), 6)
 	xp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	for row in [["HP", Color("ac514b"), 18], ["Energy", Color("50849b"), 16]]:
+	for row in [["HP", Color("ac514b"), 18], ["MP", Color("526fd6"), 16], ["Stamina", Color("65a85b"), 14]]:
 		var line := HBoxContainer.new()
 		line.add_theme_constant_override("separation", 6)
 		column.add_child(line)
@@ -157,9 +159,12 @@ func _build_vitals() -> void:
 		if row[0] == "HP":
 			hp_bar = bar
 			hp_text = _bar_text(bar, 14)
-		else:
+		elif row[0] == "MP":
 			energy_bar = bar
 			energy_label = _bar_text(bar, 12)
+		else:
+			stamina_bar = bar
+			stamina_label = _bar_text(bar, 12)
 	var needs := HBoxContainer.new()
 	needs.add_theme_constant_override("separation", 6)
 	column.add_child(needs)
