@@ -100,8 +100,8 @@ func _initialize() -> void:
 	a.wait_turn()
 	check(a.places.discovered(a, vein.instance_id), "Spirit Eye talent reveals the hidden vein")
 	a.relocate(near(a, tile_of(vein), 1))
-	a.run.state.character.resources.energy.value = 0
-	check(a.interact(vein.instance_id) and int(a.skills.resource(a, "energy")) > 0 and a.run.state.character.statuses.any(func(s: Dictionary) -> bool: return s.get("id") == "core:status/ward"), "Absorbing the vein restores energy and grants a status")
+	a.run.state.character.resources.mana.value = 0
+	check(a.interact(vein.instance_id) and int(a.skills.resource(a, "mana")) > 0 and a.run.state.character.statuses.any(func(s: Dictionary) -> bool: return s.get("id") == "core:status/ward"), "Absorbing the legacy vein restores mana and grants a status")
 
 	# Back at the ruin: Spirit Eye (and the vein XP, level 2) now meets the requirement.
 	a.relocate(near(a, ruin_tile, 1))

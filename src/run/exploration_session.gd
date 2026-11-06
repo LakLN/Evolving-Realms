@@ -188,6 +188,9 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	var generator: Terrain = _terrain_for(blueprint)
 	if generator == null:
 		return false
+	if generator.get("variants") != null:
+		var variant_error: String = generator.variants.rebuild(loaded.state.entity_mutations)
+		if not variant_error.is_empty(): return _fail(variant_error)
 	var saved_position: Dictionary = loaded.state.character.position
 	if not _within_limits(saved_position):
 		return _fail("Saved position is outside the playable world; save was not changed")

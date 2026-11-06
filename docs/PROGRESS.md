@@ -3284,3 +3284,100 @@ show square backing. Exact future asset sizes, footprints, layers, pivots and st
 `docs/design/snow_mountains/n2_long_thaw/N4_PRODUCTION_ART_GAPS.md`. Draft binding remains
 empty and `publish: false`; Hushed Crown, Broken Relay, Windcut and personal saves were not
 changed.
+
+## The Long Thaw N5 living water (2026-11-06)
+
+Implemented the authorized bounded environmental slice, with no extra area or
+roadmap. New copied layout v3 / atlas record v4 retains authored-terrain algorithm
+v2 and all seven N4 areas. N3 layout v1, N4 layout v2, their original pack and
+recommendation definitions remain unchanged. No existing World/Run is upgraded.
+
+`run_state_variants.gd` v1 derives bounded terrain cells and interaction filters
+from explicit execution receipts in the current Run. The data defines geometry,
+state selectors, cross-location evidence requirements and availability; runtime
+contains no Weir coordinates or branch names. Execution remains separate from
+survey recommendations: control @2 appends three new work actions/events @1,
+requires the matching old recommendation plus evidence/materials, and commits
+through the existing LocationRuntime/GameStore atomic save path. The old survey
+receipt/reward is retained and never awarded a second time by work. Resume resolves
+physical cells before validating position or creating caches. Terrain, movement,
+map rendering/minimap and availability all read the same resolved state. Execution
+invalidates derived terrain/object/prefetch/view caches; procedural placement is
+reserved out of authored variant cells. Each Run has its own resolver.
+
+At Weir Five, two local low crossings and the existing downstream reaches change
+water coverage/access in different combinations. A raised perimeter bypass and
+dry control ground remain available; the bounded test checks every dry overlay
+cell, every area, all landmarks and starts for reachability in every state. Existing
+resource interactions are conditioned by the same execution selector. This is
+static authored water redistribution, not fluid simulation or live ecology.
+
+New IDs: `long_thaw:water_course` variant contract v1;
+`long_thaw:place/weir_five_control@2`; `long_thaw:event/execute_open@1`,
+`long_thaw:event/execute_brace@1`, `long_thaw:event/execute_spill@1`.
+Existing `open|brace|spill` recommendation IDs/events and site instance ID remain.
+The extra pack is `content/drafts/snow_mountains/long_thaw/n5_execution_pack.json`;
+draft manifest stays unbound / `publish: false`. SQL/Run schema is unchanged.
+
+Launch with an explicit disposable DB:
+`scripts/godot.ps1 -- --database=D:/Game/RPG/.tools/long-thaw-n5-preview.sqlite --long-thaw-n5`.
+The default personal DB is now refused before opening for all Long Thaw flags.
+Each opt-in launch appends a fresh World/Run; older rows remain available. The
+technical contract and continuation notes are in
+`docs/design/snow_mountains/n2_long_thaw/N5_LIVING_WATER.md`.
+
+Bounded commands completed on Godot 4.7.2:
+- `scripts/godot.ps1 --headless --editor --quit`: initial import passed. Later
+  syntax errors from the new test and a PackedStringArray helper were corrected
+  before the final native run and final import/smoke checks.
+- `scripts/godot.ps1 --headless --script res://tests/long_thaw_n5_suite.gd '--' --long-thaw-n5`:
+  initial mechanism proof **52/0**. Early development probes caught existing
+  location interaction-count and verb-length limits; the bounded ceiling is now
+  eight interactions and work verbs fit the existing forty-character limit.
+- `scripts/godot.ps1 --script res://tests/long_thaw_n5_suite.gd '--' --long-thaw-n5`:
+  final native proof **58/0**. Includes three independent physical branches,
+  nonphysical recommendations, atomic missing-evidence/material refusals, exact
+  work costs, reward/execution exclusivity, real movement over opened/blocked
+  crossings, collision/cache alignment, complete exit connectivity, resource
+  availability, save/load, return travel and independent Runs/immutable plan.
+  A test probe initially compared JSON float arrays to integer arrays; explicit
+  integer component comparison fixed the test without weakening the check.
+- `scripts/godot.ps1 --script res://tests/long_thaw_n3_suite.gd '--' --long-thaw-n3`: **26/0**.
+- `scripts/godot.ps1 --script res://tests/long_thaw_n4_suite.gd '--' --long-thaw-n4`: **31/0**.
+
+All feature/compatibility probes create UUID-named isolated databases, never the
+personal DB. Three final 1100x720 captures were reviewed under
+`art_exports/LongThaw_N5/water_{open,brace,spill}.png`: blue flow-marked blocked
+water, tan dry/ford cells, grey raised bypass. These are diagnostic opt-in geometry
+over reused art, not completed production artwork. Art requirements are appended
+to N4_PRODUCTION_ART_GAPS.md. No concept sheet was used as a finished sprite and no
+Python production pixel art was generated. Layout JSON was compacted after the
+native proof with a parsed-data equality assertion (identical data).
+
+IMPLEMENTED: bounded Run-local variants, work gates/receipts, real traversal and
+resource filters, persistence and compatibility. PARTIAL: preview visuals,
+limited local water footprint and existing resource opportunities; not the full
+N2 quest/economy. No blocker remains for this bounded mechanism. Interiors,
+seasonal NPCs, creature ecology, fluid/weather simulation and production-art
+approval remain deferred. No full regression, export or long playthrough was run.
+
+Related invariant checks: `scripts/test.ps1 -Smoke -Only world,interactions,discoveries,snow-content`
+passed import, data **96/0**, world **49/0**, interactions **69/0** and integration
+**41/0** (including expected injected SQL failures, stale writers and separate-process
+write/crash/reload). The first discovery run stopped on a pre-existing test fixture
+accessing removed `resources.energy`; current rules use mana/stamina. Updated only
+the fixture's pool/reset assertion to mana, retaining the restored-resource/status
+assertions. No gameplay resource routing or existing test was removed. Rerun:
+`scripts/test.ps1 -Only discoveries,snow-content` (results below).
+Discovery rerun passed **40/0** with offline mock-provider tests **8/0**. The Snow
+suite contained the same stale Energy pool/cost assertions; stopped that old
+fixture run before reaching them, updated only test resource references and the
+expected resource-name string, and reran `scripts/test.ps1 -Only snow-content`:
+import PASS, Snow content **114/0**, startup PASS, exit 0. This includes existing
+Hushed Crown chains/terminal choices, saved/repeated interactions, ordinary-ice
+methods and regional crafting checks. No gameplay resource definition or routing
+changed. Final `git diff --cached --check` is clean. The checkpoint commit contains
+only N5 sources/data/docs, the two repaired legacy test fixtures and the three N5
+captures; generated imports, compatibility captures, tools, DBs and builds are
+excluded. Next step within this slice: human opt-in playtest and art identity review;
+no next milestone or additional area is started.

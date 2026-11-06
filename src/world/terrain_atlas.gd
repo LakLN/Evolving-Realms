@@ -24,6 +24,7 @@ const WARP := 28.0
 const GRID := 4
 const SAMPLES := CHUNK_SIZE / GRID + 1
 const RIM := 255 # Zone of tiles outside the land mass.
+var variants := preload("res://src/world/run_state_variants.gd").new()
 var _lands: Dictionary = {} # Vector2i slot -> compiled land
 var _plans: Dictionary = {} # land_id -> stored plan
 var _sites: Dictionary = {} # Vector2i chunk -> [site instances]
@@ -87,8 +88,10 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 			var chunk := TerrainV1.chunk_of(Vector2i(int(home.position.x), int(home.position.y)))
 			if not _creature_homes.has(chunk): _creature_homes[chunk] = []
 			_creature_homes[chunk].append(home)
-	last_error = ""
-	return true
+	last_error = variants.configure(plans)
+	if not last_error.is_empty(): return false
+	last_error = variants.rebuild({})
+	return last_error.is_empty()
 
 static func patches(plan: Dictionary) -> Array:
 	## Composed areas of a plan: the reference patch, then any further composed areas.
@@ -104,7 +107,7 @@ func elevation(tile: Vector2i) -> int:
 	return int(spatial_cell(tile).get("height", 0))
 
 func procedural_allowed(tile: Vector2i) -> bool:
-	return spatial_cell(tile).is_empty()
+	return spatial_cell(tile).is_empty() and not variants.cells.has(tile)
 
 func spatial_seam_kind(tile: Vector2i) -> String:
 	## Presentation: the outer ring of a composed patch is underpainted with the
@@ -199,6 +202,7 @@ func placements(chunk: Vector2i) -> Array:
 	return result
 
 func tile_at(tile: Vector2i) -> int:
+	if variants.cells.has(tile): return variants.cells[tile]
 	var local := TerrainV1.local_of(tile)
 	return _chunk_bytes(TerrainV1.chunk_of(tile))[local.y * CHUNK_SIZE + local.x]
 
@@ -229,7 +233,13 @@ func warm(chunk: Vector2i) -> bool:
 	return true
 
 func generate_chunk(chunk: Vector2i) -> PackedByteArray:
-	return _chunk_bytes(chunk).duplicate()
+	var result := _chunk_bytes(chunk).duplicate()
+	var origin := chunk * CHUNK_SIZE
+	for tile in variants.cells:
+		if TerrainV1.chunk_of(tile) == chunk:
+			var local: Vector2i = tile - origin
+			result[local.y * CHUNK_SIZE + local.x] = variants.cells[tile]
+	return result
 
 func chunk_zones(chunk: Vector2i) -> PackedByteArray:
 	## Region index per tile of a chunk (RIM outside the land mass); surveys and tests.

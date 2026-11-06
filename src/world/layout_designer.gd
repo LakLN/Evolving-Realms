@@ -27,9 +27,10 @@ static func load_layout(layout_id: String) -> Dictionary:
 	# The rebuild remains opt-in while its production art is incomplete. Established
 	# worlds already carry a copied plan, and normal proposals continue to use v10.
 	var args := OS.get_cmdline_user_args() + OS.get_cmdline_args()
-	if layout_id == LONG_THAW_N3 and "--long-thaw-n3" not in args and "--long-thaw-n4" not in args:
+	if layout_id == LONG_THAW_N3 and "--long-thaw-n3" not in args and "--long-thaw-n4" not in args and "--long-thaw-n5" not in args:
 		return {}
 	var path: String = REFERENCE_V11 if layout_id == "landpkg:snow_mountain/reference" and "--broken-relay-v11" in args else (LONG_THAW_N4_PATH if layout_id == LONG_THAW_N3 and "--long-thaw-n4" in args else LAYOUTS[layout_id])
+	if layout_id == LONG_THAW_N3 and "--long-thaw-n5" in args: path = "res://content/land_layouts/long_thaw_n5.json"
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not data is Dictionary or int(data.get("layout_version", 0)) != LAYOUT_VERSION or data.get("id") != layout_id:
 		return {}
@@ -189,6 +190,8 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 	if not _place_sites(designer, plan, layout, to_tile):
 		return {}
 	if not _place_creatures(designer, plan, layout, to_tile): return {}
+	if layout.has("state_variants"):
+		plan.state_variants = preload("res://src/world/run_state_variants.gd").compile(layout.state_variants, plan.sites, r)
 	return plan
 
 static func _patch_origin(plan: Dictionary, patch_id: String) -> Vector2i:

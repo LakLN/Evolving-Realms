@@ -63,7 +63,7 @@ static func classify(definition: Dictionary, registry: RefCounted, world_id: Str
 	problem = Events.check_conditions(discovery.get("conditions", []), context, skills, missing)
 	if not problem.is_empty(): return {"problem": "Discovery: " + problem, "missing": missing}
 	var interactions: Variant = p.get("interactions")
-	if not interactions is Array or interactions.is_empty() or interactions.size() > 6: return {"problem": "Location needs 1..6 interactions", "missing": missing}
+	if not interactions is Array or interactions.is_empty() or interactions.size() > 8: return {"problem": "Location needs 1..8 interactions", "missing": missing}
 	var ids: Array = []
 	for interaction in interactions:
 		if not interaction is Dictionary or not interaction.get("id") is String or not RegEx.create_from_string("^[a-z][a-z0-9_]{0,31}$").search(interaction.id) or interaction.id in ids:

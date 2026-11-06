@@ -1,0 +1,1129 @@
+{
+  "layout_version": 1,
+  "id": "landpkg:snow_mountain/long_thaw_n3",
+  "version": 3,
+  "atlas_version": 4,
+  "terrain_version": 2,
+  "archetype": "frost_highlands",
+  "epithet": "the Long Thaw, a lower basin of braided meltwater and old stone weirs",
+  "history": "Short green seasons return between snowmelt channels. Travellers read flood marks, gravel bars and repaired waterworks to cross the basin.",
+  "notes": "N5 living water opt-in. Immutable N3/N4 retained.",
+  "radius": 154,
+  "coast": {
+    "min": 1.04,
+    "max": 1.18,
+    "scale": 42
+  },
+  "warp": 24,
+  "escarpment": {
+    "name": "Underflow stoneback",
+    "center": [-0.1,-0.34],
+    "radius": [0.13,0.09],
+    "jitter": 0.08,
+    "scale": 24
+  },
+  "lakes": [
+    {
+      "id": "alder_braid",
+      "center": [-0.48,0.1],
+      "radius": [0.045,0.28],
+      "jitter": 0.09,
+      "scale": 20,
+      "shore": 3
+    },
+    {
+      "id": "commons_braid",
+      "center": [-0.08,0.13],
+      "radius": [0.055,0.3],
+      "jitter": 0.1,
+      "scale": 22,
+      "shore": 3
+    },
+    {
+      "id": "market_course",
+      "center": [0.3,0.15],
+      "radius": [0.05,0.3],
+      "jitter": 0.08,
+      "scale": 20,
+      "shore": 3
+    }
+  ],
+  "barriers": [
+    {
+      "id": "west_fan_wall",
+      "a": [-0.86,-0.35],
+      "b": [-0.84,0.63],
+      "width": 0.024
+    },
+    {
+      "id": "east_market_wall",
+      "a": [0.83,-0.38],
+      "b": [0.86,0.6],
+      "width": 0.024
+    },
+    {
+      "id": "north_gorge_wall",
+      "a": [-0.72,-0.72],
+      "b": [-0.38,-0.82],
+      "width": 0.02
+    },
+    {
+      "id": "north_weir_wall",
+      "a": [0.22,-0.82],
+      "b": [0.72,-0.64],
+      "width": 0.02
+    },
+    {
+      "id": "orchard_terrace",
+      "a": [-0.02,-0.06],
+      "b": [0.28,-0.18],
+      "width": 0.014
+    }
+  ],
+  "windbreaks": [
+    {
+      "id": "fan_rocks",
+      "a": [-0.68,0.38],
+      "b": [-0.56,0.38],
+      "width": 0.008,
+      "tile": "rock"
+    },
+    {
+      "id": "alder_roots",
+      "a": [-0.62,0],
+      "b": [-0.48,-0.04],
+      "width": 0.008,
+      "tile": "tree"
+    },
+    {
+      "id": "weir_stones",
+      "a": [0.36,-0.26],
+      "b": [0.56,-0.26],
+      "width": 0.008,
+      "tile": "rock"
+    },
+    {
+      "id": "orchard_wall",
+      "a": [0,-0.24],
+      "b": [0.18,-0.3],
+      "width": 0.008,
+      "tile": "rock"
+    }
+  ],
+  "areas": [
+    {
+      "id": "thawgate_fans",
+      "name": "Thawgate Fans",
+      "seed": [-0.58,0.48],
+      "danger": 0,
+      "start": true,
+      "exposure": "lee",
+      "opportunity": "sheltered gravel fans, clean seepage and two basin routes",
+      "ground": "meadow",
+      "patch": {
+        "surface": "frozen",
+        "scale": 30,
+        "above": 740
+      },
+      "blocker": {
+        "tile": "tree",
+        "percent": 5,
+        "on": ["meadow"]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 2
+      },
+      "ecology": {
+        "meadow": ["core:fresh_spring","core:herb_patch","core:fallen_branches"],
+        "snowfield": ["core:loose_stones"]
+      }
+    },
+    {
+      "id": "alderwash",
+      "name": "Alderwash",
+      "seed": [-0.58,0.04],
+      "danger": 1,
+      "exposure": "lee",
+      "opportunity": "root causeways, repair marks and sheltered herbs",
+      "ground": "forest",
+      "patch": {
+        "surface": "meadow",
+        "scale": 27,
+        "above": 670
+      },
+      "blocker": {
+        "tile": "tree",
+        "percent": 12,
+        "on": ["forest"]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 1
+      },
+      "ecology": {
+        "forest": ["core:herb_patch","core:fallen_branches"],
+        "meadow": ["core:fresh_spring","core:herb_patch"]
+      }
+    },
+    {
+      "id": "braided_commons",
+      "name": "Braided Commons",
+      "seed": [-0.16,0.08],
+      "danger": 1,
+      "exposure": "open",
+      "opportunity": "open grass, fresh silt and alternate crossings",
+      "ground": "meadow",
+      "patch": {
+        "surface": "frozen",
+        "scale": 34,
+        "above": 760
+      },
+      "blocker": {
+        "tile": "rock",
+        "percent": 2,
+        "on": ["meadow"]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 1
+      },
+      "ecology": {
+        "meadow": ["core:herb_patch","core:fresh_spring"],
+        "snowfield": ["core:loose_stones"]
+      }
+    },
+    {
+      "id": "siltmarket_reach",
+      "name": "Siltmarket Reach",
+      "seed": [0.3,0.38],
+      "danger": 1,
+      "exposure": "open",
+      "opportunity": "raised exchange ground and a dry fish ladder",
+      "ground": "meadow",
+      "patch": {
+        "surface": "frozen",
+        "scale": 31,
+        "above": 790
+      },
+      "blocker": {
+        "tile": "rock",
+        "percent": 2,
+        "on": ["meadow"]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 1
+      },
+      "ecology": {
+        "meadow": ["core:herb_patch","core:fallen_branches"],
+        "snowfield": ["core:loose_stones"]
+      }
+    },
+    {
+      "id": "nine_weirs",
+      "name": "Nine Weirs",
+      "seed": [0.48,-0.08],
+      "danger": 1,
+      "exposure": "open",
+      "opportunity": "dry-stone channels, flood records and the Weir Five survey",
+      "ground": "meadow",
+      "patch": {
+        "surface": "frozen",
+        "scale": 25,
+        "above": 720
+      },
+      "blocker": {
+        "tile": "rock",
+        "percent": 5,
+        "on": ["meadow","frozen"]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 2
+      },
+      "ecology": {
+        "meadow": ["core:herb_patch","core:fallen_branches"],
+        "snowfield": ["core:loose_stones","core:fresh_spring"]
+      }
+    },
+    {
+      "id": "drowned_orchard",
+      "name": "Drowned Orchard",
+      "seed": [0.08,-0.3],
+      "danger": 2,
+      "exposure": "lee",
+      "opportunity": "terrace walls, cold seepage and one surviving graft",
+      "ground": "forest",
+      "patch": {
+        "surface": "meadow",
+        "scale": 28,
+        "above": 650
+      },
+      "blocker": {
+        "tile": "tree",
+        "percent": 8,
+        "on": ["forest"]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 3
+      },
+      "ecology": {
+        "forest": ["core:herb_patch","core:fallen_branches"],
+        "meadow": ["core:fresh_spring"]
+      }
+    },
+    {
+      "id": "underflow_gorge",
+      "name": "Underflow Gorge",
+      "seed": [-0.35,-0.38],
+      "danger": 2,
+      "exposure": "lee",
+      "opportunity": "talus, buried water and a difficult inner return",
+      "ground": "frozen",
+      "patch": {
+        "surface": "forest",
+        "scale": 26,
+        "above": 760
+      },
+      "blocker": {
+        "tile": "rock",
+        "percent": 8,
+        "on": ["frozen"]
+      },
+      "rocks": {
+        "tile": "rock",
+        "percent": 4
+      },
+      "ecology": {
+        "snowfield": ["core:loose_stones"],
+        "forest": ["core:fallen_branches","core:herb_patch"]
+      }
+    }
+  ],
+  "trails": [
+    {
+      "id": "thawgate_alder",
+      "points": [
+        [-0.58,0.48],
+        [-0.66,0.26],
+        [-0.58,0.04]
+      ]
+    },
+    {
+      "id": "thawgate_weirs_high",
+      "points": [
+        [-0.58,0.48],
+        [-0.2,0.55],
+        [0.18,0.3],
+        [0.48,-0.08]
+      ]
+    },
+    {
+      "id": "alder_commons",
+      "points": [
+        [-0.58,0.04],
+        [-0.38,0],
+        [-0.16,0.08]
+      ]
+    },
+    {
+      "id": "alder_underflow",
+      "points": [
+        [-0.58,0.04],
+        [-0.52,-0.18],
+        [-0.35,-0.38]
+      ]
+    },
+    {
+      "id": "commons_market",
+      "points": [
+        [-0.16,0.08],
+        [0.05,0.28],
+        [0.3,0.38]
+      ]
+    },
+    {
+      "id": "commons_orchard",
+      "points": [
+        [-0.16,0.08],
+        [-0.02,-0.12],
+        [0.08,-0.3]
+      ]
+    },
+    {
+      "id": "market_weirs",
+      "points": [
+        [0.3,0.38],
+        [0.5,0.18],
+        [0.48,-0.08]
+      ]
+    },
+    {
+      "id": "weirs_orchard",
+      "points": [
+        [0.48,-0.08],
+        [0.3,-0.26],
+        [0.08,-0.3]
+      ]
+    },
+    {
+      "id": "orchard_underflow",
+      "points": [
+        [0.08,-0.3],
+        [-0.12,-0.46],
+        [-0.35,-0.38]
+      ]
+    },
+    {
+      "id": "pass_link",
+      "points": [
+        [-0.58,0.48],
+        [-0.32,0.68],
+        [0,0.84]
+      ]
+    }
+  ],
+  "pass": {
+    "head": [0,0.84]
+  },
+  "shelters": [],
+  "starts": [
+    {
+      "id": "fan_lee_west",
+      "at": [-0.66,0.5]
+    },
+    {
+      "id": "fan_lee_south",
+      "at": [-0.52,0.62]
+    },
+    {
+      "id": "fan_rock_hollow",
+      "at": [-0.46,0.48]
+    }
+  ],
+  "clearing_radius": 5,
+  "weather": [
+    {
+      "id": "wet_snow",
+      "name": "Wet snow",
+      "cycle": 180,
+      "duration": 35,
+      "chance": 45,
+      "sight": 5,
+      "exposure": {
+        "surfaces": ["meadow","forest","frozen ground","trail"],
+        "every": 8,
+        "damage": 1,
+        "shelter": ["pine","tree","rock","cliff","timber"]
+      }
+    }
+  ],
+  "hazards": [],
+  "supplies": {
+    "food": ["core:herb_patch"],
+    "water": ["core:fresh_spring"],
+    "food_steps": 35,
+    "water_steps": 35
+  },
+  "content_packs": ["res://content/drafts/snow_mountains/long_thaw/content_pack.json","res://content/drafts/snow_mountains/long_thaw/n5_execution_pack.json"],
+  "sites": [
+    {
+      "id": "thawgate_spring",
+      "content_id": "core:place/clear_spring",
+      "at": [-0.7,0.62],
+      "area": "thawgate_fans",
+      "reason": "a clean seep and survival stop"
+    },
+    {
+      "id": "alder_oath_bridge",
+      "content_id": "long_thaw:place/alder_oath_bridge",
+      "at": [-0.69,-0.02],
+      "area": "alderwash",
+      "reason": "repair evidence at a root crossing"
+    },
+    {
+      "id": "turning_pole",
+      "content_id": "long_thaw:place/turning_pole",
+      "at": [-0.2,0.2],
+      "area": "braided_commons",
+      "reason": "a former river bank above the present braid"
+    },
+    {
+      "id": "commons_rush",
+      "content_id": "long_thaw:place/silver_rush_bed",
+      "at": [-0.02,0.13],
+      "area": "braided_commons",
+      "reason": "a repeatable local food activity on fresh silt"
+    },
+    {
+      "id": "dry_fish_ladder",
+      "content_id": "long_thaw:place/dry_fish_ladder",
+      "at": [0.2,0.46],
+      "area": "siltmarket_reach",
+      "reason": "an entry clue where the market course no longer runs"
+    },
+    {
+      "id": "market_rush",
+      "content_id": "long_thaw:place/silver_rush_bed",
+      "at": [0.39,0.48],
+      "area": "siltmarket_reach",
+      "reason": "a second authored harvest bed above ordinary flood level"
+    },
+    {
+      "id": "floodline_stones",
+      "content_id": "long_thaw:place/floodline_stones",
+      "at": [0.39,-0.02],
+      "area": "nine_weirs",
+      "reason": "readable evidence in the Weir Five survey"
+    },
+    {
+      "id": "gatehouse_tally",
+      "content_id": "long_thaw:place/gatehouse_tally",
+      "at": [0.57,-0.2],
+      "area": "nine_weirs",
+      "reason": "maintenance evidence in the dry gatehouse wall"
+    },
+    {
+      "id": "weir_five_control",
+      "content_id": "long_thaw:place/weir_five_control",
+      "at": [0.62,-0.04],
+      "area": "nine_weirs",
+      "reason": "the recommendation-only terminal interaction",
+      "version": 2
+    },
+    {
+      "id": "orchard_seep",
+      "content_id": "long_thaw:place/orchard_seep",
+      "at": [0.02,-0.22],
+      "area": "drowned_orchard",
+      "reason": "cold seepage beneath a drowned terrace"
+    },
+    {
+      "id": "last_green_graft",
+      "content_id": "long_thaw:place/last_green_graft",
+      "at": [0.18,-0.4],
+      "area": "drowned_orchard",
+      "reason": "a Run-exclusive harvest or preserve choice"
+    },
+    {
+      "id": "underflow_rumble",
+      "content_id": "long_thaw:place/underflow_rumble",
+      "at": [-0.42,-0.48],
+      "area": "underflow_gorge",
+      "reason": "surface evidence of buried water"
+    }
+  ],
+  "state_variants": {
+    "id": "long_thaw:water_course",
+    "version": 1,
+    "source_site": "weir_five_control",
+    "baseline": [
+      {"site":"weir_five_control","offset":[-10,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-8,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-7,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-6,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-5,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-4,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-3,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-2,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-1,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[0,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[1,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[2,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[3,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[4,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[5,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[6,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[7,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[8,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[9,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[10,-6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,-5],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,-5],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,-5],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,-5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,-5],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,-4],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,-4],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,-4],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,-4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,-4],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,-3],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,-3],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,-3],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,-3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,-3],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,-2],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,-2],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,-2],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,-2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,-2],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,-1],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,-1],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,-1],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,-1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,-1],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-8,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-7,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-6,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-5,0],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-3,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-2,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-1,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[0,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[1,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[2,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[3,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[4,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[5,0],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[7,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[8,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[9,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[10,0],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,1],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,1],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,1],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,1],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,1],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,2],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,2],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,2],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,2],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,2],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,3],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,3],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,3],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,3],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,3],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,4],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,4],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,4],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,4],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,4],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,5],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-8,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-7,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-6,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-5,5],"surface":"water"},
+      {"site":"weir_five_control","offset":[-4,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-3,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-2,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[-1,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[0,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[1,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[2,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[3,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[4,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[5,5],"surface":"water"},
+      {"site":"weir_five_control","offset":[6,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[7,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[8,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[9,5],"surface":"beach"},
+      {"site":"weir_five_control","offset":[10,5],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-10,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-9,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-8,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-7,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-6,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-5,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-4,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-3,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-2,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[-1,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[0,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[1,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[2,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[3,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[4,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[5,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[6,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[7,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[8,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[9,6],"surface":"trail"},
+      {"site":"weir_five_control","offset":[10,6],"surface":"trail"},
+      {"site":"dry_fish_ladder","offset":[-3,2],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-2,2],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-1,2],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[0,2],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[1,2],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[2,2],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[3,2],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-3,3],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-2,3],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-1,3],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[0,3],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[1,3],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[2,3],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[3,3],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-3,4],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-2,4],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[-1,4],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[0,4],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[1,4],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[2,4],"surface":"beach"},
+      {"site":"dry_fish_ladder","offset":[3,4],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-3,2],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-2,2],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-1,2],"surface":"beach"},
+      {"site":"orchard_seep","offset":[0,2],"surface":"water"},
+      {"site":"orchard_seep","offset":[1,2],"surface":"beach"},
+      {"site":"orchard_seep","offset":[2,2],"surface":"beach"},
+      {"site":"orchard_seep","offset":[3,2],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-3,3],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-2,3],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-1,3],"surface":"beach"},
+      {"site":"orchard_seep","offset":[0,3],"surface":"water"},
+      {"site":"orchard_seep","offset":[1,3],"surface":"beach"},
+      {"site":"orchard_seep","offset":[2,3],"surface":"beach"},
+      {"site":"orchard_seep","offset":[3,3],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-3,4],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-2,4],"surface":"beach"},
+      {"site":"orchard_seep","offset":[-1,4],"surface":"beach"},
+      {"site":"orchard_seep","offset":[0,4],"surface":"water"},
+      {"site":"orchard_seep","offset":[1,4],"surface":"beach"},
+      {"site":"orchard_seep","offset":[2,4],"surface":"beach"},
+      {"site":"orchard_seep","offset":[3,4],"surface":"beach"}
+    ],
+    "variants": [
+      {
+        "id": "open",
+        "receipt": "execute_open",
+        "recommendation": "open",
+        "requires": [
+          {
+            "site": "floodline_stones",
+            "interaction": "compare"
+          },
+          {
+            "site": "gatehouse_tally",
+            "interaction": "read"
+          }
+        ],
+        "cells": [
+          {"site":"weir_five_control","offset":[-5,-5],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,-4],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,-3],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,-2],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,-1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,0],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,2],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,3],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,4],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,5],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,-5],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-4],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-3],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-2],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-1],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,0],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,1],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,2],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,3],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,4],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,5],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-3,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-2,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-1,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[0,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[1,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[2,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[3,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-3,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-2,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-1,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[0,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[1,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[2,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[3,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-3,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-2,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-1,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[0,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[1,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[2,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[3,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-3,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[-2,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[-1,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[0,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[2,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[3,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[-3,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[-2,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[-1,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[0,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[2,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[3,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[-3,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[-2,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[-1,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[0,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[2,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[3,4],"surface":"water"}
+        ],
+        "availability": [
+          {
+            "site": "market_rush",
+            "interactions": ["harvest"],
+            "enabled": false
+          },
+          {
+            "site": "commons_rush",
+            "interactions": ["harvest"],
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "id": "brace",
+        "receipt": "execute_brace",
+        "recommendation": "brace",
+        "requires": [
+          {
+            "site": "floodline_stones",
+            "interaction": "compare"
+          },
+          {
+            "site": "gatehouse_tally",
+            "interaction": "read"
+          }
+        ],
+        "cells": [
+          {"site":"weir_five_control","offset":[-5,-5],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-4],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-3],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-2],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-1],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,0],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,1],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,2],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,3],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,4],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,5],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-5],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,-4],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,-3],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,-2],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,-1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,0],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,2],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,3],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,4],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,5],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-3,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-2,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-1,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[0,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[1,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[2,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[3,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-3,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-2,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-1,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[0,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[1,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[2,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[3,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-3,4],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-2,4],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-1,4],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[0,4],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[1,4],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[2,4],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[3,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[-3,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-2,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-1,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[0,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[2,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[3,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-3,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-2,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-1,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[0,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[2,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[3,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-3,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-2,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-1,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[0,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[2,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[3,4],"surface":"beach"}
+        ],
+        "availability": [
+          {
+            "site": "market_rush",
+            "interactions": ["harvest"],
+            "enabled": true
+          },
+          {
+            "site": "commons_rush",
+            "interactions": ["harvest"],
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "id": "spill",
+        "receipt": "execute_spill",
+        "recommendation": "spill",
+        "requires": [
+          {
+            "site": "floodline_stones",
+            "interaction": "compare"
+          },
+          {
+            "site": "gatehouse_tally",
+            "interaction": "read"
+          },
+          {
+            "site": "orchard_seep",
+            "interaction": "inspect"
+          },
+          {
+            "site": "underflow_rumble",
+            "interaction": "listen"
+          }
+        ],
+        "cells": [
+          {"site":"weir_five_control","offset":[-5,-5],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-4],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-3],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-2],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,-1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,0],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[-5,2],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,3],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,4],"surface":"water"},
+          {"site":"weir_five_control","offset":[-5,5],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-5],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-4],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-3],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-2],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,-1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,0],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,1],"surface":"beach"},
+          {"site":"weir_five_control","offset":[5,2],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,3],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,4],"surface":"water"},
+          {"site":"weir_five_control","offset":[5,5],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[-3,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-2,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-1,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[0,2],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[1,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[2,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[3,2],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-3,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-2,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-1,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[0,3],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[1,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[2,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[3,3],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-3,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-2,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[-1,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[0,4],"surface":"water"},
+          {"site":"dry_fish_ladder","offset":[1,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[2,4],"surface":"beach"},
+          {"site":"dry_fish_ladder","offset":[3,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-3,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-2,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-1,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[0,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,2],"surface":"water"},
+          {"site":"orchard_seep","offset":[2,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[3,2],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-3,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-2,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-1,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[0,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,3],"surface":"water"},
+          {"site":"orchard_seep","offset":[2,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[3,3],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-3,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-2,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[-1,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[0,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[1,4],"surface":"water"},
+          {"site":"orchard_seep","offset":[2,4],"surface":"beach"},
+          {"site":"orchard_seep","offset":[3,4],"surface":"beach"}
+        ],
+        "availability": [
+          {
+            "site": "market_rush",
+            "interactions": ["harvest"],
+            "enabled": true
+          },
+          {
+            "site": "commons_rush",
+            "interactions": ["harvest"],
+            "enabled": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -400,11 +400,11 @@ func _world_rules(world: Dictionary, plan: Dictionary) -> void:
 		check(flame.perform_action({"type": "learn", "content_id": "core:book/ember"}), "Learn the Ember fire skill")
 		check(flame.perform_action({"type": "unequip", "slot": "weapon"}), "Put the torch away")
 		_go(flame, medicine)
-		flame.run.state.character.resources.energy.value = 0
+		flame.run.state.character.resources.mana.value = 0
 		var before_skill: Dictionary = flame.run.state.duplicate(true)
-		check(not flame.perform_action({"type": "interact", "instance_id": medicine.instance_id, "interaction": "heat", "heat_source": "skill"}) and flame.last_error.contains("Energy") and preload("res://src/acceptance/standalone_check.gd").same(flame.run.state, before_skill), "A fire skill without Energy is refused and changes nothing")
-		flame.run.state.character.resources.energy.value = 10
-		check(flame.perform_action({"type": "interact", "instance_id": medicine.instance_id, "interaction": "heat", "heat_source": "skill"}) and _count(flame, "core:herb") == 3 and int(flame.run.state.character.resources.energy.value) < 10, "Ember thaws the medicine case for its Energy cost, keeping all herbs")
+		check(not flame.perform_action({"type": "interact", "instance_id": medicine.instance_id, "interaction": "heat", "heat_source": "skill"}) and flame.last_error.contains("Mana") and preload("res://src/acceptance/standalone_check.gd").same(flame.run.state, before_skill), "A fire skill without Mana is refused and changes nothing")
+		flame.run.state.character.resources.mana.value = 10
+		check(flame.perform_action({"type": "interact", "instance_id": medicine.instance_id, "interaction": "heat", "heat_source": "skill"}) and _count(flame, "core:herb") == 3 and int(flame.run.state.character.resources.mana.value) < 10, "Ember thaws the medicine case for its Mana cost, keeping all herbs")
 	var missing: Array = []
 	var problem: String = preload("res://src/core/world_rules.gd").validate({"version": 99, "material": "ordinary_ice", "fracture_attack": 8, "thaw_fuel": [{"content_id": "core:wood", "version": 1, "quantity": 1}]}, missing)
 	check(problem.is_empty() and not missing.is_empty(), "Unknown rule version remains unsupported rather than running")
@@ -434,7 +434,7 @@ func _regional_crafting(world: Dictionary, other: Dictionary, plan: Dictionary) 
 	check(s.perform_action({"type": "interact", "instance_id": supplies.instance_id, "interaction": "heat", "heat_source": "flame"}) and _count(s, "snow:bark_ration") == 3, "Crafted Pitchbrand also thaws actual regional supplies")
 	check(_equip(s, "snow:rime_focus"), "Equip regional elemental focus")
 	var frost: Dictionary = s.skill_definition("core:skill/frost", 1)
-	check(int(s.skills.modifiers(s, frost).power_percent) == 35 and int(s.skills.costs(s, frost).energy) == 1, "Regional focus changes Frost power and Energy cost through shared rules")
+	check(int(s.skills.modifiers(s, frost).power_percent) == 35 and int(s.skills.costs(s, frost).mana) == 1, "Regional focus changes Frost power and Mana cost through shared rules")
 	s.stats().hp = 1
 	check(s.perform_action({"type": "use", "content_id": "snow:pine_salve"}) and int(s.stats().hp) > 1 and _count(s, "snow:pine_salve") == 0, "Crafted salve heals and is consumed once")
 	s.stats().hunger = 800

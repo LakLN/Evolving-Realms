@@ -31,6 +31,7 @@ var _view_rect := Rect2i()
 var session: RefCounted
 ## Selected combat target, highlighted on the map.
 var target_id := ""
+var _variant_revision := -1
 var chunk_nodes: Dictionary = {}
 var camera: Camera2D
 ## Skill targeting: {tiles: [Vector2i], selected: Vector2i} drawn above the fog.
@@ -230,6 +231,10 @@ func _feet(tile: Vector2i) -> Vector2:
 func refresh() -> void:
 	if session == null:
 		return
+	if session.terrain.get("variants") != null and _variant_revision != session.terrain.variants.revision:
+		_variant_revision = session.terrain.variants.revision
+		for entry in chunk_nodes.values(): entry.root.free()
+		chunk_nodes.clear()
 	var profile_start := Time.get_ticks_usec()
 	var added := 0
 	var next_origin: Vector2i = session.cache.center * Terrain.CHUNK_SIZE
@@ -749,6 +754,7 @@ func _draw_objects() -> void:
 				_draw_object_icon(point, definition.payload.get("visual", "resource"), consumed)
 			if not target.is_empty() and target.instance_id == instance.instance_id:
 				_draw_select(_object_layer, point, Color("f8df8b"))
+	_draw_water_debug()
 	_draw_places()
 	if session.roster == null:
 		return
@@ -1101,3 +1107,16 @@ func _effect(tile: Vector2i, delay: float, duration: float, painter: Callable) -
 		node.set_meta("t", t)
 		node.queue_redraw(), 0.0, 1.0, duration)
 	tween.tween_callback(node.queue_free)
+
+func _draw_water_debug() -> void:
+	# Opt-in diagnostic geometry, not production art. Same cells as collision.
+	if session.terrain.get("variants") == null: return
+	for tile in session.terrain.variants.cells:
+		if not shown(tile): continue
+		var surface: int = session.terrain.variants.cells[tile]
+		var point := _point(tile)
+		var wet := surface == Surfaces.WATER
+		_object_layer.draw_rect(Rect2(point - Vector2.ONE * px * 0.5, Vector2.ONE * px), Color("246c91") if wet else Color("b7a67e") if surface == Surfaces.BEACH else Color("898c7a"))
+		if wet:
+			_object_layer.draw_line(point + Vector2(-10, -3), point + Vector2(8, -3), Color("a0dbe5"), 2)
+			_object_layer.draw_line(point + Vector2(8, -3), point + Vector2(3, 2), Color("a0dbe5"), 2)

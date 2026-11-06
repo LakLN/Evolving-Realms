@@ -55,3 +55,15 @@ Status: geometry and gameplay handoff only. None of these assets is approved or 
 - Interaction locations rely on generic fallback props and cannot communicate their state visually.
 
 All state variants must be driven by actual location receipts or terrain state. No lit market, moving gate, redirected river, seasonal NPC crowd or active interior should be painted as unconditional scenery.
+
+## N5 environmental-state art requirement
+
+N5 uses diagnostic cell fills derived from the actual Run overlay: blue with flow
+arrows = blocked water, tan = dry/walkable silt or ford, grey = raised bypass.
+These are opt-in preview geometry, not production pixels. Existing assets remain
+reused around the footprint. No Python-made production art or concept-sheet sprite
+was added. State art still needs 40x40 cold flowing water and dry/damp/ford cells,
+40x80 bank/weir modules (pivot 20,72), and a 120x120 control (pivot 60,108) with
+surveyed, worked and course-aligned states. Match each state to the resolver;
+never encode collision in texture alpha. Animation, directional flow matching,
+bank transitions, weir mechanics and downstream landmark variants need art review.

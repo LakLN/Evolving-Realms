@@ -56,6 +56,7 @@ func available(session: RefCounted, instance: Dictionary, trigger: String = "") 
 	var exclusive_taken: bool = definition.payload.interactions.any(func(i: Dictionary) -> bool: return i.get("exclusive", false) and resolved.has(i.id))
 	var result: Array = []
 	for interaction in definition.payload.interactions:
+		if session.terrain.get("variants") != null and not session.terrain.variants.allowed(instance.instance_id, interaction.id): continue
 		if resolved.has(interaction.id) and wait(session, interaction, resolved[interaction.id]) != 0: continue
 		if not trigger.is_empty() and interaction.get("trigger", "interact") != trigger: continue
 		if interaction.has("after") and not resolved.has(interaction.after): continue
@@ -246,6 +247,9 @@ func interact(session: RefCounted, instance_id: String, wanted: String = "", hea
 
 func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary, heat_source: String = "") -> Dictionary:
 	## Plan conditions, cost, awards and vital changes; commit only if all succeed.
+	if session.terrain.get("variants") != null:
+		var problem: String = session.terrain.variants.requirement(session.run.state.entity_mutations, instance.instance_id, interaction.id, session.position)
+		if not problem.is_empty(): return {"error": problem}
 	var event: Dictionary = layer.event(interaction.event)
 	var definition: Dictionary = layer.definition_for(instance)
 	var p: Dictionary = event.payload
@@ -309,6 +313,16 @@ func resolve(session: RefCounted, instance: Dictionary, interaction: Dictionary,
 	mutation.resolved[interaction.id] = {"turn": int(session.run.state.turn), "event": {"content_id": event.content_id, "version": int(event.version)}, "received": award.received.duplicate(true)}
 	if use > 1: mutation.resolved[interaction.id].count = use
 	session.run.state.entity_mutations[instance.instance_id] = mutation
+	if session.terrain.get("variants") != null and session.terrain.variants.definitions.any(func(d: Dictionary) -> bool: return d.source == instance.instance_id and d.variants.any(func(v: Dictionary) -> bool: return v.receipt == interaction.id)):
+		session.terrain.variants.rebuild(session.run.state.entity_mutations)
+		session.cache.chunks.clear()
+		session.cache.center = Vector2i(2147483647, 2147483647)
+		session.cache.follow(session.position)
+		session.objects.chunks.clear()
+		session.objects._ahead.clear()
+		session.objects.center = Vector2i(2147483647, 2147483647)
+		session.objects.follow(session.position)
+		session._reveal()
 	session.dirty = true
 	var events: Array = [{"type": "location", "target": instance.instance_id, "name": definition.name, "verb": interaction.get("verb", "Explore"), "message": " ".join([p.get("message", ""), layer.clue(instance, true)] + resolved.notes).strip_edges(), "tone": p.get("tone", "neutral"), "received": award.received, "display_received": award.display_received, "changes": changes, "damage": damage, "position": instance.position.duplicate()}]
 	if not method.is_empty():

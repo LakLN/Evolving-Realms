@@ -1,0 +1,265 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {
+      "content_id": "long_thaw:event/execute_open",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Weir Five work: open",
+      "description": "",
+      "metadata": {
+        "category": "world_event"
+      },
+      "dependencies": [
+        {
+          "content_id": "core:wood",
+          "version": 1
+        },
+        {
+          "content_id": "core:stone",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "neutral",
+        "message": "The work is complete. The channels have changed; the raised bypass remains open.",
+        "cost": {
+          "items": [
+            {
+              "content_id": "core:wood",
+              "version": 1,
+              "quantity": 2
+            },
+            {
+              "content_id": "core:stone",
+              "version": 1,
+              "quantity": 2
+            }
+          ]
+        },
+        "outcomes": [
+          {
+            "type": "xp",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/execute_brace",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Weir Five work: brace",
+      "description": "",
+      "metadata": {
+        "category": "world_event"
+      },
+      "dependencies": [
+        {
+          "content_id": "core:wood",
+          "version": 1
+        },
+        {
+          "content_id": "core:stone",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "neutral",
+        "message": "The work is complete. The channels have changed; the raised bypass remains open.",
+        "cost": {
+          "items": [
+            {
+              "content_id": "core:wood",
+              "version": 1,
+              "quantity": 2
+            },
+            {
+              "content_id": "core:stone",
+              "version": 1,
+              "quantity": 2
+            }
+          ]
+        },
+        "outcomes": [
+          {
+            "type": "xp",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "long_thaw:event/execute_spill",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "world_event",
+      "name": "Weir Five work: spill",
+      "description": "",
+      "metadata": {
+        "category": "world_event"
+      },
+      "dependencies": [
+        {
+          "content_id": "core:wood",
+          "version": 1
+        },
+        {
+          "content_id": "core:stone",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "tone": "neutral",
+        "message": "The work is complete. The channels have changed; the raised bypass remains open.",
+        "cost": {
+          "items": [
+            {
+              "content_id": "core:wood",
+              "version": 1,
+              "quantity": 4
+            },
+            {
+              "content_id": "core:stone",
+              "version": 1,
+              "quantity": 4
+            }
+          ]
+        },
+        "outcomes": [
+          {
+            "type": "xp",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    {
+      "content_id": "long_thaw:place/weir_five_control",
+      "version": 2,
+      "schema_version": 1,
+      "kind": "location",
+      "name": "Weir Five control slot",
+      "description": "Survey first. Physical work requires a separate commitment, evidence and repair materials.",
+      "dependencies": [
+        {
+          "content_id": "long_thaw:event/weir_inspect",
+          "version": 1
+        },
+        {
+          "content_id": "long_thaw:event/recommend_open",
+          "version": 1
+        },
+        {
+          "content_id": "long_thaw:event/recommend_brace",
+          "version": 1
+        },
+        {
+          "content_id": "long_thaw:event/recommend_spill",
+          "version": 1
+        },
+        {
+          "content_id": "long_thaw:event/execute_open",
+          "version": 1
+        },
+        {
+          "content_id": "long_thaw:event/execute_brace",
+          "version": 1
+        },
+        {
+          "content_id": "long_thaw:event/execute_spill",
+          "version": 1
+        }
+      ],
+      "metadata": {
+        "site_only": true,
+        "category": "ruin"
+      },
+      "payload": {
+        "category": "ruin",
+        "visual": "weir_control",
+        "discovery": {
+          "mode": "visible",
+          "radius": 3
+        },
+        "spawn": {
+          "biomes": [
+            "meadow",
+            "beach"
+          ],
+          "per_10000": 1,
+          "priority": 90
+        },
+        "interactions": [
+          {
+            "id": "inspect",
+            "verb": "Inspect the dry control slot",
+            "event": {
+              "content_id": "long_thaw:event/weir_inspect",
+              "version": 1
+            }
+          },
+          {
+            "id": "open",
+            "verb": "Record the orchard course",
+            "after": "inspect",
+            "exclusive": true,
+            "event": {
+              "content_id": "long_thaw:event/recommend_open",
+              "version": 1
+            }
+          },
+          {
+            "id": "brace",
+            "verb": "Record the market course",
+            "after": "inspect",
+            "exclusive": true,
+            "event": {
+              "content_id": "long_thaw:event/recommend_brace",
+              "version": 1
+            }
+          },
+          {
+            "id": "spill",
+            "verb": "Record a measured spill",
+            "after": "inspect",
+            "exclusive": true,
+            "event": {
+              "content_id": "long_thaw:event/recommend_spill",
+              "version": 1
+            }
+          },
+          {
+            "id": "execute_open",
+            "verb": "Work: open (wood + stone)",
+            "after": "open",
+            "event": {
+              "content_id": "long_thaw:event/execute_open",
+              "version": 1
+            }
+          },
+          {
+            "id": "execute_brace",
+            "verb": "Work: brace (wood + stone)",
+            "after": "brace",
+            "event": {
+              "content_id": "long_thaw:event/execute_brace",
+              "version": 1
+            }
+          },
+          {
+            "id": "execute_spill",
+            "verb": "Work: spill (wood + stone)",
+            "after": "spill",
+            "event": {
+              "content_id": "long_thaw:event/execute_spill",
+              "version": 1
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
