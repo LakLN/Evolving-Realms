@@ -66,6 +66,9 @@ var _has_origin := false
 ## the hero's feet: pulsing red when exposed, steady ice-blue when sheltered.
 var _weather_layer := Node2D.new()
 var _reference := preload("res://src/world/reference_view.gd").new()
+var _roofs := preload("res://src/world/reference_view.gd").new() # Above actors; fades under a roof.
+var _roof_fade: Tween
+var _roof_target := 1.0
 ## Snow lands: a world-anchored, tileable brightness field multiplied over the ground
 ## and composed areas so neither tile repetition nor patch borders read as a grid.
 var _macro := Node2D.new()
@@ -101,6 +104,10 @@ func _ready() -> void:
 	_creature_layer.z_index = 3
 	_creature_layer.y_sort_enabled = true # Hero and creatures overlap by their feet.
 	add_child(_creature_layer)
+	_roofs.view = self
+	_roofs.roofs = true
+	_roofs.z_index = 4
+	add_child(_roofs)
 	_fog.z_index = 4
 	_fog.centered = false
 	_fog.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -251,6 +258,18 @@ func refresh() -> void:
 	_sense_layer.queue_redraw()
 	_mark_layer.queue_redraw()
 	_reference.queue_redraw()
+	_update_roofs()
+
+func _update_roofs() -> void:
+	## Roofs go translucent while the hero is inside or right behind a building.
+	var land: Dictionary = session.terrain.land_at(session.position) if session.terrain.has_method("land_at") else {}
+	var target := 0.12 if _roofs.under_roof(land, session.position) else 1.0
+	_roofs.queue_redraw()
+	if is_equal_approx(_roof_target, target): return
+	_roof_target = target
+	if _roof_fade != null: _roof_fade.kill()
+	_roof_fade = create_tween()
+	_roof_fade.tween_property(_roofs, "modulate:a", target, 0.25)
 
 func _draw_macro() -> void:
 	var size := _macro_texture.get_size()

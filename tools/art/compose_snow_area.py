@@ -279,6 +279,8 @@ class Painter:
     def bridge(self):
         r = self.rng
         cells = self.S('bridge')
+        if not cells.any():
+            return
         ys, xs = np.nonzero(cells)
         y0, y1 = ys.min() * TS + 4, (ys.max() + 1) * TS - 2
         x0, x1 = xs.min() * TS - 6, (xs.max() + 1) * TS + 6
@@ -365,14 +367,12 @@ class Painter:
         seams = fm & ((self.yy % 10) == 0)
         self.img[seams] *= 0.7
         # Blown-in snow at the doors; warm worn centre.
-        doors = floor & ~ndimage.binary_erosion(floor | self.S('timber'), border_value=0) & ~self.S('timber')
-        dsoft = soft(up(floor & (self.height >= 0)) & False, 1)
         for cy, cx in zip(*np.nonzero(floor)):
             n = [self.style[cy + dy, cx + dx] if 0 <= cy + dy < self.H and 0 <= cx + dx < self.W else 'snow' for dy, dx in ((1, 0), (-1, 0), (0, 1), (0, -1))]
             if any(v in ('terrace', 'trail', 'snow') for v in n):
                 ys, xs = slice(cy * TS, cy * TS + TS), slice(cx * TS, cx * TS + TS)
-                blown = E.noise(r, TS, TS, 5) > 0.45
-                self.img[ys, xs][blown] = self.img[ys, xs][blown] * 0.4 + E.SNOW[4] * 0.6
+                blown = E.noise(r, TS, TS, 7) > 0.62
+                self.img[ys, xs][blown] = self.img[ys, xs][blown] * 0.55 + E.SNOW[3] * 0.45
         walls = self.S('timber')
         for cy, cx in zip(*np.nonzero(walls)):
             ys, xs = slice(cy * TS, cy * TS + TS), slice(cx * TS, cx * TS + TS)
@@ -417,6 +417,13 @@ class Painter:
                     reg[lx >= 30] = reg[lx >= 30] * 0.6
                 if inside_w:
                     reg[lx < 10] = reg[lx < 10] * 0.6
+            # Door posts where the wall run is broken by a walkable opening.
+            for side, edge in ((-1, (lx < 9)), (1, (lx >= TS - 9))):
+                nx = cx + side
+                if 0 <= nx < self.W and self.style[cy, nx] in ('floor', 'trail', 'terrace', 'snow') and (inside_n or inside_s or self.style[cy, nx] == 'floor'):
+                    reg[edge] = E.WOOD[1]
+                    reg[edge & ((lx == 0) | (lx == TS - 9))] = E.WOOD[4]
+                    reg[edge & (ly < 5)] = E.SNOW[6]
             # Corner posts.
             corner = (not inside_s and not inside_n and (cy + 1 < self.H and walls[cy + 1, cx]) != (cy > 0 and walls[cy - 1, cx]))
             if corner or (inside_s and (cx > 0 and not walls[cy, cx - 1] or cx + 1 < self.W and not walls[cy, cx + 1])):
@@ -431,22 +438,145 @@ class Painter:
         south_shadow = up(np.roll(walls, 1, 0) & ~walls & ~floor) & (self.yy % TS < 9)
         E.shade(self.img, south_shadow, 0.8)
 
-    def vegetation(self, skip=()):
-        """Pines and boulders from the accepted props sheet, grounded with shadows."""
-        props = np.asarray(Image.open(ROOT / 'assets/game/snow/props.png').convert('RGBA'), np.float32)
+    def structures(self):
+        """Palisade stakes, the storage lean-to and stacked firewood."""
         r = self.rng
+        ly, lx = np.mgrid[0:TS, 0:TS]
+        for cy, cx in zip(*np.nonzero(self.S('palisade'))):
+            ys, xs = slice(cy * TS, cy * TS + TS), slice(cx * TS, cx * TS + TS)
+            reg = self.img[ys, xs]
+            # Shadow of the stakes on the snow behind (north) and a stone footing.
+            reg[ly > TS - 8] = reg[ly > TS - 8] * 0.7
+            for k in range(5):
+                x0 = k * 8
+                top = 2 + int(r.integers(0, 6))
+                stake = (lx >= x0 + 1) & (lx < x0 + 7) & (ly >= top) & (ly < TS - 4)
+                reg[stake] = E.WOOD[2]
+                reg[stake & (lx == x0 + 1)] = E.WOOD[4]
+                reg[stake & (lx == x0 + 6)] = E.WOOD[0]
+                tip = (lx >= x0 + 2) & (lx < x0 + 6) & (ly >= top - 2) & (ly < top)
+                reg[tip] = E.WOOD[3]
+                reg[(lx >= x0 + 1) & (lx < x0 + 7) & (ly >= top) & (ly < top + 2)] = E.SNOW[6]
+            reg[(ly >= 16) & (ly < 19)] = E.WOOD[1]  # Cross rail.
+            reg[(ly == 16)] = E.SNOW[5]
+            self.img[ys, xs] = reg
+        shed = self.S('shed')
+        for cy, cx in zip(*np.nonzero(shed)):
+            ys, xs = slice(cy * TS, cy * TS + TS), slice(cx * TS, cx * TS + TS)
+            reg = self.img[ys, xs]
+            # A lean-to roof sloping away from the wall it leans on, snow on the planks.
+            planks = self.mat[(ly + cy * TS) % 160, (lx * 0 + (ly // 7) * 23 + lx) % 160 + 480] * 0.8
+            reg[:] = planks
+            reg[(lx % 9) == 0] *= 0.7
+            snow = ((ly % 7) < 4) | (E.noise(r, TS, TS, 30) > 0.45)  # Snow on each plank course.
+            reg[snow] = E.SNOW[5]
+            reg[snow & (lx > 30)] = E.SNOW[4]
+            if not (cy + 1 < self.H and shed[cy + 1, cx]):
+                reg[ly >= TS - 10] = E.WOOD[0]
+                for k in range(4):  # Log ends of the stored firewood under the eave.
+                    E.stamp_stone(reg, 6 + k * 9, TS - 5, 3.2, 3.2, E.WOOD[1:], r, snow_cap=False)
+            if not (cx > 0 and shed[cy, cx - 1]):
+                reg[:, :4] = E.WOOD[1]
+            self.img[ys, xs] = reg
+        for cy, cx in zip(*np.nonzero(self.S('woodpile'))):
+            ys, xs = slice(cy * TS, cy * TS + TS), slice(cx * TS, cx * TS + TS)
+            reg = self.img[ys, xs]
+            reg[ly > 30] = reg[ly > 30] * 0.75
+            for row in range(3):
+                for k in range(4 - row % 2):
+                    E.stamp_stone(reg, 6 + k * 9 + (row % 2) * 4, 32 - row * 8, 4, 4, E.WOOD[1:], r, snow_cap=row == 2)
+            self.img[ys, xs] = reg
+
+    def roofs(self):
+        """Roof layer above actors (faded in game while the player is under it)."""
+        layer = np.zeros((self.h, self.w, 4), np.float32)
+        lab, n = ndimage.label(self.S('timber', 'floor') & ~self.S('palisade', 'shed', 'woodpile'))
+        slate = self.mat[self.yy % 160 + 160, (self.xx % 160)]
+        for i in range(1, n + 1):
+            cells = lab == i
+            if not (cells & self.S('floor')).any():
+                continue
+            ys, xs = np.nonzero(cells)
+            x0, x1 = xs.min() * TS - 8, (xs.max() + 1) * TS + 8
+            top, eave = ys.min() * TS - 30, ys.max() * TS + 10
+            ridge = top + int((eave - top) * 0.28)
+            box = (self.yy >= top) & (self.yy < eave) & (self.xx >= x0) & (self.xx < x1)
+            back = box & (self.yy < ridge)
+            front = box & (self.yy >= ridge)
+            col = np.zeros_like(self.img)
+            # Lapped slate shingles: staggered rows, each shingle a slightly different
+            # tone, the lower lip of every row shadowed by the row above.
+            row = (self.yy - top) // 8
+            lap = (self.yy - top) % 8
+            sx = (self.xx + (row % 2) * 6) // 12
+            tone = ((sx * 7349 + row * 1931) % 5) / 4.0
+            shingle = E.ramp(E.ROCK[2:6], 0.35 + tone * 0.4, dither=False)
+            shingle[lap >= 6] *= 0.62
+            shingle[((self.xx + (row % 2) * 6) % 12) == 0] *= 0.72
+            depth = (self.yy - ridge) / max(1, eave - ridge)
+            col[back] = shingle[back] * 0.7
+            col[front] = (shingle * (1.0 - depth[..., None] * 0.15))[front]
+            # Heavy snow on the front slope, slate showing in wind-cleared streaks.
+            # Snow lies in a smooth blanket, thinning toward the eave where shingle rows show.
+            band = E.noise(self.rng, self.h, self.w, 40) * 0.5 + E.noise(self.rng, self.h, self.w, 14) * 0.15
+            # Snow sits on each shingle row's upper part; deeper near the ridge.
+            cover = front & (band + (1 - depth) * 0.6 - lap / 8.0 * 0.35 > 0.42)
+            col[cover] = E.ramp(E.SNOW, 0.58 + (1 - depth) * 0.3)[cover]
+            lip = cover & ~np.roll(cover, -1, 0)
+            col[lip] = E.SNOW[2]
+            col[back & (band - lap / 8.0 * 0.3 > 0.25)] = E.SNOW[3]
+            col[box & (np.abs(self.yy - ridge) < 2)] = E.SNOW[6]
+            col[box & (self.yy >= eave - 5)] = E.WOOD[1]
+            col[box & (self.yy == eave - 5)] = E.SNOW[5]
+            for bx in (x0, x1 - 5):  # Barge boards.
+                b = box & (self.xx >= bx) & (self.xx < bx + 5)
+                col[b] = E.WOOD[2]
+                col[b & (self.xx == bx)] = E.WOOD[4]
+            # Stone chimney on the back slope.
+            cx0 = x1 - 3 * TS if x1 - x0 > 6 * TS else x0 + 12  # Small huts: chimney on the gable end.
+            ch = (self.yy >= top - 10) & (self.yy < ridge + 6) & (self.xx >= cx0) & (self.xx < cx0 + 16)
+            col[ch] = self.mat[self.yy % 160 + 160, self.xx % 160 + 160][ch] * 0.8
+            col[ch & (self.yy < top - 6)] = E.SNOW[6]
+            col[ch & (self.yy >= top - 6) & (self.yy < top - 3) & (self.xx >= cx0 + 4) & (self.xx < cx0 + 12)] = E.ROCK[0]
+            alpha = box | ch
+            # Icicles under the eave.
+            for x in range(x0 + 6, x1 - 6, 7):
+                ln = 3 + (x * 13) % 6
+                ic = (self.xx == x) & (self.yy >= eave) & (self.yy < eave + ln)
+                col[ic] = E.ICE[3]
+                alpha |= ic
+            # Porch gables over doors in the south wall run.
+            for x in range(xs.min(), xs.max() + 1):
+                if self.style[ys.max(), x] not in ('timber',):
+                    px0 = x * TS - 6
+                    porch = (self.yy >= eave - 4) & (self.yy < eave + 12) & (self.xx >= px0) & (self.xx < px0 + TS + 12) & (np.abs(self.xx - (px0 + TS / 2 + 6)) < (TS / 2 + 6) - (self.yy - (eave - 4)) * 0.4)
+                    col[porch] = E.WOOD[1]
+                    col[porch & (self.yy < eave + 2)] = E.SNOW[6]
+                    alpha |= porch
+            under = (self.yy >= eave) & (self.yy < eave + 6) & (self.xx >= x0) & (self.xx < x1) & ~alpha
+            layer[under, 3] = 90
+            layer[alpha, :3] = col[alpha]
+            layer[alpha, 3] = 255
+        return np.clip(layer, 0, 255).astype(np.uint8)
+
+    def vegetation(self, skip=()):
+        """Pines and boulders from the regional flora set (same weighted picks as the
+        land around), grounded with pooled shadows."""
+        props = np.asarray(Image.open(ROOT / 'assets/game/snow/terrain/props.png').convert('RGBA'), np.float32)
+        table = json.loads((ROOT / 'assets/game/snow/snow_terrain_index.json').read_text())['props']
         yy, xx = np.ogrid[0:self.h, 0:self.w]
-        for kind, sx in (('grove', 0), ('rock', 96)):
+        for kind, prop in (('grove', 'pine'), ('rock', 'rock_snow')):
+            bag = [v[0] for v in table[prop] for _ in range(int(v[1]))]
             cells = self.S(kind) & ~ndimage.binary_dilation(self.S('ravine'), iterations=1, structure=np.ones((3, 3)))
             for cy, cx in sorted(zip(*np.nonzero(cells))):
                 if (cx, cy) in skip:
                     continue
                 fx, fy = cx * TS + TS // 2, cy * TS + TS // 2 + int(TS * 0.32)
-                # Cool shadow pooled to the lower right, under the sprite's own base.
                 sh = ((xx - fx - 10) / (22.0 if kind == 'grove' else 16.0)) ** 2 + ((yy - fy + 4) / 7.0) ** 2 <= 1
-                E.shade(self.img, sh, 0.84)
-                sprite = props[:, sx:sx + 96]
-                if r.random() < 0.5:
+                E.shade(self.img, sh, 0.88)
+                col = bag[(cx * 2654435761 ^ cy * 40503) % len(bag)]
+                sprite = props[:, col * 96:(col + 1) * 96]
+                if (cx * 7 + cy * 3) % 2:
                     sprite = sprite[:, ::-1]
                 self._paste(sprite, fx - 48, fy - 84)
 
@@ -478,8 +608,16 @@ class Painter:
     def massif(self):
         """Mountain mass above every walkable level: the regional cliff-top tiles."""
         m = up(self.S('cliff') & (self.height >= 3))
-        if m.any():
-            self.regional('cliff', m)
+        if not m.any():
+            return
+        self.regional('cliff', m)
+        # Large forms: ridges and gullies hill-shaded from the upper left, snowfields on
+        # the gentler high ground, so the mass never reads as a textured rectangle.
+        r = self.rng
+        hf = E.fbm(r, self.h, self.w, [260, 110, 45], [0.55, 0.3, 0.15])
+        gy, gx = np.gradient(ndimage.gaussian_filter(hf, 6))
+        light = np.clip(1.0 - (gx + gy) * 200, 0.75, 1.2)
+        self.img[m] = (self.img * light[..., None])[m]
 
     def decals(self, items):
         """Small authored stories on open ground: no collision implied."""
@@ -502,6 +640,10 @@ class Painter:
                     self.img[y0, x0:x0 + ln] = E.SNOW[5]
                     self.img[y0 + 4, x0:x0 + ln] = E.WOOD[0]
                     self.img[y0:y0 + 5, x0 + ln - 2:x0 + ln] = E.WOOD[4]
+            elif kind == 'cairn':
+                # A road cairn: stacked stones marking the way through the wind.
+                for k, (rx, ry) in enumerate(((7, 4.5), (6, 4), (4.5, 3.4), (3, 2.6))):
+                    E.stamp_stone(self.img, fx + (k % 2) - 0.5, fy + 8 - k * 6, rx, ry, E.ROCK[2:6], r, snow_cap=k == 3)
             elif kind == 'mast':
                 # The relay's signal mast, snapped: stump, splintered top, fallen arm.
                 bx = fx - 4
@@ -530,6 +672,7 @@ class Painter:
         self.stairs()
         self.ledge()
         self.outpost()
+        self.structures()
         self.decals(decals)
         self.vegetation(skip={c for _, c in decals})
         rgb = np.clip(self.img, 0, 255).astype(np.uint8)
@@ -537,18 +680,29 @@ class Painter:
         return np.dstack([rgb, alpha])
 
 
+# Authored stories per area: the relay's cutthroat fire and snapped mast; the
+# Windcut road's cairns at the defile and the kiln-keepers' cold hearth.
+DECALS = {'reference': [('firepit', (2, 8)), ('mast', (37, 7))],
+          'windcut': [('cairn', (45, 22)), ('cairn', (58, 22)), ('firepit', (8, 31))]}
+
+
 def main():
     layout = json.loads(LAYOUT.read_text(encoding='utf-8'))
-    area = layout['reference_area']
     key = '%s_v%d' % (layout['id'].split('/')[-1], int(layout['version']))
-    seed = int(hashlib.sha256(key.encode()).hexdigest()[:8], 16)
-    # Authored stories: the cutthroats' roadside fire, the relay's snapped mast.
-    out = Painter(area, seed).paint(decals=[('firepit', (2, 8)), ('mast', (37, 7))])
-    path = OUT_DIR / ('%s_ground.png' % key)
-    Image.fromarray(out, 'RGBA').save(path, optimize=True)
-    print('Composed', path.relative_to(ROOT), out.shape[1], 'x', out.shape[0])
-    if '--preview' in sys.argv:
-        Image.fromarray(out[..., :3]).save(sys.argv[sys.argv.index('--preview') + 1])
+    areas = [('', layout['reference_area'], DECALS['reference'])]
+    areas += [('_' + a['id'], a, DECALS.get(a['id'], [])) for a in layout.get('composed_areas', [])]
+    for suffix, area, decals in areas:
+        seed = int(hashlib.sha256((key + suffix).encode()).hexdigest()[:8], 16)
+        painter = Painter(area, seed)
+        out = painter.paint(decals=decals)
+        path = OUT_DIR / ('%s%s_ground.png' % (key, suffix))
+        Image.fromarray(out, 'RGBA').save(path, optimize=True)
+        roof = painter.roofs()
+        Image.fromarray(roof, 'RGBA').save(OUT_DIR / ('%s%s_roof.png' % (key, suffix)), optimize=True)
+        print('Composed', path.relative_to(ROOT), out.shape[1], 'x', out.shape[0])
+        if '--preview' in sys.argv:
+            a = roof[..., 3:4] / 255.0
+            Image.fromarray((out[..., :3] * (1 - a) + roof[..., :3] * a).astype(np.uint8)).save(sys.argv[sys.argv.index('--preview') + 1].replace('.png', suffix + '.png'))
 
 
 if __name__ == '__main__':

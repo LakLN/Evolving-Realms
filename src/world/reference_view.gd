@@ -3,8 +3,10 @@ extends Node2D
 ## objects and fog. Geometry comes from the same plan used by collision/navigation.
 var view: Node2D
 var materials: Texture2D
-var composed: Texture2D
-var composed_key := ""
+var composed := {} # resource path -> Texture2D or null (missing)
+## Roof mode: draws each area's roof layer above actors instead of its ground.
+var roofs := false
+const TerrainAtlas = preload("res://src/world/terrain_atlas.gd")
 const SNOW := Color("dce7e5")
 const SHADOW := Color("bdcdd0")
 const STONE := Color("64747e")
@@ -17,23 +19,32 @@ func _material(rect: Rect2, index: int, tile: Vector2i) -> void:
 	if index == 1: uv = Vector2(180+posmod(tile.x,3)*30,20+posmod(tile.y,3)*30)
 	draw_texture_rect_region(materials,rect,Rect2(uv,Vector2(40,40)))
 
+static func under_roof(land: Dictionary, tile: Vector2i) -> bool:
+	## The hero is inside a composed building or tucked behind its roofline.
+	if TerrainAtlas.patches(land).is_empty(): return false
+	for shelter in land.get("geography", {}).get("shelters", []):
+		var r: Dictionary = shelter.rect
+		if Rect2i(int(r.x) - 1, int(r.y) - 2, int(r.w) + 2, int(r.h) + 1).has_point(tile): return true
+	return false
+
 func _draw() -> void:
 	if view == null or view.session == null: return
 	var terrain: RefCounted = view.session.terrain
 	var land: Dictionary = terrain.land_at(view.session.position) if terrain.has_method("land_at") else {}
-	if not land.has("spatial"): return
+	if TerrainAtlas.patches(land).is_empty(): return
 	if materials == null and ResourceLoader.exists("res://assets/game/snow/reference/materials.png"): materials=load("res://assets/game/snow/reference/materials.png")
+	var px: int = view.px
+	# A composed painting of exactly this layout version (and area) replaces the cell sketch.
+	var sketch := false
+	for patch in TerrainAtlas.patches(land):
+		var key := "res://assets/game/snow/reference/%s_v%d%s_%s.png" % [str(land.get("layout", {}).get("id", "")).get_file(), int(land.get("layout", {}).get("version", 0)), "_" + str(patch.id) if patch.has("id") else "", "roof" if roofs else "ground"]
+		if not composed.has(key): composed[key] = load(key) if ResourceLoader.exists(key) else null
+		if composed[key] != null and px == 40:
+			draw_texture(composed[key], view._point(Vector2i(int(patch.origin.x), int(patch.origin.y))) - Vector2.ONE * px / 2)
+		elif not patch.has("id"): sketch = true
+	if not sketch or roofs: return
 	var plan: Dictionary = land.spatial
 	var origin := Vector2i(int(plan.origin.x), int(plan.origin.y))
-	var px: int = view.px
-	# A composed painting of exactly this layout version replaces the cell sketch.
-	var key := "res://assets/game/snow/reference/%s_v%d_ground.png" % [str(land.get("layout", {}).get("id", "")).get_file(), int(land.get("layout", {}).get("version", 0))]
-	if composed_key != key:
-		composed_key = key
-		composed = load(key) if ResourceLoader.exists(key) else null
-	if composed != null and px == 40:
-		draw_texture(composed, view._point(origin) - Vector2.ONE * px / 2)
-		return
 	var size := Vector2i(int(plan.size.x), int(plan.size.y))
 	for y in size.y:
 		for x in size.x:

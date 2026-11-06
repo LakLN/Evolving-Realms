@@ -155,10 +155,33 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 			if str(shelter.shelter_id).ends_with("/relay_outpost"):
 				shelter.rect = {"x": anchor.x - 6, "y": anchor.y - 10, "w": 10, "h": 7}
 				shelter.doors = [_xy(anchor + Vector2i(-2, -4)), _xy(anchor + Vector2i(3, -7))]
+	# Layout v10: further composed areas, each anchored to a layout point, optionally
+	# owning one shelter whose rect/doors are authored in the area's own cells.
+	for area in layout.get("composed_areas", []):
+		var anchor: Vector2i = to_tile.call(area.anchor)
+		var patch := {"version": int(area.version), "id": str(area.id), "size": area.size.duplicate(), "zones": area.zones.duplicate(true), "transitions": area.transitions.duplicate(true)}
+		var area_origin: Vector2i = anchor - Vector2i(int(area.offset[0]), int(area.offset[1]))
+		patch.origin = _xy(area_origin)
+		if not plan.has("spatial_areas"): plan.spatial_areas = []
+		plan.spatial_areas.append(patch)
+		if area.has("shelter"):
+			for shelter in geo.shelters:
+				if str(shelter.shelter_id).ends_with("/" + str(area.shelter.id)):
+					var cells: Array = area.shelter.rect
+					shelter.rect = {"x": area_origin.x + int(cells[0]), "y": area_origin.y + int(cells[1]), "w": int(cells[2]), "h": int(cells[3])}
+					shelter.doors = area.shelter.doors.map(func(d: Array) -> Dictionary: return _xy(area_origin + Vector2i(int(d[0]), int(d[1]))))
 	if not _place_sites(designer, plan, layout, to_tile):
 		return {}
 	if not _place_creatures(designer, plan, layout, to_tile): return {}
 	return plan
+
+static func _patch_origin(plan: Dictionary, patch_id: String) -> Vector2i:
+	## Origin of a composed area: "" is the reference patch, otherwise a v10 area id.
+	if patch_id.is_empty():
+		return Vector2i(int(plan.spatial.origin.x), int(plan.spatial.origin.y)) if plan.has("spatial") else Vector2i(2147483647, 0)
+	for patch in plan.get("spatial_areas", []):
+		if str(patch.get("id", "")) == patch_id: return Vector2i(int(patch.origin.x), int(patch.origin.y))
+	return Vector2i(2147483647, 0)
 
 func _place_creatures(designer: RefCounted, plan: Dictionary, layout: Dictionary, to_tile: Callable) -> bool:
 	if not layout.has("creature_homes"): return true
@@ -168,7 +191,8 @@ func _place_creatures(designer: RefCounted, plan: Dictionary, layout: Dictionary
 	for site in plan.sites: taken[Vector2i(int(site.position.x), int(site.position.y))] = true
 	plan.creature_homes = []
 	for home in layout.creature_homes:
-		var tile: Vector2i = designer._snap(terrain, to_tile.call(home.at), Vector2i(int(plan.slot.x), int(plan.slot.y)), taken)
+		var target: Vector2i = to_tile.call(home.at) if home.has("at") else _patch_origin(plan, str(home.get("patch", ""))) + Vector2i(int(home.spatial[0]), int(home.spatial[1]))
+		var tile: Vector2i = designer._snap(terrain, target, Vector2i(int(plan.slot.x), int(plan.slot.y)), taken)
 		if tile == Vector2i(2147483647, 0): return false
 		taken[tile] = true
 		var meta := {"authored_creature_version": 1, "land_id": plan.land_id}
@@ -194,8 +218,8 @@ func _place_sites(designer: RefCounted, plan: Dictionary, layout: Dictionary, to
 	var taken := {}
 	for site in layout.get("sites", []):
 		var target := Vector2i.ZERO
-		if site.has("spatial") and plan.has("spatial"):
-			target = Vector2i(int(plan.spatial.origin.x),int(plan.spatial.origin.y))+Vector2i(int(site.spatial[0]),int(site.spatial[1]))
+		if site.has("spatial") and _patch_origin(plan, str(site.get("patch", ""))) != Vector2i(2147483647, 0):
+			target = _patch_origin(plan, str(site.get("patch", "")))+Vector2i(int(site.spatial[0]),int(site.spatial[1]))
 		elif site.has("shelter"):
 			for shelter in plan.geography.shelters:
 				if str(shelter.shelter_id).ends_with("/" + str(site.shelter)):

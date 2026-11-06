@@ -1,9 +1,9 @@
 {
   "layout_version": 1,
   "id": "landpkg:snow_mountain/reference",
-  "version": 9,
+  "version": 10,
   "archetype": "frost_highlands",
-  "notes": "Reference terrain v3 / atlas plan v3 / layout v9. Broken Relay is composed with discrete height levels and authored connectors; v9 reshapes the v8 geometry around unchanged anchors and joins the north and south roads. Old v4-v8 plans and terrain v1/v2 are never changed. Geometry source: tools/relay_layout_v9.py.",
+  "notes": "Reference terrain v3 / atlas plan v3 / layout v10. Broken Relay and Windcut Stair are composed areas with discrete height levels and authored connectors (Windcut as composed_areas[windcut]). Old v4-v9 plans and terrain v1/v2 are never changed. Geometry source: tools/snow_composed_layout.py.",
   "radius": 184,
   "coast": {
     "min": 1.02,
@@ -870,7 +870,12 @@
         -0.52
       ],
       "area": "windcut_stair",
-      "reason": "ember-stones beside a neutral drake; frost linen makes it safe"
+      "reason": "ember-stones beside a neutral drake; frost linen makes it safe",
+      "spatial": [
+        26,
+        7
+      ],
+      "patch": "windcut"
     },
     {
       "id": "singing_ice",
@@ -950,7 +955,12 @@
         -0.585
       ],
       "area": "windcut_stair",
-      "reason": "storm rime that forms only in a blizzard"
+      "reason": "storm rime that forms only in a blizzard",
+      "spatial": [
+        38,
+        35
+      ],
+      "patch": "windcut"
     },
     {
       "id": "choir_hollow",
@@ -1022,26 +1032,29 @@
     {
       "id": "stair_0",
       "content_id": "snow:relay_slinger",
-      "at": [
-        0.46,
-        -0.49
-      ]
+      "spatial": [
+        21,
+        19
+      ],
+      "patch": "windcut"
     },
     {
       "id": "stair_1",
       "content_id": "snow:relay_slinger",
-      "at": [
-        0.477,
-        -0.49
-      ]
+      "spatial": [
+        21,
+        22
+      ],
+      "patch": "windcut"
     },
     {
       "id": "nest_drake",
       "content_id": "snow:ashmaw",
-      "at": [
-        0.42,
-        -0.537
-      ]
+      "spatial": [
+        23,
+        7
+      ],
+      "patch": "windcut"
     },
     {
       "id": "choir_0",
@@ -2202,12 +2215,23 @@
         "rect": [
           11,
           11,
-          7,
+          5,
           1
         ],
         "height": 1,
         "surface": "snowfield",
         "style": "terrace"
+      },
+      {
+        "rect": [
+          16,
+          11,
+          2,
+          1
+        ],
+        "height": 1,
+        "surface": "timber",
+        "style": "shed"
       },
       {
         "rect": [
@@ -2334,12 +2358,23 @@
         "rect": [
           14,
           12,
-          4,
+          2,
           1
         ],
         "height": 1,
         "surface": "snowfield",
         "style": "terrace"
+      },
+      {
+        "rect": [
+          16,
+          12,
+          2,
+          1
+        ],
+        "height": 1,
+        "surface": "timber",
+        "style": "shed"
       },
       {
         "rect": [
@@ -2466,12 +2501,23 @@
         "rect": [
           12,
           13,
-          6,
+          4,
           1
         ],
         "height": 1,
         "surface": "snowfield",
         "style": "terrace"
+      },
+      {
+        "rect": [
+          16,
+          13,
+          2,
+          1
+        ],
+        "height": 1,
+        "surface": "timber",
+        "style": "shed"
       },
       {
         "rect": [
@@ -2565,12 +2611,23 @@
         "rect": [
           12,
           14,
-          6,
+          4,
           1
         ],
         "height": 1,
         "surface": "snowfield",
         "style": "terrace"
+      },
+      {
+        "rect": [
+          16,
+          14,
+          2,
+          1
+        ],
+        "height": 1,
+        "surface": "timber",
+        "style": "shed"
       },
       {
         "rect": [
@@ -2752,7 +2809,18 @@
         "rect": [
           28,
           15,
-          6,
+          2,
+          1
+        ],
+        "height": 1,
+        "surface": "timber",
+        "style": "woodpile"
+      },
+      {
+        "rect": [
+          30,
+          15,
+          4,
           1
         ],
         "height": 1,
@@ -3405,8 +3473,8 @@
           1
         ],
         "height": 1,
-        "surface": "snowfield",
-        "style": "terrace"
+        "surface": "timber",
+        "style": "palisade"
       },
       {
         "rect": [
@@ -3427,8 +3495,8 @@
           1
         ],
         "height": 1,
-        "surface": "snowfield",
-        "style": "terrace"
+        "surface": "timber",
+        "style": "palisade"
       },
       {
         "rect": [
@@ -3449,8 +3517,8 @@
           1
         ],
         "height": 1,
-        "surface": "snowfield",
-        "style": "terrace"
+        "surface": "timber",
+        "style": "palisade"
       },
       {
         "rect": [
@@ -3471,8 +3539,8 @@
           1
         ],
         "height": 1,
-        "surface": "snowfield",
-        "style": "terrace"
+        "surface": "timber",
+        "style": "palisade"
       },
       {
         "rect": [
@@ -4716,5 +4784,2357 @@
         "one_way": true
       }
     ]
-  }
+  },
+  "composed_areas": [
+    {
+      "id": "windcut",
+      "version": 1,
+      "anchor": [
+        0.52,
+        -0.54
+      ],
+      "offset": [
+        30,
+        30
+      ],
+      "size": {
+        "x": 64,
+        "y": 44
+      },
+      "zones": [
+        {
+          "rect": [
+            0,
+            0,
+            64,
+            44
+          ],
+          "height": 0,
+          "surface": "snowfield",
+          "style": "snow"
+        },
+        {
+          "rect": [
+            4,
+            0,
+            6,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            18,
+            0,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            6,
+            1,
+            4,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            18,
+            1,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            18,
+            2,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            9,
+            3,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            12,
+            3,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            18,
+            3,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            35,
+            3,
+            2,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            10,
+            4,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            18,
+            4,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            29,
+            4,
+            18,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            18,
+            5,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            5,
+            7,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            28,
+            5,
+            26,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            18,
+            6,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            6,
+            1,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            22,
+            6,
+            6,
+            1
+          ],
+          "height": 2,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            28,
+            6,
+            30,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            18,
+            7,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            7,
+            1,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            22,
+            7,
+            6,
+            1
+          ],
+          "height": 2,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            28,
+            7,
+            32,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            14,
+            8,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            18,
+            8,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            8,
+            1,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            22,
+            8,
+            7,
+            1
+          ],
+          "height": 2,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            29,
+            8,
+            34,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            10,
+            9,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            18,
+            9,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            9,
+            1,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            22,
+            9,
+            2,
+            1
+          ],
+          "height": 2,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            24,
+            9,
+            2,
+            1
+          ],
+          "height": 2,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            26,
+            9,
+            3,
+            1
+          ],
+          "height": 2,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            29,
+            9,
+            35,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            12,
+            10,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            17,
+            10,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            10,
+            1,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            22,
+            10,
+            2,
+            1
+          ],
+          "height": 2,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            24,
+            10,
+            2,
+            1
+          ],
+          "height": 2,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            26,
+            10,
+            3,
+            1
+          ],
+          "height": 2,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            29,
+            10,
+            35,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            15,
+            11,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            17,
+            11,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            11,
+            3,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            24,
+            11,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            26,
+            11,
+            3,
+            1
+          ],
+          "height": 2,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            29,
+            11,
+            35,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            11,
+            12,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            17,
+            12,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            20,
+            12,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            21,
+            12,
+            3,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            24,
+            12,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            26,
+            12,
+            14,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            40,
+            12,
+            24,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            17,
+            13,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            19,
+            13,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            20,
+            13,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            21,
+            13,
+            19,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            40,
+            13,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            41,
+            13,
+            3,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            44,
+            13,
+            19,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            13,
+            14,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            17,
+            14,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            20,
+            14,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            21,
+            14,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            22,
+            14,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            23,
+            14,
+            21,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            44,
+            14,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            46,
+            14,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            9,
+            15,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            17,
+            15,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            20,
+            15,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            21,
+            15,
+            9,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            30,
+            15,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            32,
+            15,
+            10,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            42,
+            15,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "ledge"
+        },
+        {
+          "rect": [
+            44,
+            15,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            46,
+            15,
+            8,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            56,
+            15,
+            5,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            17,
+            16,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            20,
+            16,
+            4,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            24,
+            16,
+            6,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            30,
+            16,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            32,
+            16,
+            9,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            41,
+            16,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            42,
+            16,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "ledge"
+        },
+        {
+          "rect": [
+            44,
+            16,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            48,
+            16,
+            3,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            59,
+            16,
+            2,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            12,
+            17,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            17,
+            17,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            21,
+            17,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            24,
+            17,
+            6,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            30,
+            17,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            32,
+            17,
+            9,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            42,
+            17,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            47,
+            17,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            49,
+            17,
+            1,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            51,
+            17,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            56,
+            17,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            60,
+            17,
+            1,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            17,
+            18,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            30,
+            18,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            42,
+            18,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            45,
+            18,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            18,
+            19,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            29,
+            19,
+            12,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            57,
+            19,
+            4,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            17,
+            20,
+            30,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            52,
+            20,
+            12,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            0,
+            21,
+            4,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            12,
+            21,
+            17,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            36,
+            21,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            41,
+            21,
+            16,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            61,
+            21,
+            3,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            0,
+            22,
+            17,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            26,
+            22,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            36,
+            22,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            47,
+            22,
+            5,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            4,
+            23,
+            8,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            27,
+            23,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            36,
+            23,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            28,
+            24,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            36,
+            24,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            47,
+            24,
+            6,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            53,
+            24,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            58,
+            24,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            28,
+            25,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            36,
+            25,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            46,
+            25,
+            8,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            28,
+            26,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "timber",
+          "style": "timber"
+        },
+        {
+          "rect": [
+            29,
+            26,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "floor",
+          "style": "floor"
+        },
+        {
+          "rect": [
+            30,
+            26,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "timber",
+          "style": "timber"
+        },
+        {
+          "rect": [
+            36,
+            26,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            42,
+            26,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            46,
+            26,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            4,
+            27,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            8,
+            27,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            28,
+            27,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "timber",
+          "style": "timber"
+        },
+        {
+          "rect": [
+            29,
+            27,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "floor",
+          "style": "floor"
+        },
+        {
+          "rect": [
+            31,
+            27,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "timber",
+          "style": "timber"
+        },
+        {
+          "rect": [
+            36,
+            27,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            40,
+            27,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            46,
+            27,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            9,
+            28,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            28,
+            28,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "timber",
+          "style": "timber"
+        },
+        {
+          "rect": [
+            29,
+            28,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "floor",
+          "style": "floor"
+        },
+        {
+          "rect": [
+            31,
+            28,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "timber",
+          "style": "timber"
+        },
+        {
+          "rect": [
+            36,
+            28,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            46,
+            28,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            2,
+            29,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            28,
+            29,
+            4,
+            1
+          ],
+          "height": 0,
+          "surface": "timber",
+          "style": "timber"
+        },
+        {
+          "rect": [
+            35,
+            29,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            46,
+            29,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            35,
+            30,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            44,
+            30,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            46,
+            30,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            35,
+            31,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "trail"
+        },
+        {
+          "rect": [
+            45,
+            31,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            46,
+            31,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            35,
+            32,
+            2,
+            1
+          ],
+          "height": 0,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            46,
+            32,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            9,
+            33,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            32,
+            33,
+            3,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            35,
+            33,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            37,
+            33,
+            4,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            46,
+            33,
+            15,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            63,
+            33,
+            1,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            5,
+            34,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "rock",
+          "style": "rock"
+        },
+        {
+          "rect": [
+            11,
+            34,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            32,
+            34,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            33,
+            34,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            35,
+            34,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "trail",
+          "style": "stairs"
+        },
+        {
+          "rect": [
+            37,
+            34,
+            3,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            40,
+            34,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            59,
+            34,
+            5,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            15,
+            35,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            32,
+            35,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            33,
+            35,
+            7,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            40,
+            35,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            56,
+            35,
+            8,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            13,
+            36,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            32,
+            36,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            33,
+            36,
+            7,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            40,
+            36,
+            1,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            46,
+            36,
+            18,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            32,
+            37,
+            7,
+            1
+          ],
+          "height": 1,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            39,
+            37,
+            2,
+            1
+          ],
+          "height": 1,
+          "surface": "snowfield",
+          "style": "terrace"
+        },
+        {
+          "rect": [
+            41,
+            37,
+            23,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            12,
+            38,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            22,
+            38,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            39,
+            38,
+            25,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            3,
+            39,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            36,
+            39,
+            27,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            25,
+            40,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            31,
+            40,
+            29,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            6,
+            41,
+            1,
+            1
+          ],
+          "height": 0,
+          "surface": "pine",
+          "style": "grove"
+        },
+        {
+          "rect": [
+            19,
+            41,
+            2,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            24,
+            41,
+            31,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            13,
+            42,
+            39,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        },
+        {
+          "rect": [
+            8,
+            43,
+            42,
+            1
+          ],
+          "height": 3,
+          "surface": "cliff",
+          "style": "cliff"
+        }
+      ],
+      "transitions": [
+        {
+          "a": [
+            30,
+            16
+          ],
+          "b": [
+            30,
+            17
+          ]
+        },
+        {
+          "a": [
+            31,
+            16
+          ],
+          "b": [
+            31,
+            17
+          ]
+        },
+        {
+          "a": [
+            24,
+            10
+          ],
+          "b": [
+            24,
+            11
+          ]
+        },
+        {
+          "a": [
+            25,
+            10
+          ],
+          "b": [
+            25,
+            11
+          ]
+        },
+        {
+          "a": [
+            35,
+            32
+          ],
+          "b": [
+            35,
+            33
+          ]
+        },
+        {
+          "a": [
+            36,
+            32
+          ],
+          "b": [
+            36,
+            33
+          ]
+        },
+        {
+          "a": [
+            42,
+            16
+          ],
+          "b": [
+            42,
+            17
+          ],
+          "one_way": true
+        },
+        {
+          "a": [
+            43,
+            16
+          ],
+          "b": [
+            43,
+            17
+          ],
+          "one_way": true
+        }
+      ],
+      "shelter": {
+        "id": "stair_hut",
+        "rect": [
+          28,
+          26,
+          4,
+          4
+        ],
+        "doors": [
+          [
+            29,
+            26
+          ]
+        ]
+      }
+    }
+  ]
 }

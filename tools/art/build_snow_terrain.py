@@ -15,6 +15,7 @@ from PIL import Image
 from scipy import ndimage
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import snow_env as E
+import snow_flora as F
 from snow_env import TS
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -194,7 +195,20 @@ def main():
             atlas[row * TS:(row + 1) * TS, col * TS:(col + 1) * TS, :3] = np.clip(tile, 0, 255).astype(np.uint8)
             atlas[row * TS:(row + 1) * TS, col * TS:(col + 1) * TS, 3] = 255
             index['ground']['kinds'][kind].append([col, row, weight])
+    # Flora and boulders: the accepted S1 pine and rock stay in the mix as variants.
+    s1 = np.asarray(Image.open(ROOT / 'assets/game/snow/props.png').convert('RGBA'), np.float32)
+    cells, pine, rocks = [s1[:, :96]], [[0, 5]], []
+    for name, draw, weight in F.TREES:
+        cells.append(draw(np.random.default_rng(int(hashlib.sha256(('tree/' + name).encode()).hexdigest()[:8], 16))))
+        pine.append([len(cells) - 1, weight])
+    cells.append(s1[:, 96:192])
+    rocks.append([len(cells) - 1, 3])
+    for name, weight in F.ROCKS:
+        cells.append(F.boulder(np.random.default_rng(int(hashlib.sha256(('rock/' + name).encode()).hexdigest()[:8], 16)), name))
+        rocks.append([len(cells) - 1, weight])
+    index['props'] = {'atlas': 'snow/terrain/props.png', 'cell': F.CELL, 'pine': pine, 'rock_snow': rocks}
     OUT.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(np.clip(np.concatenate(cells, 1), 0, 255).astype(np.uint8), 'RGBA').save(OUT / 'props.png', optimize=True)
     Image.fromarray(atlas, 'RGBA').save(OUT / 'ground.png', optimize=True)
     Image.fromarray(macro(), 'RGB').save(OUT / 'macro.png', optimize=True)
     (ROOT / 'assets/game/snow/snow_terrain_index.json').write_text(json.dumps(index, indent=1) + '\n', encoding='utf-8')

@@ -41,7 +41,7 @@ func _run() -> void:
 	var s: RefCounted = next.session
 	var plan: Dictionary = next.plan
 	var origin := Vector2i(int(plan.spatial.origin.x),int(plan.spatial.origin.y))
-	check(int(plan.terrain_version)==3 and int(plan.atlas_version)==3 and int(plan.layout.version)==9, "Reference has explicit new terrain/plan/layout versions")
+	check(int(plan.terrain_version)==3 and int(plan.atlas_version)==3 and int(plan.layout.version)==10, "Reference has explicit new terrain/plan/layout versions")
 	check(old_plan.get("spatial",{}).is_empty() and old_session.terrain.elevation(anchor)==0, "Older world retains flat geometry")
 	app._enter_map(s)
 	_go(s, origin+Vector2i(15,22))
@@ -78,7 +78,41 @@ func _run() -> void:
 	check(report.reached_set.has(origin+Vector2i(34,6)) and report.shelters.values().all(func(v: bool) -> bool:return v), "Height-aware navigation reaches lookout and every shelter door")
 	var locker: Dictionary = plan.sites.filter(func(site: Dictionary) -> bool:return str(site.instance_id).ends_with("/relay_locker"))[0]
 	check(report.reached_set.has(Vector2i(int(locker.position.x),int(locker.position.y))), "The existing relay discovery remains reachable")
+	# Windcut Stair (v10 composed area): ledges above a ground-level road.
+	var areas: Array = plan.get("spatial_areas", [])
+	if check(areas.size() == 1 and str(areas[0].id) == "windcut", "Layout v10 adds the Windcut Stair composed area"):
+		var wc := Vector2i(int(areas[0].origin.x), int(areas[0].origin.y))
+		_go(s, wc+Vector2i(30,18))
+		s.roster.creatures.clear()
+		check(s.try_move(Vector2i.UP) and s.try_move(Vector2i.UP) and s.terrain.elevation(s.position)==1, "Real moves climb the carved stair to the north shelf")
+		_go(s, wc+Vector2i(24,12))
+		s.roster.creatures.clear()
+		check(s.try_move(Vector2i.UP) and s.try_move(Vector2i.UP) and s.terrain.elevation(s.position)==2, "The eyrie stair reaches the high shelf")
+		_go(s, wc+Vector2i(42,17))
+		s.roster.creatures.clear()
+		before = s.run.state.duplicate(true)
+		check(not s.try_move(Vector2i.UP) and Same.same(before, s.run.state), "The shelf drop cannot be climbed; refusal spends nothing")
+		_go(s, wc+Vector2i(42,16))
+		s.roster.creatures.clear()
+		check(s.try_move(Vector2i.DOWN) and s.terrain.elevation(s.position)==0, "Real action drops from the shelf to the road")
+		var climber := {"instance_id":"windcut:edge", "position":wc+Vector2i(42,17), "home":wc+Vector2i(42,17), "dead":false, "definition":{"payload":{"movement":{"leash":20}}}}
+		s.position = wc+Vector2i(30,22)
+		check(not s.roster._can_enter(s, climber, wc+Vector2i(42,16)) and s.roster._can_enter(s, climber, wc+Vector2i(42,18)), "Creatures cannot climb the shelf drop either")
+		var hits := {}
+		for site in plan.sites:
+			for name in ["/ashmaw_nest", "/rime_ledge", "/old_kiln"]:
+				if str(site.instance_id).ends_with(name): hits[name] = report.reached_set.has(Vector2i(int(site.position.x), int(site.position.y)))
+		check(hits.size() == 3 and hits.values().all(func(v: bool) -> bool: return v), "Windcut nest, rime ledge and kiln sites are reachable: %s" % str(hits))
+		var drake: Array = plan.creature_homes.filter(func(h: Dictionary) -> bool: return str(h.instance_id).ends_with("/nest_drake"))
+		check(drake.size() == 1 and s.terrain.elevation(Vector2i(int(drake[0].position.x), int(drake[0].position.y))) == 2, "The ashmaw keeps the high eyrie")
+		_go(s, wc+Vector2i(46,20))
+		s.roster.creatures.clear()
+		await _capture("reference-windcut-defile.png")
+		_go(s, wc+Vector2i(30,15))
+		s.roster.creatures.clear()
+		await _capture("reference-windcut-shelf.png")
 	_go(s,origin+Vector2i(22,17))
+	s.roster.creatures.clear() # Comparable view: nothing carried over from Windcut.
 	await _capture("reference-after.png")
 	_go(s,origin+Vector2i(26,32))
 	await _capture("reference-bridge.png")

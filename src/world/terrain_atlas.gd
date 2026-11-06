@@ -29,6 +29,7 @@ var _plans: Dictionary = {} # land_id -> stored plan
 var _sites: Dictionary = {} # Vector2i chunk -> [site instances]
 var _spatial_cells: Dictionary = {} # Derived once from the immutable authored patch.
 var _spatial_seams: Dictionary = {} # Patch border ring (presentation feathering only).
+var _patch_of: Dictionary = {} # tile -> the composed area (spatial plan) containing it.
 const SEAM := 3
 var _creature_homes: Dictionary = {} # Authored plan-v2 layer; v1 homes stay separate.
 var _bytes: Dictionary = {} # chunk -> tiles
@@ -48,13 +49,15 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 	_creature_homes.clear()
 	_spatial_cells.clear()
 	_spatial_seams.clear()
+	_patch_of.clear()
 	_bytes.clear()
 	_zones.clear()
 	_order.clear()
 	for plan in plans:
-		if plan.has("spatial") and not Spatial.validate(plan.spatial).is_empty():
-			last_error = Spatial.validate(plan.spatial)
-			return false
+		for patch in patches(plan):
+			if not Spatial.validate(patch).is_empty():
+				last_error = Spatial.validate(patch)
+				return false
 		if not int(plan.get("terrain_version", 0)) in TERRAIN_VERSIONS or (int(plan.terrain_version) >= LAYOUT_TERRAIN_VERSION) != plan.has("geography") or (int(plan.terrain_version) == 3 and (not plan.has("spatial") or int(plan.spatial.get("version", 0)) != 1)):
 			last_error = "Unsupported atlas terrain version in %s; World was not changed" % str(plan.get("land_id", "?"))
 			return false
@@ -64,13 +67,17 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 			return false
 		_lands[slot] = Layout.compile(plan, compile_kind) if int(plan.terrain_version) >= LAYOUT_TERRAIN_VERSION else _compile(plan)
 		_plans[plan.land_id] = plan
-		if plan.has("spatial"):
-			var so := Vector2i(int(plan.spatial.origin.x), int(plan.spatial.origin.y))
-			for sy in int(plan.spatial.size.y):
-				for sx in int(plan.spatial.size.x):
+		for patch in patches(plan):
+			var so := Vector2i(int(patch.origin.x), int(patch.origin.y))
+			for sy in int(patch.size.y):
+				for sx in int(patch.size.x):
 					var tile := so + Vector2i(sx, sy)
-					_spatial_cells[tile] = Spatial.cell(plan.spatial, tile)
-					if mini(mini(sx, sy), mini(int(plan.spatial.size.x) - 1 - sx, int(plan.spatial.size.y) - 1 - sy)) < SEAM:
+					if _spatial_cells.has(tile):
+						last_error = "Composed areas overlap at %s" % str(tile)
+						return false
+					_spatial_cells[tile] = Spatial.cell(patch, tile)
+					_patch_of[tile] = patch
+					if mini(mini(sx, sy), mini(int(patch.size.x) - 1 - sx, int(patch.size.y) - 1 - sy)) < SEAM:
 						_spatial_seams[tile] = true
 		for site in plan.get("sites", []):
 			var chunk := TerrainV1.chunk_of(Vector2i(int(site.position.x), int(site.position.y)))
@@ -82,6 +89,10 @@ func configure_atlas(seed_value: int, plans: Array) -> bool:
 			_creature_homes[chunk].append(home)
 	last_error = ""
 	return true
+
+static func patches(plan: Dictionary) -> Array:
+	## Composed areas of a plan: the reference patch, then any further composed areas.
+	return ([plan.spatial] if plan.has("spatial") else []) + plan.get("spatial_areas", [])
 
 func creature_homes(chunk: Vector2i) -> Array:
 	return _creature_homes.get(chunk, []).duplicate(true)
@@ -118,14 +129,12 @@ func can_step(from: Vector2i, to: Vector2i) -> bool:
 		var y := from + Vector2i(0, delta.y)
 		return can_step(from, x) and can_step(x, to) and can_step(from, y) and can_step(y, to)
 	if elevation(from) == elevation(to): return true
-	var land: Dictionary = land_at(from)
-	return land.has("spatial") and Spatial.connector(land.spatial, from, to)
+	return _patch_of.has(from) and Spatial.connector(_patch_of[from], from, to)
 
 func can_reach(from: Vector2i, to: Vector2i) -> bool:
 	if elevation(from) == elevation(to): return true
 	if absi(from.x-to.x) + absi(from.y-to.y) != 1: return false
-	var land: Dictionary = land_at(from)
-	return land.has("spatial") and Spatial.connector(land.spatial, from, to, false)
+	return _patch_of.has(from) and Spatial.connector(_patch_of[from], from, to, false)
 
 func configure(_seed_value: int, _generation_version: int) -> bool:
 	last_error = "Atlas terrain needs its land plans (configure_atlas)"
@@ -249,7 +258,7 @@ func _chunk_bytes(chunk: Vector2i) -> PackedByteArray:
 		tiles.fill(Surfaces.VEIL)
 	elif land.has("version"):
 		Layout.build(self, land, origin, tiles, zones)
-		if land.plan.has("spatial"):
+		if not patches(land.plan).is_empty():
 			for i in tiles.size():
 				var c: Dictionary = spatial_cell(origin + Vector2i(i % CHUNK_SIZE, i / CHUNK_SIZE))
 				if not c.is_empty(): tiles[i] = int(c.surface)
