@@ -39,6 +39,7 @@ static func enabled(blueprint: Dictionary) -> bool:
 
 static func supported_plan(plan: Dictionary) -> bool:
 	var version := int(plan.get("atlas_version", 0))
+	if version == 5: return int(plan.get("terrain_version", 0)) == 2 and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/long_thaw_n3" and int(plan.layout.get("version", 0)) == 4 and plan.has("state_variants")
 	if version == 4: return int(plan.get("terrain_version", 0)) == 2 and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/long_thaw_n3" and int(plan.layout.get("version", 0)) == 3 and plan.has("state_variants")
 	if version == 3: return int(plan.get("terrain_version", 0)) == 3 and plan.has("spatial") and int(plan.spatial.get("version", 0)) == 1 and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/reference" and int(plan.layout.get("version", 0)) in [8, 9, 10, 11] and (int(plan.layout.version) >= 10 or not plan.has("spatial_areas"))
 	return version == 1 or (version == 2 and int(plan.get("terrain_version", 0)) == 2 and plan.has("geography") and plan.get("layout", {}).get("id") == "landpkg:snow_mountain/full_region" and int(plan.layout.get("version", 0)) in [5, 6, 7])
@@ -262,7 +263,9 @@ func validate(proposal: Dictionary) -> String:
 	var home_tiles := {}
 	for home in plan.get("creature_homes", []):
 		var tile := Vector2i(int(home.position.x), int(home.position.y))
-		if int(plan.atlas_version) not in [2, 3] or home_ids.has(home.instance_id) or home_tiles.has(tile) or not str(home.instance_id).begins_with("crt:atlas/") or TerrainAtlas.slot_of(tile) != slot or not generator.walkable(tile): return "Invalid authored creature home"
+		if int(plan.atlas_version) not in [2, 3, 5] or home_ids.has(home.instance_id) or home_tiles.has(tile) or not str(home.instance_id).begins_with("crt:atlas/") or TerrainAtlas.slot_of(tile) != slot or not generator.walkable(tile): return "Invalid authored creature home"
+		var ecology_problem: String = preload("res://src/run/resident_ecology.gd").validate(home, generator)
+		if not ecology_problem.is_empty(): return ecology_problem
 		var definition: Dictionary = registry.load_definition(world.world_id, home.content_id, int(home.version))
 		if definition.is_empty() or definition.kind != "creature" or definition.status != "active": return "Authored home needs an active creature"
 		home_ids[home.instance_id] = true
@@ -425,8 +428,9 @@ func _layout_start(generator: RefCounted, run_seed: int, candidate: Dictionary, 
 func _install_packs(paths: Array) -> bool:
 	var packs := Pack.new()
 	for path in paths:
-		var draft_n3 := str(path) == "res://content/drafts/snow_mountains/long_thaw/content_pack.json" and ("--long-thaw-n3" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()) or "--long-thaw-n4" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()) or "--long-thaw-n5" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()))
-		if str(path) == "res://content/drafts/snow_mountains/long_thaw/n5_execution_pack.json" and "--long-thaw-n5" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()): draft_n3 = true
+		var draft_n3 := str(path) == "res://content/drafts/snow_mountains/long_thaw/content_pack.json" and ("--long-thaw-n3" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()) or "--long-thaw-n4" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()) or "--long-thaw-n5" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()) or "--long-thaw-n6" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()))
+		if str(path) == "res://content/drafts/snow_mountains/long_thaw/n5_execution_pack.json" and ("--long-thaw-n5" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()) or "--long-thaw-n6" in (OS.get_cmdline_user_args() + OS.get_cmdline_args())): draft_n3 = true
+		if str(path) == "res://content/drafts/snow_mountains/long_thaw/n6_ecology_pack.json" and "--long-thaw-n6" in (OS.get_cmdline_user_args() + OS.get_cmdline_args()): draft_n3 = true
 		if (not str(path).begins_with("res://content/land_packages/") and not draft_n3) or not packs.install(registry, world.world_id, str(path)):
 			return _fail("Land content pack %s: %s" % [str(path), packs.last_error])
 	return true

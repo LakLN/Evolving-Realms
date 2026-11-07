@@ -5,6 +5,7 @@ const Surfaces = preload("res://src/world/surfaces.gd")
 const Data = preload("res://src/data/json_data.gd")
 var definitions: Array = []
 var cells: Dictionary = {}
+var footprint: Dictionary = {} # Union of every authored state, for resident safety.
 var active: Dictionary = {}
 var revision := 0
 
@@ -26,6 +27,7 @@ static func compile(source: Dictionary, sites: Array, rotation: int) -> Dictiona
 
 func configure(plans: Array) -> String:
 	definitions.clear()
+	footprint.clear()
 	for plan in plans:
 		if not plan.has("state_variants"): continue
 		var d: Dictionary = plan.state_variants
@@ -51,6 +53,7 @@ func configure(plans: Array) -> String:
 				var tile := Vector2i(int(c.position.x), int(c.position.y))
 				if used.has(tile) or floori(float(tile.x) / 512) != int(plan.slot.x) or floori(float(tile.y) / 512) != int(plan.slot.y): return "Overlapping or out-of-land world-state cells"
 				used[tile] = true
+				footprint[tile] = true
 		definitions.append(d)
 	return ""
 

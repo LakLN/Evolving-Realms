@@ -115,6 +115,22 @@
         "radius": 7,
         "text": "turns toward you. The snow shivers with each of its steps."
       }
+    },
+    "long_thaw_bank_warning": {
+      "name": "Bank warning",
+      "description": "A visible warning before a close-range ambush.",
+      "warning": {
+        "radius": 6,
+        "text": "pushes fresh silt from a breathing hole; the bank flexes around a low heavy body."
+      }
+    },
+    "long_thaw_sluice_warning": {
+      "name": "Bank defender",
+      "description": "Neutral until provoked; gives a warning posture.",
+      "warning": {
+        "radius": 4,
+        "text": "slaps its broad tail on the bank and keeps its cutting teeth turned toward the water."
+      }
     }
   },
   "assign": {

@@ -305,6 +305,7 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	roster = next_roster
 	locations = next_locations
 	places.layer = next_locations
+	var before_resident_count: int = run.state.entity_mutations.size()
 	var _cues: Array = roster.refresh(self) # Weather-bound / returning homes (needs places + environment).
 	survival = rules
 	uses = next_uses
@@ -324,7 +325,7 @@ func _activate(blueprint: Dictionary, loaded: Dictionary) -> bool:
 	last_result = {}
 	last_events = []
 	awakened_now = awakened
-	dirty = not awakened.is_empty()
+	dirty = not awakened.is_empty() or run.state.entity_mutations.size() != before_resident_count
 	_reveal()
 	last_events.append_array(atlas_knowledge.update(self))
 	last_error = ""

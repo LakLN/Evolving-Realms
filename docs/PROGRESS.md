@@ -3381,3 +3381,76 @@ only N5 sources/data/docs, the two repaired legacy test fixtures and the three N
 captures; generated imports, compatibility captures, tools, DBs and builds are
 excluded. Next step within this slice: human opt-in playtest and art identity review;
 no next milestone or additional area is started.
+
+## The Long Thaw N6 living ecology (2026-11-06)
+
+Implemented the requested gameplay ecology from N5 `0fff4c9`, without adding an
+area, roadmap, quest, boss or player-playtest requirement. Four ordinary species
+come directly from N2: `long_thaw:reedhorn@1`, `long_thaw:sluiceback@1`,
+`long_thaw:silt_fox@1`, `long_thaw:bank_maw@1`. Their passive/neutral/hostile
+profiles, movement/detection/flee/leash parameters, warnings and shared fire fear
+produce distinct real behavior. Drops reuse pinned ordinary core food/materials;
+no Hushed Crown species, rare reward or special N2 encounter is substituted.
+
+New opt-in layout v4 / atlas record v5 retains terrain algorithm v2,
+`long_thaw:water_course@1`, all N5 work/recommendation/event IDs, geometry, starts,
+landmarks and seven areas. Added eighteen authored homes across all seven areas,
+including two water-conditioned bank arrivals. There are no new procedural spawn
+rules and creature-generation v1 identities/homes remain unchanged. The N6 pack is
+separate under the unbound/unpublished draft directory. Existing N3/N4/N5 layouts,
+packs, Hushed Crown/Broken Relay definitions and personal Runs are not upgraded.
+
+Resident metadata v1 validates habitat/version/source and commits normal Run
+creature mutations on first arrival, including idle animals. Water conditions gate
+initial arrival from the actual Run resolver, not a recommendation. Established
+residents retain position/injury/provocation/death/loot across area streaming and
+load. N6 declares no respawn schedule; existing nonresident weather/return homes
+retain their original behavior. Mixing residency-v1 with weather/return metadata
+is explicitly unsupported. No SQL or Run schema migration or service is added.
+
+All resident homes and navigation avoid the union of every possible water-state
+footprint. Habitat-aware placement requires two legal dry exits; conditional homes
+anchor to existing downstream site banks and tests check actual nearby water.
+This avoids flooding/teleporting actors when N5 work changes the terrain. Transit
+on declared trail/floor surfaces is an optional movement parameter; old definitions
+retain their previous path rules. Activation retains dirty state for new arrivals.
+Two new warning trait parts append to the existing registry without changing old
+parts/assignments. No actor-to-actor hunting, dam building or migration is claimed.
+
+Launch:
+`scripts/godot.ps1 -- --database=D:/Game/RPG/.tools/long-thaw-n6-preview.sqlite --long-thaw-n6`.
+Default personal DB is refused before opening; the opt-in appends fresh World/Run
+rows and retains old ones. All feature tests use explicit UUID disposable DBs.
+Implementation contract/coverage: `docs/design/snow_mountains/n2_long_thaw/N6_LIVING_ECOLOGY.md`.
+
+Commands/results completed:
+- `scripts/godot.ps1 --headless --editor --quit`: import PASS.
+- Initial N6 development tests caught three homes on walkable ice (not a species
+  habitat); added the bounded resident habitat/exits selector instead of weakening
+  validation or changing terrain. Two early movement assertions tested wandering
+  while the animal was defending/biting; corrected the context to put the player
+  outside detection, then required a real legal movement commit for each species.
+- `scripts/godot.ps1 --headless --script res://tests/long_thaw_n6_suite.gd '--' --long-thaw-n6`:
+  intermediate mechanism proof **54/0**, including all three physical water branches,
+  Run isolation, persisted residents/deaths and once-only loot.
+- `scripts/godot.ps1 --script res://tests/long_thaw_n6_suite.gd '--' --long-thaw-n6 --visual-only`:
+  native diagnostic proof **3/0**, one 1100x720 capture reviewed at
+  `art_exports/LongThaw_N6/resident_tokens.png`. R/S/F/B tokens are named DEBUG and
+  grounded at the actual one-tile feet/hitbox; no incorrect borrowed animal sprite.
+- `scripts/test.ps1 -Smoke -Only combat,survival,interactions,long-thaw-n5`:
+  import PASS, data **96/0**, interactions **69/0**, integration **41/0** (expected
+  injected write failures, stale sessions and crash/reload included), combat
+  **75/0**, survival **60/0**, N5 **55/0**, startup PASS, exit 0.
+- `scripts/test.ps1 -Only long-thaw-n6`: final import PASS, N6 **57/0**, startup PASS,
+  exit 0. Adds actual local-water checks for the conditioned bank homes. Species
+  validation is counted once per unique definition, not repeated for home count.
+- Node structural guard: after removing only approved ecology/home/pack/version
+  fields, N6 equals N5 for all geometry, starts, sites and state definitions.
+
+PARTIAL visuals: diagnostic tokens, not production creature art. Exact silhouette,
+body/canvas scale, feet pivots, four directions, animations and state/VFX requirements
+are in `N6_CREATURE_ART_REQUIREMENTS.md`. No Python sprite construction or concept-
+sheet-as-sprite was used. Remaining capabilities: deep-water char/fishing population,
+autonomous predator-prey combat, tree cutting/dams, herd migration, creature-to-quest
+observation/shed bridge and seasonal population simulation. No blocker remains for
+this bounded four-species slice. No full regression, export or long playthrough.

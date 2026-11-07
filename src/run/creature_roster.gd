@@ -12,6 +12,7 @@ const Traits = preload("res://src/core/creature_traits.gd")
 const Combat = preload("res://src/core/combat.gd")
 const Loot = preload("res://src/core/loot_table.gd")
 const Inventory = preload("res://src/core/inventory.gd")
+const Residency = preload("res://src/run/resident_ecology.gd")
 const ACTIVE_RADIUS := 12
 const SAFE_RADIUS := 6 # No creature homes this close to the Run's spawn.
 ## Dynamic authored homes (layout v7 plan metadata, 2026-11-04), resolved by refresh():
@@ -35,6 +36,10 @@ var last_error := ""
 func configure(world_layer: RefCounted, run: Dictionary) -> bool:
 	layer = world_layer
 	spawn = Vector2i(int(run.spawn.position.x), int(run.spawn.position.y))
+	for plan in layer.terrain.plans() if layer.terrain.has_method("plans") else []:
+		for home in plan.get("creature_homes", []):
+			var problem := Residency.validate(home, layer.terrain)
+			if not problem.is_empty(): return _fail(problem)
 	creatures.clear()
 	chunks.clear()
 	center = Vector2i(2147483647, 2147483647)
@@ -81,7 +86,7 @@ func follow(tile: Vector2i, terrain_chunks: Dictionary) -> bool:
 			if maxi(absi(home.x - spawn.x), absi(home.y - spawn.y)) <= SAFE_RADIUS:
 				continue
 			var meta: Dictionary = instance.get("metadata", {})
-			if meta.has("weather") or meta.has("returns"):
+			if meta.has("weather") or meta.has("returns") or meta.has("residency_version"):
 				dynamic.append(instance) # Presence decided per turn by refresh().
 				continue
 			if creatures.has(instance.instance_id):
@@ -93,8 +98,8 @@ func follow(tile: Vector2i, terrain_chunks: Dictionary) -> bool:
 	return true
 
 func refresh(session: RefCounted) -> Array:
-	## Weather-bound and returning homes in the loaded chunks; pure in Run state. Returns
-	## presentation cues: storm shapes arriving/leaving near the player, and a returned
+	## Weather/return homes plus persistent resident arrivals in loaded chunks.
+	## New residents commit ordinary Run mutations; returns presentation cues: storm shapes arriving/leaving near the player, and a returned
 	## individual the first time it is seen.
 	var weather := ""
 	var arrived := 0
@@ -104,6 +109,9 @@ func refresh(session: RefCounted) -> Array:
 		var meta: Dictionary = instance.metadata
 		var id := _current(session, instance)
 		var present := not id.is_empty()
+		# Arrival conditions do not erase established residents or their deaths.
+		if meta.has("world_state") and not creatures.has(id) and not session.run.state.entity_mutations.has(id):
+			present = present and Residency.eligible(meta.world_state, session.terrain)
 		if present and meta.has("weather"):
 			if weather.is_empty(): weather = session.places.weather_id(session)
 			present = weather in meta.weather
@@ -124,6 +132,11 @@ func refresh(session: RefCounted) -> Array:
 		if creature.is_empty(): continue
 		var mutation: Variant = session.run.state.entity_mutations.get(id)
 		if mutation is Dictionary and mutation.has("creature") and not _apply(creature, mutation): continue
+		if meta.has("residency_version"):
+			if not session.terrain.walkable(creature.position) or not living_at(creature.position).is_empty() or creature.position == session.position: continue
+			if not _ensure_materialized(creature): continue
+			_commit(session, creature)
+			session.dirty = true
 		creatures[id] = creature
 		if near and meta.has("weather"): arrived += 1
 	if arrived > 0: events.append({"type": "stirring", "state": "arrive", "weather": weather})
@@ -391,12 +404,15 @@ func stun(session: RefCounted, target_id: String, turns: int) -> Dictionary:
 	return {"type": "stun", "target": target_id, "name": creature.definition.name, "turns": turns, "position": _point(creature.position)}
 
 func _can_enter(session: RefCounted, creature: Dictionary, tile: Vector2i) -> bool:
+	var movement: Dictionary = creature.definition.payload.movement
+	if movement.get("avoid_variants", false) and session.terrain.get("variants") != null and session.terrain.variants.footprint.has(tile): return false
 	if not session.terrain.can_step(creature.position, tile): return false
 	if tile == session.position or not living_at(tile).is_empty() or _distance(tile, creature.home) > int(creature.definition.payload.movement.leash):
 		return false
 	var ground: int = session.cache.tile_at(tile)
 	# Authored routes are transit surfaces, never spawn habitats. Spatial creatures
 	# may use them while retaining their own leash and the same directed height edges.
+	if Surfaces.BY_NAME.find_key(ground) in movement.get("transit_surfaces", []): return true
 	if not session.terrain.spatial_cell(tile).is_empty() and ground in [Surfaces.TRAIL, Surfaces.FLOOR]: return true
 	return Surfaces.hosts(session.terrain, ground, tile, str(creature.definition.content_id), creature.definition.payload.movement.biomes)
 

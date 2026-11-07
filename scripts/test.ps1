@@ -83,6 +83,7 @@ try {
     Invoke-EngineCheck -Name 'm04-world' -EngineArgs @('--headless', '--script', 'res://tests/m04_world_suite.gd') -Summary 'M04 WORLD: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'm04-gameplay' -EngineArgs @('--headless', '--script', 'res://tests/m04_gameplay_suite.gd') -Summary 'M04 GAMEPLAY: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-mountain' -EngineArgs @('--headless', '--script', 'res://tests/snow_mountain_suite.gd') -Summary 'M05 SNOW MOUNTAIN: \d+ checks, 0 failures'
+    Invoke-EngineCheck -Name 'long-thaw-n6' -EngineArgs @('--headless', '--script', 'res://tests/long_thaw_n6_suite.gd', '--', '--long-thaw-n6') -Summary 'LONG THAW N6: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'long-thaw-n5' -EngineArgs @('--headless', '--script', 'res://tests/long_thaw_n5_suite.gd', '--', '--long-thaw-n5') -Summary 'LONG THAW N5: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-content' -EngineArgs @('--headless', '--script', 'res://tests/snow_content_suite.gd') -Summary 'M05 SNOW CONTENT: \d+ checks, 0 failures'
     Invoke-EngineCheck -Name 'snow-region' -EngineArgs @('--headless', '--script', 'res://tests/snow_region_suite.gd') -Summary 'SNOW REGION: \d+ checks, 0 failures'

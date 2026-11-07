@@ -1,0 +1,295 @@
+{
+  "pack_version": 1,
+  "definitions": [
+    {
+      "content_id": "long_thaw:reedhorn",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "creature",
+      "name": "Reedhorn",
+      "description": "A broad-hoofed sedge grazer. It keeps to stable bars and bolts from a close approach.",
+      "metadata": {
+        "category": "beast",
+        "preview_token": {
+          "glyph": "R",
+          "color": "c4bc78"
+        }
+      },
+      "dependencies": [
+        {
+          "content_id": "core:raw_meat",
+          "version": 1
+        },
+        {
+          "content_id": "core:hide",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "visual": "long_thaw_reedhorn",
+        "disposition": "passive",
+        "stats": {
+          "max_hp": 12,
+          "attack": 2,
+          "defense": 1
+        },
+        "traits": [],
+        "movement": {
+          "biomes": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "leash": 10,
+          "move_per_10000": 10000,
+          "transit_surfaces": [
+            "trail"
+          ],
+          "avoid_variants": true
+        },
+        "ai": {
+          "detect_radius": 7,
+          "wander_per_10000": 4500,
+          "flee_radius": 5,
+          "flee_below_percent": 0
+        },
+        "loot": {
+          "guaranteed": [
+            {
+              "content_id": "core:raw_meat",
+              "version": 1,
+              "min": 2,
+              "max": 3
+            },
+            {
+              "content_id": "core:hide",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "content_id": "long_thaw:sluiceback",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "creature",
+      "name": "Sluiceback",
+      "description": "A broad-tailed alder cutter. It ignores travellers until struck and defends its bank.",
+      "metadata": {
+        "category": "beast",
+        "preview_token": {
+          "glyph": "S",
+          "color": "9c7350"
+        }
+      },
+      "dependencies": [
+        {
+          "content_id": "core:wood",
+          "version": 1
+        },
+        {
+          "content_id": "core:raw_meat",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "visual": "long_thaw_sluiceback",
+        "disposition": "neutral",
+        "stats": {
+          "max_hp": 16,
+          "attack": 5,
+          "defense": 3
+        },
+        "traits": [
+          "long_thaw_sluice_warning"
+        ],
+        "movement": {
+          "biomes": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "leash": 7,
+          "move_per_10000": 5500,
+          "transit_surfaces": [
+            "trail"
+          ],
+          "avoid_variants": true
+        },
+        "ai": {
+          "detect_radius": 5,
+          "wander_per_10000": 2400,
+          "flee_radius": 0,
+          "flee_below_percent": 25
+        },
+        "loot": {
+          "guaranteed": [
+            {
+              "content_id": "core:wood",
+              "version": 1,
+              "min": 1,
+              "max": 2
+            },
+            {
+              "content_id": "core:raw_meat",
+              "version": 1,
+              "min": 1,
+              "max": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "content_id": "long_thaw:silt_fox",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "creature",
+      "name": "Silt fox",
+      "description": "A small wary bank predator and scavenger. It breaks off a losing fight and fears carried fire.",
+      "metadata": {
+        "category": "beast",
+        "preview_token": {
+          "glyph": "F",
+          "color": "cb7854"
+        }
+      },
+      "dependencies": [
+        {
+          "content_id": "core:raw_meat",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "visual": "long_thaw_silt_fox",
+        "disposition": "hostile",
+        "stats": {
+          "max_hp": 7,
+          "attack": 3,
+          "defense": 0
+        },
+        "traits": [
+          "fears_fire"
+        ],
+        "movement": {
+          "biomes": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "leash": 8,
+          "move_per_10000": 8500,
+          "transit_surfaces": [
+            "trail"
+          ],
+          "avoid_variants": true
+        },
+        "ai": {
+          "detect_radius": 4,
+          "wander_per_10000": 4000,
+          "flee_radius": 0,
+          "flee_below_percent": 65
+        },
+        "loot": {
+          "guaranteed": [
+            {
+              "content_id": "core:raw_meat",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "content_id": "long_thaw:bank_maw",
+      "version": 1,
+      "schema_version": 1,
+      "kind": "creature",
+      "name": "Bank-maw",
+      "description": "A heavy bank ambusher. Slumped earth and breathing holes warn of its short, dangerous reach.",
+      "metadata": {
+        "category": "beast",
+        "preview_token": {
+          "glyph": "B",
+          "color": "787f8c"
+        }
+      },
+      "dependencies": [
+        {
+          "content_id": "core:fang",
+          "version": 1
+        },
+        {
+          "content_id": "core:hide",
+          "version": 1
+        },
+        {
+          "content_id": "core:raw_meat",
+          "version": 1
+        }
+      ],
+      "payload": {
+        "visual": "long_thaw_bank_maw",
+        "disposition": "hostile",
+        "stats": {
+          "max_hp": 24,
+          "attack": 9,
+          "defense": 3
+        },
+        "traits": [
+          "long_thaw_bank_warning"
+        ],
+        "movement": {
+          "biomes": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "leash": 5,
+          "move_per_10000": 5000,
+          "transit_surfaces": [
+            "trail"
+          ],
+          "avoid_variants": true
+        },
+        "ai": {
+          "detect_radius": 3,
+          "wander_per_10000": 600,
+          "flee_radius": 0,
+          "flee_below_percent": 0
+        },
+        "loot": {
+          "guaranteed": [
+            {
+              "content_id": "core:fang",
+              "version": 1,
+              "min": 1,
+              "max": 2
+            },
+            {
+              "content_id": "core:hide",
+              "version": 1,
+              "min": 1,
+              "max": 1
+            },
+            {
+              "content_id": "core:raw_meat",
+              "version": 1,
+              "min": 2,
+              "max": 2
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -85,6 +85,8 @@ func validate(definition: Dictionary) -> bool:
 		return _fail("Creature movement needs biomes and leash 1..12: " + id)
 	if not Data.integer(movement.get("move_per_10000", 10000)) or movement.get("move_per_10000", 10000) < 1 or movement.get("move_per_10000", 10000) > 10000:
 		return _fail("Creature move_per_10000 must be 1..10000: " + id)
+	if not movement.get("avoid_variants", false) is bool or not movement.get("transit_surfaces", []) is Array or movement.get("transit_surfaces", []).any(func(value: Variant) -> bool: return value not in ["trail", "floor"]):
+		return _fail("Unsupported creature transit or variant avoidance: " + id)
 	for biome in movement.biomes:
 		if biome not in Surfaces.HABITATS:
 			return _fail("Unsupported creature movement biome: " + id)

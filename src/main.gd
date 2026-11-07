@@ -156,7 +156,7 @@ func _ready() -> void:
 		printerr("Acceptance checks require --database=<separate path>; personal saves are never opened")
 		get_tree().quit(2)
 		return
-	var thaw_preview := Array(OS.get_cmdline_user_args()).any(func(arg: String) -> bool: return arg in ["--long-thaw-n3", "--long-thaw-n4", "--long-thaw-n5"])
+	var thaw_preview := Array(OS.get_cmdline_user_args()).any(func(arg: String) -> bool: return arg in ["--long-thaw-n3", "--long-thaw-n4", "--long-thaw-n5", "--long-thaw-n6"])
 	if thaw_preview and ProjectSettings.globalize_path(database_path) == ProjectSettings.globalize_path(DEFAULT_DATABASE):
 		printerr("The Long Thaw requires --database=<separate path>; personal saves are never opened")
 		get_tree().quit(2)
@@ -168,12 +168,12 @@ func _ready() -> void:
 	if options.has("acceptance"):
 		_acceptance = Acceptance.new()
 		_acceptance.run(self, options.acceptance)
-	elif "--long-thaw-n3" in OS.get_cmdline_user_args() or "--long-thaw-n4" in OS.get_cmdline_user_args() or "--long-thaw-n5" in OS.get_cmdline_user_args():
+	elif "--long-thaw-n3" in OS.get_cmdline_user_args() or "--long-thaw-n4" in OS.get_cmdline_user_args() or "--long-thaw-n5" in OS.get_cmdline_user_args() or "--long-thaw-n6" in OS.get_cmdline_user_args():
 		if ProjectSettings.globalize_path(database_path) == ProjectSettings.globalize_path(DEFAULT_DATABASE):
 			printerr("The Long Thaw N3 requires --database=<separate path>; personal saves are never opened")
 			get_tree().quit(2)
 			return
-		call_deferred("_launch_long_thaw", "N5" if "--long-thaw-n5" in OS.get_cmdline_user_args() else "N4" if "--long-thaw-n4" in OS.get_cmdline_user_args() else "N3")
+		call_deferred("_launch_long_thaw", "N6" if "--long-thaw-n6" in OS.get_cmdline_user_args() else "N5" if "--long-thaw-n5" in OS.get_cmdline_user_args() else "N4" if "--long-thaw-n4" in OS.get_cmdline_user_args() else "N3")
 
 static func launch_options() -> Dictionary:
 	## User arguments after `--`, e.g. `-- --database=D:/saves/test.sqlite`.

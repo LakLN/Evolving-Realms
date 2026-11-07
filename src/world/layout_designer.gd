@@ -27,10 +27,11 @@ static func load_layout(layout_id: String) -> Dictionary:
 	# The rebuild remains opt-in while its production art is incomplete. Established
 	# worlds already carry a copied plan, and normal proposals continue to use v10.
 	var args := OS.get_cmdline_user_args() + OS.get_cmdline_args()
-	if layout_id == LONG_THAW_N3 and "--long-thaw-n3" not in args and "--long-thaw-n4" not in args and "--long-thaw-n5" not in args:
+	if layout_id == LONG_THAW_N3 and "--long-thaw-n3" not in args and "--long-thaw-n4" not in args and "--long-thaw-n5" not in args and "--long-thaw-n6" not in args:
 		return {}
 	var path: String = REFERENCE_V11 if layout_id == "landpkg:snow_mountain/reference" and "--broken-relay-v11" in args else (LONG_THAW_N4_PATH if layout_id == LONG_THAW_N3 and "--long-thaw-n4" in args else LAYOUTS[layout_id])
 	if layout_id == LONG_THAW_N3 and "--long-thaw-n5" in args: path = "res://content/land_layouts/long_thaw_n5.json"
+	if layout_id == LONG_THAW_N3 and "--long-thaw-n6" in args: path = "res://content/land_layouts/long_thaw_n6.json"
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not data is Dictionary or int(data.get("layout_version", 0)) != LAYOUT_VERSION or data.get("id") != layout_id:
 		return {}
@@ -189,9 +190,9 @@ func design(designer: RefCounted, layout: Dictionary, slot: Vector2i, gate: Dict
 					shelter.doors = area.shelter.doors.map(func(d: Array) -> Dictionary: return _xy(area_origin + Vector2i(int(d[0]), int(d[1]))))
 	if not _place_sites(designer, plan, layout, to_tile):
 		return {}
-	if not _place_creatures(designer, plan, layout, to_tile): return {}
 	if layout.has("state_variants"):
 		plan.state_variants = preload("res://src/world/run_state_variants.gd").compile(layout.state_variants, plan.sites, r)
+	if not _place_creatures(designer, plan, layout, to_tile): return {}
 	return plan
 
 static func _patch_origin(plan: Dictionary, patch_id: String) -> Vector2i:
@@ -208,13 +209,28 @@ func _place_creatures(designer: RefCounted, plan: Dictionary, layout: Dictionary
 	if not terrain.configure_atlas(designer._hash.world_seed, [plan]): return false
 	var taken := {}
 	for site in plan.sites: taken[Vector2i(int(site.position.x), int(site.position.y))] = true
+	# Residents use permanent dry ground outside every state-changing footprint.
+	for tile in terrain.variants.footprint: taken[tile] = true
 	plan.creature_homes = []
 	for home in layout.creature_homes:
-		var target: Vector2i = to_tile.call(home.at) if home.has("at") else _patch_origin(plan, str(home.get("patch", ""))) + Vector2i(int(home.spatial[0]), int(home.spatial[1]))
-		var tile: Vector2i = designer._snap(terrain, target, Vector2i(int(plan.slot.x), int(plan.slot.y)), taken)
+		var target := Vector2i.ZERO
+		if home.has("site"):
+			var anchor: Dictionary = {}
+			for site in plan.sites:
+				if str(site.instance_id).get_slice("/site/", 1) == str(home.site): anchor = site
+			if anchor.is_empty(): return false
+			var offset := Vector2i(rotate(Vector2(float(home.offset[0]), float(home.offset[1])), int(plan.layout.rotation)))
+			target = Vector2i(int(anchor.position.x), int(anchor.position.y)) + offset
+		else:
+			target = to_tile.call(home.at) if home.has("at") else _patch_origin(plan, str(home.get("patch", ""))) + Vector2i(int(home.spatial[0]), int(home.spatial[1]))
+		var tile: Vector2i = _resident_home(terrain, target, Vector2i(int(plan.slot.x), int(plan.slot.y)), taken, home.habitats) if home.has("residency_version") else designer._snap(terrain, target, Vector2i(int(plan.slot.x), int(plan.slot.y)), taken)
 		if tile == Vector2i(2147483647, 0): return false
 		taken[tile] = true
 		var meta := {"authored_creature_version": 1, "land_id": plan.land_id}
+		if home.has("residency_version"):
+			meta.residency_version = home.residency_version
+			meta.habitats = home.habitats.duplicate()
+		if home.has("world_state"): meta.world_state = home.world_state.duplicate(true)
 		# Layout v7: weather-bound and returning homes (CreatureRoster.refresh).
 		if home.has("weather"):
 			if not home.weather is Array or home.weather.is_empty(): return false
@@ -263,3 +279,19 @@ func _place_sites(designer: RefCounted, plan: Dictionary, layout: Dictionary, to
 func _error(message: String) -> Dictionary:
 	last_error = message
 	return {}
+
+static func _resident_home(terrain: RefCounted, target: Vector2i, slot: Vector2i, taken: Dictionary, habitats: Array) -> Vector2i:
+	# New authored layer only: never change the frozen v1 or older authored homes.
+	var directions := [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
+	for radius in 24:
+		for dy in range(-radius, radius + 1):
+			for dx in range(-radius, radius + 1):
+				if maxi(absi(dx), absi(dy)) != radius: continue
+				var tile := target + Vector2i(dx, dy)
+				if TerrainAtlas.slot_of(tile) != slot or taken.has(tile) or Surfaces.HABITAT_OF.get(terrain.tile_at(tile), "") not in habitats: continue
+				var exits := 0
+				for direction: Vector2i in directions:
+					var next := tile + direction
+					if not terrain.variants.footprint.has(next) and terrain.can_step(tile, next) and Surfaces.HABITAT_OF.get(terrain.tile_at(next), "") in habitats: exits += 1
+				if exits >= 2 and preload("res://src/world/spawn_selector.gd").accessible(terrain, tile): return tile
+	return Vector2i(2147483647, 0)

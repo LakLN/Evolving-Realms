@@ -719,13 +719,18 @@ func _kill_creature(id: String) -> void:
 
 func _draw_creature_token(node: Node2D, creature: Dictionary) -> void:
 	var payload: Dictionary = creature.definition.payload
+	var preview: Dictionary = creature.definition.get("metadata", {}).get("preview_token", {})
 	var body: Color = BODY_COLORS.get(payload.get("visual", ""), Color("b9a6d6"))
+	if not preview.is_empty(): body = Color(str(preview.color))
 	var center := Vector2(0, -px * 0.32)
 	node.draw_circle(center, px * 0.3, body.darkened(0.45))
 	node.draw_circle(center, px * 0.26, body)
 	node.draw_circle(center + Vector2(-3, -4), px * 0.1, body.lightened(0.3))
 	var glyph := str(creature.definition.name).split(" ")[-1].left(1).to_upper() # "Grey wolf" -> W
+	if not preview.is_empty(): glyph = str(preview.glyph)
 	node.draw_string(ThemeDB.fallback_font, center + Vector2(-6, 6), glyph, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("1d1b19"))
+	if not preview.is_empty():
+		node.draw_string(ThemeDB.fallback_font, Vector2(-40, -px * 0.8), "DEBUG " + str(creature.definition.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
 
 # ------------------------------------------------------------------ objects & places
 
