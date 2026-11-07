@@ -1,0 +1,15 @@
+{
+  "provisional": true,
+  "colors": {
+    "snow_light": "#E9F2FF",
+    "snow_mid": "#CADBF0",
+    "snow_shadow": "#AABCD7",
+    "rock_mid": "#697A90",
+    "rock_dark": "#414F63",
+    "wood_light": "#A77850",
+    "wood_dark": "#51392E",
+    "pine_dark": "#2C504D",
+    "banner_red": "#AE454A",
+    "lantern_gold": "#F0AF63"
+  }
+}

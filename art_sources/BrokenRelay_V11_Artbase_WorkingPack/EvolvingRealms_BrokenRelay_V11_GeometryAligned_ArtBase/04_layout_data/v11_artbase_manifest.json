@@ -1,0 +1,190 @@
+{
+  "schema": "evolvingrealms.broken_relay.v11.artbase.v1",
+  "geometry_authority": "snow_mountain_reference_v11.json reference_area zones; NOT pixel-mask collision",
+  "layout_id": "landpkg:snow_mountain/reference",
+  "layout_version": 1,
+  "area": "broken_relay",
+  "logical_tile_px": 40,
+  "grid": [
+    48,
+    40
+  ],
+  "canvas_px": [
+    1920,
+    1600
+  ],
+  "available_layers": [
+    {
+      "id": "ground_visual_preview",
+      "path": "01_visual_pass/broken_relay_v11_organic_ground_PREVIEW_1920x1600.png",
+      "size_px": [
+        1920,
+        1600
+      ],
+      "opaque": true,
+      "review_status": "PROTOTYPE_REVIEW_ONLY"
+    },
+    {
+      "id": "surface_exact_masks",
+      "path": "02_exact_masks/surface_{surface}_1920x1600.png",
+      "color_mode": "L",
+      "meaning": "255=source cell matches surface; 0=otherwise"
+    },
+    {
+      "id": "style_exact_masks",
+      "path": "02_exact_masks/style_{style}_1920x1600.png",
+      "color_mode": "L"
+    },
+    {
+      "id": "height_exact_masks",
+      "path": "02_exact_masks/height_{0..3}_1920x1600.png",
+      "color_mode": "L"
+    }
+  ],
+  "surface_cell_counts": {
+    "cliff": 115,
+    "floor": 40,
+    "pine": 10,
+    "rock": 36,
+    "snowfield": 1399,
+    "timber": 29,
+    "trail": 155,
+    "water": 136
+  },
+  "style_cell_counts": {
+    "bridge": 11,
+    "cliff": 115,
+    "floor": 40,
+    "grove": 10,
+    "ledge": 2,
+    "ravine": 136,
+    "rock": 36,
+    "snow": 1074,
+    "terrace": 325,
+    "timber": 29,
+    "trail": 142
+  },
+  "bridge": {
+    "source_rect_cells": [
+      20,
+      32,
+      11,
+      1
+    ],
+    "source_rect_px": [
+      800,
+      1280,
+      440,
+      40
+    ],
+    "visual_asset_requested_in_ASSET_GAPS_px": [
+      440,
+      80
+    ],
+    "flag": "difference: source bridge semantic footprint 11x1; extra art height must not be equated with walkable cells"
+  },
+  "shelter": {
+    "id": "relay_outpost",
+    "rect": [
+      18,
+      11,
+      12,
+      6
+    ],
+    "doors": [
+      [
+        23,
+        16
+      ],
+      [
+        24,
+        16
+      ]
+    ]
+  },
+  "shelter_footprint_px": [
+    720,
+    440,
+    480,
+    240
+  ],
+  "transition_pairs": [
+    {
+      "a": [
+        16,
+        21
+      ],
+      "b": [
+        16,
+        22
+      ]
+    },
+    {
+      "a": [
+        17,
+        21
+      ],
+      "b": [
+        17,
+        22
+      ]
+    },
+    {
+      "a": [
+        34,
+        16
+      ],
+      "b": [
+        34,
+        17
+      ]
+    },
+    {
+      "a": [
+        35,
+        16
+      ],
+      "b": [
+        35,
+        17
+      ]
+    },
+    {
+      "a": [
+        32,
+        21
+      ],
+      "b": [
+        32,
+        22
+      ],
+      "one_way": true
+    },
+    {
+      "a": [
+        33,
+        21
+      ],
+      "b": [
+        33,
+        22
+      ],
+      "one_way": true
+    }
+  ],
+  "spatial_content_sites": {
+    "relay_locker": [
+      22,
+      14
+    ],
+    "relay_strongbox": [
+      28,
+      18
+    ],
+    "bandit_stash": [
+      8,
+      23
+    ]
+  },
+  "important": "Masks encode surface and elevation declarations, not walkability. Validate against runtime collision. Do not overwrite source scene or player runs."
+}

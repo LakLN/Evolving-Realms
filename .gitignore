@@ -12,3 +12,8 @@ addons/godot-sqlite/bin/~*.dll
 
 # Source art archive duplicates the extracted batch folder.
 assets/sources/*.zip
+
+# Archive bundles duplicate their extracted folders / are hand-off deliverables.
+art_sources/*.zip
+art_exports/**/*.zip
+art_exports/*.zip

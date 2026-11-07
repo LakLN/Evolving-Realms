@@ -1,0 +1,293 @@
+{
+  "schema": "er-art-handoff-qa",
+  "version": 1,
+  "result": "PASS",
+  "checks": [
+    {
+      "file": "Geometry/area_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Geometry/authored_markers_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 95448,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Geometry/collision_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Geometry/elevation_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Geometry/surface_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Geometry/vegetation_landscape_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 77202,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/area_01_thawgate_fans.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/area_02_alderwash.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/area_03_braided_commons.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/area_04_siltmarket_reach.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/area_05_nine_weirs.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/area_06_drowned_orchard.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/area_07_underflow_gorge.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/water_state_brace.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/water_state_open.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Screenshots/water_state_spill.png",
+      "size": [
+        1100,
+        720
+      ],
+      "expected_size": [
+        1100,
+        720
+      ],
+      "size_ok": true,
+      "transparent_pixels": 0,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Water-states/water_course_brace_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 95166,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Water-states/water_course_open_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 95166,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    },
+    {
+      "file": "Water-states/water_course_spill_mask.png",
+      "size": [
+        309,
+        309
+      ],
+      "expected_size": [
+        309,
+        309
+      ],
+      "size_ok": true,
+      "transparent_pixels": 95166,
+      "transparent_rgb_bleed_pixels": 0,
+      "alpha_ok": true
+    }
+  ],
+  "note": "Screenshots are opaque runtime references; transparent geometry overlays are registration masks, not production sprites."
+}

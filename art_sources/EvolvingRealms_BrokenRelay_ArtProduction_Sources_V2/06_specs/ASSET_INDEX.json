@@ -1,0 +1,1498 @@
+{
+  "pack_name": "Evolving Realms Broken Relay Art Production Sources V2",
+  "style": "Approved sample 3: Modern Stylized Pixel Fantasy",
+  "current_layout": {
+    "id": "landpkg:snow_mountain/reference",
+    "version": 10,
+    "logical_tile_px": 40,
+    "patch_tiles": [
+      48,
+      40
+    ],
+    "target_layer_pixel_size": [
+      1920,
+      1600
+    ],
+    "native_viewport": [
+      1100,
+      720
+    ]
+  },
+  "readiness": "SOURCE_ONLY_NOT_FOR_DIRECT_INTEGRATION",
+  "scene_source": {
+    "file": "01_scene_reference/broken_relay_art_direction_scene.png",
+    "size": [
+      1374,
+      1145
+    ],
+    "status": "illustration_reference_only",
+    "reason": "Does not match 1920x1600 native patch or authoritative location/collision coordinates; not the ground composition."
+  },
+  "roof_source": {
+    "file": "02_original_sources/outpost_roof_parts_source.png",
+    "size": [
+      1374,
+      1145
+    ],
+    "status": "unregistered_foreground_source_only",
+    "reason": "Parts not registered to the scene or layout. Cannot be inserted as same-coordinate roof overlay."
+  },
+  "modular_sources": [
+    "02_original_sources/architecture_parts_source.png",
+    "02_original_sources/pine_rocks_parts_source.png",
+    "02_original_sources/bridge_cliff_parts_source.png"
+  ],
+  "transparent_sheets": "Cleaned alpha sheet files are candidates; some artifacts are split, incomplete or have halo; verify against opaque backgrounds.",
+  "candidates": [
+    {
+      "id": "roof_01",
+      "package_file": "04_separated_candidates/roof/roof_01_candidate.png",
+      "origin_sheet": "roof",
+      "source_rect": [
+        883,
+        126,
+        250,
+        187
+      ],
+      "pixel_size": [
+        260,
+        197
+      ],
+      "suggested_pivot": [
+        130,
+        196
+      ],
+      "layer": "foreground",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "roof_02",
+      "package_file": "04_separated_candidates/roof/roof_02_candidate.png",
+      "origin_sheet": "roof",
+      "source_rect": [
+        411,
+        194,
+        572,
+        326
+      ],
+      "pixel_size": [
+        582,
+        336
+      ],
+      "suggested_pivot": [
+        291,
+        335
+      ],
+      "layer": "foreground",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "roof_03",
+      "package_file": "04_separated_candidates/roof/roof_03_candidate.png",
+      "origin_sheet": "roof",
+      "source_rect": [
+        332,
+        537,
+        339,
+        148
+      ],
+      "pixel_size": [
+        349,
+        158
+      ],
+      "suggested_pivot": [
+        174,
+        157
+      ],
+      "layer": "foreground",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "roof_04",
+      "package_file": "04_separated_candidates/roof/roof_04_candidate.png",
+      "origin_sheet": "roof",
+      "source_rect": [
+        780,
+        537,
+        359,
+        148
+      ],
+      "pixel_size": [
+        369,
+        158
+      ],
+      "suggested_pivot": [
+        184,
+        157
+      ],
+      "layer": "foreground",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "roof_05",
+      "package_file": "04_separated_candidates/roof/roof_05_candidate.png",
+      "origin_sheet": "roof",
+      "source_rect": [
+        550,
+        862,
+        289,
+        149
+      ],
+      "pixel_size": [
+        299,
+        159
+      ],
+      "suggested_pivot": [
+        149,
+        158
+      ],
+      "layer": "foreground",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_01",
+      "package_file": "04_separated_candidates/architecture/architecture_01_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        27,
+        34,
+        155,
+        157
+      ],
+      "pixel_size": [
+        165,
+        167
+      ],
+      "suggested_pivot": [
+        82,
+        166
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_02",
+      "package_file": "04_separated_candidates/architecture/architecture_02_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        197,
+        34,
+        153,
+        157
+      ],
+      "pixel_size": [
+        163,
+        167
+      ],
+      "suggested_pivot": [
+        81,
+        166
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_03",
+      "package_file": "04_separated_candidates/architecture/architecture_03_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        362,
+        34,
+        152,
+        157
+      ],
+      "pixel_size": [
+        162,
+        167
+      ],
+      "suggested_pivot": [
+        81,
+        166
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_04",
+      "package_file": "04_separated_candidates/architecture/architecture_04_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        526,
+        34,
+        155,
+        157
+      ],
+      "pixel_size": [
+        165,
+        167
+      ],
+      "suggested_pivot": [
+        82,
+        166
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_05",
+      "package_file": "04_separated_candidates/architecture/architecture_05_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        692,
+        33,
+        150,
+        158
+      ],
+      "pixel_size": [
+        160,
+        168
+      ],
+      "suggested_pivot": [
+        80,
+        167
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_06",
+      "package_file": "04_separated_candidates/architecture/architecture_06_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        856,
+        34,
+        154,
+        157
+      ],
+      "pixel_size": [
+        164,
+        167
+      ],
+      "suggested_pivot": [
+        82,
+        166
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_07",
+      "package_file": "04_separated_candidates/architecture/architecture_07_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        20,
+        226,
+        173,
+        108
+      ],
+      "pixel_size": [
+        183,
+        118
+      ],
+      "suggested_pivot": [
+        91,
+        117
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_08",
+      "package_file": "04_separated_candidates/architecture/architecture_08_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        212,
+        227,
+        159,
+        107
+      ],
+      "pixel_size": [
+        169,
+        117
+      ],
+      "suggested_pivot": [
+        84,
+        116
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_09",
+      "package_file": "04_separated_candidates/architecture/architecture_09_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        390,
+        227,
+        163,
+        107
+      ],
+      "pixel_size": [
+        173,
+        117
+      ],
+      "suggested_pivot": [
+        86,
+        116
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_10",
+      "package_file": "04_separated_candidates/architecture/architecture_10_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        569,
+        221,
+        177,
+        119
+      ],
+      "pixel_size": [
+        187,
+        129
+      ],
+      "suggested_pivot": [
+        93,
+        128
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_11",
+      "package_file": "04_separated_candidates/architecture/architecture_11_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        760,
+        225,
+        147,
+        114
+      ],
+      "pixel_size": [
+        157,
+        124
+      ],
+      "suggested_pivot": [
+        78,
+        123
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_12",
+      "package_file": "04_separated_candidates/architecture/architecture_12_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        1118,
+        217,
+        107,
+        130
+      ],
+      "pixel_size": [
+        117,
+        140
+      ],
+      "suggested_pivot": [
+        58,
+        139
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_13",
+      "package_file": "04_separated_candidates/architecture/architecture_13_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        1339,
+        219,
+        100,
+        128
+      ],
+      "pixel_size": [
+        110,
+        138
+      ],
+      "suggested_pivot": [
+        55,
+        137
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_14",
+      "package_file": "04_separated_candidates/architecture/architecture_14_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        27,
+        363,
+        152,
+        158
+      ],
+      "pixel_size": [
+        162,
+        168
+      ],
+      "suggested_pivot": [
+        81,
+        167
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_15",
+      "package_file": "04_separated_candidates/architecture/architecture_15_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        197,
+        363,
+        142,
+        157
+      ],
+      "pixel_size": [
+        152,
+        167
+      ],
+      "suggested_pivot": [
+        76,
+        166
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_16",
+      "package_file": "04_separated_candidates/architecture/architecture_16_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        477,
+        383,
+        125,
+        104
+      ],
+      "pixel_size": [
+        135,
+        114
+      ],
+      "suggested_pivot": [
+        67,
+        113
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_17",
+      "package_file": "04_separated_candidates/architecture/architecture_17_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        1272,
+        370,
+        156,
+        113
+      ],
+      "pixel_size": [
+        166,
+        123
+      ],
+      "suggested_pivot": [
+        83,
+        122
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_18",
+      "package_file": "04_separated_candidates/architecture/architecture_18_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        21,
+        530,
+        258,
+        132
+      ],
+      "pixel_size": [
+        268,
+        142
+      ],
+      "suggested_pivot": [
+        134,
+        141
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_19",
+      "package_file": "04_separated_candidates/architecture/architecture_19_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        297,
+        529,
+        234,
+        131
+      ],
+      "pixel_size": [
+        244,
+        141
+      ],
+      "suggested_pivot": [
+        122,
+        140
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_20",
+      "package_file": "04_separated_candidates/architecture/architecture_20_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        529,
+        543,
+        197,
+        114
+      ],
+      "pixel_size": [
+        207,
+        124
+      ],
+      "suggested_pivot": [
+        103,
+        123
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_21",
+      "package_file": "04_separated_candidates/architecture/architecture_21_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        39,
+        732,
+        174,
+        244
+      ],
+      "pixel_size": [
+        184,
+        254
+      ],
+      "suggested_pivot": [
+        92,
+        253
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_22",
+      "package_file": "04_separated_candidates/architecture/architecture_22_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        490,
+        746,
+        198,
+        206
+      ],
+      "pixel_size": [
+        208,
+        216
+      ],
+      "suggested_pivot": [
+        104,
+        215
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_23",
+      "package_file": "04_separated_candidates/architecture/architecture_23_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        1015,
+        787,
+        141,
+        144
+      ],
+      "pixel_size": [
+        151,
+        154
+      ],
+      "suggested_pivot": [
+        75,
+        153
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "architecture_24",
+      "package_file": "04_separated_candidates/architecture/architecture_24_candidate.png",
+      "origin_sheet": "architecture",
+      "source_rect": [
+        209,
+        985,
+        181,
+        83
+      ],
+      "pixel_size": [
+        191,
+        93
+      ],
+      "suggested_pivot": [
+        95,
+        92
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_01",
+      "package_file": "04_separated_candidates/vegetation/vegetation_01_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        17,
+        17,
+        329,
+        478
+      ],
+      "pixel_size": [
+        339,
+        488
+      ],
+      "suggested_pivot": [
+        169,
+        487
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_02",
+      "package_file": "04_separated_candidates/vegetation/vegetation_02_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        392,
+        17,
+        333,
+        478
+      ],
+      "pixel_size": [
+        343,
+        488
+      ],
+      "suggested_pivot": [
+        171,
+        487
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_03",
+      "package_file": "04_separated_candidates/vegetation/vegetation_03_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        787,
+        25,
+        244,
+        470
+      ],
+      "pixel_size": [
+        254,
+        480
+      ],
+      "suggested_pivot": [
+        127,
+        479
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_04",
+      "package_file": "04_separated_candidates/vegetation/vegetation_04_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        1100,
+        24,
+        338,
+        471
+      ],
+      "pixel_size": [
+        348,
+        481
+      ],
+      "suggested_pivot": [
+        174,
+        480
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_05",
+      "package_file": "04_separated_candidates/vegetation/vegetation_05_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        74,
+        551,
+        162,
+        213
+      ],
+      "pixel_size": [
+        172,
+        223
+      ],
+      "suggested_pivot": [
+        86,
+        222
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_06",
+      "package_file": "04_separated_candidates/vegetation/vegetation_06_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        1115,
+        521,
+        276,
+        253
+      ],
+      "pixel_size": [
+        286,
+        263
+      ],
+      "suggested_pivot": [
+        143,
+        262
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_07",
+      "package_file": "04_separated_candidates/vegetation/vegetation_07_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        306,
+        560,
+        211,
+        204
+      ],
+      "pixel_size": [
+        221,
+        214
+      ],
+      "suggested_pivot": [
+        110,
+        213
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_08",
+      "package_file": "04_separated_candidates/vegetation/vegetation_08_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        569,
+        589,
+        465,
+        174
+      ],
+      "pixel_size": [
+        475,
+        184
+      ],
+      "suggested_pivot": [
+        237,
+        183
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_09",
+      "package_file": "04_separated_candidates/vegetation/vegetation_09_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        15,
+        827,
+        224,
+        169
+      ],
+      "pixel_size": [
+        234,
+        179
+      ],
+      "suggested_pivot": [
+        117,
+        178
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_10",
+      "package_file": "04_separated_candidates/vegetation/vegetation_10_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        253,
+        808,
+        246,
+        194
+      ],
+      "pixel_size": [
+        256,
+        204
+      ],
+      "suggested_pivot": [
+        128,
+        203
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_11",
+      "package_file": "04_separated_candidates/vegetation/vegetation_11_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        711,
+        810,
+        215,
+        191
+      ],
+      "pixel_size": [
+        225,
+        201
+      ],
+      "suggested_pivot": [
+        112,
+        200
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_12",
+      "package_file": "04_separated_candidates/vegetation/vegetation_12_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        950,
+        821,
+        223,
+        178
+      ],
+      "pixel_size": [
+        233,
+        188
+      ],
+      "suggested_pivot": [
+        116,
+        187
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_13",
+      "package_file": "04_separated_candidates/vegetation/vegetation_13_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        1189,
+        802,
+        230,
+        190
+      ],
+      "pixel_size": [
+        240,
+        200
+      ],
+      "suggested_pivot": [
+        120,
+        199
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "vegetation_14",
+      "package_file": "04_separated_candidates/vegetation/vegetation_14_candidate.png",
+      "origin_sheet": "vegetation",
+      "source_rect": [
+        514,
+        864,
+        183,
+        134
+      ],
+      "pixel_size": [
+        193,
+        144
+      ],
+      "suggested_pivot": [
+        96,
+        143
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_01",
+      "package_file": "04_separated_candidates/bridge/bridge_01_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        73,
+        26,
+        144,
+        121
+      ],
+      "pixel_size": [
+        154,
+        131
+      ],
+      "suggested_pivot": [
+        77,
+        130
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_02",
+      "package_file": "04_separated_candidates/bridge/bridge_02_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        259,
+        31,
+        170,
+        116
+      ],
+      "pixel_size": [
+        180,
+        126
+      ],
+      "suggested_pivot": [
+        90,
+        125
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_03",
+      "package_file": "04_separated_candidates/bridge/bridge_03_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        467,
+        30,
+        159,
+        117
+      ],
+      "pixel_size": [
+        169,
+        127
+      ],
+      "suggested_pivot": [
+        84,
+        126
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_04",
+      "package_file": "04_separated_candidates/bridge/bridge_04_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        657,
+        31,
+        147,
+        116
+      ],
+      "pixel_size": [
+        157,
+        126
+      ],
+      "suggested_pivot": [
+        78,
+        125
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_05",
+      "package_file": "04_separated_candidates/bridge/bridge_05_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        45,
+        176,
+        303,
+        133
+      ],
+      "pixel_size": [
+        313,
+        143
+      ],
+      "suggested_pivot": [
+        156,
+        142
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_06",
+      "package_file": "04_separated_candidates/bridge/bridge_06_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        403,
+        166,
+        300,
+        138
+      ],
+      "pixel_size": [
+        310,
+        148
+      ],
+      "suggested_pivot": [
+        155,
+        147
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_07",
+      "package_file": "04_separated_candidates/bridge/bridge_07_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        747,
+        177,
+        222,
+        121
+      ],
+      "pixel_size": [
+        232,
+        131
+      ],
+      "suggested_pivot": [
+        116,
+        130
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_08",
+      "package_file": "04_separated_candidates/bridge/bridge_08_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        1017,
+        186,
+        190,
+        108
+      ],
+      "pixel_size": [
+        200,
+        118
+      ],
+      "suggested_pivot": [
+        100,
+        117
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_09",
+      "package_file": "04_separated_candidates/bridge/bridge_09_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        32,
+        350,
+        335,
+        82
+      ],
+      "pixel_size": [
+        345,
+        92
+      ],
+      "suggested_pivot": [
+        172,
+        91
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_10",
+      "package_file": "04_separated_candidates/bridge/bridge_10_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        35,
+        462,
+        314,
+        146
+      ],
+      "pixel_size": [
+        324,
+        156
+      ],
+      "suggested_pivot": [
+        162,
+        155
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_11",
+      "package_file": "04_separated_candidates/bridge/bridge_11_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        383,
+        463,
+        298,
+        148
+      ],
+      "pixel_size": [
+        308,
+        158
+      ],
+      "suggested_pivot": [
+        154,
+        157
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_12",
+      "package_file": "04_separated_candidates/bridge/bridge_12_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        711,
+        463,
+        290,
+        152
+      ],
+      "pixel_size": [
+        300,
+        162
+      ],
+      "suggested_pivot": [
+        150,
+        161
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_13",
+      "package_file": "04_separated_candidates/bridge/bridge_13_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        1034,
+        471,
+        187,
+        155
+      ],
+      "pixel_size": [
+        197,
+        165
+      ],
+      "suggested_pivot": [
+        98,
+        164
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_14",
+      "package_file": "04_separated_candidates/bridge/bridge_14_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        12,
+        628,
+        212,
+        154
+      ],
+      "pixel_size": [
+        222,
+        164
+      ],
+      "suggested_pivot": [
+        111,
+        163
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_15",
+      "package_file": "04_separated_candidates/bridge/bridge_15_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        252,
+        628,
+        203,
+        154
+      ],
+      "pixel_size": [
+        213,
+        164
+      ],
+      "suggested_pivot": [
+        106,
+        163
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_16",
+      "package_file": "04_separated_candidates/bridge/bridge_16_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        466,
+        633,
+        172,
+        142
+      ],
+      "pixel_size": [
+        182,
+        152
+      ],
+      "suggested_pivot": [
+        91,
+        151
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_17",
+      "package_file": "04_separated_candidates/bridge/bridge_17_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        647,
+        658,
+        160,
+        117
+      ],
+      "pixel_size": [
+        170,
+        127
+      ],
+      "suggested_pivot": [
+        85,
+        126
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_18",
+      "package_file": "04_separated_candidates/bridge/bridge_18_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        18,
+        802,
+        111,
+        100
+      ],
+      "pixel_size": [
+        121,
+        110
+      ],
+      "suggested_pivot": [
+        60,
+        109
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_19",
+      "package_file": "04_separated_candidates/bridge/bridge_19_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        492,
+        790,
+        137,
+        112
+      ],
+      "pixel_size": [
+        147,
+        122
+      ],
+      "suggested_pivot": [
+        73,
+        121
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    },
+    {
+      "id": "bridge_20",
+      "package_file": "04_separated_candidates/bridge/bridge_20_candidate.png",
+      "origin_sheet": "bridge",
+      "source_rect": [
+        1058,
+        790,
+        146,
+        109
+      ],
+      "pixel_size": [
+        156,
+        119
+      ],
+      "suggested_pivot": [
+        78,
+        118
+      ],
+      "layer": "world",
+      "alpha_cleanup": "thresholded",
+      "status": "candidate_requires_manual_review",
+      "note": "Automatic connected-component segmentation; verify it is a complete independent sprite and not a disconnected fragment; pivots are provisional."
+    }
+  ],
+  "next_production_gate": "Create exact 1920x1600 ground and matching roof composition aligned with v10 gameplay geometry, plus seam-tested material pieces and independently layered modular sprites. Then test in Godot at 1100x720."
+}

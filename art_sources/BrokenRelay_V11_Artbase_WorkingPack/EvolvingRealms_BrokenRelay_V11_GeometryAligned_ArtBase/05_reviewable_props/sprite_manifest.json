@@ -1,0 +1,249 @@
+{
+  "schema": "evolvingrealms.artreview.v11",
+  "pixel_grid": 40,
+  "style": "Modern Stylized Pixel Fantasy sample 3",
+  "assets": [
+    {
+      "id": "snow_pine_large",
+      "path": "05_reviewable_props/snow_pine_large_candidate.png",
+      "size_px": [
+        165,
+        240
+      ],
+      "pivot_px": [
+        82,
+        238
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_01_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        165,
+        240
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "snow_pine_mature",
+      "path": "05_reviewable_props/snow_pine_mature_candidate.png",
+      "size_px": [
+        157,
+        225
+      ],
+      "pivot_px": [
+        78,
+        223
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_02_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        157,
+        225
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "snow_pine_narrow",
+      "path": "05_reviewable_props/snow_pine_narrow_candidate.png",
+      "size_px": [
+        114,
+        220
+      ],
+      "pivot_px": [
+        57,
+        218
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_03_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        114,
+        220
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "snow_pine_young",
+      "path": "05_reviewable_props/snow_pine_young_candidate.png",
+      "size_px": [
+        105,
+        138
+      ],
+      "pivot_px": [
+        52,
+        136
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_05_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        105,
+        138
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "wind_bent_pine",
+      "path": "05_reviewable_props/wind_bent_pine_candidate.png",
+      "size_px": [
+        137,
+        132
+      ],
+      "pivot_px": [
+        68,
+        130
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_07_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        137,
+        132
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "fallen_pine",
+      "path": "05_reviewable_props/fallen_pine_candidate.png",
+      "size_px": [
+        180,
+        67
+      ],
+      "pivot_px": [
+        90,
+        65
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_08_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        180,
+        67
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "snow_rock_small",
+      "path": "05_reviewable_props/snow_rock_small_candidate.png",
+      "size_px": [
+        112,
+        85
+      ],
+      "pivot_px": [
+        56,
+        83
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_09_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        112,
+        85
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "snow_rock_cluster",
+      "path": "05_reviewable_props/snow_rock_cluster_candidate.png",
+      "size_px": [
+        142,
+        112
+      ],
+      "pivot_px": [
+        71,
+        110
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_10_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        142,
+        112
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "rock_red_bush",
+      "path": "05_reviewable_props/rock_red_bush_candidate.png",
+      "size_px": [
+        133,
+        118
+      ],
+      "pivot_px": [
+        66,
+        116
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_11_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        133,
+        118
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "exposed_rock",
+      "path": "05_reviewable_props/exposed_rock_candidate.png",
+      "size_px": [
+        143,
+        114
+      ],
+      "pivot_px": [
+        71,
+        112
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_12_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        143,
+        114
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    },
+    {
+      "id": "snow_boulder",
+      "path": "05_reviewable_props/snow_boulder_candidate.png",
+      "size_px": [
+        108,
+        79
+      ],
+      "pivot_px": [
+        54,
+        77
+      ],
+      "layer": "world_facade_and_props",
+      "status": "IMPORT_READY_VISUAL_QA_PENDING",
+      "provenance": "EvolvingRealms_BrokenRelay_ArtProduction_V2/04_separated_candidates/vegetation/vegetation_14_candidate.png",
+      "alpha_bbox": [
+        0,
+        0,
+        108,
+        79
+      ],
+      "game_logic": "decoration only; do not create collision without authored placement"
+    }
+  ]
+}

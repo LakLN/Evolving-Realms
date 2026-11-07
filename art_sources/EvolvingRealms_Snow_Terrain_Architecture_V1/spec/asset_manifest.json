@@ -1,0 +1,531 @@
+{
+  "package_id": "EvolvingRealms_Snow_Terrain_Architecture_V1",
+  "style_approved": "Broken Relay sample #3 (watchtower left, red pennants, stone bridge, sign near trail)",
+  "perspective": "2D 3/4 top-down, orthographic, upper-left light",
+  "gameplay_cell_px": [
+    40,
+    40
+  ],
+  "render_reference_viewport_px": [
+    1100,
+    720
+  ],
+  "IMPORTANT": "All generated sheets, extracted cutouts and 40px crops are ART CANDIDATES or REFERENCES, not verified production assets, seamless atlases, or map-aligned ground/roof exports.",
+  "requires_actual_layout_before_composition": [
+    "Broken Relay gameplay collision/elevation layers",
+    "door/stair/bridge tile coordinates",
+    "patch origin and orientation",
+    "native screenshots in Godot"
+  ],
+  "artifacts": [
+    {
+      "id": "pine_snow_01",
+      "file": "04_extracted_candidates/vegetation/pine_snow_01.png",
+      "native_width": 64,
+      "native_height": 88,
+      "suggested_pivot": [
+        32,
+        87
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "pine_snow_02",
+      "file": "04_extracted_candidates/vegetation/pine_snow_02.png",
+      "native_width": 58,
+      "native_height": 89,
+      "suggested_pivot": [
+        29,
+        88
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "pine_snow_03",
+      "file": "04_extracted_candidates/vegetation/pine_snow_03.png",
+      "native_width": 49,
+      "native_height": 78,
+      "suggested_pivot": [
+        24,
+        77
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "pine_snow_04",
+      "file": "04_extracted_candidates/vegetation/pine_snow_04.png",
+      "native_width": 48,
+      "native_height": 78,
+      "suggested_pivot": [
+        24,
+        77
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "pine_snow_05",
+      "file": "04_extracted_candidates/vegetation/pine_snow_05.png",
+      "native_width": 41,
+      "native_height": 72,
+      "suggested_pivot": [
+        20,
+        71
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "pine_snow_large",
+      "file": "04_extracted_candidates/vegetation/pine_snow_large.png",
+      "native_width": 67,
+      "native_height": 102,
+      "suggested_pivot": [
+        33,
+        101
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "young_pine",
+      "file": "04_extracted_candidates/vegetation/young_pine.png",
+      "native_width": 43,
+      "native_height": 59,
+      "suggested_pivot": [
+        21,
+        58
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "dead_tree",
+      "file": "04_extracted_candidates/vegetation/dead_tree.png",
+      "native_width": 81,
+      "native_height": 86,
+      "suggested_pivot": [
+        40,
+        85
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "snow_shrub",
+      "file": "04_extracted_candidates/vegetation/snow_shrub.png",
+      "native_width": 50,
+      "native_height": 50,
+      "suggested_pivot": [
+        25,
+        49
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "rock_cluster_snow_01",
+      "file": "04_extracted_candidates/vegetation/rock_cluster_snow_01.png",
+      "native_width": 85,
+      "native_height": 65,
+      "suggested_pivot": [
+        42,
+        64
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "rock_cluster_snow_02",
+      "file": "04_extracted_candidates/vegetation/rock_cluster_snow_02.png",
+      "native_width": 54,
+      "native_height": 35,
+      "suggested_pivot": [
+        27,
+        34
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "berry_bush",
+      "file": "04_extracted_candidates/vegetation/berry_bush.png",
+      "native_width": 50,
+      "native_height": 39,
+      "suggested_pivot": [
+        25,
+        38
+      ],
+      "layer": "world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Foot anchor needs in-game calibration; automatically separated from sheet; verify matte and sprite overlaps"
+    },
+    {
+      "id": "outpost_main_building",
+      "file": "04_extracted_candidates/architecture/outpost_main_building.png",
+      "native_width": 171,
+      "native_height": 158,
+      "suggested_pivot": [
+        85,
+        157
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "outpost_side_building",
+      "file": "04_extracted_candidates/architecture/outpost_side_building.png",
+      "native_width": 119,
+      "native_height": 87,
+      "suggested_pivot": [
+        59,
+        86
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "outpost_watchtower",
+      "file": "04_extracted_candidates/architecture/outpost_watchtower.png",
+      "native_width": 105,
+      "native_height": 155,
+      "suggested_pivot": [
+        52,
+        154
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "snow_roof_module_a",
+      "file": "04_extracted_candidates/architecture/snow_roof_module_a.png",
+      "native_width": 70,
+      "native_height": 71,
+      "suggested_pivot": [
+        35,
+        70
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "stone_wall_module_a",
+      "file": "04_extracted_candidates/architecture/stone_wall_module_a.png",
+      "native_width": 108,
+      "native_height": 70,
+      "suggested_pivot": [
+        54,
+        69
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "stone_wall_module_b",
+      "file": "04_extracted_candidates/architecture/stone_wall_module_b.png",
+      "native_width": 115,
+      "native_height": 56,
+      "suggested_pivot": [
+        57,
+        55
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "wooden_gateway",
+      "file": "04_extracted_candidates/architecture/wooden_gateway.png",
+      "native_width": 81,
+      "native_height": 63,
+      "suggested_pivot": [
+        40,
+        62
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "roof_module_b",
+      "file": "04_extracted_candidates/architecture/roof_module_b.png",
+      "native_width": 58,
+      "native_height": 58,
+      "suggested_pivot": [
+        29,
+        57
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "roof_module_c",
+      "file": "04_extracted_candidates/architecture/roof_module_c.png",
+      "native_width": 65,
+      "native_height": 53,
+      "suggested_pivot": [
+        32,
+        52
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "roof_module_d",
+      "file": "04_extracted_candidates/architecture/roof_module_d.png",
+      "native_width": 64,
+      "native_height": 57,
+      "suggested_pivot": [
+        32,
+        56
+      ],
+      "layer": "world / roof candidate",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "NOT a final construction-ready modular prefab; separation and occlusion layers need artistic reconstruction"
+    },
+    {
+      "id": "wooden_bridge_candidate",
+      "file": "04_extracted_candidates/bridges/wooden_bridge_candidate.png",
+      "native_width": 172,
+      "native_height": 99,
+      "suggested_pivot": [
+        86,
+        98
+      ],
+      "layer": "world / foreground",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Candidate art; ensure endpoints, collision and elevation match actual level geometry"
+    },
+    {
+      "id": "stone_bridge_candidate",
+      "file": "04_extracted_candidates/bridges/stone_bridge_candidate.png",
+      "native_width": 103,
+      "native_height": 56,
+      "suggested_pivot": [
+        51,
+        55
+      ],
+      "layer": "world / foreground",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Candidate art; ensure endpoints, collision and elevation match actual level geometry"
+    },
+    {
+      "id": "stone_stair_candidate",
+      "file": "04_extracted_candidates/bridges/stone_stair_candidate.png",
+      "native_width": 62,
+      "native_height": 75,
+      "suggested_pivot": [
+        31,
+        74
+      ],
+      "layer": "world / foreground",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Candidate art; ensure endpoints, collision and elevation match actual level geometry"
+    },
+    {
+      "id": "stone_ramp_candidate",
+      "file": "04_extracted_candidates/bridges/stone_ramp_candidate.png",
+      "native_width": 52,
+      "native_height": 45,
+      "suggested_pivot": [
+        26,
+        44
+      ],
+      "layer": "world / foreground",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Candidate art; ensure endpoints, collision and elevation match actual level geometry"
+    },
+    {
+      "id": "stone_ramp_candidate_b",
+      "file": "04_extracted_candidates/bridges/stone_ramp_candidate_b.png",
+      "native_width": 52,
+      "native_height": 44,
+      "suggested_pivot": [
+        26,
+        43
+      ],
+      "layer": "world / foreground",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Candidate art; ensure endpoints, collision and elevation match actual level geometry"
+    },
+    {
+      "id": "cliff_single_01",
+      "file": "04_extracted_candidates/cliffs/cliff_single_01.png",
+      "native_width": 53,
+      "native_height": 89,
+      "suggested_pivot": [
+        26,
+        88
+      ],
+      "layer": "ground / world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Use as painted-source candidate; cliffs require adjoining geometry and seams reconstructed"
+    },
+    {
+      "id": "cliff_single_02",
+      "file": "04_extracted_candidates/cliffs/cliff_single_02.png",
+      "native_width": 59,
+      "native_height": 88,
+      "suggested_pivot": [
+        29,
+        87
+      ],
+      "layer": "ground / world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Use as painted-source candidate; cliffs require adjoining geometry and seams reconstructed"
+    },
+    {
+      "id": "cliff_double_01",
+      "file": "04_extracted_candidates/cliffs/cliff_double_01.png",
+      "native_width": 117,
+      "native_height": 110,
+      "suggested_pivot": [
+        58,
+        109
+      ],
+      "layer": "ground / world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Use as painted-source candidate; cliffs require adjoining geometry and seams reconstructed"
+    },
+    {
+      "id": "icy_fall_01",
+      "file": "04_extracted_candidates/cliffs/icy_fall_01.png",
+      "native_width": 75,
+      "native_height": 123,
+      "suggested_pivot": [
+        37,
+        122
+      ],
+      "layer": "ground / world",
+      "review": "CANDIDATE_NEEDS_ALPHA_AND_EDGE_CLEANUP",
+      "notes": "Use as painted-source candidate; cliffs require adjoining geometry and seams reconstructed"
+    },
+    {
+      "id": "snow_clean",
+      "file": "05_material_samples_40px/snow_clean_40px_sample.png",
+      "native_width": 40,
+      "native_height": 40,
+      "suggested_pivot": null,
+      "layer": "ground",
+      "review": "REFERENCE_SAMPLE_NOT_SEAMLESS",
+      "notes": "Crop from generated concept board; must be rebuilt/edge-tested before use as repeating atlas material"
+    },
+    {
+      "id": "snow_blue",
+      "file": "05_material_samples_40px/snow_blue_40px_sample.png",
+      "native_width": 40,
+      "native_height": 40,
+      "suggested_pivot": null,
+      "layer": "ground",
+      "review": "REFERENCE_SAMPLE_NOT_SEAMLESS",
+      "notes": "Crop from generated concept board; must be rebuilt/edge-tested before use as repeating atlas material"
+    },
+    {
+      "id": "snow_compacted",
+      "file": "05_material_samples_40px/snow_compacted_40px_sample.png",
+      "native_width": 40,
+      "native_height": 40,
+      "suggested_pivot": null,
+      "layer": "ground",
+      "review": "REFERENCE_SAMPLE_NOT_SEAMLESS",
+      "notes": "Crop from generated concept board; must be rebuilt/edge-tested before use as repeating atlas material"
+    },
+    {
+      "id": "snow_scree_mix",
+      "file": "05_material_samples_40px/snow_scree_mix_40px_sample.png",
+      "native_width": 40,
+      "native_height": 40,
+      "suggested_pivot": null,
+      "layer": "ground",
+      "review": "REFERENCE_SAMPLE_NOT_SEAMLESS",
+      "notes": "Crop from generated concept board; must be rebuilt/edge-tested before use as repeating atlas material"
+    },
+    {
+      "id": "exposed_earth",
+      "file": "05_material_samples_40px/exposed_earth_40px_sample.png",
+      "native_width": 40,
+      "native_height": 40,
+      "suggested_pivot": null,
+      "layer": "ground",
+      "review": "REFERENCE_SAMPLE_NOT_SEAMLESS",
+      "notes": "Crop from generated concept board; must be rebuilt/edge-tested before use as repeating atlas material"
+    },
+    {
+      "id": "cobblestone",
+      "file": "05_material_samples_40px/cobblestone_40px_sample.png",
+      "native_width": 40,
+      "native_height": 40,
+      "suggested_pivot": null,
+      "layer": "ground",
+      "review": "REFERENCE_SAMPLE_NOT_SEAMLESS",
+      "notes": "Crop from generated concept board; must be rebuilt/edge-tested before use as repeating atlas material"
+    },
+    {
+      "id": "frozen_water",
+      "file": "05_material_samples_40px/frozen_water_40px_sample.png",
+      "native_width": 40,
+      "native_height": 40,
+      "suggested_pivot": null,
+      "layer": "ground",
+      "review": "REFERENCE_SAMPLE_NOT_SEAMLESS",
+      "notes": "Crop from generated concept board; must be rebuilt/edge-tested before use as repeating atlas material"
+    }
+  ],
+  "final_export_targets": [
+    {
+      "id": "broken_relay_ground",
+      "native_size": [
+        1920,
+        1600
+      ],
+      "mode": "opaque",
+      "status": "NOT_CREATED_REQUIRES_REAL_LAYOUT"
+    },
+    {
+      "id": "broken_relay_roof",
+      "native_size": [
+        1920,
+        1600
+      ],
+      "mode": "RGBA",
+      "status": "NOT_CREATED_REQUIRES_REAL_LAYOUT"
+    },
+    {
+      "id": "windcut_ground",
+      "native_size": [
+        2560,
+        1760
+      ],
+      "status": "NOT_STARTED"
+    },
+    {
+      "id": "windcut_roof",
+      "native_size": [
+        2560,
+        1760
+      ],
+      "status": "NOT_STARTED"
+    }
+  ]
+}

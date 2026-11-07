@@ -1,0 +1,38 @@
+{
+  "checks": "automated file geometry only, not Godot rendering",
+  "results": [
+    {
+      "file": "reference_v10_ground_artpass.png",
+      "size_px": [
+        1920,
+        1600
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        1920,
+        1600
+      ],
+      "all_transparent": false,
+      "bytes": 2065521
+    },
+    {
+      "file": "reference_v10_roof_artpass.png",
+      "size_px": [
+        1920,
+        1600
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        691,
+        384,
+        1151,
+        646
+      ],
+      "all_transparent": false,
+      "bytes": 220663
+    }
+  ],
+  "godot_runtime_tested": false
+}

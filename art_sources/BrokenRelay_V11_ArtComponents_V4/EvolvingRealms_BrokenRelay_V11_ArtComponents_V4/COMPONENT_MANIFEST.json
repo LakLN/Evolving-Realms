@@ -1,0 +1,494 @@
+{
+  "schema": "er.snow.broken_relay.art_components.v4",
+  "layout_version": 11,
+  "reference_area": "broken_relay",
+  "style_lock": "approved sample #3, Modern Stylized Pixel Fantasy 3/4",
+  "grid_px": 40,
+  "area_size_cells": [
+    48,
+    40
+  ],
+  "art_status": "PARTIAL_COMPONENT_DELIVERY_NOT_PRODUCTION_COMPLETE",
+  "items": [
+    {
+      "file": "01_architecture_pair/outpost_facade_480x240.png",
+      "canvas_px": [
+        480,
+        240
+      ],
+      "alpha": true,
+      "status": "INTEGRATION_CANDIDATE",
+      "common_anchor_tiles": [
+        18,
+        11
+      ],
+      "pivot_px": [
+        240,
+        240
+      ]
+    },
+    {
+      "file": "01_architecture_pair/outpost_roof_only_480x240.png",
+      "canvas_px": [
+        480,
+        240
+      ],
+      "alpha": true,
+      "status": "INTEGRATION_CANDIDATE",
+      "common_anchor_tiles": [
+        18,
+        11
+      ],
+      "pivot_px": [
+        240,
+        240
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r1_c1_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r1_c2_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r1_c3_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r1_c4_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r2_c1_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r2_c2_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r2_c3_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r2_c4_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r3_c1_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r3_c2_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r3_c3_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r3_c4_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r4_c1_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r4_c2_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r4_c3_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "02_cliff_cutouts/cliff_module_r4_c4_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "alpha": true,
+      "status": "REQUIRES_MANUAL_PLACEMENT_REVIEW",
+      "pivot_px": [
+        80,
+        159
+      ]
+    },
+    {
+      "file": "03_props_candidates/exposed_rock_candidate.png",
+      "canvas_px": [
+        143,
+        114
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/fallen_pine_candidate.png",
+      "canvas_px": [
+        180,
+        67
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/rock_red_bush_candidate.png",
+      "canvas_px": [
+        133,
+        118
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/snow_boulder_candidate.png",
+      "canvas_px": [
+        108,
+        79
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/snow_pine_large_candidate.png",
+      "canvas_px": [
+        165,
+        240
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/snow_pine_mature_candidate.png",
+      "canvas_px": [
+        157,
+        225
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/snow_pine_narrow_candidate.png",
+      "canvas_px": [
+        114,
+        220
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/snow_pine_young_candidate.png",
+      "canvas_px": [
+        105,
+        138
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/snow_rock_cluster_candidate.png",
+      "canvas_px": [
+        142,
+        112
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/snow_rock_small_candidate.png",
+      "canvas_px": [
+        112,
+        85
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "03_props_candidates/wind_bent_pine_candidate.png",
+      "canvas_px": [
+        137,
+        132
+      ],
+      "alpha": true,
+      "status": "PIXEL_DENSITY_AND_PIVOT_REVIEW_REQUIRED"
+    },
+    {
+      "file": "04_material_library_review_only/cliff_rock_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/ice_blue_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/ice_cracks_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/snow_path_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/snow_path_rocks_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/snow_powder_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/snow_scree_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/snow_soft_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/snow_wind_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/taiga_floor_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/talus_boulders_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/talus_rock_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/talus_sparse_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    },
+    {
+      "file": "04_material_library_review_only/trail_earth_160.png",
+      "canvas_px": [
+        160,
+        160
+      ],
+      "status": "NOT_APPROVED_VISUALLY_TILEABLE"
+    }
+  ],
+  "critical_note": "The experimentally composed V4 ground/cliff global layers FAILED visual review due visible tile/grid repetition and are intentionally excluded from this handoff. Do not import or reconstruct them as final runtime assets.",
+  "house_pair": {
+    "same_origin": true,
+    "size_px": [
+      480,
+      240
+    ],
+    "map_origin_px": [
+      720,
+      440
+    ],
+    "fade_only": "01_architecture_pair/outpost_roof_only_480x240.png",
+    "static": "01_architecture_pair/outpost_facade_480x240.png",
+    "fade_alpha_qa": [
+      1.0,
+      0.53,
+      0.12
+    ]
+  },
+  "not_finished": [
+    "organic terrain edge production",
+    "full gorge/cliff art placement",
+    "bridge 440x40 deck plus rails",
+    "stairs/ledge",
+    "world composition matching playable geometry",
+    "runtime sorting/fade validation"
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "schema": "er-art-handoff",
+  "version": 1,
+  "package": "long_thaw_n7",
+  "status": "reference_data_not_production_art",
+  "layout": {
+    "id": "landpkg:snow_mountain/long_thaw_n3",
+    "version": 4,
+    "atlas_version": 5,
+    "terrain_version": 2
+  },
+  "tile_px": 40,
+  "viewport_px": [
+    1100,
+    720
+  ],
+  "required_art": {
+    "environment": "See ENVIRONMENT_ASSET_LIST.md",
+    "creatures": "See CREATURE_ART_BRIEFS.md",
+    "story_constraints": "See Studio-only/ENVIRONMENT_STORYTELLING.md"
+  },
+  "qa": {
+    "transparent_assets": "true alpha; no matte, board, hidden frame or RGB bleed",
+    "lighting": "upper-left",
+    "review_backgrounds": [
+      "dark",
+      "light",
+      "checkerboard"
+    ],
+    "pixel_density": "native 1x; no fractional scaling",
+    "report": "QA_REPORT.json"
+  },
+  "files": [
+    {
+      "path": "CREATURE_ART_BRIEFS.md",
+      "bytes": 2508,
+      "sha256": "c240226c02ca72587acd051df403b2e69a1a1883792269fb65921b74c98b0273"
+    },
+    {
+      "path": "ENVIRONMENT_ASSET_LIST.md",
+      "bytes": 2415,
+      "sha256": "5c5b5801164870d57591d1d26eea118049aab3c24a7ca129cee27f3f41b18815"
+    },
+    {
+      "path": "Geometry/area_mask.png",
+      "bytes": 2757,
+      "sha256": "69700e6262cfaa308b3e1e0584b57a2747061c6f46eeea019db01143ba6b6b9c"
+    },
+    {
+      "path": "Geometry/authored_markers_mask.png",
+      "bytes": 601,
+      "sha256": "4c627c883a90a60c88463af94988c85076db2d0e11f74054f398fff4f47c1165"
+    },
+    {
+      "path": "Geometry/collision_mask.png",
+      "bytes": 11395,
+      "sha256": "8cd123696cb327062b1066f427251c4b8539eff2e30aef96d5094277714cd672"
+    },
+    {
+      "path": "Geometry/elevation_mask.png",
+      "bytes": 1105,
+      "sha256": "c3dedb5dfcc00a2bc427f32863356c9c870bc1a7f7a24aef48537312c1c4a4db"
+    },
+    {
+      "path": "Geometry/geometry.json",
+      "bytes": 161087,
+      "sha256": "8ef60df89e6c61b985a9ae4cf225626069106ff7a1246b7d839dbdd46745a784"
+    },
+    {
+      "path": "Geometry/surface_mask.png",
+      "bytes": 19089,
+      "sha256": "cddac7663a6c0bd1a86cfa8206b376e6a395dffaa89a4cb6497d0fb2cbbbda4c"
+    },
+    {
+      "path": "Geometry/vegetation_landscape_mask.png",
+      "bytes": 11531,
+      "sha256": "208ec7a0cbfd81effb8e7a892063d3b32749185abf7197bb18cb9da4f91b98aa"
+    },
+    {
+      "path": "QA_REPORT.json",
+      "bytes": 5817,
+      "sha256": "8b731cf2221acfc722c76947ab398accca11863a5ee30fcea42e8c3c71b92832"
+    },
+    {
+      "path": "Screenshots/area_01_thawgate_fans.png",
+      "bytes": 1414715,
+      "sha256": "9f30925c77dfc3d9b5b0784bdfd69aabfb6bd84387ac8fe0f8e41b15370e4acc"
+    },
+    {
+      "path": "Screenshots/area_02_alderwash.png",
+      "bytes": 1432003,
+      "sha256": "e6c3df9f0af8fd1fc10dbe7b6098bbf8d1e4516b3733a8ecf20adf49aef6310f"
+    },
+    {
+      "path": "Screenshots/area_03_braided_commons.png",
+      "bytes": 833406,
+      "sha256": "737eb64c8ad3aef6755fc0bff95a4cbbee61df1f0cff16a12ce2c13b06362918"
+    },
+    {
+      "path": "Screenshots/area_04_siltmarket_reach.png",
+      "bytes": 1312847,
+      "sha256": "90a2c4f8549fa1cfa642bc350f51379d9fdca3879cf28f4c30086abc03a8bbd1"
+    },
+    {
+      "path": "Screenshots/area_05_nine_weirs.png",
+      "bytes": 1373576,
+      "sha256": "89b1bdf73a7eeb8029126be69330433d5239458157dfb6988a6a6b6cbd3e086f"
+    },
+    {
+      "path": "Screenshots/area_06_drowned_orchard.png",
+      "bytes": 1454229,
+      "sha256": "bd46b32766809e957ed73dfa836262866436a65c8559544d5d65eeb909abacf6"
+    },
+    {
+      "path": "Screenshots/area_07_underflow_gorge.png",
+      "bytes": 918171,
+      "sha256": "83068b1c4b6e8c5fb97c26782950a009a4a3f541b9bb0d414e0c6e42f104581f"
+    },
+    {
+      "path": "Screenshots/water_state_brace.png",
+      "bytes": 605939,
+      "sha256": "a305a64fac14b710a5a492c57068fdcfc2b4143521a197b8e9c241c882297317"
+    },
+    {
+      "path": "Screenshots/water_state_open.png",
+      "bytes": 595769,
+      "sha256": "951aa8949ebdf2039b10a3b933d555faad3be36c351e3c9fccc9375080c74680"
+    },
+    {
+      "path": "Screenshots/water_state_spill.png",
+      "bytes": 607927,
+      "sha256": "e4e9a944d5535fc2180b5fd69ecfb9c6eb1f02e559b9ed39d1a5ea4ac43a9705"
+    },
+    {
+      "path": "Studio-only/ENVIRONMENT_STORYTELLING.md",
+      "bytes": 1462,
+      "sha256": "953c8d16825b8058fa8ace545a999eee42d940bea2244944d2abd653d3355077"
+    },
+    {
+      "path": "Water-states/water_course_brace_mask.png",
+      "bytes": 709,
+      "sha256": "0f69e72565de9eddd16c33fff1e439e1d8ee77cafce454f96e74ae16d5708218"
+    },
+    {
+      "path": "Water-states/water_course_open_mask.png",
+      "bytes": 690,
+      "sha256": "9b57dd7db9d8e76c1389b582b006c978f09b8214d8bf9e94db1fe58b7b4032a4"
+    },
+    {
+      "path": "Water-states/water_course_spill_mask.png",
+      "bytes": 733,
+      "sha256": "d651e95f5c8e094ad22c8b4a5363cf0d75f844b91963e7bc3a08e1f2eb44274a"
+    }
+  ]
+}

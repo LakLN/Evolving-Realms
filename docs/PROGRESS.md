@@ -3454,3 +3454,28 @@ sheet-as-sprite was used. Remaining capabilities: deep-water char/fishing popula
 autonomous predator-prey combat, tree cutting/dams, herd migration, creature-to-quest
 observation/shed bridge and seasonal population simulation. No blocker remains for
 this bounded four-species slice. No full regression, export or long playthrough.
+## The Long Thaw N7-A production art handoff (2026-11-07)
+
+Produced a data-only art handoff for the existing opt-in N6 Long Thaw. No gameplay,
+content, collision, save schema, layout, personal Run or Git history changed. The
+runtime exporter `tools/art/long_thaw_n7_handoff.gd` opens a disposable UUID database,
+requires N6 layout v4 / atlas v5, and derives all registration data from the live
+terrain/atlas rather than redrawing it.
+
+Delivery: `art_exports/LongThaw_N7/LongThaw_N7_ART_HANDOFF.zip`, with a spoiler-free
+external README. The package contains aligned 309x309 one-pixel-per-tile surface,
+collision, elevation, area, landscape and authored-marker masks; exact world-tile
+origin/40px scale, regions, roads, gates, shelters, sites, creature homes and Weir Five
+state cells in JSON; transparent `open`/`brace`/`spill` masks; seven native area-centre
+captures and three executed water-state captures at 1100x720; four creature briefs;
+environment asset requirements; and spoiler-sensitive storytelling constraints in a
+separate `Studio-only` folder. Masks are explicitly reference data, never production art.
+
+Commands/results: `scripts/godot.ps1 --headless --editor --quit` completed on Godot
+4.7.2; `scripts/godot.ps1 --script res://tools/art/long_thaw_n7_handoff.gd '--'
+--long-thaw-n6` completed after all three N5 physical-work branches reported PASS.
+Generated `QA_REPORT.json`: **PASS**, 19 PNG checks; all dimensions matched, all fully
+transparent pixels had zero RGB bleed, and every screenshot was 1100x720. Direct review
+covered Nine Weirs, the measured-spill capture and the whole-land surface mask. No full
+regression, executable export or long playthrough was run. Production art remains to be
+created and accepted; this handoff does not promote any fallback screenshot/token/mask.

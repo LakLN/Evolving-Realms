@@ -1,0 +1,7849 @@
+{
+  "schema": "er-long-thaw-art-geometry",
+  "version": 1,
+  "source": {
+    "layout_id": "landpkg:snow_mountain/long_thaw_n3",
+    "layout_version": 4,
+    "atlas_version": 5,
+    "terrain_version": 2,
+    "world_seed": 4242
+  },
+  "coordinates": {
+    "unit": "tile",
+    "tile_px": 40,
+    "origin_tile": {
+      "x": -402,
+      "y": -408
+    },
+    "size_tiles": {
+      "x": 309,
+      "y": 309
+    },
+    "north": "negative Y",
+    "pixel_mapping": "mask pixel (x,y) = world tile origin_tile + (x,y)",
+    "reference_viewport_px": [
+      1100,
+      720
+    ]
+  },
+  "render_order": [
+    "ground",
+    "water/ford/path",
+    "terrain and landscape props",
+    "world objects and places",
+    "feet-sorted actors",
+    "foreground/roof",
+    "fog/weather",
+    "HUD"
+  ],
+  "pivot_sorting_collision": {
+    "tile_visual_px": [
+      40,
+      40
+    ],
+    "actor_collision_tiles": [
+      1,
+      1
+    ],
+    "actor_sort": "feet Y",
+    "place_interaction": "stable world tile",
+    "multi_tile_art": "explicit bottom-centre pivot; artwork never changes collision",
+    "foreground": "visual-only occlusion"
+  },
+  "surface_legend": {
+    "forest": {
+      "value": 0,
+      "rgba": "55734dff",
+      "walkable": true
+    },
+    "beach": {
+      "value": 1,
+      "rgba": "a9986eff",
+      "walkable": true
+    },
+    "meadow": {
+      "value": 2,
+      "rgba": "87945bff",
+      "walkable": true
+    },
+    "water": {
+      "value": 3,
+      "rgba": "397b9bff",
+      "walkable": false
+    },
+    "tree": {
+      "value": 4,
+      "rgba": "214b35ff",
+      "walkable": false
+    },
+    "rock": {
+      "value": 5,
+      "rgba": "5f6872ff",
+      "walkable": false
+    },
+    "snowfield": {
+      "value": 8,
+      "rgba": "d9e4e7ff",
+      "walkable": true
+    },
+    "taiga": {
+      "value": 9,
+      "rgba": "46695dff",
+      "walkable": true
+    },
+    "pine": {
+      "value": 10,
+      "rgba": "254c43ff",
+      "walkable": false
+    },
+    "ice": {
+      "value": 11,
+      "rgba": "91c6d5ff",
+      "walkable": true
+    },
+    "ashland": {
+      "value": 12,
+      "rgba": "ff00ffff",
+      "walkable": true
+    },
+    "cinder": {
+      "value": 13,
+      "rgba": "ff00ffff",
+      "walkable": true
+    },
+    "lava": {
+      "value": 14,
+      "rgba": "ff00ffff",
+      "walkable": false
+    },
+    "basalt": {
+      "value": 15,
+      "rgba": "ff00ffff",
+      "walkable": false
+    },
+    "veil": {
+      "value": 16,
+      "rgba": "ff00ffff",
+      "walkable": false
+    },
+    "road": {
+      "value": 17,
+      "rgba": "8c755cff",
+      "walkable": true
+    },
+    "cliff": {
+      "value": 18,
+      "rgba": "444b55ff",
+      "walkable": false
+    },
+    "frozen": {
+      "value": 19,
+      "rgba": "aebcc2ff",
+      "walkable": true
+    },
+    "trail": {
+      "value": 20,
+      "rgba": "9b8a76ff",
+      "walkable": true
+    },
+    "floor": {
+      "value": 21,
+      "rgba": "725d49ff",
+      "walkable": true
+    },
+    "timber": {
+      "value": 22,
+      "rgba": "49382eff",
+      "walkable": false
+    }
+  },
+  "marker_legend": {
+    "site": "#ffe66d",
+    "creature_home": "#ee78d6",
+    "run_start": "#65e8ff"
+  },
+  "terrain_transition_constraints": {
+    "connections": "all nine authored corridors remain seamless and traversable",
+    "ford": "must match collision and active water-state mask",
+    "cliff": "top/rim, face and foot must agree with collision",
+    "mask_resampling": "nearest-neighbour only; masks are registration data"
+  },
+  "regions": [
+    {
+      "danger": 0.0,
+      "exposure": "lee",
+      "index": 0.0,
+      "kind": "thawgate_fans",
+      "name": "Thawgate Fans",
+      "opportunity": "sheltered gravel fans, clean seepage and two basin routes",
+      "region_id": "land:-1_-1/r0",
+      "seed": {
+        "x": -322.0,
+        "y": -343.0
+      },
+      "start": true
+    },
+    {
+      "danger": 1.0,
+      "exposure": "lee",
+      "index": 1.0,
+      "kind": "alderwash",
+      "name": "Alderwash",
+      "opportunity": "root causeways, repair marks and sheltered herbs",
+      "region_id": "land:-1_-1/r1",
+      "seed": {
+        "x": -254.0,
+        "y": -343.0
+      },
+      "start": false
+    },
+    {
+      "danger": 1.0,
+      "exposure": "open",
+      "index": 2.0,
+      "kind": "braided_commons",
+      "name": "Braided Commons",
+      "opportunity": "open grass, fresh silt and alternate crossings",
+      "region_id": "land:-1_-1/r2",
+      "seed": {
+        "x": -260.0,
+        "y": -279.0
+      },
+      "start": false
+    },
+    {
+      "danger": 1.0,
+      "exposure": "open",
+      "index": 3.0,
+      "kind": "siltmarket_reach",
+      "name": "Siltmarket Reach",
+      "opportunity": "raised exchange ground and a dry fish ladder",
+      "region_id": "land:-1_-1/r3",
+      "seed": {
+        "x": -307.0,
+        "y": -208.0
+      },
+      "start": false
+    },
+    {
+      "danger": 1.0,
+      "exposure": "open",
+      "index": 4.0,
+      "kind": "nine_weirs",
+      "name": "Nine Weirs",
+      "opportunity": "dry-stone channels, flood records and the Weir Five survey",
+      "region_id": "land:-1_-1/r4",
+      "seed": {
+        "x": -236.0,
+        "y": -180.0
+      },
+      "start": false
+    },
+    {
+      "danger": 2.0,
+      "exposure": "lee",
+      "index": 5.0,
+      "kind": "drowned_orchard",
+      "name": "Drowned Orchard",
+      "opportunity": "terrace walls, cold seepage and one surviving graft",
+      "region_id": "land:-1_-1/r5",
+      "seed": {
+        "x": -202.0,
+        "y": -242.0
+      },
+      "start": false
+    },
+    {
+      "danger": 2.0,
+      "exposure": "lee",
+      "index": 6.0,
+      "kind": "underflow_gorge",
+      "name": "Underflow Gorge",
+      "opportunity": "talus, buried water and a difficult inner return",
+      "region_id": "land:-1_-1/r6",
+      "seed": {
+        "x": -189.0,
+        "y": -308.0
+      },
+      "start": false
+    }
+  ],
+  "geography": {
+    "barriers": [
+      {
+        "a": {
+          "x": -194.0,
+          "y": -386.0
+        },
+        "b": {
+          "x": -345.0,
+          "y": -383.0
+        },
+        "barrier_id": "west_fan_wall",
+        "width": 37.0
+      },
+      {
+        "a": {
+          "x": -189.0,
+          "y": -126.0
+        },
+        "b": {
+          "x": -340.0,
+          "y": -122.0
+        },
+        "barrier_id": "east_market_wall",
+        "width": 37.0
+      },
+      {
+        "a": {
+          "x": -137.0,
+          "y": -365.0
+        },
+        "b": {
+          "x": -122.0,
+          "y": -313.0
+        },
+        "barrier_id": "north_gorge_wall",
+        "width": 31.0
+      },
+      {
+        "a": {
+          "x": -122.0,
+          "y": -220.0
+        },
+        "b": {
+          "x": -149.0,
+          "y": -143.0
+        },
+        "barrier_id": "north_weir_wall",
+        "width": 31.0
+      },
+      {
+        "a": {
+          "x": -239.0,
+          "y": -257.0
+        },
+        "b": {
+          "x": -220.0,
+          "y": -211.0
+        },
+        "barrier_id": "orchard_terrace",
+        "width": 22.0
+      }
+    ],
+    "clearings": [
+      {
+        "r": 5.0,
+        "x": -325.0,
+        "y": -356.0
+      },
+      {
+        "r": 5.0,
+        "x": -343.0,
+        "y": -334.0
+      },
+      {
+        "r": 5.0,
+        "x": -322.0,
+        "y": -325.0
+      }
+    ],
+    "coast": {
+      "max": 1180.0,
+      "min": 1040.0,
+      "scale": 42.0
+    },
+    "escarpment": {
+      "center": {
+        "x": -196.0,
+        "y": -269.0
+      },
+      "jitter": 80.0,
+      "name": "Underflow stoneback",
+      "radius": {
+        "x": 14.0,
+        "y": 20.0
+      },
+      "scale": 24.0
+    },
+    "lakes": [
+      {
+        "center": {
+          "x": -263.0,
+          "y": -328.0
+        },
+        "jitter": 90.0,
+        "lake_id": "alder_braid",
+        "radius": {
+          "x": 43.0,
+          "y": 7.0
+        },
+        "scale": 20.0,
+        "shore": 3.0
+      },
+      {
+        "center": {
+          "x": -268.0,
+          "y": -266.0
+        },
+        "jitter": 100.0,
+        "lake_id": "commons_braid",
+        "radius": {
+          "x": 46.0,
+          "y": 8.0
+        },
+        "scale": 22.0,
+        "shore": 3.0
+      },
+      {
+        "center": {
+          "x": -271.0,
+          "y": -208.0
+        },
+        "jitter": 80.0,
+        "lake_id": "market_course",
+        "radius": {
+          "x": 46.0,
+          "y": 8.0
+        },
+        "scale": 20.0,
+        "shore": 3.0
+      }
+    ],
+    "shelters": [],
+    "warp": 24.0,
+    "windbreaks": [
+      {
+        "a": {
+          "x": -307.0,
+          "y": -359.0
+        },
+        "b": {
+          "x": -307.0,
+          "y": -340.0
+        },
+        "tile": "rock",
+        "width": 12.0
+      },
+      {
+        "a": {
+          "x": -248.0,
+          "y": -349.0
+        },
+        "b": {
+          "x": -242.0,
+          "y": -328.0
+        },
+        "tile": "tree",
+        "width": 12.0
+      },
+      {
+        "a": {
+          "x": -208.0,
+          "y": -199.0
+        },
+        "b": {
+          "x": -208.0,
+          "y": -168.0
+        },
+        "tile": "rock",
+        "width": 12.0
+      },
+      {
+        "a": {
+          "x": -211.0,
+          "y": -254.0
+        },
+        "b": {
+          "x": -202.0,
+          "y": -226.0
+        },
+        "tile": "rock",
+        "width": 12.0
+      },
+      {
+        "a": {
+          "x": -324.0,
+          "y": -358.0
+        },
+        "b": {
+          "x": -324.0,
+          "y": -354.0
+        },
+        "tile": "pine",
+        "width": 6.0
+      },
+      {
+        "a": {
+          "x": -342.0,
+          "y": -336.0
+        },
+        "b": {
+          "x": -342.0,
+          "y": -332.0
+        },
+        "tile": "pine",
+        "width": 6.0
+      },
+      {
+        "a": {
+          "x": -321.0,
+          "y": -327.0
+        },
+        "b": {
+          "x": -321.0,
+          "y": -323.0
+        },
+        "tile": "pine",
+        "width": 6.0
+      }
+    ]
+  },
+  "roads": [
+    {
+      "a": {
+        "x": -322.0,
+        "y": -343.0
+      },
+      "b": {
+        "x": -288.0,
+        "y": -356.0
+      },
+      "trail": "thawgate_alder",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -288.0,
+        "y": -356.0
+      },
+      "b": {
+        "x": -254.0,
+        "y": -343.0
+      },
+      "trail": "thawgate_alder",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -322.0,
+        "y": -343.0
+      },
+      "b": {
+        "x": -333.0,
+        "y": -285.0
+      },
+      "trail": "thawgate_weirs_high",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -333.0,
+        "y": -285.0
+      },
+      "b": {
+        "x": -294.0,
+        "y": -226.0
+      },
+      "trail": "thawgate_weirs_high",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -294.0,
+        "y": -226.0
+      },
+      "b": {
+        "x": -236.0,
+        "y": -180.0
+      },
+      "trail": "thawgate_weirs_high",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -254.0,
+        "y": -343.0
+      },
+      "b": {
+        "x": -248.0,
+        "y": -313.0
+      },
+      "trail": "alder_commons",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -248.0,
+        "y": -313.0
+      },
+      "b": {
+        "x": -260.0,
+        "y": -279.0
+      },
+      "trail": "alder_commons",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -254.0,
+        "y": -343.0
+      },
+      "b": {
+        "x": -220.0,
+        "y": -334.0
+      },
+      "trail": "alder_underflow",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -220.0,
+        "y": -334.0
+      },
+      "b": {
+        "x": -189.0,
+        "y": -308.0
+      },
+      "trail": "alder_underflow",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -260.0,
+        "y": -279.0
+      },
+      "b": {
+        "x": -291.0,
+        "y": -246.0
+      },
+      "trail": "commons_market",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -291.0,
+        "y": -246.0
+      },
+      "b": {
+        "x": -307.0,
+        "y": -208.0
+      },
+      "trail": "commons_market",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -260.0,
+        "y": -279.0
+      },
+      "b": {
+        "x": -230.0,
+        "y": -257.0
+      },
+      "trail": "commons_orchard",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -230.0,
+        "y": -257.0
+      },
+      "b": {
+        "x": -202.0,
+        "y": -242.0
+      },
+      "trail": "commons_orchard",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -307.0,
+        "y": -208.0
+      },
+      "b": {
+        "x": -276.0,
+        "y": -177.0
+      },
+      "trail": "market_weirs",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -276.0,
+        "y": -177.0
+      },
+      "b": {
+        "x": -236.0,
+        "y": -180.0
+      },
+      "trail": "market_weirs",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -236.0,
+        "y": -180.0
+      },
+      "b": {
+        "x": -208.0,
+        "y": -208.0
+      },
+      "trail": "weirs_orchard",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -208.0,
+        "y": -208.0
+      },
+      "b": {
+        "x": -202.0,
+        "y": -242.0
+      },
+      "trail": "weirs_orchard",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -202.0,
+        "y": -242.0
+      },
+      "b": {
+        "x": -177.0,
+        "y": -272.0
+      },
+      "trail": "orchard_underflow",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -177.0,
+        "y": -272.0
+      },
+      "b": {
+        "x": -189.0,
+        "y": -308.0
+      },
+      "trail": "orchard_underflow",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -322.0,
+        "y": -343.0
+      },
+      "b": {
+        "x": -353.0,
+        "y": -303.0
+      },
+      "trail": "pass_link",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -353.0,
+        "y": -303.0
+      },
+      "b": {
+        "x": -377.0,
+        "y": -254.0
+      },
+      "trail": "pass_link",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -1.0,
+        "y": -265.0
+      },
+      "b": {
+        "x": -57.0,
+        "y": -265.0
+      },
+      "trail": "pass_corridor",
+      "width": 12.0
+    },
+    {
+      "a": {
+        "x": -57.0,
+        "y": -265.0
+      },
+      "b": {
+        "x": -242.0,
+        "y": -255.0
+      },
+      "trail": "pass_approach",
+      "width": 9.0
+    },
+    {
+      "a": {
+        "x": -242.0,
+        "y": -255.0
+      },
+      "b": {
+        "x": -377.0,
+        "y": -254.0
+      },
+      "trail": "pass_approach",
+      "width": 9.0
+    }
+  ],
+  "gates": [
+    {
+      "faces": "land:0_-1",
+      "gate_id": "land:-1_-1/gate/east",
+      "inner": {
+        "x": -57.0,
+        "y": -265.0
+      },
+      "kind": "pass",
+      "mirrors": "land:0_-1/gate/west",
+      "position": {
+        "x": -1.0,
+        "y": -265.0
+      },
+      "region": 3.0,
+      "side": "east"
+    }
+  ],
+  "shelters": [],
+  "structures": [
+    {
+      "instance_id": "loc:atlas/-1_-1/site/thawgate_spring",
+      "content_id": "core:place/clear_spring",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -343,
+        "y": -362
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/alder_oath_bridge",
+      "content_id": "long_thaw:place/alder_oath_bridge",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -245,
+        "y": -360
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/turning_pole",
+      "content_id": "long_thaw:place/turning_pole",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -279,
+        "y": -285
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/commons_rush",
+      "content_id": "long_thaw:place/silver_rush_bed",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -268,
+        "y": -257
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/dry_fish_ladder",
+      "content_id": "long_thaw:place/dry_fish_ladder",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -319,
+        "y": -223
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/market_rush",
+      "content_id": "long_thaw:place/silver_rush_bed",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -322,
+        "y": -194
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/floodline_stones",
+      "content_id": "long_thaw:place/floodline_stones",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -245,
+        "y": -194
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/gatehouse_tally",
+      "content_id": "long_thaw:place/gatehouse_tally",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -217,
+        "y": -166
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/weir_five_control",
+      "content_id": "long_thaw:place/weir_five_control",
+      "version": 2,
+      "interaction_anchor_tile": {
+        "x": -242,
+        "y": -159
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/orchard_seep",
+      "content_id": "long_thaw:place/orchard_seep",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -215,
+        "y": -252
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/last_green_graft",
+      "content_id": "long_thaw:place/last_green_graft",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -186,
+        "y": -226
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    },
+    {
+      "instance_id": "loc:atlas/-1_-1/site/underflow_rumble",
+      "content_id": "long_thaw:place/underflow_rumble",
+      "version": 1,
+      "interaction_anchor_tile": {
+        "x": -174,
+        "y": -319
+      },
+      "gameplay_footprint_tiles": [
+        1,
+        1
+      ],
+      "collision": "none; interaction uses anchor tile",
+      "art_pivot": "declare bottom-centre in delivered asset",
+      "sorting": "feet/world Y unless explicitly foreground"
+    }
+  ],
+  "points": {
+    "starts": [
+      {
+        "position": {
+          "x": -325,
+          "y": -356
+        }
+      },
+      {
+        "position": {
+          "x": -343,
+          "y": -334
+        }
+      },
+      {
+        "position": {
+          "x": -322,
+          "y": -325
+        }
+      }
+    ],
+    "sites": [
+      {
+        "position": {
+          "x": -343,
+          "y": -362
+        },
+        "instance_id": "loc:atlas/-1_-1/site/thawgate_spring",
+        "content_id": "core:place/clear_spring",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "a clean seep and survival stop",
+          "region_id": "land:-1_-1/r0",
+          "region_name": "Thawgate Fans",
+          "role": "landmark",
+          "site_name": "Clear Spring",
+          "title": "Clear Spring (Thawgate Fans)"
+        }
+      },
+      {
+        "position": {
+          "x": -245,
+          "y": -360
+        },
+        "instance_id": "loc:atlas/-1_-1/site/alder_oath_bridge",
+        "content_id": "long_thaw:place/alder_oath_bridge",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "repair evidence at a root crossing",
+          "region_id": "land:-1_-1/r1",
+          "region_name": "Alderwash",
+          "role": "landmark",
+          "site_name": "Alder Oath Bridge",
+          "title": "Alder Oath Bridge (Alderwash)"
+        }
+      },
+      {
+        "position": {
+          "x": -279,
+          "y": -285
+        },
+        "instance_id": "loc:atlas/-1_-1/site/turning_pole",
+        "content_id": "long_thaw:place/turning_pole",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "a former river bank above the present braid",
+          "region_id": "land:-1_-1/r2",
+          "region_name": "Braided Commons",
+          "role": "landmark",
+          "site_name": "Turning Pole",
+          "title": "Turning Pole (Braided Commons)"
+        }
+      },
+      {
+        "position": {
+          "x": -268,
+          "y": -257
+        },
+        "instance_id": "loc:atlas/-1_-1/site/commons_rush",
+        "content_id": "long_thaw:place/silver_rush_bed",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "a repeatable local food activity on fresh silt",
+          "region_id": "land:-1_-1/r2",
+          "region_name": "Braided Commons",
+          "role": "landmark",
+          "site_name": "Silver Rush Bed",
+          "title": "Silver Rush Bed (Braided Commons)"
+        }
+      },
+      {
+        "position": {
+          "x": -319,
+          "y": -223
+        },
+        "instance_id": "loc:atlas/-1_-1/site/dry_fish_ladder",
+        "content_id": "long_thaw:place/dry_fish_ladder",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "an entry clue where the market course no longer runs",
+          "region_id": "land:-1_-1/r3",
+          "region_name": "Siltmarket Reach",
+          "role": "landmark",
+          "site_name": "Dry Fish Ladder",
+          "title": "Dry Fish Ladder (Siltmarket Reach)"
+        }
+      },
+      {
+        "position": {
+          "x": -322,
+          "y": -194
+        },
+        "instance_id": "loc:atlas/-1_-1/site/market_rush",
+        "content_id": "long_thaw:place/silver_rush_bed",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "a second authored harvest bed above ordinary flood level",
+          "region_id": "land:-1_-1/r3",
+          "region_name": "Siltmarket Reach",
+          "role": "landmark",
+          "site_name": "Silver Rush Bed",
+          "title": "Silver Rush Bed (Siltmarket Reach)"
+        }
+      },
+      {
+        "position": {
+          "x": -245,
+          "y": -194
+        },
+        "instance_id": "loc:atlas/-1_-1/site/floodline_stones",
+        "content_id": "long_thaw:place/floodline_stones",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "readable evidence in the Weir Five survey",
+          "region_id": "land:-1_-1/r4",
+          "region_name": "Nine Weirs",
+          "role": "landmark",
+          "site_name": "Floodline Stones",
+          "title": "Floodline Stones (Nine Weirs)"
+        }
+      },
+      {
+        "position": {
+          "x": -217,
+          "y": -166
+        },
+        "instance_id": "loc:atlas/-1_-1/site/gatehouse_tally",
+        "content_id": "long_thaw:place/gatehouse_tally",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "maintenance evidence in the dry gatehouse wall",
+          "region_id": "land:-1_-1/r4",
+          "region_name": "Nine Weirs",
+          "role": "landmark",
+          "site_name": "Gatehouse Tally",
+          "title": "Gatehouse Tally (Nine Weirs)"
+        }
+      },
+      {
+        "position": {
+          "x": -242,
+          "y": -159
+        },
+        "instance_id": "loc:atlas/-1_-1/site/weir_five_control",
+        "content_id": "long_thaw:place/weir_five_control",
+        "version": 2.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "the recommendation-only terminal interaction",
+          "region_id": "land:-1_-1/r4",
+          "region_name": "Nine Weirs",
+          "role": "landmark",
+          "site_name": "Weir Five Control",
+          "title": "Weir Five Control (Nine Weirs)"
+        }
+      },
+      {
+        "position": {
+          "x": -215,
+          "y": -252
+        },
+        "instance_id": "loc:atlas/-1_-1/site/orchard_seep",
+        "content_id": "long_thaw:place/orchard_seep",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "cold seepage beneath a drowned terrace",
+          "region_id": "land:-1_-1/r5",
+          "region_name": "Drowned Orchard",
+          "role": "landmark",
+          "site_name": "Orchard Seep",
+          "title": "Orchard Seep (Drowned Orchard)"
+        }
+      },
+      {
+        "position": {
+          "x": -186,
+          "y": -226
+        },
+        "instance_id": "loc:atlas/-1_-1/site/last_green_graft",
+        "content_id": "long_thaw:place/last_green_graft",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "a Run-exclusive harvest or preserve choice",
+          "region_id": "land:-1_-1/r5",
+          "region_name": "Drowned Orchard",
+          "role": "landmark",
+          "site_name": "Last Green Graft",
+          "title": "Last Green Graft (Drowned Orchard)"
+        }
+      },
+      {
+        "position": {
+          "x": -174,
+          "y": -319
+        },
+        "instance_id": "loc:atlas/-1_-1/site/underflow_rumble",
+        "content_id": "long_thaw:place/underflow_rumble",
+        "version": 1.0,
+        "metadata": {
+          "atlas_version": 1.0,
+          "land_id": "land:-1_-1",
+          "reason": "surface evidence of buried water",
+          "region_id": "land:-1_-1/r6",
+          "region_name": "Underflow Gorge",
+          "role": "landmark",
+          "site_name": "Underflow Rumble",
+          "title": "Underflow Rumble (Underflow Gorge)"
+        }
+      }
+    ],
+    "creature_homes": [
+      {
+        "position": {
+          "x": -308,
+          "y": -339
+        },
+        "instance_id": "crt:atlas/-1_-1/home/fans_reedhorn_1",
+        "content_id": "long_thaw:reedhorn",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -305,
+          "y": -330
+        },
+        "instance_id": "crt:atlas/-1_-1/home/fans_reedhorn_2",
+        "content_id": "long_thaw:reedhorn",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -264,
+          "y": -354
+        },
+        "instance_id": "crt:atlas/-1_-1/home/alder_sluiceback_1",
+        "content_id": "long_thaw:sluiceback",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -251,
+          "y": -365
+        },
+        "instance_id": "crt:atlas/-1_-1/home/alder_sluiceback_2",
+        "content_id": "long_thaw:sluiceback",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -242,
+          "y": -322
+        },
+        "instance_id": "crt:atlas/-1_-1/home/alder_fox",
+        "content_id": "long_thaw:silt_fox",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -268,
+          "y": -285
+        },
+        "instance_id": "crt:atlas/-1_-1/home/commons_herd_1",
+        "content_id": "long_thaw:reedhorn",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -278,
+          "y": -274
+        },
+        "instance_id": "crt:atlas/-1_-1/home/commons_herd_2",
+        "content_id": "long_thaw:reedhorn",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -280,
+          "y": -291
+        },
+        "instance_id": "crt:atlas/-1_-1/home/commons_herd_3",
+        "content_id": "long_thaw:reedhorn",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -251,
+          "y": -296
+        },
+        "instance_id": "crt:atlas/-1_-1/home/commons_fox",
+        "content_id": "long_thaw:silt_fox",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -320,
+          "y": -205
+        },
+        "instance_id": "crt:atlas/-1_-1/home/market_reedhorn",
+        "content_id": "long_thaw:reedhorn",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -322,
+          "y": -227
+        },
+        "instance_id": "crt:atlas/-1_-1/home/market_sluiceback",
+        "content_id": "long_thaw:sluiceback",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0,
+          "world_state": {
+            "id": "long_thaw:water_course",
+            "values": [
+              "brace",
+              "spill"
+            ],
+            "version": 1.0
+          }
+        }
+      },
+      {
+        "position": {
+          "x": -223,
+          "y": -183
+        },
+        "instance_id": "crt:atlas/-1_-1/home/weirs_maw",
+        "content_id": "long_thaw:bank_maw",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -254,
+          "y": -171
+        },
+        "instance_id": "crt:atlas/-1_-1/home/weirs_sluiceback",
+        "content_id": "long_thaw:sluiceback",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -211,
+          "y": -236
+        },
+        "instance_id": "crt:atlas/-1_-1/home/orchard_fox_1",
+        "content_id": "long_thaw:silt_fox",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -199,
+          "y": -217
+        },
+        "instance_id": "crt:atlas/-1_-1/home/orchard_fox_2",
+        "content_id": "long_thaw:silt_fox",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -220,
+          "y": -258
+        },
+        "instance_id": "crt:atlas/-1_-1/home/orchard_sluiceback",
+        "content_id": "long_thaw:sluiceback",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0,
+          "world_state": {
+            "id": "long_thaw:water_course",
+            "values": [
+              "open",
+              "spill"
+            ],
+            "version": 1.0
+          }
+        }
+      },
+      {
+        "position": {
+          "x": -179,
+          "y": -303
+        },
+        "instance_id": "crt:atlas/-1_-1/home/underflow_maw",
+        "content_id": "long_thaw:bank_maw",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      },
+      {
+        "position": {
+          "x": -200,
+          "y": -320
+        },
+        "instance_id": "crt:atlas/-1_-1/home/underflow_fox",
+        "content_id": "long_thaw:silt_fox",
+        "version": 1.0,
+        "metadata": {
+          "authored_creature_version": 1.0,
+          "habitats": [
+            "forest",
+            "meadow",
+            "beach",
+            "snowfield"
+          ],
+          "land_id": "land:-1_-1",
+          "residency_version": 1.0
+        }
+      }
+    ]
+  },
+  "water_state": {
+    "id": "long_thaw:water_course",
+    "version": 1,
+    "source_site": "loc:atlas/-1_-1/site/weir_five_control",
+    "baseline_cells": [
+      {
+        "offset": [
+          -10.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -8.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -7.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -6.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -5.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -4.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -3.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -2.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -1.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          0.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          1.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          2.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          3.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          4.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          5.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          6.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          7.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          8.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          9.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          10.0,
+          -6.0
+        ],
+        "position": {
+          "x": -236.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          -5.0
+        ],
+        "position": {
+          "x": -237.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          -4.0
+        ],
+        "position": {
+          "x": -238.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          -3.0
+        ],
+        "position": {
+          "x": -239.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          -2.0
+        ],
+        "position": {
+          "x": -240.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          -1.0
+        ],
+        "position": {
+          "x": -241.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -8.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -7.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -6.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -5.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -3.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -2.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -1.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          0.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          1.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          2.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          3.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          4.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          5.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          7.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          8.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          9.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          10.0,
+          0.0
+        ],
+        "position": {
+          "x": -242.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          1.0
+        ],
+        "position": {
+          "x": -243.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          2.0
+        ],
+        "position": {
+          "x": -244.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          3.0
+        ],
+        "position": {
+          "x": -245.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          4.0
+        ],
+        "position": {
+          "x": -246.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -8.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -7.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -6.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -5.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          -4.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          4.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          5.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          6.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          7.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          8.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          9.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          10.0,
+          5.0
+        ],
+        "position": {
+          "x": -247.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -10.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -169.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -9.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -168.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -8.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -167.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -7.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -166.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -6.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -165.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -5.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -164.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -4.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -163.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -3.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -162.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -2.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -161.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -1.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -160.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          0.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -159.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          1.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -158.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          2.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -157.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          3.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -156.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          4.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -155.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          5.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -154.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          6.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -153.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          7.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -152.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          8.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -151.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          9.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -150.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          10.0,
+          6.0
+        ],
+        "position": {
+          "x": -248.0,
+          "y": -149.0
+        },
+        "site": "weir_five_control",
+        "surface": "trail"
+      },
+      {
+        "offset": [
+          -3.0,
+          2.0
+        ],
+        "position": {
+          "x": -321.0,
+          "y": -226.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          2.0
+        ],
+        "position": {
+          "x": -321.0,
+          "y": -225.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          2.0
+        ],
+        "position": {
+          "x": -321.0,
+          "y": -224.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          2.0
+        ],
+        "position": {
+          "x": -321.0,
+          "y": -223.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          2.0
+        ],
+        "position": {
+          "x": -321.0,
+          "y": -222.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          2.0
+        ],
+        "position": {
+          "x": -321.0,
+          "y": -221.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          2.0
+        ],
+        "position": {
+          "x": -321.0,
+          "y": -220.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          3.0
+        ],
+        "position": {
+          "x": -322.0,
+          "y": -226.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          3.0
+        ],
+        "position": {
+          "x": -322.0,
+          "y": -225.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          3.0
+        ],
+        "position": {
+          "x": -322.0,
+          "y": -224.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          3.0
+        ],
+        "position": {
+          "x": -322.0,
+          "y": -223.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          3.0
+        ],
+        "position": {
+          "x": -322.0,
+          "y": -222.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          3.0
+        ],
+        "position": {
+          "x": -322.0,
+          "y": -221.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          3.0
+        ],
+        "position": {
+          "x": -322.0,
+          "y": -220.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          4.0
+        ],
+        "position": {
+          "x": -323.0,
+          "y": -226.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          4.0
+        ],
+        "position": {
+          "x": -323.0,
+          "y": -225.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          4.0
+        ],
+        "position": {
+          "x": -323.0,
+          "y": -224.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          4.0
+        ],
+        "position": {
+          "x": -323.0,
+          "y": -223.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          1.0,
+          4.0
+        ],
+        "position": {
+          "x": -323.0,
+          "y": -222.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          4.0
+        ],
+        "position": {
+          "x": -323.0,
+          "y": -221.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          4.0
+        ],
+        "position": {
+          "x": -323.0,
+          "y": -220.0
+        },
+        "site": "dry_fish_ladder",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          2.0
+        ],
+        "position": {
+          "x": -217.0,
+          "y": -255.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          2.0
+        ],
+        "position": {
+          "x": -217.0,
+          "y": -254.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          2.0
+        ],
+        "position": {
+          "x": -217.0,
+          "y": -253.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          2.0
+        ],
+        "position": {
+          "x": -217.0,
+          "y": -252.0
+        },
+        "site": "orchard_seep",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          1.0,
+          2.0
+        ],
+        "position": {
+          "x": -217.0,
+          "y": -251.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          2.0
+        ],
+        "position": {
+          "x": -217.0,
+          "y": -250.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          2.0
+        ],
+        "position": {
+          "x": -217.0,
+          "y": -249.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          3.0
+        ],
+        "position": {
+          "x": -218.0,
+          "y": -255.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          3.0
+        ],
+        "position": {
+          "x": -218.0,
+          "y": -254.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          3.0
+        ],
+        "position": {
+          "x": -218.0,
+          "y": -253.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          3.0
+        ],
+        "position": {
+          "x": -218.0,
+          "y": -252.0
+        },
+        "site": "orchard_seep",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          1.0,
+          3.0
+        ],
+        "position": {
+          "x": -218.0,
+          "y": -251.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          3.0
+        ],
+        "position": {
+          "x": -218.0,
+          "y": -250.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          3.0
+        ],
+        "position": {
+          "x": -218.0,
+          "y": -249.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -3.0,
+          4.0
+        ],
+        "position": {
+          "x": -219.0,
+          "y": -255.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -2.0,
+          4.0
+        ],
+        "position": {
+          "x": -219.0,
+          "y": -254.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          -1.0,
+          4.0
+        ],
+        "position": {
+          "x": -219.0,
+          "y": -253.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          0.0,
+          4.0
+        ],
+        "position": {
+          "x": -219.0,
+          "y": -252.0
+        },
+        "site": "orchard_seep",
+        "surface": "water"
+      },
+      {
+        "offset": [
+          1.0,
+          4.0
+        ],
+        "position": {
+          "x": -219.0,
+          "y": -251.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          2.0,
+          4.0
+        ],
+        "position": {
+          "x": -219.0,
+          "y": -250.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      },
+      {
+        "offset": [
+          3.0,
+          4.0
+        ],
+        "position": {
+          "x": -219.0,
+          "y": -249.0
+        },
+        "site": "orchard_seep",
+        "surface": "beach"
+      }
+    ],
+    "variants": [
+      {
+        "availability": [
+          {
+            "enabled": false,
+            "instance_id": "loc:atlas/-1_-1/site/market_rush",
+            "interactions": [
+              "harvest"
+            ],
+            "site": "market_rush"
+          },
+          {
+            "enabled": true,
+            "instance_id": "loc:atlas/-1_-1/site/commons_rush",
+            "interactions": [
+              "harvest"
+            ],
+            "site": "commons_rush"
+          }
+        ],
+        "cells": [
+          {
+            "offset": [
+              -5.0,
+              -5.0
+            ],
+            "position": {
+              "x": -237.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              -4.0
+            ],
+            "position": {
+              "x": -238.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              -3.0
+            ],
+            "position": {
+              "x": -239.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              -2.0
+            ],
+            "position": {
+              "x": -240.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              -1.0
+            ],
+            "position": {
+              "x": -241.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              0.0
+            ],
+            "position": {
+              "x": -242.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              1.0
+            ],
+            "position": {
+              "x": -243.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              2.0
+            ],
+            "position": {
+              "x": -244.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              3.0
+            ],
+            "position": {
+              "x": -245.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              4.0
+            ],
+            "position": {
+              "x": -246.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              5.0
+            ],
+            "position": {
+              "x": -247.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              -5.0
+            ],
+            "position": {
+              "x": -237.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -4.0
+            ],
+            "position": {
+              "x": -238.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -3.0
+            ],
+            "position": {
+              "x": -239.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -2.0
+            ],
+            "position": {
+              "x": -240.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -1.0
+            ],
+            "position": {
+              "x": -241.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              0.0
+            ],
+            "position": {
+              "x": -242.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              1.0
+            ],
+            "position": {
+              "x": -243.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              2.0
+            ],
+            "position": {
+              "x": -244.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              3.0
+            ],
+            "position": {
+              "x": -245.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              4.0
+            ],
+            "position": {
+              "x": -246.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              5.0
+            ],
+            "position": {
+              "x": -247.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -3.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              1.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              1.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              1.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -2.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -1.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              3.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -3.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -2.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -1.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              3.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -3.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -2.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -1.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              3.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          }
+        ],
+        "id": "open",
+        "receipt": "execute_open",
+        "recommendation": "open",
+        "requires": [
+          {
+            "instance_id": "loc:atlas/-1_-1/site/floodline_stones",
+            "interaction": "compare",
+            "site": "floodline_stones"
+          },
+          {
+            "instance_id": "loc:atlas/-1_-1/site/gatehouse_tally",
+            "interaction": "read",
+            "site": "gatehouse_tally"
+          }
+        ]
+      },
+      {
+        "availability": [
+          {
+            "enabled": true,
+            "instance_id": "loc:atlas/-1_-1/site/market_rush",
+            "interactions": [
+              "harvest"
+            ],
+            "site": "market_rush"
+          },
+          {
+            "enabled": false,
+            "instance_id": "loc:atlas/-1_-1/site/commons_rush",
+            "interactions": [
+              "harvest"
+            ],
+            "site": "commons_rush"
+          }
+        ],
+        "cells": [
+          {
+            "offset": [
+              -5.0,
+              -5.0
+            ],
+            "position": {
+              "x": -237.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -4.0
+            ],
+            "position": {
+              "x": -238.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -3.0
+            ],
+            "position": {
+              "x": -239.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -2.0
+            ],
+            "position": {
+              "x": -240.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -1.0
+            ],
+            "position": {
+              "x": -241.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              0.0
+            ],
+            "position": {
+              "x": -242.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              1.0
+            ],
+            "position": {
+              "x": -243.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              2.0
+            ],
+            "position": {
+              "x": -244.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              3.0
+            ],
+            "position": {
+              "x": -245.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              4.0
+            ],
+            "position": {
+              "x": -246.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              5.0
+            ],
+            "position": {
+              "x": -247.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -5.0
+            ],
+            "position": {
+              "x": -237.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              -4.0
+            ],
+            "position": {
+              "x": -238.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              -3.0
+            ],
+            "position": {
+              "x": -239.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              -2.0
+            ],
+            "position": {
+              "x": -240.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              -1.0
+            ],
+            "position": {
+              "x": -241.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              0.0
+            ],
+            "position": {
+              "x": -242.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              1.0
+            ],
+            "position": {
+              "x": -243.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              2.0
+            ],
+            "position": {
+              "x": -244.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              3.0
+            ],
+            "position": {
+              "x": -245.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              4.0
+            ],
+            "position": {
+              "x": -246.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              5.0
+            ],
+            "position": {
+              "x": -247.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -2.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -1.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              3.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -3.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -2.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -1.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              3.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -3.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -2.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -1.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              3.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -3.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          }
+        ],
+        "id": "brace",
+        "receipt": "execute_brace",
+        "recommendation": "brace",
+        "requires": [
+          {
+            "instance_id": "loc:atlas/-1_-1/site/floodline_stones",
+            "interaction": "compare",
+            "site": "floodline_stones"
+          },
+          {
+            "instance_id": "loc:atlas/-1_-1/site/gatehouse_tally",
+            "interaction": "read",
+            "site": "gatehouse_tally"
+          }
+        ]
+      },
+      {
+        "availability": [
+          {
+            "enabled": true,
+            "instance_id": "loc:atlas/-1_-1/site/market_rush",
+            "interactions": [
+              "harvest"
+            ],
+            "site": "market_rush"
+          },
+          {
+            "enabled": true,
+            "instance_id": "loc:atlas/-1_-1/site/commons_rush",
+            "interactions": [
+              "harvest"
+            ],
+            "site": "commons_rush"
+          }
+        ],
+        "cells": [
+          {
+            "offset": [
+              -5.0,
+              -5.0
+            ],
+            "position": {
+              "x": -237.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -4.0
+            ],
+            "position": {
+              "x": -238.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -3.0
+            ],
+            "position": {
+              "x": -239.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -2.0
+            ],
+            "position": {
+              "x": -240.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              -1.0
+            ],
+            "position": {
+              "x": -241.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              0.0
+            ],
+            "position": {
+              "x": -242.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              1.0
+            ],
+            "position": {
+              "x": -243.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -5.0,
+              2.0
+            ],
+            "position": {
+              "x": -244.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              3.0
+            ],
+            "position": {
+              "x": -245.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              4.0
+            ],
+            "position": {
+              "x": -246.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -5.0,
+              5.0
+            ],
+            "position": {
+              "x": -247.0,
+              "y": -164.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -5.0
+            ],
+            "position": {
+              "x": -237.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -4.0
+            ],
+            "position": {
+              "x": -238.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -3.0
+            ],
+            "position": {
+              "x": -239.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -2.0
+            ],
+            "position": {
+              "x": -240.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              -1.0
+            ],
+            "position": {
+              "x": -241.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              0.0
+            ],
+            "position": {
+              "x": -242.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              1.0
+            ],
+            "position": {
+              "x": -243.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              5.0,
+              2.0
+            ],
+            "position": {
+              "x": -244.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              3.0
+            ],
+            "position": {
+              "x": -245.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              4.0
+            ],
+            "position": {
+              "x": -246.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              5.0,
+              5.0
+            ],
+            "position": {
+              "x": -247.0,
+              "y": -154.0
+            },
+            "site": "weir_five_control",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              -3.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              2.0
+            ],
+            "position": {
+              "x": -321.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              3.0
+            ],
+            "position": {
+              "x": -322.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -226.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -225.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -224.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              0.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -223.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -222.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              2.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -221.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              4.0
+            ],
+            "position": {
+              "x": -323.0,
+              "y": -220.0
+            },
+            "site": "dry_fish_ladder",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              2.0
+            ],
+            "position": {
+              "x": -217.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              3.0
+            ],
+            "position": {
+              "x": -218.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -3.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -255.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -2.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -254.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              -1.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -253.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              0.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -252.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              1.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -251.0
+            },
+            "site": "orchard_seep",
+            "surface": "water"
+          },
+          {
+            "offset": [
+              2.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -250.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          },
+          {
+            "offset": [
+              3.0,
+              4.0
+            ],
+            "position": {
+              "x": -219.0,
+              "y": -249.0
+            },
+            "site": "orchard_seep",
+            "surface": "beach"
+          }
+        ],
+        "id": "spill",
+        "receipt": "execute_spill",
+        "recommendation": "spill",
+        "requires": [
+          {
+            "instance_id": "loc:atlas/-1_-1/site/floodline_stones",
+            "interaction": "compare",
+            "site": "floodline_stones"
+          },
+          {
+            "instance_id": "loc:atlas/-1_-1/site/gatehouse_tally",
+            "interaction": "read",
+            "site": "gatehouse_tally"
+          },
+          {
+            "instance_id": "loc:atlas/-1_-1/site/orchard_seep",
+            "interaction": "inspect",
+            "site": "orchard_seep"
+          },
+          {
+            "instance_id": "loc:atlas/-1_-1/site/underflow_rumble",
+            "interaction": "listen",
+            "site": "underflow_rumble"
+          }
+        ]
+      }
+    ]
+  }
+}
